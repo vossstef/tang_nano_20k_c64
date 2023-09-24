@@ -12,7 +12,7 @@ Features:
 **Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS AND ON A PROOF OF CONCEPT LEVEL!</b> So far Video/Audio/Keyboard/Joystick/Cartride working.
 <br>
 Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo.
-<br>
+<br><br>
 **Warning** HDMI Signal is not yet fully compatible with 4K Monitor/TV !
 <br>
 ## Push Button utilization
