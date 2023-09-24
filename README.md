@@ -6,12 +6,13 @@ Original C64 core by Peter Wendrich
 Features:
 * HDMI 720x576p @50Hz Video and Audio Output
 * PS/2 Keyboard
-* Joystick (Atari / Commodore digital type)
+* Joystick (Atari / Commodore digital type)<br>
 
-<p style='color:red'><b>ENTIRE PROJECT IS STILL WORK IN PROGRESS AND ON A PROOF OF CONCEPT LEVEL!</b> So far Video/Audio/Keyboard/Joystick/Cartride working.<br></p>
-
+**Note** 
+<p style='color:red'><b>ENTIRE PROJECT IS STILL WORK IN PROGRESS AND ON A PROOF OF CONCEPT LEVEL!</b> So far Video/Audio/Keyboard/Joystick/Cartride working.</b><br></p>
 
 Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo.<br>
+**Info**
 HDMI Signal is not yet fully compatible with 4K Monitor/TV !<br>
 ## Push Button utilization
 * S1 push button Reset
