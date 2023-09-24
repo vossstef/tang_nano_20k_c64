@@ -9,10 +9,12 @@ Features:
 * Joystick (Atari / Commodore digital type)<br>
 
 
-[!NOTE]<br> ENTIRE PROJECT IS STILL WORK IN PROGRESS AND ON A PROOF OF CONCEPT LEVEL!</b> So far Video/Audio/Keyboard/Joystick/Cartride working.<br>
-Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo.<br>
-[!IMPORTANT]<br> HDMI Signal is not yet fully compatible with 4K Monitor/TV !<br>
-
+[!NOTE] ENTIRE PROJECT IS STILL WORK IN PROGRESS AND ON A PROOF OF CONCEPT LEVEL!</b> So far Video/Audio/Keyboard/Joystick/Cartride working.
+<br>
+Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo.
+<br>
+[!WARNING] HDMI Signal is not yet fully compatible with 4K Monitor/TV !
+<br>
 ## Push Button utilization
 * S1 push button Reset
 * S2 to select in between Joystick port 1 or 2 (active port indicated by LED 0). You have to toggle for this release!
