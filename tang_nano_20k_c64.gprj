@@ -1,0 +1,50 @@
+<?xml version="1" encoding="UTF-8"?>
+<!DOCTYPE gowin-fpga-project>
+<Project>
+    <Template>FPGA</Template>
+    <Version>5</Version>
+    <Device name="GW2AR-18C" pn="GW2AR-LV18QN88C8/I7">gw2ar18c-000</Device>
+    <FileList>
+        <File path="src/hdmi/hdmidataencoder.v" type="file.verilog" enable="1"/>
+        <File path="src/mos6526.v" type="file.verilog" enable="1"/>
+        <File path="src/ps2.v" type="file.verilog" enable="1"/>
+        <File path="src/cpu_6510.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/fpga64_buslogic.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/fpga64_keyboard.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/fpga64_rgbcolor.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_dpb/gowin_dpb.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_dpb/gowin_dpbi.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_prom/gowin_prom_basic_kernal.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_prom/gowin_prom_cart.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_prom/gowin_prom_chargen.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_ram16s/gowin_ram16s_color.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_rpll/gowin_rpll.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_rpll/gowin_rpll_hdmi.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_sp/gowin_sp.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/hdmi/c64_dblscan.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/hdmi/encoder.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/hdmi/hdmi.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/hdmi/hdmidelay.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/hdmi/rgb2vga_scandoubler.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/sid6581/Q_table.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/sid6581/adsr_multi.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/sid6581/mult_acc.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/sid6581/my_math_pkg.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/sid6581/oscillator.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/sid6581/sid_ctrl.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/sid6581/sid_debug_pkg.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/sid6581/sid_filter.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/sid6581/sid_mixer.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/sid6581/sid_regs.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/sid6581/sid_top.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/sid6581/wave_map.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/t65/T65.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/t65/T65_ALU.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/t65/T65_MCode.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/t65/T65_Pack.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/tang_nano_20k_c64.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/video_vicII_656x.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/tang_nano_20k_c64.cst" type="file.cst" enable="1"/>
+        <File path="src/tang_nano_20k_c64.sdc" type="file.sdc" enable="1"/>
+    </FileList>
+</Project>

@@ -1,0 +1,15 @@
+[General]
+ipc_version=4
+file=gowin_prom_chargen
+module=Gowin_pROM_chargen
+target_device=gw2ar18c-000
+type=ram_prom
+version=1.0
+
+[Config]
+DEPTH=4096
+LANG=1
+MEM_FILE=../gowin_prom/c64char.mi
+READ=0
+RESET_MODE=true
+WIDTH=8
