@@ -8,11 +8,11 @@ Features:
 * PS/2 Keyboard
 * Joystick (Atari / Commodore digital type)<br>
 
-**Note** 
+[!NOTE] 
 <p style='color:red'><b>ENTIRE PROJECT IS STILL WORK IN PROGRESS AND ON A PROOF OF CONCEPT LEVEL!</b> So far Video/Audio/Keyboard/Joystick/Cartride working.</b><br></p>
 
 Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo.<br>
-**Info**
+[!IMPORTANT]
 HDMI Signal is not yet fully compatible with 4K Monitor/TV !<br>
 ## Push Button utilization
 * S1 push button Reset
