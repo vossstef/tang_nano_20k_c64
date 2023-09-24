@@ -9,11 +9,11 @@ Features:
 * Joystick (Atari / Commodore digital type)<br>
 
 
-[!NOTE] ENTIRE PROJECT IS STILL WORK IN PROGRESS AND ON A PROOF OF CONCEPT LEVEL!</b> So far Video/Audio/Keyboard/Joystick/Cartride working.
+**Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS AND ON A PROOF OF CONCEPT LEVEL!</b> So far Video/Audio/Keyboard/Joystick/Cartride working.
 <br>
 Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo.
 <br>
-[!WARNING] HDMI Signal is not yet fully compatible with 4K Monitor/TV !
+**Warning** HDMI Signal is not yet fully compatible with 4K Monitor/TV !
 <br>
 ## Push Button utilization
 * S1 push button Reset
