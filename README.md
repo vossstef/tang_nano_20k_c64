@@ -13,7 +13,9 @@ Features:
 <br>
 Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo.
 <br><br>
-**Warning** HDMI Signal is not yet fully compatible with 4K Monitor/TV !
+**Warning** HDMI Signal is not fully compatible with many Monitor/TV as mode 720x576p@50Hz isn't an official [VESA](https://glenwing.github.io/docs/VESA-DMT-1.13.pdf) mode!<br>
+Working on e.g. BENQ GL2450HM Model 242450-T, Check [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) of your target display for support.
+An [EDID Database](https://github.com/bsdhw/EDID) or other support material might help.
 <br>
 ## Push Button utilization
 * S1 push button Reset
