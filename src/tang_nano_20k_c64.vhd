@@ -438,10 +438,6 @@ ramDataIn <= unsigned(ramDataIn_vec(7 downto 0));
 dram_addr(15 downto 0)  <= std_logic_vector(ramAddr);
 dram_addr(21 downto 16) <= (others => '0');
 
---dram_we <= systemWe when sysCycle > CYCLE_CPU0 and sysCycle < CYCLE_CPUF  else '0';
---dram_cs <= cs_ram when (sysCycle >= CYCLE_IEC0 and sysCycle <= CYCLE_VIC3) or
---                       (sysCycle > CYCLE_CPU0 and sysCycle <  CYCLE_CPUF and cs_ram = '1') else '0';
-
 dram_inst:  sdram
  port map(
   -- SDRAM side interface
@@ -475,6 +471,7 @@ gsr_inst: GSR
 
 mainclock: Gowin_rPLL
     port map (
+        clkout  => open,
         lock    => clk32_locked,
         reset   => reset_btn,
         clkoutd => clk32,
