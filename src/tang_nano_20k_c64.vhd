@@ -28,6 +28,9 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.numeric_std.ALL;
 
 entity tang_nano_20k_c64 is
+	generic (
+		resetCycles : integer := 4095
+	);
   port
   (
     clk_27mhz   : in std_logic;
@@ -40,13 +43,23 @@ entity tang_nano_20k_c64 is
     tmds_clk_n  : out std_logic;
     tmds_clk_p  : out std_logic;
     tmds_d_n    : out std_logic_vector( 2 downto 0);
-    tmds_d_p    : out std_logic_vector( 2 downto 0)
+    tmds_d_p    : out std_logic_vector( 2 downto 0);
+    -- "Magic" port names that the gowin compiler connects to the on-chip SDRAM
+    O_sdram_clk : out std_logic;
+    O_sdram_cke : out std_logic;
+    O_sdram_cs_n : out std_logic;            -- chip select
+    O_sdram_cas_n : out std_logic;           -- columns address select
+    O_sdram_ras_n : out std_logic;           -- row address select
+    O_sdram_wen_n : out std_logic;           -- write enable
+    IO_sdram_dq : inout std_logic_vector(31 downto 0); -- 32 bit bidirectional data bus
+    O_sdram_addr : out std_logic_vector(10 downto 0);  -- 11 bit multiplexed address bus
+    O_sdram_ba : out std_logic_vector(1 downto 0);     -- two banks
+    O_sdram_dqm : out std_logic_vector(3 downto 0)     -- 32/4
   );
 end;
 
 architecture Behavioral of tang_nano_20k_c64 is
 
-constant resetCycles : integer := 4095;
 signal clk_pixel, clk_shift, shift_locked  : std_logic;
 signal clk32, clk32_locked: std_logic;
 signal R_btn_joy: std_logic_vector(6 downto 0);
@@ -113,12 +126,11 @@ signal ramDataReg   : unsigned(7 downto 0);
 -- external memory
 signal ramAddr     : unsigned(15 downto 0);
 signal ramDataIn   : unsigned(7 downto 0);
-signal ramDataOut  : unsigned(7 downto 0);
-signal ramDataIn_vec   : std_logic_vector(7 downto 0);
+signal ramDataOut  : unsigned(15 downto 0);
+signal ramDataIn_vec   : std_logic_vector(15 downto 0);
 
-signal ramCE       : std_logic;
-signal ramWe       : std_logic;
-signal ramWeCe     : std_logic;
+signal ram_CE       : std_logic;
+signal ram_WE       : std_logic;
 
 signal io_cycle    : std_logic;
 signal idle        : std_logic;
@@ -260,13 +272,14 @@ signal  uart_cts    : std_logic; -- CIA2, PortB(6)
 signal  uart_dsr    : std_logic; -- CIA2, PortB(7)
 
 signal colorQ_vec       : std_logic_vector(3 downto 0);
+signal dram_addr : std_logic_vector(21 downto 0);
 
 component Gowin_rPLL
     port (
         clkout: out std_logic;
         lock: out std_logic;
         reset: in std_logic;
-    clkoutd: out std_logic;
+        clkoutd: out std_logic;
         clkin: in std_logic
     );
 end component;
@@ -291,6 +304,19 @@ component CLKDIV
         RESETN: in std_logic;
         CALIB: in std_logic
     );
+end component;
+
+COMPONENT CLKDIVG
+  GENERIC(
+    DIV_MODE:STRING:="2";
+    GSREN:STRING:="false"
+  );
+  PORT(
+    CLKIN:IN std_logic;
+    RESETN:IN std_logic;
+    CALIB:IN std_logic;
+    CLKOUT:OUT std_logic
+  );
 end component;
 
 component Gowin_SP
@@ -323,6 +349,34 @@ COMPONENT GSR
 end component;
 
 -- verilog components
+
+component sdram 
+port (
+  -- SDRAM side interface
+  sd_clk    : out std_logic; -- sd clock
+	sd_cke    : out std_logic; -- clock enable
+	sd_data   : inout std_logic_vector(31 downto 0); -- 32 bit bidirectional data bus
+	sd_addr   : out std_logic_vector(10 downto 0); -- 11 bit multiplexed address bus
+	sd_dqm    : out std_logic_vector(3 downto 0); -- two byte masks
+  sd_ba     : out std_logic_vector(1 downto 0); -- two banks
+	sd_cs     : out std_logic; -- a single chip select
+	sd_we     : out std_logic; -- write enable
+	sd_ras    : out std_logic; -- row address select
+	sd_cas    : out std_logic; -- columns address select
+	-- cpu/chipset interface
+	clk       : in std_logic; -- sdram is accessed at 32MHz
+	reset_n   : in std_logic; -- init signal after FPGA config to initialize RAM
+	ready     : out std_logic; -- ram is ready and has been initialized
+	refresh   : in std_logic; -- chipset requests a refresh cycle
+	din       : in std_logic_vector(15 downto 0); -- data input from chipset/cpu
+	dout      : out std_logic_vector(15 downto 0);
+	addr      : in std_logic_vector(21 downto 0); -- 22 bit word address
+	ds        : in std_logic_vector(1 downto 0); -- upper/lower data strobe
+	cs        : in std_logic; -- cpu/chipset requests read/wrie
+	we        : in std_logic         -- cpu/chipset requests write
+);
+end component;
+
 component mos6526
   port (
     clk           : in  std_logic;
@@ -362,7 +416,55 @@ end component;
 ---------------------------------------------------------
 begin
 
-  gsr_inst: GSR
+  vga2hdmi_instance: entity work.C64_DBLSCAN 
+  port map (
+   CLK               => clk32,
+   ENA               => enablePixel,
+   index             => vicColorIndex,
+   clk_5x_pixel      => clk_shift,
+   clk_pixel         => clk_pixel,
+   I_HSYNC           => vicHSync,
+   I_VSYNC           => vicVSync,
+   I_AUDIO_PCM_L     => audio_data(17 downto 2),
+   I_AUDIO_PCM_R     => audio_data(17 downto 2),
+   tmds_clk_n        => tmds_clk_n,
+   tmds_clk_p        => tmds_clk_p,
+   tmds_d_n          => tmds_d_n,
+   tmds_d_p          => tmds_d_p
+  );
+
+ramDataIn <= unsigned(ramDataIn_vec(7 downto 0));
+
+dram_addr(15 downto 0)  <= std_logic_vector(ramAddr);
+dram_addr(21 downto 16) <= (others => '0');
+
+dram_inst:  sdram
+ port map(
+  -- SDRAM side interface
+  sd_clk    => O_sdram_clk,   -- sd clock
+	sd_cke    => O_sdram_cke,   -- clock enable
+	sd_data   => IO_sdram_dq,   -- 32 bit bidirectional data bus
+	sd_addr   => O_sdram_addr,  -- 11 bit multiplexed address bus
+	sd_dqm    => O_sdram_dqm,   -- two byte masks
+  sd_ba     => O_sdram_ba,    -- two banks
+	sd_cs     => O_sdram_cs_n,  -- a single chip select
+	sd_we     => O_sdram_wen_n, -- write enable
+	sd_ras    => O_sdram_ras_n, -- row address select
+	sd_cas    => O_sdram_cas_n, -- columns address select
+	-- cpu/chipset interface
+	clk       => clk32,         -- sdram is accessed at 32MHz
+	reset_n   => clk32_locked,  -- init signal after FPGA config to initialize RAM
+	ready     => open,          -- ram is ready and has been initialized
+	refresh   => idle,          -- chipset requests a refresh cycle
+	din       => std_logic_vector(ramDataOut), -- data input from chipset/cpu
+	dout      => ramDataIn_vec,
+	addr      => dram_addr,      -- 22 bit word address
+	ds        => (others => '0'),-- upper/lower data strobe R = low and W = low
+	cs        => ram_CE,        -- cpu/chipset requests read/wrie
+	we        => ram_WE         -- cpu/chipset requests write
+);
+
+gsr_inst: GSR
     PORT MAP(
     GSRI => not reset_btn
   );
@@ -396,6 +498,52 @@ port map (
     resetn => shift_locked
     );
 
+-- process to toggle joy A/B with BTN2
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    if vicVSync = '1' then
+      if R_btn_joy(2)='1' and btn_debounce(2)='0' then
+        joy_sel <= not joy_sel;
+      end if;
+      btn_debounce <= R_btn_joy;
+    end if;
+  end if;
+end process;
+
+led(0) <= joy_sel;
+led(1) <= '1';
+
+process(clk32)
+begin
+  if rising_edge(clk32) then
+     R_btn_joy(0) <= '0';        -- was reset in original design
+     R_btn_joy(1) <= not btn(4); -- joy fire 
+     R_btn_joy(2) <= s2_btn;     -- select Joy port 1 / 2
+     R_btn_joy(3) <= not btn(3); -- joy right
+     R_btn_joy(4) <= not btn(2); -- joy left
+     R_btn_joy(5) <= not btn(1); -- joy down
+     R_btn_joy(6) <= not btn(0); -- joy up
+  end if;
+end process;
+
+joyA <= "00" & R_btn_joy(1) & R_btn_joy(6) & R_btn_joy(5) & R_btn_joy(4) & R_btn_joy(3) when joy_sel='0' 
+    else (others => '0');
+
+joyB <= "00" & R_btn_joy(1) & R_btn_joy(6) & R_btn_joy(5) & R_btn_joy(4) & R_btn_joy(3) when joy_sel='1' 
+    else (others => '0');
+
+-- -----------------------------------------------------------------------
+-- Local signal to outside world
+-- -----------------------------------------------------------------------
+ba <= baLoc;
+
+idle <= '1' when
+		(sysCycle = CYCLE_IDLE0) or (sysCycle = CYCLE_IDLE1) or
+		(sysCycle = CYCLE_IDLE2) or (sysCycle = CYCLE_IDLE3) or
+		(sysCycle = CYCLE_IDLE4) or (sysCycle = CYCLE_IDLE5) or
+		(sysCycle = CYCLE_IDLE6) or (sysCycle = CYCLE_IDLE7) else '0';
+
 -- -----------------------------------------------------------------------
 -- System state machine, controls bus accesses
 -- and triggers enables of other components
@@ -404,6 +552,17 @@ process(clk32)
 begin
   if rising_edge(clk32) then
       sysCycle <= sysCycle+1;
+  end if;
+end process;
+
+div1m: process(clk32) -- this process divides 32 MHz to 1 MHz for the SID
+begin
+  if (rising_edge(clk32)) then
+    if sysCycle = CYCLE_VIC0 then
+          clk_1MHz_en <= '1'; -- single pulse
+    else
+          clk_1MHz_en <= '0';
+    end if;
   end if;
 end process;
 
@@ -446,187 +605,6 @@ begin
     end if;
   end if;
 end process;
-
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    enablePixel <= '0';
-    if sysCycle = CYCLE_VIC2
-    or sysCycle = CYCLE_IDLE2
-    or sysCycle = CYCLE_IDLE6
-    or sysCycle = CYCLE_IEC2
-    or sysCycle = CYCLE_CPU2
-    or sysCycle = CYCLE_CPU6
-    or sysCycle = CYCLE_CPUA
-    or sysCycle = CYCLE_CPUE then
-      enablePixel <= '1';
-    end if;
-  end if;
-end process;
-
-
--- -----------------------------------------------------------------------
--- Reset button
--- -----------------------------------------------------------------------
-calcReset: process(clk32)
-begin
-  if rising_edge(clk32) then
---    if R_btn_joy(0) = '0' or R_cpu_control(0) = '1' or clk32_locked = '0' then
-    if clk32_locked = '0' then
-      reset_cnt <= 0;
-                elsif sysCycle = CYCLE_CPUF then
-      if reset_cnt = resetCycles then
-        reset <= '0';
-      else
-        reset <= '1';
-        reset_cnt <= reset_cnt + 1;
-      end if;
-    end if;
-  end if;
-end process;
-
--- -----------------------------------------------------------------------
--- Keyboard
--- -----------------------------------------------------------------------
-ps2recv: ps2
-port map (
-  clk      => clk32,
-  ps2_clk  => ps2_clk,
-  ps2_data => ps2_data,
-  ps2_key  => ps2_key
-);
-
--- process to toggle joy A/B with BTN2
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    if vicVSync = '1' then
-      if R_btn_joy(2)='1' and btn_debounce(2)='0' then
-        joy_sel <= not joy_sel;
-      end if;
-      btn_debounce <= R_btn_joy;
-    end if;
-  end if;
-end process;
-
-   led(0) <= joy_sel;
-   led(1) <= '1';
-
-process(clk32)
-begin
-  if rising_edge(clk32) then
-     R_btn_joy(0) <= '0';        -- was reset in original design
-     R_btn_joy(1) <= not btn(4); -- joy fire 
-     R_btn_joy(2) <= s2_btn;     -- select Joy port 1 / 2
-     R_btn_joy(3) <= not btn(3); -- joy right
-     R_btn_joy(4) <= not btn(2); -- joy left
-     R_btn_joy(5) <= not btn(1); -- joy down
-     R_btn_joy(6) <= not btn(0); -- joy up
-  end if;
-end process;
-
-joyA <= "00" & R_btn_joy(1) & R_btn_joy(6) & R_btn_joy(5) & R_btn_joy(4) & R_btn_joy(3) when joy_sel='0' 
-    else (others => '0');
-
-joyB <= "00" & R_btn_joy(1) & R_btn_joy(6) & R_btn_joy(5) & R_btn_joy(4) & R_btn_joy(3) when joy_sel='1' 
-    else (others => '0');
-
-Keyboard: entity work.fpga64_keyboard
-port map (
-  clk => clk32,
-  ps2_key => ps2_key,
-
-  joyA => not unsigned(joyA(4 downto 0)),
-  joyB => not unsigned(joyB(4 downto 0)),
-  pai => cia1_pao,
-  pbi => cia1_pbo,
-  pao => cia1_pai,
-  pbo => cia1_pbi,
-
-  restore_key => freeze_key, -- freeze_key not connected to c64
-  backwardsReadingEnabled => '1'
-);
-
--- -----------------------------------------------------------------------
--- Local signal to outside world
--- -----------------------------------------------------------------------
-ba <= baLoc;
-
-io_cycle <= '1' when sysCycle >= CYCLE_IDLE0 and sysCycle <= CYCLE_IEC3 else '0';
-
-idle <= '1' when sysCycle >= CYCLE_IDLE4 and sysCycle <= CYCLE_IDLE7 else '0';
-
-iec_data_o <= not cia2_pao(5);
-iec_clk_o <= not cia2_pao(4);
-iec_atn_o <= not cia2_pao(3);
-
-ramDataOut <= "00" & cia2_pao(5 downto 3) & "000" when sysCycle >= CYCLE_IEC0 and sysCycle <= CYCLE_IEC3 else cpuDo;
-ramAddr <= systemAddr;
-ramWe <= '0' when sysCycle = CYCLE_IEC2 or sysCycle = CYCLE_IEC3 else not systemWe;
--- CPU2...CPUE or VIC0..VIC3
-ramCE <= '0' when ((sysCycle >= CYCLE_CPU2 and sysCycle <= CYCLE_CPUE)
-               or  (sysCycle >= CYCLE_VIC0 and sysCycle <= CYCLE_VIC3))
-              and cs_ram = '1' else '1';
-ramWeCE <= (not ramWe) and (not ramCE);
-
--- 64K RAM (BRAM)
-ram64k: Gowin_SP
-    port map (
-        dout  => ramDataIn_vec,
-        clk   => clk32,
-        oce   => '1',
-        ce    => not ramCE,
-        reset => '0',
-        wre   => not ramWE,
-        ad    => std_logic_vector(ramAddr),
-        din   => std_logic_vector(ramDataOut)
-    );
-ramDataIn <= unsigned(ramDataIn_vec);
-
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    if sysCycle = CYCLE_CPUD
-    or sysCycle = CYCLE_VIC2 then
-      ramDataReg <= unsigned(ramDataIn);
-    end if;
-    if sysCycle = CYCLE_VIC3 then
-      lastVicDi <= vicDi;
-    end if;
-  end if;
-end process;
-
--- -----------------------------------------------------------------------
--- 6510 CPU
--- -----------------------------------------------------------------------
-cpu: entity work.cpu_6510
-port map (
-  clk => clk32,
-  reset => reset,
-  enable => enableCpu,
-  nmi_n => nmiLoc,
-  nmi_ack => nmi_ack,
-  irq_n => irqLoc,
-  rdy => baLoc,
-
-  di => cpuDi,
-  addr => cpuAddr,
-  do => cpuDo,
-  we => cpuWe,
-
-  diIO => cpudiIO,
-  doIO => cpuIO
-);
-cpudiIO <= cpuIO(7) & cpuIO(6) & cpuIO(5) & cass_sense & cpuIO(3) & "111";
-
-cass_motor <= cpuIO(5);
-cass_write <= cpuIO(3);
-
--- -----------------------------------------------------------------------
--- Interrupt lines
--- -----------------------------------------------------------------------
-irqLoc <= irq_cia1 and irq_vic and irq_n; 
-nmiLoc <= irq_cia2 and nmi_n;
 
 -- -----------------------------------------------------------------------
 -- Color RAM
@@ -719,6 +697,123 @@ begin
 end process;
 
 -- -----------------------------------------------------------------------
+-- VIC-II video interface chip
+-- -----------------------------------------------------------------------
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    if phi0_cpu = '1' then
+      if cpuWe = '1' and cs_vic = '1' then
+        vicBus <= cpuDo;
+      else
+        vicBus <= x"FF";
+      end if;
+    end if;
+  end if;
+end process;
+
+-- In the first three cycles after BA went low, the VIC reads
+-- $ff as character pointers and
+-- as color information the lower 4 bits of the opcode after the access to $d011.
+vicDiAec <= vicBus when aec = '0' else vicDi;
+colorDataAec <= cpuDi(3 downto 0) when aec = '0' else colorData;
+
+vic: entity work.video_vicii_656x
+generic map (
+  registeredAddress => false,
+  emulateRefresh    => true,
+  emulateLightpen   => true,
+  emulateGraphics   => true
+)      
+port map (
+  clk => clk32,
+  reset => reset,
+  enaPixel => enablePixel,
+  enaData => enableVic,
+  phi => phi0_cpu,
+
+  baSync => '0',
+  ba => baLoc,
+
+  mode6567old => '0', -- 60 Hz NTSC USA
+  mode6567R8  => '0', -- 60 Hz NTSC USA
+  mode6569    => '1', -- 50 Hz PAL-B Europe
+  mode6572    => '0', -- 50 Hz PAL-N southern South America (not Brazil)
+
+  -- CPU bus
+  cs => cs_vic,
+  we => cpuWe,
+  aRegisters => cpuAddr(5 downto 0),
+  diRegisters => cpuDo,
+
+  -- video data bus
+  di => vicDiAec,
+  diColor => colorDataAec,
+  do => vicData,
+  vicAddr => vicAddr(13 downto 0),
+
+  addrValid => aec,
+
+  -- VGA
+  hsync => vicHSync,
+  vsync => vicVSync,
+  colorIndex => vicColorIndex,
+
+  lp_n => cia1_pbi(4), -- light pen
+  irq_n => irq_vic
+);
+
+-- Pixel timing
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    enablePixel <= '0';
+    if sysCycle = CYCLE_VIC2
+    or sysCycle = CYCLE_IDLE2
+    or sysCycle = CYCLE_IDLE6
+    or sysCycle = CYCLE_IEC2
+    or sysCycle = CYCLE_CPU2
+    or sysCycle = CYCLE_CPU6
+    or sysCycle = CYCLE_CPUA
+    or sysCycle = CYCLE_CPUE then
+      enablePixel <= '1';
+    end if;
+  end if;
+end process;
+
+-- -----------------------------------------------------------------------
+-- SID
+-- -----------------------------------------------------------------------
+sid_6581: entity work.sid_top
+port map (
+  clock => clk32,
+  reset => reset,
+
+  addr  => "000" & cpuAddr(4 downto 0),
+  wren  => pulseWrRam and phi0_cpu and cs_sid,
+  wdata => std_logic_vector(cpuDo),
+  rdata => sid_do,
+
+  potx => (others => '0'),
+  poty => (others => '0'),
+
+  comb_wave_l => '0',
+  comb_wave_r => '0',
+
+  extfilter_en => '1',
+
+  start_iter => clk_1MHz_en,
+  sample_left => audio_6581,
+  sample_right => open
+);
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    audio_data <= std_logic_vector(audio_6581);
+  end if;
+end process;
+
+-- -----------------------------------------------------------------------
 -- CIAs
 -- -----------------------------------------------------------------------
 cia1: mos6526
@@ -798,6 +893,108 @@ begin
 end process;
 end generate;
 
+-- -----------------------------------------------------------------------
+-- 6510 CPU
+-- -----------------------------------------------------------------------
+cpu: entity work.cpu_6510
+port map (
+  clk => clk32,
+  reset => reset,
+  enable => enableCpu,
+  nmi_n => nmiLoc,
+  nmi_ack => nmi_ack,
+  irq_n => irqLoc,
+  rdy => baLoc,
+
+  di => cpuDi,
+  addr => cpuAddr,
+  do => cpuDo,
+  we => cpuWe,
+
+  diIO => cpudiIO,
+  doIO => cpuIO
+);
+
+cpudiIO <= cpuIO(7) & cpuIO(6) & cpuIO(5) & cass_sense & cpuIO(3) & "111";
+
+cass_motor <= cpuIO(5);
+cass_write <= cpuIO(3);
+
+-- -----------------------------------------------------------------------
+-- Keyboard
+-- -----------------------------------------------------------------------
+ps2recv: ps2
+port map (
+  clk      => clk32,
+  ps2_clk  => ps2_clk,
+  ps2_data => ps2_data,
+  ps2_key  => ps2_key
+);
+
+Keyboard: entity work.fpga64_keyboard
+port map (
+  clk => clk32,
+  ps2_key => ps2_key,
+
+  joyA => not unsigned(joyA(4 downto 0)),
+  joyB => not unsigned(joyB(4 downto 0)),
+  pai => cia1_pao,
+  pbi => cia1_pbo,
+  pao => cia1_pai,
+  pbo => cia1_pbi,
+
+  restore_key => freeze_key, -- freeze_key not connected to c64
+  backwardsReadingEnabled => '1'
+);
+
+-- -----------------------------------------------------------------------
+-- Reset button
+-- -----------------------------------------------------------------------
+calcReset: process(clk32)
+begin
+  if rising_edge(clk32) then
+--    if R_btn_joy(0) = '0' or R_cpu_control(0) = '1' or clk32_locked = '0' then
+    if clk32_locked = '0' then
+      reset_cnt <= 0;
+                elsif sysCycle = CYCLE_CPUF then
+      if reset_cnt = resetCycles then
+        reset <= '0';
+      else
+        reset <= '1';
+        reset_cnt <= reset_cnt + 1;
+      end if;
+    end if;
+  end if;
+end process;
+
+-- Video modes
+-- removed
+
+iec_data_o <= not cia2_pao(5);
+iec_clk_o <= not cia2_pao(4);
+iec_atn_o <= not cia2_pao(3);
+
+ramDataOut(7 downto 0) <= cpuDo;
+--ramDataOut(7 downto 0) <= "00" & cia2_pao(5 downto 3) & "000" when sysCycle >= CYCLE_IEC0 and sysCycle <= CYCLE_IEC3 else cpuDo;
+ramDataOut(15 downto 8) <= (others => '0');
+ramAddr <= systemAddr;
+ram_WE <= systemWe when sysCycle > CYCLE_CPU0 and sysCycle < CYCLE_CPUF  else '0';
+ram_CE <= cs_ram when (sysCycle >= CYCLE_IEC0 and sysCycle <= CYCLE_VIC3) or
+                      (sysCycle >  CYCLE_CPU0 and sysCycle <  CYCLE_CPUF and cs_ram = '1') else '0';
+
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    if sysCycle = CYCLE_CPUD
+    or sysCycle = CYCLE_VIC2 then
+      ramDataReg <= unsigned(ramDataIn);
+    end if;
+    if sysCycle = CYCLE_VIC3 then
+      lastVicDi <= vicDi;
+    end if;
+  end if;
+end process;
+
 --serialBus
 serialBus: process(clk32)
 begin
@@ -842,45 +1039,6 @@ begin
   end if;
 end process;
 
--- UART outputs... TODO connect to ftdi
-uart_txd <= cia2_pao(2);
-uart_rts <= cia2_pbo(1);
-uart_dtr <= cia2_pbo(2);
-uart_ri_out <= cia2_pbo(3);
-uart_dcd_out <= cia2_pbo(4);
-
--- -----------------------------------------------------------------------
--- Cartridge port lines LCA
--- -----------------------------------------------------------------------
-romL <= cs_romL;
-romH <= cs_romH;
-IOE  <= cs_ioE;
-IOF  <= cs_ioF;
-UMAXromH <= cs_UMAXromH;
-CPU_hasbus <= cpuHasBus;
-
--- -----------------------------------------------------------------------
--- VIC-II video interface chip
--- -----------------------------------------------------------------------
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    if phi0_cpu = '1' then
-      if cpuWe = '1' and cs_vic = '1' then
-        vicBus <= cpuDo;
-      else
-        vicBus <= x"FF";
-      end if;
-    end if;
-  end if;
-end process;
-
--- In the first three cycles after BA went low, the VIC reads
--- $ff as character pointers and
--- as color information the lower 4 bits of the opcode after the access to $d011.
-vicDiAec <= vicBus when aec = '0' else vicDi;
-colorDataAec <= cpuDi(3 downto 0) when aec = '0' else colorData;
-
 -- -----------------------------------------------------------------------
 -- VIC bank to address lines
 -- -----------------------------------------------------------------------
@@ -902,109 +1060,20 @@ end process;
 -- emulate only the first glitch (enough for Undead from Emulamer)
 vicAddr(15 downto 14) <= "11" when ((vicAddr1514 xor not cia2_pao(1 downto 0)) = "11") and (cia2_pao(0) /= cia2_pao(1)) else not unsigned(cia2_pao(1 downto 0));
 
-vic: entity work.video_vicii_656x
-generic map (
-  registeredAddress => false,
-  emulateRefresh    => true,
-  emulateLightpen   => true,
-  emulateGraphics   => true
-)      
-port map (
-  clk => clk32,
-  reset => reset,
-  enaPixel => enablePixel,
-  enaData => enableVic,
-  phi => phi0_cpu,
-
-  baSync => '0',
-  ba => baLoc,
-
-  mode6567old => '0', -- 60 Hz NTSC USA
-  mode6567R8  => '0', -- 60 Hz NTSC USA
-  mode6569    => '1', -- 50 Hz PAL-B Europe
-  mode6572    => '0', -- 50 Hz PAL-N southern South America (not Brazil)
-
-  -- CPU bus
-  cs => cs_vic,
-  we => cpuWe,
-  aRegisters => cpuAddr(5 downto 0),
-  diRegisters => cpuDo,
-
-  -- video data bus
-  di => vicDiAec,
-  diColor => colorDataAec,
-  do => vicData,
-  vicAddr => vicAddr(13 downto 0),
-
-  addrValid => aec,
-
-  -- VGA
-  hsync => vicHSync,
-  vsync => vicVSync,
-  colorIndex => vicColorIndex,
-
-  lp_n => cia1_pbi(4), -- light pen
-  irq_n => irq_vic
-);
+-- -----------------------------------------------------------------------
+-- Interrupt lines
+-- -----------------------------------------------------------------------
+irqLoc <= irq_cia1 and irq_vic and irq_n; 
+nmiLoc <= irq_cia2 and nmi_n;
 
 -- -----------------------------------------------------------------------
--- SID
+-- Cartridge port lines LCA
 -- -----------------------------------------------------------------------
-div1m: process(clk32) -- this process divides 32 MHz to 1 MHz for the SID
-begin
-  if (rising_edge(clk32)) then
-    if sysCycle = CYCLE_VIC0 then
-          clk_1MHz_en <= '1'; -- single pulse
-    else
-          clk_1MHz_en <= '0';
-    end if;
-  end if;
-end process;
-
-sid_6581: entity work.sid_top
-port map (
-  clock => clk32,
-  reset => reset,
-
-  addr  => "000" & cpuAddr(4 downto 0),
-  wren  => pulseWrRam and phi0_cpu and cs_sid,
-  wdata => std_logic_vector(cpuDo),
-  rdata => sid_do,
-
-  potx => (others => '0'),
-  poty => (others => '0'),
-
-  comb_wave_l => '0',
-  comb_wave_r => '0',
-
-  extfilter_en => '1',
-
-  start_iter => clk_1MHz_en,
-  sample_left => audio_6581,
-  sample_right => open
-);
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    audio_data <= std_logic_vector(audio_6581);
-  end if;
-end process;
-
-vga2hdmi_instance: entity work.C64_DBLSCAN 
-  port map (
-   CLK               => clk32,
-   ENA               => enablePixel,
-   index             => vicColorIndex,
-   clk_5x_pixel      => clk_shift,
-   clk_pixel         => clk_pixel,
-   I_HSYNC           => vicHSync,
-   I_VSYNC           => vicVSync,
-   I_AUDIO_PCM_L     => audio_data(17 downto 2),
-   I_AUDIO_PCM_R     => audio_data(17 downto 2),
-   tmds_clk_n        => tmds_clk_n,
-   tmds_clk_p        => tmds_clk_p,
-   tmds_d_n          => tmds_d_n,
-   tmds_d_p          => tmds_d_p
-  );
+romL <= cs_romL;
+romH <= cs_romH;
+IOE  <= cs_ioE;
+IOF  <= cs_ioF;
+UMAXromH <= cs_UMAXromH;
+CPU_hasbus <= cpuHasBus;
 
 end Behavioral;

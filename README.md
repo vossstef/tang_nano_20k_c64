@@ -1,7 +1,8 @@
 # tang_nano_20k_c64
 [C64](https://en.wikipedia.org/wiki/Commodore_64) living in a [Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/) FPGA on a [Sipeed Tang Nano 20k](https://api.dl.sipeed.com/shareURL/TANG/Nano_20K) with HDMI Video and Audio Output.<br>
 <br>
-Original C64 core by Peter Wendrich
+Original C64 core by Peter Wendrich<br>
+Dram controller by Till Harbaum
 
 Features:
 * HDMI 720x576p @50Hz Video and Audio Output
@@ -13,9 +14,11 @@ Features:
 <br>
 Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo.
 <br><br>
-**Warning** HDMI Signal is not fully compatible with many Monitor/TV as mode 720x576p@50Hz isn't an official [VESA](https://glenwing.github.io/docs/VESA-DMT-1.13.pdf) mode!<br>
-Working on e.g. BENQ GL2450HM Model 242450-T, Check [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) of your target display for support.
-An [EDID Database](https://github.com/bsdhw/EDID) or other support material might help.
+**Info** HDMI Signal is not fully compatible with many Monitor/TV as mode 720x576p@50Hz isn't an official [VESA](https://glenwing.github.io/docs/VESA-DMT-1.13.pdf) mode!<br>
+Working on e.g. BENQ GL2450HM, Check [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) of your target display for support.<br>
+[Monitor Asset Manager](http://www.entechtaiwan.com/util/moninfo.shtm) or an [EDID Database](https://github.com/bsdhw/EDID) might help to figure out.
+
+
 <br>
 ## Push Button utilization
 * S1 push button Reset
