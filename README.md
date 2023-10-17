@@ -16,10 +16,8 @@ Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo
 <br><br>
 **Info** HDMI Signal is not fully compatible with many Monitor/TV as mode 720x576p@50Hz isn't an official [VESA](https://glenwing.github.io/docs/VESA-DMT-1.13.pdf) mode!<br>
 Working on e.g. BENQ GL2450HM, Check [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) of your target display for support.<br>
-[Monitor Asset Manager](http://www.entechtaiwan.com/util/moninfo.shtm) or an [EDID Database](https://github.com/bsdhw/EDID) might help to figure out.
+[Monitor Asset Manager](http://www.entechtaiwan.com/util/moninfo.shtm) or an [EDID Database](https://github.com/bsdhw/EDID) might help to figure out.<br>
 
-
-<br>
 ## Push Button utilization
 * S1 push button Reset
 * S2 to select in between Joystick port 1 or 2 (active port indicated by LED 0). You have to toggle for this release!
