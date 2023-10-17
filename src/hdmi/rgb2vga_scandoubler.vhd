@@ -42,13 +42,20 @@ architecture rtl of rgb2vga_scandoubler is
     -- Config parameters
     constant SAMPLE_OFFSET0 : integer := 90;
     constant SAMPLE_WIDTH   : integer := 350;
+    constant width25       : integer := 10;
+-- 720x576, 27Mhz *5 = 135Mhz pll 
     constant HORIZ_BP      : integer := 68;
     constant HORIZ_DISP    : integer := 720;
     constant HORIZ_FP      : integer := 12;
-    constant width25       : integer := 10;
-    constant HORIZ_RT      : integer := 64;
+    constant HORIZ_RT      : integer := 64; -- H Sync
 
-    -- Registers in the 8MHz clock domain:
+-- Modeline "720x576 @ 50hz"  27    720   732   796   864   576   581   586   625 31.25khz
+-- Hcnt is set to 0 on the trailing edge of hsync from core
+-- so the H constants below need to be offset by 864-796=68
+-- Vcnt is set to 0 on the trailing edge of vsync from the core
+-- so the V constants below need to be offset by 625-586=39
+
+-- Registers in the 8MHz clock domain:
     signal hSync_s8        : std_logic;
     signal hSyncStart      : std_logic;
     signal hCount8         : unsigned(9 downto 0) := (others => '0');
@@ -192,7 +199,7 @@ begin
 	hCount27_next <=
 		to_unsigned(1024 - HORIZ_RT - HORIZ_BP, 10) when
         (hSync_s27a = '1' and hSync_s27b = '0') or
-        (hCount27 = HORIZ_DISP + HORIZ_FP + 0) -- magic number +2 !!!
+        (hCount27 = HORIZ_DISP + HORIZ_FP - 1) 
         else hCount27 + 1;
 
 	-- Generate VGA HSYNC

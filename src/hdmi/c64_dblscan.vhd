@@ -177,14 +177,12 @@ port map (
 -- HDMI
 --------------------------------------------------------
 -- Recreate the video sync/blank signals that match standard HDTV 720x576p
---
--- Modeline "720x576 @ 50hz"  27    720   732   796   864   576   581   586   625
---
+-- Modeline "720x576_50"      27    720   732   796   864   576   581   586   625 +HSync +VSync 31.25khz
+
 -- Hcnt is set to 0 on the trailing edge of hsync from core
--- so the H constants below need to be offset by 864-796=68
---
+-- so the H constants below need to be offset by 864-796=68 (H Back Porch)
 -- Vcnt is set to 0 on the trailing edge of vsync from the core
--- so the V constants below need to be offset by 625-586=39
+-- so the V constants below need to be offset by 625-586=39 (V back porch)
 
 process(clk_pixel)
     variable voffset : integer;
@@ -204,7 +202,7 @@ begin
             hcnt <= hcnt + 1;
         end if;
             voffset := 39;
-            vsize   := 576;
+            vsize := 576;
         if hcnt < 68 or hcnt >= 68 + 720 or vcnt < voffset or vcnt >= voffset + vsize then
             hdmi_blank <= '1';
             hdmi_red   <= (others => '0');
@@ -216,15 +214,15 @@ begin
             hdmi_green <= std_logic_vector(vic_g);
             hdmi_blue  <= std_logic_vector(vic_b);
         end if;
-        if hcnt >= 732 + 68 then -- 800
-            hdmi_hsync <= '0';
-            if vcnt >= 581 + 39 then -- 620
-               hdmi_vsync <= '0';
-            else
+        if hcnt >= 732 + 68 then
+            hdmi_hsync <= '1';
+            if vcnt >= 581 + 39 then
                hdmi_vsync <= '1';
+            else
+               hdmi_vsync <= '0';
             end if;
         else
-          hdmi_hsync <= '1';
+          hdmi_hsync <= '0';
         end if;
     end if;
 end process;
@@ -247,7 +245,7 @@ inst_hdmi: hdmi
         I_BLANK          => hdmi_blank,
         I_HSYNC          => hdmi_hsync,
         I_VSYNC          => hdmi_vsync,
-        I_ASPECT_169     => '1',
+        I_ASPECT_169     => '0',
         -- PCM audio
         I_AUDIO_ENABLE   => '1',
         I_AUDIO_PCM_L    => I_AUDIO_PCM_L,

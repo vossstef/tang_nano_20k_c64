@@ -5,7 +5,7 @@
 --Part Number: GW2AR-LV18QN88C8/I7
 --Device: GW2AR-18
 --Device Version: C
---Created Time: Thu Sep 21 22:50:39 2023
+--Created Time: Tue Oct 17 19:58:10 2023
 
 library IEEE;
 use IEEE.std_logic_1164.all;

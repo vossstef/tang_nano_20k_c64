@@ -10,13 +10,12 @@ Features:
 * Joystick (Atari / Commodore digital type)<br>
 
 
-**Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS AND ON A PROOF OF CONCEPT LEVEL!</b> So far Video/Audio/Keyboard/Joystick/Cartride working.
-<br>
-Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo.
+**Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS AND ON A PROOF OF CONCEPT LEVEL!</b> 
+<br>So far Video/Audio/Keyboard/Joystick/Cartride working.<br>
+Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo included.
 <br><br>
-**Info** HDMI Signal is not fully compatible with many Monitor/TV as mode 720x576p@50Hz isn't an official [VESA](https://glenwing.github.io/docs/VESA-DMT-1.13.pdf) mode!<br>
-Working on e.g. BENQ GL2450HM, Check [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) of your target display for support.<br>
-[Monitor Asset Manager](http://www.entechtaiwan.com/util/moninfo.shtm) or an [EDID Database](https://github.com/bsdhw/EDID) might help to figure out.<br>
+**Info** HDMI Signal 720x576p@50Hz isn't an official [VESA](https://glenwing.github.io/docs/VESA-DMT-1.13.pdf) mode.<br>
+Working on e.g. BENQ GL2450HM (FHD) , Acer VN247 (FHD), Dell S2721DGF (2k), LG 27UP85NP (4K). Check [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) of your target display for support. [Monitor Asset Manager](http://www.entechtaiwan.com/util/moninfo.shtm) or an [EDID Database](https://github.com/bsdhw/EDID) might help to figure out.<br>
 
 ## Push Button utilization
 * S1 push button Reset
