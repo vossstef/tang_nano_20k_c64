@@ -43,18 +43,18 @@ entity tang_nano_20k_c64 is
     tmds_clk_n  : out std_logic;
     tmds_clk_p  : out std_logic;
     tmds_d_n    : out std_logic_vector( 2 downto 0);
-    tmds_d_p    : out std_logic_vector( 2 downto 0);
+    tmds_d_p    : out std_logic_vector( 2 downto 0)
     -- "Magic" port names that the gowin compiler connects to the on-chip SDRAM
-    O_sdram_clk : out std_logic;
-    O_sdram_cke : out std_logic;
-    O_sdram_cs_n : out std_logic;            -- chip select
-    O_sdram_cas_n : out std_logic;           -- columns address select
-    O_sdram_ras_n : out std_logic;           -- row address select
-    O_sdram_wen_n : out std_logic;           -- write enable
-    IO_sdram_dq : inout std_logic_vector(31 downto 0); -- 32 bit bidirectional data bus
-    O_sdram_addr : out std_logic_vector(10 downto 0);  -- 11 bit multiplexed address bus
-    O_sdram_ba : out std_logic_vector(1 downto 0);     -- two banks
-    O_sdram_dqm : out std_logic_vector(3 downto 0)     -- 32/4
+--    O_sdram_clk : out std_logic;
+--    O_sdram_cke : out std_logic;
+--    O_sdram_cs_n : out std_logic;            -- chip select
+--    O_sdram_cas_n : out std_logic;           -- columns address select
+--    O_sdram_ras_n : out std_logic;           -- row address select
+--    O_sdram_wen_n : out std_logic;           -- write enable
+--    IO_sdram_dq : inout std_logic_vector(31 downto 0); -- 32 bit bidirectional data bus
+--    O_sdram_addr : out std_logic_vector(10 downto 0);  -- 11 bit multiplexed address bus
+--    O_sdram_ba : out std_logic_vector(1 downto 0);     -- two banks
+--    O_sdram_dqm : out std_logic_vector(3 downto 0)     -- 32/4
   );
 end;
 
@@ -274,6 +274,8 @@ signal  uart_dsr    : std_logic; -- CIA2, PortB(7)
 signal colorQ_vec       : std_logic_vector(3 downto 0);
 signal dram_addr : std_logic_vector(21 downto 0);
 
+signal ramWe, ramCE : std_logic;
+
 component Gowin_rPLL
     port (
         clkout: out std_logic;
@@ -306,19 +308,6 @@ component CLKDIV
     );
 end component;
 
-COMPONENT CLKDIVG
-  GENERIC(
-    DIV_MODE:STRING:="2";
-    GSREN:STRING:="false"
-  );
-  PORT(
-    CLKIN:IN std_logic;
-    RESETN:IN std_logic;
-    CALIB:IN std_logic;
-    CLKOUT:OUT std_logic
-  );
-end component;
-
 component Gowin_SP
     port (
         dout: out std_logic_vector(7 downto 0);
@@ -349,33 +338,6 @@ COMPONENT GSR
 end component;
 
 -- verilog components
-
-component sdram 
-port (
-  -- SDRAM side interface
-  sd_clk    : out std_logic; -- sd clock
-	sd_cke    : out std_logic; -- clock enable
-	sd_data   : inout std_logic_vector(31 downto 0); -- 32 bit bidirectional data bus
-	sd_addr   : out std_logic_vector(10 downto 0); -- 11 bit multiplexed address bus
-	sd_dqm    : out std_logic_vector(3 downto 0); -- two byte masks
-  sd_ba     : out std_logic_vector(1 downto 0); -- two banks
-	sd_cs     : out std_logic; -- a single chip select
-	sd_we     : out std_logic; -- write enable
-	sd_ras    : out std_logic; -- row address select
-	sd_cas    : out std_logic; -- columns address select
-	-- cpu/chipset interface
-	clk       : in std_logic; -- sdram is accessed at 32MHz
-	reset_n   : in std_logic; -- init signal after FPGA config to initialize RAM
-	ready     : out std_logic; -- ram is ready and has been initialized
-	refresh   : in std_logic; -- chipset requests a refresh cycle
-	din       : in std_logic_vector(15 downto 0); -- data input from chipset/cpu
-	dout      : out std_logic_vector(15 downto 0);
-	addr      : in std_logic_vector(21 downto 0); -- 22 bit word address
-	ds        : in std_logic_vector(1 downto 0); -- upper/lower data strobe
-	cs        : in std_logic; -- cpu/chipset requests read/wrie
-	we        : in std_logic         -- cpu/chipset requests write
-);
-end component;
 
 component mos6526
   port (
@@ -438,31 +400,44 @@ ramDataIn <= unsigned(ramDataIn_vec(7 downto 0));
 dram_addr(15 downto 0)  <= std_logic_vector(ramAddr);
 dram_addr(21 downto 16) <= (others => '0');
 
-dram_inst:  sdram
- port map(
+--dram_inst: entity work.sdram
+-- port map(
   -- SDRAM side interface
-  sd_clk    => O_sdram_clk,   -- sd clock
-	sd_cke    => O_sdram_cke,   -- clock enable
-	sd_data   => IO_sdram_dq,   -- 32 bit bidirectional data bus
-	sd_addr   => O_sdram_addr,  -- 11 bit multiplexed address bus
-	sd_dqm    => O_sdram_dqm,   -- two byte masks
-  sd_ba     => O_sdram_ba,    -- two banks
-	sd_cs     => O_sdram_cs_n,  -- a single chip select
-	sd_we     => O_sdram_wen_n, -- write enable
-	sd_ras    => O_sdram_ras_n, -- row address select
-	sd_cas    => O_sdram_cas_n, -- columns address select
+--  sd_clk    => O_sdram_clk,   -- sd clock
+--	sd_cke    => O_sdram_cke,   -- clock enable
+--	sd_data   => IO_sdram_dq,   -- 32 bit bidirectional data bus
+--	sd_addr   => O_sdram_addr,  -- 11 bit multiplexed address bus
+--	sd_dqm    => O_sdram_dqm,   -- two byte masks
+--  sd_ba     => O_sdram_ba,    -- two banks
+--	sd_cs     => O_sdram_cs_n,  -- a single chip select
+--	sd_we     => O_sdram_wen_n, -- write enable
+--	sd_ras    => O_sdram_ras_n, -- row address select
+--	sd_cas    => O_sdram_cas_n, -- columns address select
 	-- cpu/chipset interface
-	clk       => clk32,         -- sdram is accessed at 32MHz
-	reset_n   => clk32_locked,  -- init signal after FPGA config to initialize RAM
-	ready     => open,          -- ram is ready and has been initialized
-	refresh   => idle,          -- chipset requests a refresh cycle
-	din       => std_logic_vector(ramDataOut), -- data input from chipset/cpu
-	dout      => ramDataIn_vec,
-	addr      => dram_addr,      -- 22 bit word address
-	ds        => (others => '0'),-- upper/lower data strobe R = low and W = low
-	cs        => ram_CE,        -- cpu/chipset requests read/wrie
-	we        => ram_WE         -- cpu/chipset requests write
-);
+--	clk       => clk32,         -- sdram is accessed at 32MHz
+--	reset_n   => clk32_locked,  -- init signal after FPGA config to initialize RAM
+--	ready     => open,          -- ram is ready and has been initialized
+--	refresh   => idle,          -- chipset requests a refresh cycle
+--	din       => std_logic_vector(ramDataOut), -- data input from chipset/cpu
+--	dout      => ramDataIn_vec,
+--	addr      => dram_addr,      -- 22 bit word address
+--	ds        => (others => '0'),-- upper/lower data strobe R = low and W = low
+--	cs        => ram_CE,        -- cpu/chipset requests read/wrie
+--	we        => ram_WE         -- cpu/chipset requests write
+--);
+
+-- 64K (40k !!!) RAM (BRAM)
+ram64k: Gowin_SP
+    port map (
+        dout  => ramDataIn_vec(7 downto 0),
+        clk   => clk32,
+        oce   => '1',
+        ce    => not ramCE,
+        reset => '0',
+        wre   => not ramWE,
+        ad    => std_logic_vector(ramAddr),
+        din   => std_logic_vector(ramDataOut(7 downto 0))
+    );
 
 gsr_inst: GSR
     PORT MAP(
@@ -978,9 +953,17 @@ ramDataOut(7 downto 0) <= cpuDo;
 --ramDataOut(7 downto 0) <= "00" & cia2_pao(5 downto 3) & "000" when sysCycle >= CYCLE_IEC0 and sysCycle <= CYCLE_IEC3 else cpuDo;
 ramDataOut(15 downto 8) <= (others => '0');
 ramAddr <= systemAddr;
+
+-- dram
 ram_WE <= systemWe when sysCycle > CYCLE_CPU0 and sysCycle < CYCLE_CPUF  else '0';
 ram_CE <= cs_ram when (sysCycle >= CYCLE_IEC0 and sysCycle <= CYCLE_VIC3) or
                       (sysCycle >  CYCLE_CPU0 and sysCycle <  CYCLE_CPUF and cs_ram = '1') else '0';
+
+-- sram 
+ramWe <= '0' when sysCycle = CYCLE_IEC2 or sysCycle = CYCLE_IEC3 else not systemWe;
+ramCE <= '0' when ((sysCycle >= CYCLE_CPU2 and sysCycle <= CYCLE_CPUE)
+                or  (sysCycle >= CYCLE_VIC0 and sysCycle <= CYCLE_VIC3))
+              and cs_ram = '1' else '1';
 
 process(clk32)
 begin
