@@ -21,7 +21,6 @@
         <File path="src/gowin_ram16s/gowin_ram16s_color.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll_hdmi.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/gowin_sp/gowin_sp.vhd" type="file.vhdl" enable="0"/>
         <File path="src/hdmi/c64_dblscan.vhd" type="file.vhdl" enable="1"/>
         <File path="src/hdmi/encoder.vhd" type="file.vhdl" enable="1"/>
         <File path="src/hdmi/hdmi.vhd" type="file.vhdl" enable="1"/>
