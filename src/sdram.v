@@ -127,7 +127,8 @@ always @(posedge clk) begin
    
    if(init_state != 0) begin
       csD <= 1'b0;     
-      
+      refreshD <= 1'b0;
+
       // initialization takes place at the end of the reset
       if(state == STATE_IDLE) begin
 	 
@@ -149,17 +150,21 @@ always @(posedge clk) begin
       // normal operation, start on ... 
       if(state == STATE_IDLE) begin
 
-        // ... rising edge of refresh
+      // cs independant refresh for c64 core
+      // ... rising edge of refresh.
       if(refresh && !refreshD)  
         sd_cmd <= CMD_AUTO_REFRESH;
 
         // ... rising edge of cs
         if (cs && !csD) begin
+          if(!refresh) begin
             // RAS phase
             sd_cmd <= CMD_ACTIVE;
             sd_addr <= addr[19:9];
             sd_ba <= addr[21:20];
             state <= 3'd1;
+          end else
+            sd_cmd <= CMD_AUTO_REFRESH;
         end
       end else begin
         // always advance state unless we are in idle state
