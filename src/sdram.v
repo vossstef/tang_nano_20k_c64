@@ -19,6 +19,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 //
 
+// additions and change for c64 core compatibility (refresh and RASCAS_DELAY)
+
 module sdram (
 
 	output		  sd_clk, // sd clock
@@ -52,7 +54,7 @@ module sdram (
 assign sd_clk = clk;
 assign sd_cke = 1'b1;  
    
-localparam RASCAS_DELAY   = 3'd1;   // tRCD=15ns -> 1 cycle@32MHz
+localparam RASCAS_DELAY   = 3'd2;   // 2 cycle@32MHz for c64 core compatibility
 localparam BURST_LENGTH   = 3'b000; // 000=1, 001=2, 010=4, 011=8
 localparam ACCESS_TYPE    = 1'b0;   // 0=sequential, 1=interleaved
 localparam CAS_LATENCY    = 3'd2;   // 2/3 allowed
@@ -150,7 +152,7 @@ always @(posedge clk) begin
       // normal operation, start on ... 
       if(state == STATE_IDLE) begin
 
-      // cs independant refresh for c64 core
+      // cs independent refresh for c64 core compatibility
       // ... rising edge of refresh.
       if(refresh && !refreshD)  
         sd_cmd <= CMD_AUTO_REFRESH;

@@ -211,7 +211,7 @@ kernel_c64: Gowin_pROM_basic_kernal
     );
 	--
 	--begin
-	process(ramData, vicData, sidData, colorData,
+	process(ramData, vicData, sidData, colorData, cartData,
            cia1Data, cia2Data, charData, romData, c64rom_data,
 			  cs_romHReg, cs_romLReg, cs_romReg, cs_CharReg,
 			  cs_ramReg, cs_vicReg, cs_sidReg, cs_colorReg,

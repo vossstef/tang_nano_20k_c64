@@ -201,12 +201,11 @@ signal vic_b        : unsigned(7 downto 0) ;
 
 -- SID signals
 signal sid_do       : std_logic_vector(7 downto 0);
-signal sid_do6581   : std_logic_vector(7 downto 0);
+signal audio_l      : std_logic_vector(17 downto 0);
+signal audio_r      : std_logic_vector(17 downto 0);
 signal sid_we       : std_logic;
 signal sid_sel_int  : std_logic;
 signal sid_wren     : std_logic;
-signal audio_6581_l   : signed(17 downto 0);
-signal audio_6581_r   : signed(17 downto 0);
 signal clk_1MHz_en  : std_logic; -- single clk pulse
 
 -- "external" connections, in this project internal
@@ -241,8 +240,8 @@ signal  joy_sel     : std_logic := '0'; -- BTN2 toggles joy A/B
 signal  btn_debounce: std_logic_vector(6 downto 0);
 
 -- Connector to the SID
-signal  audio_data_l  : std_logic_vector(17 downto 0);
-signal  audio_data_r  : std_logic_vector(17 downto 0);
+signal  audio_data_l  : signed(17 downto 0);
+signal  audio_data_r  : signed(17 downto 0);
 signal  extfilter_en: std_logic := '1';  -- added
 
 -- IEC
@@ -279,7 +278,6 @@ signal  uart_dsr    : std_logic; -- CIA2, PortB(7)
 
 signal colorQ_vec   : std_logic_vector(3 downto 0);
 signal dram_addr    : std_logic_vector(21 downto 0);
-signal ramWe, ramCE : std_logic;
 
 component CLKDIV
     generic (
@@ -350,8 +348,8 @@ begin
    clk_pixel         => clk_pixel,
    I_HSYNC           => vicHSync,
    I_VSYNC           => vicVSync,
-   I_AUDIO_PCM_L     => audio_data_l(17 downto 2),
-   I_AUDIO_PCM_R     => audio_data_r(17 downto 2),
+   I_AUDIO_PCM_L     => audio_l(17 downto 2),
+   I_AUDIO_PCM_R     => audio_r(17 downto 2),
    tmds_clk_n        => tmds_clk_n,
    tmds_clk_p        => tmds_clk_p,
    tmds_d_n          => tmds_d_n,
@@ -406,7 +404,7 @@ hdmi_clockgenerator: entity work.Gowin_rPLL_hdmi
 port map (
       clkin  => clk_27mhz,
       clkout => clk_shift,
-      reset  => reset_btn,
+      reset  => not clk32_locked,
       lock   => shift_locked
     );
 
@@ -727,17 +725,12 @@ port map (
   extfilter_en => '1',
 
   start_iter => clk_1MHz_en,
-  sample_left => audio_6581_l,
-  sample_right => audio_6581_r
+  sample_left => audio_data_l,
+  sample_right => audio_data_r
 );
 
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    audio_data_l <= std_logic_vector(audio_6581_l);
-    audio_data_r <= std_logic_vector(audio_6581_r);
-    end if;
-end process;
+    audio_l <= std_logic_vector(audio_data_l);
+    audio_r <= std_logic_vector(audio_data_r);
 
 -- -----------------------------------------------------------------------
 -- CIAs

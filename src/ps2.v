@@ -78,7 +78,7 @@ module ps2 (
                 end
             end      
         end else begin
-            timeout_cnt <= timeout_cnt + 1;
+            timeout_cnt <= timeout_cnt + 16'd1;
 	    if (&timeout_cnt) begin
               state <= `RCVSTART;
               //extended <= 1'b0;
