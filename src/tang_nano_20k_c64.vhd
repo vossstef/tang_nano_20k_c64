@@ -43,18 +43,18 @@ entity tang_nano_20k_c64 is
     tmds_clk_n  : out std_logic;
     tmds_clk_p  : out std_logic;
     tmds_d_n    : out std_logic_vector( 2 downto 0);
-    tmds_d_p    : out std_logic_vector( 2 downto 0)
+    tmds_d_p    : out std_logic_vector( 2 downto 0);
     -- "Magic" port names that the gowin compiler connects to the on-chip SDRAM
---    O_sdram_clk : out std_logic;
---    O_sdram_cke : out std_logic;
---    O_sdram_cs_n : out std_logic;            -- chip select
---    O_sdram_cas_n : out std_logic;           -- columns address select
---    O_sdram_ras_n : out std_logic;           -- row address select
---    O_sdram_wen_n : out std_logic;           -- write enable
---    IO_sdram_dq : inout std_logic_vector(31 downto 0); -- 32 bit bidirectional data bus
---    O_sdram_addr : out std_logic_vector(10 downto 0);  -- 11 bit multiplexed address bus
---    O_sdram_ba : out std_logic_vector(1 downto 0);     -- two banks
---    O_sdram_dqm : out std_logic_vector(3 downto 0)     -- 32/4
+    O_sdram_clk : out std_logic;
+    O_sdram_cke : out std_logic;
+    O_sdram_cs_n : out std_logic;            -- chip select
+    O_sdram_cas_n : out std_logic;           -- columns address select
+    O_sdram_ras_n : out std_logic;           -- row address select
+    O_sdram_wen_n : out std_logic;           -- write enable
+    IO_sdram_dq : inout std_logic_vector(31 downto 0); -- 32 bit bidirectional data bus
+    O_sdram_addr : out std_logic_vector(10 downto 0);  -- 11 bit multiplexed address bus
+    O_sdram_ba : out std_logic_vector(1 downto 0);     -- two banks
+    O_sdram_dqm : out std_logic_vector(3 downto 0)     -- 32/4
   );
 end;
 
@@ -62,6 +62,10 @@ architecture Behavioral of tang_nano_20k_c64 is
 
 signal clk_pixel, clk_shift, shift_locked  : std_logic;
 signal clk32, clk32_locked: std_logic;
+
+attribute syn_keep : integer;
+attribute syn_keep of clk32 : signal is 1;
+
 signal R_btn_joy: std_logic_vector(6 downto 0);
 -------------------------------------
 -- System state machine
@@ -197,11 +201,11 @@ signal vic_b        : unsigned(7 downto 0) ;
 
 -- SID signals
 signal sid_do       : std_logic_vector(7 downto 0);
-signal sid_do6581   : std_logic_vector(7 downto 0);
+signal audio_l      : std_logic_vector(17 downto 0);
+signal audio_r      : std_logic_vector(17 downto 0);
 signal sid_we       : std_logic;
 signal sid_sel_int  : std_logic;
 signal sid_wren     : std_logic;
-signal audio_6581   : signed(17 downto 0);
 signal clk_1MHz_en  : std_logic; -- single clk pulse
 
 -- "external" connections, in this project internal
@@ -236,7 +240,8 @@ signal  joy_sel     : std_logic := '0'; -- BTN2 toggles joy A/B
 signal  btn_debounce: std_logic_vector(6 downto 0);
 
 -- Connector to the SID
-signal  audio_data  : std_logic_vector(17 downto 0);
+signal  audio_data_l  : signed(17 downto 0);
+signal  audio_data_r  : signed(17 downto 0);
 signal  extfilter_en: std_logic := '1';  -- added
 
 -- IEC
@@ -271,29 +276,8 @@ signal  uart_dcd_in : std_logic; -- CIA2, PortB(4)
 signal  uart_cts    : std_logic; -- CIA2, PortB(6)
 signal  uart_dsr    : std_logic; -- CIA2, PortB(7)
 
-signal colorQ_vec       : std_logic_vector(3 downto 0);
-signal dram_addr : std_logic_vector(21 downto 0);
-
-signal ramWe, ramCE : std_logic;
-
-component Gowin_rPLL
-    port (
-        clkout: out std_logic;
-        lock: out std_logic;
-        reset: in std_logic;
-        clkoutd: out std_logic;
-        clkin: in std_logic
-    );
-end component;
-
-component Gowin_rPLL_hdmi
-    port (
-        clkout: out std_logic;
-        lock: out std_logic;
-        reset: in std_logic;
-        clkin: in std_logic
-    );
-end component;
+signal colorQ_vec   : std_logic_vector(3 downto 0);
+signal dram_addr    : std_logic_vector(21 downto 0);
 
 component CLKDIV
     generic (
@@ -305,29 +289,6 @@ component CLKDIV
         HCLKIN: in std_logic;
         RESETN: in std_logic;
         CALIB: in std_logic
-    );
-end component;
-
-component Gowin_SP
-    port (
-        dout: out std_logic_vector(7 downto 0);
-        clk: in std_logic;
-        oce: in std_logic;
-        ce: in std_logic;
-        reset: in std_logic;
-        wre: in std_logic;
-        ad: in std_logic_vector(15 downto 0);
-        din: in std_logic_vector(7 downto 0)
-    );
-end component;
-
-component Gowin_RAM16S_color
-    port (
-        dout: out std_logic_vector(3 downto 0);
-        wre: in std_logic;
-        ad: in std_logic_vector(9 downto 0);
-        di: in std_logic_vector(3 downto 0);
-        clk: in std_logic
     );
 end component;
 
@@ -387,8 +348,8 @@ begin
    clk_pixel         => clk_pixel,
    I_HSYNC           => vicHSync,
    I_VSYNC           => vicVSync,
-   I_AUDIO_PCM_L     => audio_data(17 downto 2),
-   I_AUDIO_PCM_R     => audio_data(17 downto 2),
+   I_AUDIO_PCM_L     => audio_l(17 downto 2),
+   I_AUDIO_PCM_R     => audio_r(17 downto 2),
    tmds_clk_n        => tmds_clk_n,
    tmds_clk_p        => tmds_clk_p,
    tmds_d_n          => tmds_d_n,
@@ -396,55 +357,41 @@ begin
   );
 
 ramDataIn <= unsigned(ramDataIn_vec(7 downto 0));
-
 dram_addr(15 downto 0)  <= std_logic_vector(ramAddr);
 dram_addr(21 downto 16) <= (others => '0');
 
---dram_inst: entity work.sdram
--- port map(
+dram_inst: entity work.sdram
+ port map(
   -- SDRAM side interface
---  sd_clk    => O_sdram_clk,   -- sd clock
---	sd_cke    => O_sdram_cke,   -- clock enable
---	sd_data   => IO_sdram_dq,   -- 32 bit bidirectional data bus
---	sd_addr   => O_sdram_addr,  -- 11 bit multiplexed address bus
---	sd_dqm    => O_sdram_dqm,   -- two byte masks
---  sd_ba     => O_sdram_ba,    -- two banks
---	sd_cs     => O_sdram_cs_n,  -- a single chip select
---	sd_we     => O_sdram_wen_n, -- write enable
---	sd_ras    => O_sdram_ras_n, -- row address select
---	sd_cas    => O_sdram_cas_n, -- columns address select
+  sd_clk    => O_sdram_clk,   -- sd clock
+	sd_cke    => O_sdram_cke,   -- clock enable
+	sd_data   => IO_sdram_dq,   -- 32 bit bidirectional data bus
+	sd_addr   => O_sdram_addr,  -- 11 bit multiplexed address bus
+	sd_dqm    => O_sdram_dqm,   -- two byte masks
+  sd_ba     => O_sdram_ba,    -- two banks
+	sd_cs     => O_sdram_cs_n,  -- a single chip select
+	sd_we     => O_sdram_wen_n, -- write enable
+	sd_ras    => O_sdram_ras_n, -- row address select
+	sd_cas    => O_sdram_cas_n, -- columns address select
 	-- cpu/chipset interface
---	clk       => clk32,         -- sdram is accessed at 32MHz
---	reset_n   => clk32_locked,  -- init signal after FPGA config to initialize RAM
---	ready     => open,          -- ram is ready and has been initialized
---	refresh   => idle,          -- chipset requests a refresh cycle
---	din       => std_logic_vector(ramDataOut), -- data input from chipset/cpu
---	dout      => ramDataIn_vec,
---	addr      => dram_addr,      -- 22 bit word address
---	ds        => (others => '0'),-- upper/lower data strobe R = low and W = low
---	cs        => ram_CE,        -- cpu/chipset requests read/wrie
---	we        => ram_WE         -- cpu/chipset requests write
---);
-
--- 64K (40k !!!) RAM (BRAM)
-ram64k: Gowin_SP
-    port map (
-        dout  => ramDataIn_vec(7 downto 0),
-        clk   => clk32,
-        oce   => '1',
-        ce    => not ramCE,
-        reset => '0',
-        wre   => not ramWE,
-        ad    => std_logic_vector(ramAddr),
-        din   => std_logic_vector(ramDataOut(7 downto 0))
-    );
+	clk       => clk32,         -- sdram is accessed at 32MHz
+	reset_n   => clk32_locked,  -- init signal after FPGA config to initialize RAM
+	ready     => open,          -- ram is ready and has been initialized
+	refresh   => idle,          -- chipset requests a refresh cycle
+	din       => std_logic_vector(ramDataOut), -- data input from chipset/cpu
+	dout      => ramDataIn_vec,
+	addr      => dram_addr,      -- 22 bit word address
+	ds        => (others => '0'),-- upper/lower data strobe R = low and W = low
+	cs        => ram_CE,        -- cpu/chipset requests read/wrie
+	we        => ram_WE         -- cpu/chipset requests write
+);
 
 gsr_inst: GSR
     PORT MAP(
     GSRI => not reset_btn
   );
 
-mainclock: Gowin_rPLL
+mainclock: entity work.Gowin_rPLL
     port map (
         clkout  => open,
         lock    => clk32_locked,
@@ -453,11 +400,11 @@ mainclock: Gowin_rPLL
         clkin   => clk_27mhz
     );
 
-clock_generator2: Gowin_rPLL_hdmi
+hdmi_clockgenerator: entity work.Gowin_rPLL_hdmi
 port map (
       clkin  => clk_27mhz,
       clkout => clk_shift,
-      reset  => reset_btn,
+      reset  => not clk32_locked,
       lock   => shift_locked
     );
 
@@ -584,7 +531,7 @@ end process;
 -- -----------------------------------------------------------------------
 -- Color RAM
 -- -----------------------------------------------------------------------
-colorram: Gowin_RAM16S_color
+colorram: entity work.Gowin_RAM16S_color
 port map (
   dout => colorQ_vec,
   wre => colorWe,
@@ -778,15 +725,12 @@ port map (
   extfilter_en => '1',
 
   start_iter => clk_1MHz_en,
-  sample_left => audio_6581,
-  sample_right => open
+  sample_left => audio_data_l,
+  sample_right => audio_data_r
 );
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    audio_data <= std_logic_vector(audio_6581);
-  end if;
-end process;
+
+    audio_l <= std_logic_vector(audio_data_l);
+    audio_r <= std_logic_vector(audio_data_r);
 
 -- -----------------------------------------------------------------------
 -- CIAs
@@ -949,21 +893,12 @@ iec_data_o <= not cia2_pao(5);
 iec_clk_o <= not cia2_pao(4);
 iec_atn_o <= not cia2_pao(3);
 
-ramDataOut(7 downto 0) <= cpuDo;
---ramDataOut(7 downto 0) <= "00" & cia2_pao(5 downto 3) & "000" when sysCycle >= CYCLE_IEC0 and sysCycle <= CYCLE_IEC3 else cpuDo;
+ramDataOut(7 downto 0) <= "00" & cia2_pao(5 downto 3) & "000" when sysCycle >= CYCLE_IEC0 and sysCycle <= CYCLE_IEC3 else cpuDo;
 ramDataOut(15 downto 8) <= (others => '0');
 ramAddr <= systemAddr;
-
--- dram
 ram_WE <= systemWe when sysCycle > CYCLE_CPU0 and sysCycle < CYCLE_CPUF  else '0';
 ram_CE <= cs_ram when (sysCycle >= CYCLE_IEC0 and sysCycle <= CYCLE_VIC3) or
                       (sysCycle >  CYCLE_CPU0 and sysCycle <  CYCLE_CPUF and cs_ram = '1') else '0';
-
--- sram 
-ramWe <= '0' when sysCycle = CYCLE_IEC2 or sysCycle = CYCLE_IEC3 else not systemWe;
-ramCE <= '0' when ((sysCycle >= CYCLE_CPU2 and sysCycle <= CYCLE_CPUE)
-                or  (sysCycle >= CYCLE_VIC0 and sysCycle <= CYCLE_VIC3))
-              and cs_ram = '1' else '1';
 
 process(clk32)
 begin

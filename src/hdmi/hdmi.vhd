@@ -130,41 +130,7 @@ end component;
 
    signal clockCounter: integer range 0 to 2047;
 
-   -- Horizontal Timing constants
-   constant h_pixels_across   : integer := 720 - 1; -- 720
-   constant h_sync_on      : integer := 732 - 1; --732
-   constant h_sync_off     : integer := 800 - 1; --800
-   constant h_end_count    : integer := 864 - 1; --864
-   -- Vertical Timing constants
-   constant v_pixels_down  : integer := 576 - 1; --576
-   constant v_sync_on      : integer := 581 - 1; --581
-   constant v_sync_off     : integer := 586 - 1; --586
-   constant v_end_count    : integer := 625 - 1; --625
-
-   signal shift      : std_logic_vector(7 downto 0);
-   signal hcnt    : std_logic_vector(11 downto 0) := "000000000000";    -- horizontal pixel counter
-   signal vcnt    : std_logic_vector(11 downto 0) := "000000000000";    -- vertical line counter
-
 begin
-
-   process (I_CLK_PIXEL, hcnt)
-   begin
-      if rising_edge(I_CLK_PIXEL) then
-         if hcnt = h_end_count then
-            hcnt <= (others => '0');
-         else
-            hcnt <= hcnt + 1;
-         end if;
-         if hcnt = h_sync_on then
-            if vcnt = v_end_count then
-               vcnt <= (others => '0');
-               shift <= shift + 1;
-            else
-               vcnt <= vcnt + 1;
-            end if;
-         end if;
-      end if;
-   end process;
 
 -- data should be delayed for 11 clocks to allow preamble and guard band generation
 
