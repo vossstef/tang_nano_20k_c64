@@ -3,6 +3,5 @@ impl/temp/**
 impl/pnr/**
 simulation/sim/**
 simulation/transcript
-!impl/pnr/*.fs
 !impl/pnr/device.cfg
 *.user

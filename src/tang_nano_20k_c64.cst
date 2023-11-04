@@ -1,100 +1,99 @@
-//Copyright (C)2014-2022 Gowin Semiconductor Corporation.
+//Copyright (C)2014-2023 Gowin Semiconductor Corporation.
 //All rights reserved. 
 //File Title: Physical Constraints file
-//GOWIN Version: 1.9.8.09 Education
-//Part Number: GW1NR-LV9QN88PC6/I5
-//Device: GW1NR-9C
-//Created Time: Sun 01 15 18:41:54 2023
+//GOWIN Version: 1.9.8.11 Education
+//Part Number: GW2AR-LV18QN88C8/I7
+//Device: GW2AR-18
+//Device Version: C
+//Created Time: Wed 10 25 23:26:16 2023
 
-// HDMI
-IO_LOC "tmds_clk_p" 33;
-IO_PORT "tmds_clk_p" PULL_MODE=NONE;
-IO_LOC "tmds_clk_n" 34;
-IO_PORT "tmds_clk_n" PULL_MODE=NONE;
-IO_LOC "tmds_d_p[0]" 35;
-IO_PORT "tmds_d_p[0]" PULL_MODE=NONE;
-IO_LOC "tmds_d_n[0]" 36;
-IO_PORT "tmds_d_n[0]" PULL_MODE=NONE;
-IO_LOC "tmds_d_p[1]" 37;
-IO_PORT "tmds_d_p[1]" PULL_MODE=NONE;
-IO_LOC "tmds_d_n[1]" 38;
-IO_PORT "tmds_d_n[1]" PULL_MODE=NONE;
-IO_LOC "tmds_d_p[2]" 39;
-IO_PORT "tmds_d_p[2]" PULL_MODE=NONE;
-IO_LOC "tmds_d_n[2]" 40;
-IO_PORT "tmds_d_n[2]" PULL_MODE=NONE;
-
-IO_LOC "clk_27mhz" 4;
-IO_PORT "clk_27mhz" IO_TYPE=LVCMOS33  PULL_MODE=NONE;
-
-IO_LOC "s2_btn" 87;  
-IO_PORT "s2_btn" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
-IO_LOC "reset_btn" 88;
-IO_PORT "reset_btn" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
-
-
-IO_PORT "btn[0]" IO_TYPE=LVCMOS33 PULL_MODE=UP; // Joy0 UP
-IO_LOC "btn[0]" 86;
-IO_PORT "btn[1]" IO_TYPE=LVCMOS33 PULL_MODE=UP; // Joy1 DOWN
-IO_LOC "btn[1]" 75;
-IO_PORT "btn[2]" IO_TYPE=LVCMOS33 PULL_MODE=UP; // Joy2 LEFT
-IO_LOC "btn[2]" 74;
-IO_PORT "btn[3]" IO_TYPE=LVCMOS33 PULL_MODE=UP; // Joy3 RIGHT
-IO_LOC "btn[3]" 73;
-IO_PORT "btn[4]" IO_TYPE=LVCMOS33 PULL_MODE=UP; // Joy Fire
-IO_LOC "btn[4]" 79;
-
-IO_LOC "ps2_clk" 71;
-IO_LOC "ps2_data" 76;
-IO_PORT "ps2_clk" IO_TYPE=LVCMOS33 PULL_MODE=UP;
-IO_PORT "ps2_data" IO_TYPE=LVCMOS33 PULL_MODE=UP;
-
-//IO_LOC "uart_rx" 70;
-//IO_LOC "uart_tx" 69;
-//IO_PORT "uart_rx" IO_TYPE=LVCMOS33 PULL_MODE=UP;
-//IO_PORT "uart_tx" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "tmds_d_p[2]" 39,40;
+IO_PORT "tmds_d_p[2]" PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_LOC "tmds_d_p[1]" 37,38;
+IO_PORT "tmds_d_p[1]" PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_LOC "tmds_d_p[0]" 35,36;
+IO_PORT "tmds_d_p[0]" PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_LOC "tmds_clk_p" 33,34;
+IO_PORT "tmds_clk_p" PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
 
 //IO_LOC "led[5]" 20;
 //IO_PORT "led[5]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
-//IO_LOC "led[4]" 19;
+//IO_LOC "led[4]" 19; // Joypad MISO blocked !!! 
 //IO_PORT "led[4]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
-//IO_LOC "led[3]" 18;
-//IO_PORT "led[3]" IO_TYPE=LVCMOS33 PULL_MODE=UP;;
-//IO_LOC "led[2]" 17;
-//IO_PORT "led[2]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "led[3]" 18; // Joypad CS
+IO_PORT "led[3]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "led[2]" 17; // Joypad MCLK
+IO_PORT "led[2]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
 IO_LOC "led[1]" 16;
-IO_PORT "led[1]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "led[1]" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8 BANK_VCCIO=3.3;
 IO_LOC "led[0]" 15;
-IO_PORT "led[0]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "led[0]" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8 BANK_VCCIO=3.3;
 
-//Audio
-//IO_LOC "PA_EN" 51;
-//IO_LOC "HP_DIN" 54;
-//IO_LOC "HP_WS" 55;
-//IO_LOC "HP_BCK" 56;
+// PS/2 Keyboard or PS/2 via M0 Dock
+IO_LOC "ps2_clk" 42;
+IO_PORT "ps2_clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3;
+IO_LOC "ps2_data" 41;
+IO_PORT "ps2_data" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3;
 
-// SDCard
-//IO_LOC "sd_clk" 83;
-//IO_PORT "sd_clk" PULL_MODE=NONE IO_TYPE=LVCMOS33; 
-//IO_LOC "sd_cmd" 82;        // MOSI
-//IO_PORT "sd_cmd" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "sd_dat0" 84;       // MISO
-//IO_PORT "sd_dat0" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "sd_dat1" 85;       // 1
-//IO_PORT "sd_dat1" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "sd_dat2" 80;       // 1
-//IO_PORT "sd_dat2" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "sd_dat3" 81;       // 1
-//IO_PORT "sd_dat3" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-
-
-// USB ports for USB Keyboard, USB Joystick
-//IO_LOC "usbdp" 42;      
+// USB Keyboard via differential pair and IP block like NES Tang
+//IO_LOC "usbdp" 42;
 //IO_PORT "usbdp" PULL_MODE=DOWN IO_TYPE=LVCMOS33;
-//IO_LOC "usbdm" 41;      
+//IO_LOC "usbdm" 41;
 //IO_PORT "usbdm" PULL_MODE=DOWN IO_TYPE=LVCMOS33;
-//IO_LOC "usbdp2" 56;     
-//IO_PORT "usbdp2" PULL_MODE=DOWN IO_TYPE=LVCMOS33;
-//IO_LOC "usbdm2" 54;     
-//IO_PORT "usbdm2" PULL_MODE=DOWN IO_TYPE=LVCMOS33;
 
+IO_LOC "btn[4]" 27;
+IO_PORT "btn[4]" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+IO_LOC "btn[3]" 28;
+IO_PORT "btn[3]" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+IO_LOC "btn[2]" 25;
+IO_PORT "btn[2]" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+IO_LOC "btn[1]" 26;
+IO_PORT "btn[1]" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+IO_LOC "btn[0]" 29;
+IO_PORT "btn[0]" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+
+IO_LOC "s2_btn" 87;
+IO_PORT "s2_btn" IO_TYPE=LVCMOS33 PULL_MODE=DOWN PCI_CLAMP=ON BANK_VCCIO=3.3;
+IO_LOC "reset_btn" 88;
+IO_PORT "reset_btn" IO_TYPE=LVCMOS33 PULL_MODE=DOWN PCI_CLAMP=ON BANK_VCCIO=3.3;
+IO_LOC "clk_27mhz" 4;
+IO_PORT "clk_27mhz" IO_TYPE=LVCMOS33 PULL_MODE=NONE PCI_CLAMP=OFF BANK_VCCIO=3.3;
+
+// SD card
+IO_LOC "sd_clk" 83;
+IO_PORT "sd_clk" PULL_MODE=NONE IO_TYPE=LVCMOS33; 
+IO_LOC "sd_cmd" 82;        // MOSI
+IO_PORT "sd_cmd" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "sd_dat0" 84;       // MISO
+IO_PORT "sd_dat0" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "sd_dat1" 85;
+IO_PORT "sd_dat1" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "sd_dat2" 80;
+IO_PORT "sd_dat2" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "sd_dat3" 81;
+IO_PORT "sd_dat3" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+// Debug
+//IO_LOC "debug[0]" 42;
+IO_PORT "debug[0]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+//IO_LOC "debug[1]" 41;
+IO_PORT "debug[1]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "debug[2]" 56;
+IO_PORT "debug[2]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "debug[3]" 54;
+IO_PORT "debug[3]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "debug[4]" 51;
+IO_PORT "debug[4]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+// connections to the BL616 controller
+IO_LOC "spi_csn" 86;
+IO_PORT "spi_csn" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "spi_sclk" 13;
+IO_PORT "spi_sclk" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "spi_dat" 76;
+IO_PORT "spi_dat" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "spi_dir" 75;
+IO_PORT "spi_dir" PULL_MODE=UP IO_TYPE=LVCMOS33;
+
+IO_LOC "ws2812" 79;
+IO_PORT "ws2812" PULL_MODE=DOWN IO_TYPE=LVCMOS33;

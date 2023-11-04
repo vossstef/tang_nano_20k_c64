@@ -9,7 +9,7 @@ version=1.0
 [Config]
 DEPTH=16384
 LANG=1
-MEM_FILE=../../ROM/c64basic_kernal.mi
+MEM_FILE=../../tools/JiffyDOS_C64_16k.mi
 READ=0
 RESET_MODE=true
 WIDTH=8
