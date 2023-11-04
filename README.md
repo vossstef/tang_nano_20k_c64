@@ -10,7 +10,7 @@ Features:
 * PS/2 Keyboard
 * Joystick (Atari / Commodore digital type)<br>
 * Joystick emulation on Keyboard Numpad<br>
-* emulated 1541 Diskdrive on **raw** SD card <br>
+* emulated 1541 Diskdrive on **raw** microSD card <br>
 
 <font color="red">Both PS/2 KEYBOAD AND digital JOYSTICK pinmaps aligned to match</font> [MiSTeryNano project](https://github.com/harbaum/MiSTeryNano). Didn't tested yet but the described USB Keyboard to PS/2 converter based on [M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) should work too.
 
@@ -22,8 +22,8 @@ Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo
 Working on e.g. BENQ GL2450HM (FHD) , Acer VN247 (FHD), Dell S2721DGF (2k), LG 27UP85NP (4K). Check [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) timing of your target display for support. [Monitor Asset Manager](http://www.entechtaiwan.com/util/moninfo.shtm) might help to figure out.<br>
 
 ## emulated Diskdrive 1541
-Emulated 1541 on a raw SD card (no FAT fs !)<br>
-Place one or more [.D64](https://vice-emu.sourceforge.io/vice_toc.html#TOC405) file in the tools folder and run 'create_C64_ALL_D64.bat'. It will create a DISKSRAWC64.IMG.<br> Use e.g. [win32diskimager](https://sourceforge.net/projects/win32diskimager/) to program the SD card with DISKSRAWC64.IMG. BE CAREFUL NOT WRITING ON YOUR OWN HARDDRIVE!<br>
+Emulated 1541 on a raw microSD card (no FAT fs !)<br>
+Place one or more [.D64](https://vice-emu.sourceforge.io/vice_toc.html#TOC405) file in the tools folder and run 'create_C64_ALL_D64.bat'. It will create a DISKSRAWC64.IMG.<br> Use e.g. [win32diskimager](https://sourceforge.net/projects/win32diskimager/) to program a microSD card with DISKSRAWC64.IMG. BE CAREFUL NOT WRITING ON YOUR OWN HARDDRIVE! Insert card in TN slot.<br>
 LED 1 is the Drive activity indicator.<br> For those who forgot after all those years...<br>
 Disk directory listing: (or push F1)<br>
 LOAD"$",8<br>
@@ -31,17 +31,16 @@ LIST<br>
 Load first program from Disk:<br>
 LOAD"*",8<br>
 RUN<br>
-D64 Image on sdcard can be selected by CTRL+F8 (LED 2+3 give a hint) followed by a Drive Reset CTRL+F11. Sorry no OSD selection yet...<br>
+D64 Image on sdcard can be selected by CTRL+F8 (LED 2+3 will give a hint) followed by a Drive Reset pushing CTRL+F11. Sorry no OSD selection yet...
 
 ## Push Button utilization
 * S1 push button Reset<br>
-* S2 to select physical Joystick in between [c64 Joystick port ](https://www.c64-wiki.com/wiki/Control_Port) 1 or 2 (active port indicated by LED 0).<br>
+* S2 to select physical Joystick in between [c64 Joystick port ](https://www.c64-wiki.com/wiki/Control_Port) 1 or 2 (selected port indicated by LED 0).<br>
 ## Keyboard 
 * left CTRL+F1 toggle Numpad Joystick emulation:<br>
  	'default' - PORT 1 = Joystick or JOYKEYS on Numpad, PORT 2 = unused<br>
 	'toggle' - PORT 1 = unused,            PORT 2 = Joystick or JOYKEYS on Numpad <br>
-    Keypad layout:<br>
-	left 4, right 6, up 8, down 2 and fire 0
+    Keypad layout: left 4, right 6, up 8, down 2 and fire 0
 * left CTRL+F8 change selected disk image on internal 1541 SD card<br>
           - left CTRL + F8 next image<br>
           - left CTRL + shift + F8  previous image<br>
@@ -61,6 +60,13 @@ Keyboard specific keys:<br>
 | F9 | F9   | &pound; |
 | F10 | F10   | + |
 | Left Alt | Left Alt | commodore key |
+
+## LED
+0 Joystick selection indication<br>
+1 1541 drive activity<br>
+2 Disk image indicator bit 0<br>
+3 Disk image indicator bit 1<br>
+
 ## Powering
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis
@@ -114,6 +120,7 @@ PS/2 Socket Adapter Module<br>
 2 pcs [SN74LVC1G17DBVR](http://www.ti.com/document-viewer/SN74LVC1G17/datasheet) level shifter<br>
 Prototype Board<br>
 TFT Monitor with HDMI Input<br>
+microSD or microSDHC card<br>
 <br>
 Not tested yet !!!<br>
 alternative Keyboard option:<br>
