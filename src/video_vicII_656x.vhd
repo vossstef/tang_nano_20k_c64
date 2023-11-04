@@ -36,11 +36,15 @@ entity video_vicii_656x is
 
 		baSync : in std_logic;
 		ba: out std_logic;
+		ba_dma : out std_logic;
 
 		mode6569 : in std_logic; -- PAL 63 cycles and 312 lines
 		mode6567old : in std_logic; -- old NTSC 64 cycles and 262 line
 		mode6567R8 : in std_logic; -- new NTSC 65 cycles and 263 line
 		mode6572 : in std_logic; -- PAL-N 65 cycles and 312 lines
+
+		turbo_en   : in  std_logic;
+		turbo_state: out std_logic;
 
 		reset : in std_logic;
 		cs : in std_logic;
@@ -63,8 +67,8 @@ entity video_vicii_656x is
 		colorIndex : out unsigned(3 downto 0);
 
 		-- Debug outputs
-		debugX : out unsigned(9 downto 0);
-		debugY : out unsigned(8 downto 0);
+		debugX  : out unsigned(9 downto 0);
+		debugY  : out unsigned(8 downto 0);
 		vicRefresh : out std_logic;
 		addrValid : out std_logic
 	);
@@ -111,6 +115,7 @@ architecture rtl of video_vicii_656x is
 	signal baSprite15 : std_logic;
 	signal baSprite26 : std_logic;
 	signal baSprite37 : std_logic;
+	signal baSpriteLast : std_logic;
 
 -- Memory refresh cycles
 	signal refreshCounter : unsigned(7 downto 0);
@@ -157,8 +162,6 @@ architecture rtl of video_vicii_656x is
 	signal hBlack: std_logic;
 	signal vBlanking : std_logic;
 	signal hBlanking : std_logic;
-	signal vSyncing : std_logic;
-	signal hSyncing : std_logic;
 	signal xscroll: unsigned(2 downto 0);
 	signal yscroll: unsigned(2 downto 0);
 	signal rasterCmp : unsigned(8 downto 0);
@@ -257,6 +260,8 @@ architecture rtl of video_vicii_656x is
 	signal myWr_b : std_logic;
 	signal myWr_c : std_logic;
 	signal myRd : std_logic;
+	
+	signal turbo_reg : std_logic;
 
 begin
 -- -----------------------------------------------------------------------
@@ -264,9 +269,10 @@ begin
 -- -----------------------------------------------------------------------
 	ba <= baLoc;
 	vicAddr <= vicAddrReg when registeredAddress else vicAddrLoc;
-	hSync <= hSyncing;
-	vSync <= vSyncing;
+	hSync <= hBlanking;
+	vSync <= vBlanking;
 	irq_n <= not IRQ;
+	turbo_state <= turbo_reg;
 
 -- -----------------------------------------------------------------------
 -- chip-select signals and data/address bus latch
@@ -362,7 +368,7 @@ vicStateMachine: process(clk)
 						if ((mode6567old or mode6567R8) = '1') then
 							vicCycle <= cycleIdle1;
 						end if;
-					when cycleIdle1 => vicCycle <= cycleRefresh2;
+					when cycleIdle1    => vicCycle <= cycleRefresh2;
 					when cycleRefresh2 => vicCycle <= cycleRefresh3;
 					when cycleRefresh3 => vicCycle <= cycleRefresh4;  -- X=0..7 on this cycle
 					when cycleRefresh4 => vicCycle <= cycleRefresh5;
@@ -375,8 +381,8 @@ vicStateMachine: process(clk)
 							vicCycle <= cycleCalcSprites;
 						end if;
 					when cycleCalcSprites => vicCycle <= cycleSpriteBa1;
-					when cycleSpriteBa1 => vicCycle <= cycleSpriteBa2;
-					when cycleSpriteBa2 => vicCycle <= cycleSpriteBa3;
+					when cycleSpriteBa1   => vicCycle <= cycleSpriteBa2;
+					when cycleSpriteBa2   => vicCycle <= cycleSpriteBa3;
 					when others =>
 						null;
 					end case;
@@ -632,8 +638,13 @@ vicStateMachine: process(clk)
 				end if;
 				if vicCycle = cycleRefresh1 then
 					baSprite37 <= '1';
+					baSpriteLast <= baSpriteLast and baSprite37;
 				end if;
-				
+				if vicCycle = cycleRefresh3 then
+					baSprite37 <= '1';
+					baSpriteLast <= '1';
+				end if;
+
 				if MDMA_next(0) and (vicCycle = cycleCalcSprites) then
 					baSprite04 <= '0';
 				end if;
@@ -662,6 +673,7 @@ vicStateMachine: process(clk)
 		end if;
 	end process;
 	baLoc <= baChars and baSprite04 and baSprite15 and baSprite26 and baSprite37;
+	ba_dma <= '1' when (baSpriteLast = '0' or vicCycle = cycleRefresh3) and badLine else '0';
 
 -- -----------------------------------------------------------------------
 -- Address valid?
@@ -858,22 +870,16 @@ lightPen: process(clk)
 -- VSync
 -- -----------------------------------------------------------------------
 doVBlanking: process(clk, mode6569, mode6567old, mode6567R8)
-		variable rasterSync : integer range 0 to 311;
+		variable rasterBlank : integer range 0 to 300;
 	begin
-		rasterSync := 300;
+		rasterBlank := 300;
 		if (mode6567old or mode6567R8) = '1' then
-			rasterSync := 12;
+			rasterBlank := 12;
 		end if;
 		if rising_edge(clk) then
-			if rasterY = rasterSync then
-				vSyncing <= '1';
-			elsif rasterY = rasterSync+3 then
-				vSyncing <= '0';
-			end if;
-			if rasterY = rasterSync-4 then
+			vBlanking <= '0';
+			if rasterY = rasterBlank then
 				vBlanking <= '1';
-			elsif rasterY = rasterSync+8 then
-				vBlanking <= '0';
 			end if;
 		end if;
 	end process;
@@ -895,11 +901,6 @@ doHBlanking: process(clk)
 					hBlanking <= '1';
 				elsif rasterX = 496 then -- from VIC II datasheet
 					hBlanking <= '0';
-				end if;
-				if rasterX = 424 then
-					hSyncing <= '1';
-				elsif rasterX = 448 then
-					hSyncing <= '0';
 				end if;
 			end if;
 		end if;
@@ -984,7 +985,7 @@ calcBitmap: process(clk)
 					waitingChar_r <= waitingChar;
 					waitingPixels_r <= waitingPixels;
 				end if;
-
+				
 				--
 				-- Reload shift register when xscroll=rasterX
 				-- otherwise shift pixels
@@ -1532,6 +1533,7 @@ writeRegisters: process(clk)
 				spriteColors(5) <= (others => '0');
 				spriteColors(6) <= (others => '0');
 				spriteColors(7) <= (others => '0');
+				turbo_reg <= '0';
 			else
 
 				if (myWr_a = '1') then
@@ -1573,7 +1575,6 @@ writeRegisters: process(clk)
 						RES <= di_r(5);
 						MCM <= di_r(4);
 						CSEL <= di_r(3);
-						xscroll <= di_r(2 downto 0);
 					when "010111" => MYE <= di_r;
 					when "011000" =>
 						VM <= di_r(7 downto 4);
@@ -1613,6 +1614,7 @@ writeRegisters: process(clk)
 					when "001101" => MY(6) <= di_r;
 					when "001110" => MX(7)(7 downto 0) <= di_r;
 					when "001111" => MY(7) <= di_r;
+					when "010110" => xscroll <= di_r(2 downto 0);
 					when "010000" =>
 						MX(0)(8) <= di_r(0);
 						MX(1)(8) <= di_r(1);
@@ -1622,6 +1624,7 @@ writeRegisters: process(clk)
 						MX(5)(8) <= di_r(5);
 						MX(6)(8) <= di_r(6);
 						MX(7)(8) <= di_r(7);
+					when "110000" => turbo_reg <= diRegisters(0);
 					when others => null;
 					end case;
 				end if;
@@ -1686,6 +1689,7 @@ readRegisters: process(clk)
 			when "101100" => do <= "1111" & spriteColors(5);
 			when "101101" => do <= "1111" & spriteColors(6);
 			when "101110" => do <= "1111" & spriteColors(7);
+			when "110000" => do <= "1111111" & (turbo_reg or not turbo_en);
 			when others => do <= (others => '1');
 			end case;
 			end if;

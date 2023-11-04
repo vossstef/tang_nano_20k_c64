@@ -29,14 +29,15 @@ use IEEE.numeric_std.ALL;
 
 entity tang_nano_20k_c64 is
 	generic (
-		resetCycles : integer := 4095
+		resetCycles : integer := 4095;
+    keyb    : integer := 1
 	);
   port
   (
     clk_27mhz   : in std_logic;
     reset_btn   : in std_logic;
     s2_btn      : in std_logic;
-    led         : out std_logic_vector(1 downto 0);
+    led         : out std_logic_vector(3 downto 0);
     btn         : in std_logic_vector(4 downto 0);
     ps2_data    : in std_logic;
     ps2_clk     : in std_logic;
@@ -44,29 +45,44 @@ entity tang_nano_20k_c64 is
     tmds_clk_p  : out std_logic;
     tmds_d_n    : out std_logic_vector( 2 downto 0);
     tmds_d_p    : out std_logic_vector( 2 downto 0);
+    -- sd interface
+    sd_clk      : out std_logic; -- SCLK
+    sd_cmd      : out std_logic; -- MOSI
+    sd_dat0     : in std_logic; -- MISO
+    sd_dat1     : in std_logic; -- unused
+    sd_dat2     : in std_logic; -- unused
+    sd_dat3     : out std_logic; -- CSn
+    -- Debug
+    debug       : out std_logic_vector(4 downto 0);
+    ws2812      : out std_logic;
+    -- BL616 controller SPI interface connections
+    spi_csn     : in std_logic;
+    spi_sclk    : in std_logic;
+    spi_dat     : in std_logic;
+    spi_dir     : in std_logic;
     -- "Magic" port names that the gowin compiler connects to the on-chip SDRAM
-    O_sdram_clk : out std_logic;
-    O_sdram_cke : out std_logic;
+    O_sdram_clk  : out std_logic;
+    O_sdram_cke  : out std_logic;
     O_sdram_cs_n : out std_logic;            -- chip select
     O_sdram_cas_n : out std_logic;           -- columns address select
     O_sdram_ras_n : out std_logic;           -- row address select
     O_sdram_wen_n : out std_logic;           -- write enable
-    IO_sdram_dq : inout std_logic_vector(31 downto 0); -- 32 bit bidirectional data bus
+    IO_sdram_dq  : inout std_logic_vector(31 downto 0); -- 32 bit bidirectional data bus
     O_sdram_addr : out std_logic_vector(10 downto 0);  -- 11 bit multiplexed address bus
-    O_sdram_ba : out std_logic_vector(1 downto 0);     -- two banks
-    O_sdram_dqm : out std_logic_vector(3 downto 0)     -- 32/4
-  );
+    O_sdram_ba   : out std_logic_vector(1 downto 0);     -- two banks
+    O_sdram_dqm  : out std_logic_vector(3 downto 0)     -- 32/4
+    );
 end;
 
 architecture Behavioral of tang_nano_20k_c64 is
 
 signal clk_pixel, clk_shift, shift_locked  : std_logic;
-signal clk32, clk32_locked: std_logic;
+signal clk32, clk32_locked, clk16: std_logic;
 
 attribute syn_keep : integer;
 attribute syn_keep of clk32 : signal is 1;
 
-signal R_btn_joy: std_logic_vector(6 downto 0);
+signal R_btn_joy: std_logic_vector(4 downto 0);
 -------------------------------------
 -- System state machine
 constant CYCLE_IDLE0: unsigned(4 downto 0) := to_unsigned( 0, 5);
@@ -131,13 +147,14 @@ signal ramDataReg   : unsigned(7 downto 0);
 signal ramAddr     : unsigned(15 downto 0);
 signal ramDataIn   : unsigned(7 downto 0);
 signal ramDataOut  : unsigned(15 downto 0);
-signal ramDataIn_vec   : std_logic_vector(15 downto 0);
+signal ramDataIn_vec : std_logic_vector(15 downto 0);
 
 signal ram_CE       : std_logic;
 signal ram_WE       : std_logic;
 
 signal io_cycle    : std_logic;
 signal idle        : std_logic;
+signal cia_mode    : std_logic  := '0';
 
 signal cs_vic       : std_logic;
 signal cs_sid       : std_logic;
@@ -173,6 +190,7 @@ signal cia2_pai     : unsigned(7 downto 0);
 signal cia2_pao     : unsigned(7 downto 0);
 signal cia2_pbi     : unsigned(7 downto 0);
 signal cia2_pbo     : unsigned(7 downto 0);
+signal cia2_pbe     : unsigned(7 downto 0);
 
 signal todclk       : std_logic;
 signal toddiv       : std_logic_vector(19 downto 0);
@@ -214,10 +232,10 @@ signal  game        : std_logic := '1';
 signal  exrom       : std_logic := '1';
 signal  ioE_rom     : std_logic := '1';
 signal  ioF_rom     : std_logic := '1';
-signal  max_ram     : std_logic := '1';
+signal  max_ram     : std_logic := '0';
 signal  irq_n       : std_logic := '1';
 signal  nmi_n       : std_logic := '1';
-signal  nmi_ack     : std_logic := '1';
+signal  nmi_ack     : std_logic; 
 signal  ba          : std_logic := '1';
 signal  romL        : std_logic := '1'; -- cart signals LCA
 signal  romH        : std_logic := '1'; -- cart signals LCA
@@ -232,17 +250,32 @@ signal  ioE_ext     : std_logic;
 signal  io_data     : unsigned(7 downto 0);
 
 -- joystick interface
-signal  joyA        : std_logic_vector(6 downto 0) := (others => '0');
-signal  joyB        : std_logic_vector(6 downto 0) := (others => '0');
-signal  joyC        : std_logic_vector(6 downto 0) := (others => '0');
-signal  joyD        : std_logic_vector(6 downto 0) := (others => '0');
+signal  joyA        : unsigned(6 downto 0) := (others => '1');
+signal  joyB        : unsigned(6 downto 0) := (others => '1');
 signal  joy_sel     : std_logic := '0'; -- BTN2 toggles joy A/B
 signal  btn_debounce: std_logic_vector(6 downto 0);
+signal  btn_deb     : std_logic;
 
 -- Connector to the SID
 signal  audio_data_l  : signed(17 downto 0);
 signal  audio_data_r  : signed(17 downto 0);
-signal  extfilter_en: std_logic := '1';  -- added
+signal  extfilter_en: std_logic := '1';
+
+  -- USER
+signal  pb_i        :  unsigned(7 downto 0) := (others => '1');
+signal  pb_o        :  unsigned(7 downto 0);
+signal  pa2_i       :  std_logic := '1';
+signal  pa2_o       :  std_logic;
+signal  pc2_n_o     :  std_logic;
+signal  flag2_n_i   :  std_logic := '1';
+signal  sp2_i       :  std_logic := '1';
+signal  sp2_o       :  std_logic;
+signal  sp1_i       :  std_logic := '1';
+signal  sp1_o       :  std_logic;
+signal  cnt2_i      :  std_logic := '1';
+signal  cnt2_o      :  std_logic;
+signal  cnt1_i      :  std_logic := '1';
+signal  cnt1_o      :  std_logic;
 
 -- IEC
 signal  iec_data_o  : std_logic;
@@ -250,6 +283,7 @@ signal  iec_data_i  : std_logic;
 signal  iec_clk_o   : std_logic;
 signal  iec_clk_i   : std_logic;
 signal  iec_atn_o   : std_logic;
+signal  iec_atn_i   : std_logic;
 
 -- external (SPI) ROM update
 signal  c64rom_addr : std_logic_vector(13 downto 0) := (others => '0');
@@ -259,25 +293,20 @@ signal  c64rom_wr   : std_logic := '0';
 -- cassette
 signal  cass_motor  : std_logic;
 signal  cass_write  : std_logic;
-signal  cass_sense  : std_logic;
-signal  cass_in     : std_logic;
-
-signal  uart_enable : std_logic;
-
-signal  uart_txd    : std_logic; -- CIA2, PortA(2) 
-signal  uart_rts    : std_logic; -- CIA2, PortB(1)
-signal  uart_dtr    : std_logic; -- CIA2, PortB(2)
-signal  uart_ri_out : std_logic; -- CIA2, PortB(3)
-signal  uart_dcd_out: std_logic; -- CIA2, PortB(4)
-
-signal  uart_rxd    : std_logic; -- CIA2, PortB(0)
-signal  uart_ri_in  : std_logic; -- CIA2, PortB(3)
-signal  uart_dcd_in : std_logic; -- CIA2, PortB(4)
-signal  uart_cts    : std_logic; -- CIA2, PortB(6)
-signal  uart_dsr    : std_logic; -- CIA2, PortB(7)
+signal  cass_sense  : std_logic := '1';
+signal  cass_in     : std_logic := '1';
 
 signal colorQ_vec   : std_logic_vector(3 downto 0);
 signal dram_addr    : std_logic_vector(21 downto 0);
+signal spare        : std_logic_vector(5 downto 0);
+
+	-- keyboard
+signal newScanCode  : std_logic;
+signal theScanCode  : unsigned(7 downto 0);
+signal disk_num     : std_logic_vector(7 downto 0);
+signal joyKeys      : std_logic_vector(6 downto 0);
+signal reset_key    : std_logic;
+signal disk_reset   : std_logic;
 
 component CLKDIV
     generic (
@@ -314,8 +343,10 @@ component mos6526
     db_out        : out unsigned(7 downto 0);
     pa_in         : in  unsigned(7 downto 0);
     pa_out        : out unsigned(7 downto 0);
+    pa_oe         : out unsigned(7 downto 0);
     pb_in         : in  unsigned(7 downto 0);
     pb_out        : out unsigned(7 downto 0);
+    pb_oe         : out unsigned(7 downto 0);
     flag_n        : in  std_logic;
     pc_n          : out std_logic;
     tod           : in  std_logic;
@@ -327,17 +358,53 @@ component mos6526
   );
 end component; 
 
-component ps2
-  port (
-    clk           : in  std_logic;
-    ps2_clk       : in  std_logic;
-    ps2_data      : in  std_logic;
-    ps2_key       : out std_logic_vector(10 downto 0)
-  );
-end component; 
-
 ---------------------------------------------------------
 begin
+
+  -- block interfaces and pins
+  spare(0) <= sd_dat1;
+  spare(1) <= sd_dat2;
+  spare(2) <= spi_csn;
+  spare(3) <= spi_sclk;
+  spare(4) <= spi_dat;
+  spare(5) <= spi_dir;
+  
+
+led_ws2812: entity work.ws2812led
+  port map
+  (
+   clk       => clk_27mhz,
+   WS2812    => ws2812
+  );
+
+c1541_sd : entity work.c1541_sd
+  port map
+  (
+    clk32         => clk32,
+  	clk_spi_ctrlr => clk16,
+    reset         => disk_reset,
+    
+    disk_num      => ("00" & disk_num),
+
+    iec_atn_i     => iec_atn_o,
+    iec_data_i    => iec_data_o,
+    iec_clk_i     => iec_clk_o,
+
+    iec_atn_o     => iec_atn_i,
+    iec_data_o    => iec_data_i,
+    iec_clk_o     => iec_clk_i,
+
+    sd_miso       => sd_dat0,
+  	sd_cs_n       => sd_dat3,
+  	sd_mosi       => sd_cmd,
+  	sd_sclk       => sd_clk,
+   
+    dbg_act       => led(1)  -- LED floppy indicator
+  );
+
+  disk_reset <= reset or reset_key;
+  led(2) <= not disk_num(0);
+  led(3) <= not disk_num(1);
 
   vga2hdmi_instance: entity work.C64_DBLSCAN 
   port map (
@@ -400,6 +467,18 @@ mainclock: entity work.Gowin_rPLL
         clkin   => clk_27mhz
     );
 
+clock16m: CLKDIV
+    generic map (
+        DIV_MODE => "2",
+        GSREN  => "false"
+    )
+    port map (
+        CALIB  => '0',
+        clkout => clk16,
+        hclkin => clk32,
+        resetn => clk32_locked
+        );
+
 hdmi_clockgenerator: entity work.Gowin_rPLL_hdmi
 port map (
       clkin  => clk_27mhz,
@@ -425,35 +504,26 @@ process(clk32)
 begin
   if rising_edge(clk32) then
     if vicVSync = '1' then
-      if R_btn_joy(2)='1' and btn_debounce(2)='0' then
+      if s2_btn = '1' and btn_deb = '0' then  --risige edge of button
         joy_sel <= not joy_sel;
       end if;
-      btn_debounce <= R_btn_joy;
+      btn_deb <= s2_btn;
     end if;
   end if;
 end process;
 
 led(0) <= joy_sel;
-led(1) <= '1';
 
 process(clk32)
 begin
   if rising_edge(clk32) then
-     R_btn_joy(0) <= '0';        -- was reset in original design
-     R_btn_joy(1) <= not btn(4); -- joy fire 
-     R_btn_joy(2) <= s2_btn;     -- select Joy port 1 / 2
-     R_btn_joy(3) <= not btn(3); -- joy right
-     R_btn_joy(4) <= not btn(2); -- joy left
-     R_btn_joy(5) <= not btn(1); -- joy down
-     R_btn_joy(6) <= not btn(0); -- joy up
+     R_btn_joy(4 downto 0) <= btn(4 downto 0);
   end if;
 end process;
 
-joyA <= "00" & R_btn_joy(1) & R_btn_joy(6) & R_btn_joy(5) & R_btn_joy(4) & R_btn_joy(3) when joy_sel='0' 
-    else (others => '0');
-
-joyB <= "00" & R_btn_joy(1) & R_btn_joy(6) & R_btn_joy(5) & R_btn_joy(4) & R_btn_joy(3) when joy_sel='1' 
-    else (others => '0');
+joyKeys <= not ("11" & R_btn_joy(4) & R_btn_joy(0) & R_btn_joy(1) & R_btn_joy(2) & R_btn_joy(3));
+joyA <=  unsigned(joyKeys) when joy_sel='0' else (others => '0');
+joyB <=  unsigned(joyKeys) when joy_sel='1' else (others => '0');
 
 -- -----------------------------------------------------------------------
 -- Local signal to outside world
@@ -653,37 +723,40 @@ port map (
   enaPixel => enablePixel,
   enaData => enableVic,
   phi => phi0_cpu,
-
+  
   baSync => '0',
   ba => baLoc,
-
+  ba_dma =>  open,
   mode6567old => '0', -- 60 Hz NTSC USA
   mode6567R8  => '0', -- 60 Hz NTSC USA
   mode6569    => '1', -- 50 Hz PAL-B Europe
   mode6572    => '0', -- 50 Hz PAL-N southern South America (not Brazil)
-
-  -- CPU bus
+  turbo_en => '0',
+  turbo_state => open,
+  
   cs => cs_vic,
   we => cpuWe,
+  lp_n => cia1_pbi(4), -- light pen
   aRegisters => cpuAddr(5 downto 0),
   diRegisters => cpuDo,
-
   -- video data bus
   di => vicDiAec,
   diColor => colorDataAec,
   do => vicData,
   vicAddr => vicAddr(13 downto 0),
-
   addrValid => aec,
-
   -- VGA
   hsync => vicHSync,
   vsync => vicVSync,
   colorIndex => vicColorIndex,
 
-  lp_n => cia1_pbi(4), -- light pen
-  irq_n => irq_vic
-);
+  irq_n => irq_vic,
+
+	-- Debug outputs
+	debugX  => open,
+	debugY  => open,
+	vicRefresh => open
+  );
 
 -- Pixel timing
 process(clk32)
@@ -738,6 +811,7 @@ port map (
 cia1: mos6526
 port map (
   clk => clk32,
+  mode => cia_mode,
   phi2_p => enableCia_p,
   phi2_n => enableCia_n,
   res_n => not reset,
@@ -754,10 +828,11 @@ port map (
   pb_out => cia1_pbo,
 
   flag_n => cass_in,
-  sp_in => '1',
-  cnt_in => '1',
-
-  tod => vicVSync, -- FIXME not exactly 50Hz
+  sp_in => sp1_i,
+  sp_out => sp1_o,
+  cnt_in => cnt1_i,
+  pc_n => open,
+  tod => todclk,
 
   irq_n => irq_cia1
 );
@@ -765,6 +840,7 @@ port map (
 cia2: mos6526
 port map (
   clk => clk32,
+  mode => cia_mode,
   phi2_p => enableCia_p,
   phi2_n => enableCia_n,
   res_n => not reset,
@@ -780,37 +856,39 @@ port map (
   pb_in => cia2_pbi,
   pb_out => cia2_pbo,
 
-  -- Looks like most of the old terminal programs use the FLAG_N input (and to PB0) on CIA2 to
-  -- trigger an interrupt on the falling edge of the RXD input.
-  -- (and they don't use the "SP" pin for some reason?) ElectronAsh.
-  flag_n => uart_rxd,
-  
-  sp_in => uart_rxd,  -- Hooking up to the SP pin anyway, ready for the "UP9600" style serial.
-  cnt_in => '1',
-
-  tod => vicVSync, -- FIXME not exactly 50Hz
+	flag_n => flag2_n_i,
+	pc_n => pc2_n_o,
+	sp_in => sp2_i,
+	sp_out => sp2_o,
+	cnt_in => cnt2_i,
+	cnt_out => cnt2_o,
+  tod => todclk,
 
   irq_n => irq_cia2
 );
 
-tod_clk: if false generate
--- generate TOD clock from stable 32 MHz
--- Can we simply use vicVSync1?
-process(clk32, reset)
+process(clk32)
+variable sum: integer range 0 to 33000000;
 begin
   if rising_edge(clk32) then
-    toddiv <= toddiv + 1;
-    if (ntscMode = '1' and toddiv = 27082 and toddiv3 = "00") or
-      (ntscMode = '1' and toddiv = 27083 and toddiv3 /= "00") or
-      toddiv = 31999 then
-      toddiv <= (others => '0');
-      todclk <= not todclk;
-      toddiv3 <= toddiv3 + 1;
-      if toddiv3 = "10" then toddiv3 <= "00"; end if;
+    if reset = '1' then
+      todclk <= '0';
+      sum := 0;
+    elsif ntscMode = '1' then
+      sum := sum + 120;
+      if sum >= 32727266 then
+        sum := sum - 32727266;
+        todclk <= not todclk;
+      end if;
+    else
+      sum := sum + 100;
+      if sum >= 31527954 then
+        sum := sum - 31527954;
+        todclk <= not todclk;
+      end if;
     end if;
   end if;
 end process;
-end generate;
 
 -- -----------------------------------------------------------------------
 -- 6510 CPU
@@ -842,27 +920,35 @@ cass_write <= cpuIO(3);
 -- -----------------------------------------------------------------------
 -- Keyboard
 -- -----------------------------------------------------------------------
-ps2recv: ps2
-port map (
-  clk      => clk32,
-  ps2_clk  => ps2_clk,
-  ps2_data => ps2_data,
-  ps2_key  => ps2_key
-);
 
-Keyboard: entity work.fpga64_keyboard
+myKeyboard: entity work.io_ps2_keyboard
 port map (
   clk => clk32,
-  ps2_key => ps2_key,
-
-  joyA => not unsigned(joyA(4 downto 0)),
-  joyB => not unsigned(joyB(4 downto 0)),
+  kbd_clk => ps2_clk,
+  kbd_dat => ps2_data,
+  interrupt => newScanCode,
+  scanCode => theScanCode
+);
+myKeyboardMatrix: entity work.fpga64_keyboard_matrix
+port map (
+  clk => clk32,
+  theScanCode => theScanCode,
+  newScanCode => newScanCode,
+  joyA => (not joyA(4 downto 0)),
+  joyB => (not joyB(4 downto 0)),
   pai => cia1_pao,
   pbi => cia1_pbo,
   pao => cia1_pai,
   pbo => cia1_pbi,
 
-  restore_key => freeze_key, -- freeze_key not connected to c64
+  videoKey => open,
+  traceKey => open,
+  trace2Key => open,
+  reset_key => reset_key,
+  restore_key => open,
+  tapPlayStopKey => open,
+  disk_num => disk_num,
+
   backwardsReadingEnabled => '1'
 );
 
@@ -924,38 +1010,16 @@ begin
   end if;
 end process;
 
-cia2_pai(5 downto 0) <= cia2_pao(5 downto 0);
+iec_data_o <= not cia2_pao(5);
+iec_clk_o <= not cia2_pao(4);
+iec_atn_o <= not cia2_pao(3);
 
-process(joyC, joyD, cia2_pbo, uart_rxd, uart_ri_in, uart_dcd_in, uart_cts, uart_dsr, uart_enable)
-begin
-  if uart_enable = '1' then
-    cia2_pbi(0) <= uart_rxd;
-    cia2_pbi(1) <= '1';
-    cia2_pbi(2) <= '1';
-    cia2_pbi(3) <= uart_ri_in;
-    cia2_pbi(4) <= uart_dcd_in;
-    cia2_pbi(5) <= '1';
-    cia2_pbi(6) <= uart_cts;
-    cia2_pbi(7) <= uart_dsr;
-  else
-    if cia2_pbo(7) = '1' then
-      cia2_pbi(3 downto 0) <= not unsigned(joyC(3 downto 0));
-    else
-      cia2_pbi(3 downto 0) <= not unsigned(joyD(3 downto 0));
-    end if;
-    if joyC(6 downto 4) /= "000" then
-      cia2_pbi(4) <= '0';
-    else
-      cia2_pbi(4) <= '1';
-    end if;
-    if joyD(6 downto 4) /= "000" then
-      cia2_pbi(5) <= '0';
-    else
-      cia2_pbi(5) <= '1';
-    end if;
-    cia2_pbi(7 downto 6) <= cia2_pbo(7 downto 6);
-  end if;
-end process;
+cia2_pai(5 downto 3) <= cia2_pao(5 downto 3);
+cia2_pai(2) <= pa2_i;
+cia2_pai(1 downto 0) <= cia2_pao(1 downto 0);
+pa2_o <= cia2_pao(2);
+cia2_pbi <= pb_i;
+pb_o <= cia2_pbo;
 
 -- -----------------------------------------------------------------------
 -- VIC bank to address lines

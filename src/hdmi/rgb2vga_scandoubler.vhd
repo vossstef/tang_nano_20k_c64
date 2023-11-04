@@ -40,8 +40,8 @@ end entity;
 
 architecture rtl of rgb2vga_scandoubler is
     -- Config parameters
-    constant SAMPLE_OFFSET0 : integer := 90;
-    constant SAMPLE_WIDTH   : integer := 350;
+    constant SAMPLE_OFFSET0 : integer := 120;
+    constant SAMPLE_WIDTH   : integer := 360;
     constant width25       : integer := 10;
 -- 720x576, 27Mhz *5 = 135Mhz pll 
     constant HORIZ_BP      : integer := 68;
