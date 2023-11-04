@@ -22,6 +22,7 @@
         <File path="src/gowin_dpb/gowin_dpbi.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_prom/gowin_prom_1541_rom.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_prom/gowin_prom_basic_kernal.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_prom/gowin_prom_cart.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_prom/gowin_prom_chargen.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_ram16s/gowin_ram16s_color.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll.vhd" type="file.vhdl" enable="1"/>
