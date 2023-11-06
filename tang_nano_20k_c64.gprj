@@ -18,7 +18,6 @@
         <File path="src/fpga64_buslogic.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_keyboard_matrix_mark_mcdougall.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_rgbcolor.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/gowin_dpb/gowin_dpb.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_dpb/gowin_dpbi.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_prom/gowin_prom_1541_rom.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_prom/gowin_prom_basic_kernal.vhd" type="file.vhdl" enable="1"/>

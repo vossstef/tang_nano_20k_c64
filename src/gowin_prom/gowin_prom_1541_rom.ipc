@@ -12,4 +12,4 @@ LANG=1
 READ=0
 RESET_MODE=true
 WIDTH=8
-MEM_FILE=../../tools/JiffyDOS_C1541.mi
+MEM_FILE=../../gowin_prom/c1541_sdplus.mi
