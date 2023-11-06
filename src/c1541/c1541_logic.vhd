@@ -2,9 +2,6 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.all;
 
---use work.platform_pkg.all;
---use work.project_pkg.all;
-
 --
 -- Model 1541B
 --
@@ -174,9 +171,6 @@ architecture SYN of c1541_logic is
   -- qualified write signals
   ram_wr <= '1' when ram_cs = '1' and cpu_rw_n = '0' else '0';
 
---  .port_a_i((ext_en ? par_data_in : {7'h7F,tr00_sense_n}) & (uc1_pa_o  | ~uc1_pa_oe)),
---  .cb1_i((ext_en ? par_stb_in : 1'b1) & (uc1_cb1_o | ~uc1_cb1_oe)),
-
   --
   -- hook up UC1 ports
   uc1_cs1 <= '1';
@@ -184,18 +178,10 @@ architecture SYN of c1541_logic is
   -- CA1
   uc1_ca1_i <= not sb_atn_in;
   -- PA
---  uc1_pa_i(0) <= (uc1_pa_o(0) or uc1_pa_oe_n(0)) and tr00_sense_n;
---  uc1_pa_i(7 downto 1) <= uc1_pa_oe_n(7 downto 1) or uc1_pa_o(7 downto 1);  -- NC, but reads output when set to output
-
---assign     par_data_out = uc1_pa_o  | ~uc1_pa_oe;
---assign     par_stb_out  = uc1_ca2_o | ~uc1_ca2_oe;
---.cb1_i((ext_en ? par_stb_in : 1'b1) & (uc1_cb1_o | ~uc1_cb1_oe)),
---.port_a_i((ext_en ? par_data_in : {7'h7F,tr00_sense_n}) & (uc1_pa_o  | ~uc1_pa_oe)),
-
   par_data_o <= uc1_pa_o or not uc1_pa_oe_n; 
   par_stb_o  <= uc1_ca2_o or not uc1_ca2_oe;
-  cb1_i      <= par_stb_i; --and (uc1_cb1_o or not uc1_cb1_oe);
-  uc1_pa_i   <= par_data_i; -- and (uc1_pa_o or not uc1_pa_oe);
+  cb1_i      <= par_stb_i;
+  uc1_pa_i   <= par_data_i;
 
   -- PB
   uc1_pb_i(0) <=  not (sb_data_in and sb_data_oe);
