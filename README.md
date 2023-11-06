@@ -25,7 +25,7 @@ Working on e.g. BENQ GL2450HM (FHD) , Acer VN247 (FHD), Dell S2721DGF (2k), LG 2
 Emulated 1541 on a raw microSD card (no FAT fs !)<br>
 Place one or more [.D64](https://vice-emu.sourceforge.io/vice_toc.html#TOC405) file in the tools folder and run 'create_C64_ALL_D64.bat'. It will create a DISKSRAWC64.IMG.<br> Use e.g. [win32diskimager](https://sourceforge.net/projects/win32diskimager/) to program a microSD card with DISKSRAWC64.IMG. BE CAREFUL NOT WRITING ON YOUR OWN HARDDRIVE! Insert card in TN slot.<br>
 LED 1 is the Drive activity indicator.<br> For those who forgot after all those years...<br>
-Disk directory listing: (or push F1)<br>
+Disk directory listing: <br>
 LOAD"$",8<br>
 LIST<br> 
 Load first program from Disk:<br>
