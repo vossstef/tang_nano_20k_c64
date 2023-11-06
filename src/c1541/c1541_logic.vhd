@@ -2,9 +2,6 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.numeric_std.all;
 
---use work.platform_pkg.all;
---use work.project_pkg.all;
-
 --
 -- Model 1541B
 --
@@ -26,8 +23,14 @@ entity c1541_logic is
     sb_clk_in       : in std_logic;
     sb_atn_oe       : out std_logic;
     sb_atn_in       : in std_logic;
-    
-    -- drive-side interface
+
+    -- parallel bus
+    par_data_i      : in std_logic_vector(7 downto 0);
+    par_stb_i       : in std_logic;
+    par_data_o      : out std_logic_vector(7 downto 0);
+    par_stb_o       : out std_logic;
+
+  -- drive-side interface
     ds              : in std_logic_vector(1 downto 0);    -- device select
     di              : in std_logic_vector(7 downto 0);    -- disk read data
     do              : out std_logic_vector(7 downto 0);   -- disk data to write
@@ -121,7 +124,15 @@ architecture SYN of c1541_logic is
   signal uc3_pb_oe      : std_logic_vector(7 downto 0);
 
   signal cpu_a_slice    : std_logic_vector(3 downto 0);
-begin
+
+  signal uc1_ca2_o      : std_logic;
+  signal uc1_ca2_oe     : std_logic;
+  signal uc1_cb1_o      : std_logic;
+  signal uc1_cb1_oe     : std_logic;
+  signal cb1_i          : std_logic;
+
+
+  begin
 
   reset_n <= not reset;
   
@@ -162,15 +173,16 @@ begin
 
   --
   -- hook up UC1 ports
-  --
-  
   uc1_cs1 <= '1';
   --uc1_cs2_n: see decode logic above
   -- CA1
   uc1_ca1_i <= not sb_atn_in;
+
   -- PA
-  uc1_pa_i(0) <= (uc1_pa_o(0) or uc1_pa_oe_n(0)) and tr00_sense_n;
-  uc1_pa_i(7 downto 1) <= uc1_pa_oe_n(7 downto 1) or uc1_pa_o(7 downto 1);  -- NC, but reads output when set to output
+  par_stb_o  <= uc1_ca2_o or not uc1_ca2_oe;
+  par_data_o <= uc1_pa_o or not uc1_pa_oe; 
+  cb1_i      <= par_stb_i;
+  uc1_pa_i   <= par_data_i;
 
   -- PB
   uc1_pb_i(0) <=  not (sb_data_in and sb_data_oe);
@@ -300,10 +312,18 @@ begin
       port_b_t        => uc1_pb_oe,
       port_b_i        => uc1_pb_i,
 
-      ca1_i           => uc1_ca1_i,
-      ca2_i           => '1',
 
-      cb1_i           => '1',
+      ca1_i           => uc1_ca1_i,
+      ca2_i           => (uc1_ca2_o or not uc1_ca2_oe),
+
+
+      ca2_o           => uc1_ca2_o,
+      ca2_t           => uc1_ca2_oe,
+
+      cb1_i           => cb1_i,
+      cb1_o           => uc1_cb1_o,
+      cb1_t           => uc1_cb1_oe, 
+
       cb2_i           => '1',
 
       irq             => uc1_irq

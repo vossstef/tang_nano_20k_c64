@@ -32,7 +32,7 @@ always@(posedge clk)
 		RESET:begin
 			WS2812 <= 0;
 			if (clk_count < DELAY_RESET) begin
-				clk_count <= clk_count + 1;
+				clk_count <= clk_count + 32'd1;
             end
 			else begin
 				clk_count <= 0;
@@ -55,7 +55,7 @@ always@(posedge clk)
 				state    <= BIT_SEND_HIGH;
 			end
 			else begin
-				data_send <= data_send + 1;
+				data_send <= data_send + 9'd1;
 
 				bit_send  <= 0;
 				state    <= BIT_SEND_HIGH;
@@ -67,14 +67,14 @@ always@(posedge clk)
 
 			if (WS2812_data[bit_send]) 
 				if (clk_count < DELAY_1_HIGH)
-					clk_count <= clk_count + 1;
+					clk_count <= clk_count + 32'd1;
 				else begin
 					clk_count <= 0;
 					state    <= BIT_SEND_LOW;
 				end
 			else 
 				if (clk_count < DELAY_0_HIGH)
-					clk_count <= clk_count + 1;
+					clk_count <= clk_count + 32'd1;
 				else begin
 					clk_count <= 0;
 					state    <= BIT_SEND_LOW;
@@ -86,20 +86,20 @@ always@(posedge clk)
 
 			if (WS2812_data[bit_send]) 
 				if (clk_count < DELAY_1_LOW) 
-					clk_count <= clk_count + 1;
+					clk_count <= clk_count + 32'd1;
 				else begin
 					clk_count <= 0;
 
-					bit_send <= bit_send + 1;
+					bit_send <= bit_send + 9'd1;
 					state    <= DATA_SEND;
 				end
 			else 
 				if (clk_count < DELAY_0_LOW) 
-					clk_count <= clk_count + 1;
+					clk_count <= clk_count + 32'd1;
 				else begin
 					clk_count <= 0;
 					
-					bit_send <= bit_send + 1;
+					bit_send <= bit_send + 9'd1;
 					state    <= DATA_SEND;
 				end
 		end

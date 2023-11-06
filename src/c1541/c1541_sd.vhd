@@ -48,10 +48,16 @@ port(
 	sd_mosi  : out std_logic;
 	sd_sclk  : out std_logic;
 
+	-- parallel bus
+	par_data_i : in std_logic_vector(7 downto 0);
+	par_stb_i  : in std_logic;
+	par_data_o : out std_logic_vector(7 downto 0);
+	par_stb_o  : out std_logic;
+
 	dbg_track_num_dbl : out std_logic_vector(6 downto 0);
 	dbg_sd_busy     : out std_logic;
 	dbg_sd_state    : out std_logic_vector(7 downto 0);
-    dbg_read_sector : out std_logic_vector(4 downto 0);
+	dbg_read_sector : out std_logic_vector(4 downto 0);
 	dbg_mtr         : out std_logic;
 	dbg_act         : out std_logic
 );
@@ -132,7 +138,13 @@ begin
     sb_data_in => iec_data_i,
     sb_clk_in  => iec_clk_i,
     sb_atn_in  => iec_atn_i,
-    
+
+    -- parallel bus
+    par_data_i => par_data_i,
+    par_stb_i  => par_stb_i,
+    par_data_o => par_data_o,
+    par_stb_o  => par_stb_o,
+
     -- drive-side interface
     ds              => "00",     -- device select
     di              => c1541_logic_din,  -- data read 

@@ -81,6 +81,7 @@ signal clk32, clk32_locked, clk16: std_logic;
 
 attribute syn_keep : integer;
 attribute syn_keep of clk32 : signal is 1;
+attribute syn_keep of clk16 : signal is 1;
 
 signal R_btn_joy: std_logic_vector(4 downto 0);
 -------------------------------------
@@ -188,13 +189,10 @@ signal cia1_pbi     : unsigned(7 downto 0);
 signal cia1_pbo     : unsigned(7 downto 0);
 signal cia2_pai     : unsigned(7 downto 0);
 signal cia2_pao     : unsigned(7 downto 0);
-signal cia2_pbi     : unsigned(7 downto 0);
 signal cia2_pbo     : unsigned(7 downto 0);
 signal cia2_pbe     : unsigned(7 downto 0);
 
 signal todclk       : std_logic;
-signal toddiv       : std_logic_vector(19 downto 0);
-signal toddiv3      : std_logic_vector(1 downto 0);
 
 -- video
 constant ntscMode   : std_logic := '0';
@@ -395,10 +393,16 @@ c1541_sd : entity work.c1541_sd
     iec_clk_o     => iec_clk_i,
 
     sd_miso       => sd_dat0,
-  	sd_cs_n       => sd_dat3,
-  	sd_mosi       => sd_cmd,
-  	sd_sclk       => sd_clk,
-   
+    sd_cs_n       => sd_dat3,
+    sd_mosi       => sd_cmd,
+    sd_sclk       => sd_clk,
+
+    -- Userport parallel bus to 1541 disk
+    par_data_i    => std_logic_vector(pb_o),
+    par_stb_i     => pc2_n_o,
+    std_logic_vector(par_data_o) => pb_i,
+    par_stb_o     => flag2_n_i,
+
     dbg_act       => led(1)  -- LED floppy indicator
   );
 
@@ -831,7 +835,8 @@ port map (
   sp_in => sp1_i,
   sp_out => sp1_o,
   cnt_in => cnt1_i,
-  pc_n => open,
+  cnt_out => cnt1_o,
+
   tod => todclk,
 
   irq_n => irq_cia1
@@ -851,17 +856,20 @@ port map (
   db_in => cpuDo,
   db_out => cia2Do,
 
-  pa_in => cia2_pai,
+  pa_in => cia2_pai and cia2_pao,
   pa_out => cia2_pao,
-  pb_in => cia2_pbi,
+  pb_in => (pb_i and not cia2_pbe) or (cia2_pbo and cia2_pbe),
   pb_out => cia2_pbo,
+  pb_oe => cia2_pbe,
 
-	flag_n => flag2_n_i,
-	pc_n => pc2_n_o,
-	sp_in => sp2_i,
-	sp_out => sp2_o,
-	cnt_in => cnt2_i,
-	cnt_out => cnt2_o,
+  flag_n => flag2_n_i,
+  pc_n => pc2_n_o,
+
+  sp_in => sp2_i,
+  sp_out => sp2_o,
+  cnt_in => cnt2_i,
+  cnt_out => cnt2_o,
+
   tod => todclk,
 
   irq_n => irq_cia2
@@ -929,6 +937,7 @@ port map (
   interrupt => newScanCode,
   scanCode => theScanCode
 );
+
 myKeyboardMatrix: entity work.fpga64_keyboard_matrix
 port map (
   clk => clk32,
@@ -958,7 +967,6 @@ port map (
 calcReset: process(clk32)
 begin
   if rising_edge(clk32) then
---    if R_btn_joy(0) = '0' or R_cpu_control(0) = '1' or clk32_locked = '0' then
     if clk32_locked = '0' then
       reset_cnt <= 0;
                 elsif sysCycle = CYCLE_CPUF then
@@ -1018,7 +1026,6 @@ cia2_pai(5 downto 3) <= cia2_pao(5 downto 3);
 cia2_pai(2) <= pa2_i;
 cia2_pai(1 downto 0) <= cia2_pao(1 downto 0);
 pa2_o <= cia2_pao(2);
-cia2_pbi <= pb_i;
 pb_o <= cia2_pbo;
 
 -- -----------------------------------------------------------------------
