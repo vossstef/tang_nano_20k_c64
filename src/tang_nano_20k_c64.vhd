@@ -398,7 +398,13 @@ c1541_sd : entity work.c1541_sd
   	sd_cs_n       => sd_dat3,
   	sd_mosi       => sd_cmd,
   	sd_sclk       => sd_clk,
-   
+
+    -- parallel bus User Port to 1541 disk
+    par_data_i                   => std_logic_vector(pb_o),
+    par_stb_i                    => pc2_n_o,
+    std_logic_vector(par_data_o) => pb_i,
+    par_stb_o                    => flag2_n_i,
+
     dbg_act       => led(1)  -- LED floppy indicator
   );
 

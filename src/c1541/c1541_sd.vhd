@@ -48,6 +48,12 @@ port(
 	sd_mosi  : out std_logic;
 	sd_sclk  : out std_logic;
 
+	-- parallel bus
+	par_data_i : in std_logic_vector(7 downto 0);
+	par_stb_i  : in std_logic;
+	par_data_o : out std_logic_vector(7 downto 0);
+	par_stb_o  : out std_logic;
+
 	dbg_track_num_dbl : out std_logic_vector(6 downto 0);
 	dbg_sd_busy     : out std_logic;
 	dbg_sd_state    : out std_logic_vector(7 downto 0);
@@ -112,6 +118,12 @@ signal disk_mount  : std_logic := '1';
 signal disk_readonly : std_logic := '0';
 signal disk_g64    : std_logic := '0';
 
+--signal	par_data_i : std_logic_vector(7 downto 0);
+--signal	par_stb_i : std_logic;
+--signal	par_data_o : std_logic_vector(7 downto 0);
+--signal	par_stb_o : std_logic;
+
+
 begin
 	
   c1541 : entity work.c1541_logic
@@ -132,7 +144,13 @@ begin
     sb_data_in => iec_data_i,
     sb_clk_in  => iec_clk_i,
     sb_atn_in  => iec_atn_i,
-    
+
+	-- parallel bus
+	par_data_i => par_data_i,
+	par_stb_i  => par_stb_i,
+	par_data_o => par_data_o,
+	par_stb_o  => par_stb_o,
+
     -- drive-side interface
     ds              => "00",     -- device select
     di              => c1541_logic_din,  -- data read 
