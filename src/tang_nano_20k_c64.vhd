@@ -188,13 +188,10 @@ signal cia1_pbi     : unsigned(7 downto 0);
 signal cia1_pbo     : unsigned(7 downto 0);
 signal cia2_pai     : unsigned(7 downto 0);
 signal cia2_pao     : unsigned(7 downto 0);
-signal cia2_pbi     : unsigned(7 downto 0);
 signal cia2_pbo     : unsigned(7 downto 0);
 signal cia2_pbe     : unsigned(7 downto 0);
 
 signal todclk       : std_logic;
-signal toddiv       : std_logic_vector(19 downto 0);
-signal toddiv3      : std_logic_vector(1 downto 0);
 
 -- video
 constant ntscMode   : std_logic := '0';
@@ -837,7 +834,8 @@ port map (
   sp_in => sp1_i,
   sp_out => sp1_o,
   cnt_in => cnt1_i,
-  pc_n => open,
+	cnt_out => cnt1_o,
+
   tod => todclk,
 
   irq_n => irq_cia1
@@ -857,17 +855,20 @@ port map (
   db_in => cpuDo,
   db_out => cia2Do,
 
-  pa_in => cia2_pai,
+  pa_in => cia2_pai and cia2_pao,
   pa_out => cia2_pao,
-  pb_in => cia2_pbi,
+  pb_in => (pb_i and not cia2_pbe) or (cia2_pbo and cia2_pbe),
   pb_out => cia2_pbo,
+  pb_oe => cia2_pbe,
 
 	flag_n => flag2_n_i,
 	pc_n => pc2_n_o,
+
 	sp_in => sp2_i,
 	sp_out => sp2_o,
 	cnt_in => cnt2_i,
 	cnt_out => cnt2_o,
+
   tod => todclk,
 
   irq_n => irq_cia2
@@ -1024,7 +1025,6 @@ cia2_pai(5 downto 3) <= cia2_pao(5 downto 3);
 cia2_pai(2) <= pa2_i;
 cia2_pai(1 downto 0) <= cia2_pao(1 downto 0);
 pa2_o <= cia2_pao(2);
-cia2_pbi <= pb_i;
 pb_o <= cia2_pbo;
 
 -- -----------------------------------------------------------------------
