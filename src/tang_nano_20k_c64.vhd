@@ -30,7 +30,7 @@ use IEEE.numeric_std.ALL;
 entity tang_nano_20k_c64 is
 	generic (
 		resetCycles : integer := 4095;
-    keyb    : integer := 1
+    sysclk_frequency : integer := 315 -- Sysclk frequency * 10 (31.5Mhz)
 	);
   port
   (
@@ -929,14 +929,30 @@ cass_write <= cpuIO(3);
 -- Keyboard
 -- -----------------------------------------------------------------------
 
-myKeyboard: entity work.io_ps2_keyboard
+mykeyboard : entity work.io_ps2_com
+generic map (
+  clockFilter => 15,
+  ticksPerUsec => sysclk_frequency/10
+)
 port map (
   clk => clk32,
-  kbd_clk => ps2_clk,
-  kbd_dat => ps2_data,
-  interrupt => newScanCode,
-  scanCode => theScanCode
-);
+  reset => reset, -- active high!
+  ps2_clk_in => ps2_clk,
+  ps2_dat_in => ps2_data,
+  ps2_clk_out => open,
+  ps2_dat_out => open,
+  
+  inIdle => open,
+  sendTrigger => '0',
+  sendByte => (others => '0'),
+  sendBusy => open,
+  sendDone => open,
+  recvTrigger => newScanCode,
+--  recvByte => recvByte,
+  recvByte(0) => open,
+  unsigned(recvByte(8 downto 1)) => theScanCode,
+  recvByte(10 downto 9) => open
+  );
 
 myKeyboardMatrix: entity work.fpga64_keyboard_matrix
 port map (

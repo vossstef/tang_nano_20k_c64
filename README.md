@@ -12,18 +12,17 @@ Features:
 * Joystick emulation on Keyboard Numpad<br>
 * emulated 1541 Diskdrive on **raw** microSD card with Userport parallel bus Speedloader<br>
 
-<font color="red">Both PS/2 KEYBOAD AND digital JOYSTICK pinmaps aligned to match</font> [MiSTeryNano project](https://github.com/harbaum/MiSTeryNano). Didn't tested yet but the described USB Keyboard to PS/2 converter based on [M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) should work too.
+<font color="red">Both PS/2 KEYBOAD AND digital JOYSTICK pinmaps aligned to match</font> [MiSTeryNano project](https://github.com/harbaum/MiSTeryNano). Described USB Keyboard to PS/2 converter based on [Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) can be used too. 
 
 **Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS</b>
 <br>So far Video/Audio/Keyboard/Joystick/Cartride/c1541_sd working.<br>
 Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo included.
 <br><br>
-**Info** HDMI Signal 720x576p@50Hz isn't an official [VESA](https://glenwing.github.io/docs/VESA-DMT-1.13.pdf) mode.<br>
-Working on e.g. BENQ GL2450HM (FHD) , Acer VN247 (FHD), Dell S2721DGF (2k), LG 27UP85NP (4K). Check [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) timing of your target display for support. [Monitor Asset Manager](http://www.entechtaiwan.com/util/moninfo.shtm) might help to figure out.<br>
+**Info** HDMI Signal 720x576p@50Hz isn't an official [VESA](https://glenwing.github.io/docs/VESA-DMT-1.13.pdf) mode. Working on e.g. BENQ GL2450HM (FHD) , Acer VN247 (FHD), Dell S2721DGF (2k), LG 27UP85NP (4K). Check [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) timing of your target display for support. [Monitor Asset Manager](http://www.entechtaiwan.com/util/moninfo.shtm) might help to figure out.<br>
 
 ## emulated Diskdrive 1541
 Emulated 1541 on a raw microSD card (no FAT fs !) including parallel bus Speedloader<br>
-Place one or more [.D64](https://vice-emu.sourceforge.io/vice_toc.html#TOC405) file in the tools folder and run 'create_C64_ALL_D64.bat'. It will create a DISKSRAWC64.IMG.<br> Use e.g. [win32diskimager](https://sourceforge.net/projects/win32diskimager/) to program a microSD card with DISKSRAWC64.IMG. BE CAREFUL NOT WRITING ON YOUR OWN HARDDRIVE! Insert card in TN slot.<br>
+Place one or more [.D64](https://vice-emu.sourceforge.io/vice_toc.html#TOC405) file in the tools folder and run 'create_C64_ALL_D64.bat'. It will create a DISKSRAWC64.IMG. Use only SIMPLE D64 files : 174 848 octets (35 Tracks)<br> Use e.g. [win32diskimager](https://sourceforge.net/projects/win32diskimager/) to program a microSD card with DISKSRAWC64.IMG. BE CAREFUL NOT WRITING ON YOUR OWN HARDDRIVE! Insert card in TN slot.<br>
 LED 1 is the Drive activity indicator.<br> For those who forgot after all those years...<br>
 Disk directory listing:<br>
 LOAD"$",8<br>
@@ -32,6 +31,7 @@ Load first program from Disk:<br>
 LOAD"*",8<br>
 RUN<br>
 D64 Image on sdcard can be selected by CTRL+F8 (LED 2+3 will give a hint) followed by a Drive Reset pushing CTRL+F11. Sorry no OSD selection yet...
+
 
 ## Push Button utilization
 * S1 push button Reset<br>
@@ -122,14 +122,14 @@ Prototype Board<br>
 TFT Monitor with HDMI Input<br>
 microSD or microSDHC card<br>
 <br>
-Not tested yet !!!<br>
+<br>
 alternative Keyboard option:<br>
 USB Keyboard<br>
-[M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
+[Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
 USB-C to USB-A adapter to connect regular USB devices to the M0S Dock<br>
 [USB Keyboard firmware for M0S Dock](https://github.com/harbaum/MiSTeryNano/tree/d61060803bd5839fd0dca355d45b596c87f65832/bl616)<br>
 <br>
-alternative Joystick option:<br>
+alternative Joystick option (at this moment in time !):<br>
 a 2nd M0S Dock and a 2nd USB-C to USB-A adapter<br>
 USB Joystick [COMPETITION PRO](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)<br>
 [USB Joystick firmware for M0S Dock](https://github.com/harbaum/Pacman-TangNano9k/tree/2b078bfd923d8f4e174b177ab0912dd4eef6a7f2/m0sdock_usb_joystick)

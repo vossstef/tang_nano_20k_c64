@@ -33,7 +33,7 @@
         <File path="src/hdmi/hdmi.vhd" type="file.vhdl" enable="1"/>
         <File path="src/hdmi/hdmidelay.vhd" type="file.vhdl" enable="1"/>
         <File path="src/hdmi/rgb2vga_scandoubler.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/io_ps2_keyboard.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/io_ps2_com.vhd" type="file.vhdl" enable="1"/>
         <File path="src/sid6581/Q_table.vhd" type="file.vhdl" enable="1"/>
         <File path="src/sid6581/adsr_multi.vhd" type="file.vhdl" enable="1"/>
         <File path="src/sid6581/mult_acc.vhd" type="file.vhdl" enable="1"/>
