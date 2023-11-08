@@ -22,7 +22,7 @@ Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo
 
 ## emulated Diskdrive 1541
 Emulated 1541 on a raw microSD card (no FAT fs !) including parallel bus Speedloader<br>
-Place one or more [.D64](https://vice-emu.sourceforge.io/vice_toc.html#TOC405) file in the tools folder and run 'create_C64_ALL_D64.bat'. It will create a DISKSRAWC64.IMG.<br> Use e.g. [win32diskimager](https://sourceforge.net/projects/win32diskimager/) to program a microSD card with DISKSRAWC64.IMG. BE CAREFUL NOT WRITING ON YOUR OWN HARDDRIVE! Insert card in TN slot.<br>
+Place one or more [.D64](https://vice-emu.sourceforge.io/vice_toc.html#TOC405) file in the tools folder and run 'create_C64_ALL_D64.bat'. It will create a DISKSRAWC64.IMG. Use only SIMPLE D64 files : 174 848 octets (35 Tracks)<br> Use e.g. [win32diskimager](https://sourceforge.net/projects/win32diskimager/) to program a microSD card with DISKSRAWC64.IMG. BE CAREFUL NOT WRITING ON YOUR OWN HARDDRIVE! Insert card in TN slot.<br>
 LED 1 is the Drive activity indicator.<br> For those who forgot after all those years...<br>
 Disk directory listing:<br>
 LOAD"$",8<br>
@@ -31,6 +31,7 @@ Load first program from Disk:<br>
 LOAD"*",8<br>
 RUN<br>
 D64 Image on sdcard can be selected by CTRL+F8 (LED 2+3 will give a hint) followed by a Drive Reset pushing CTRL+F11. Sorry no OSD selection yet...
+
 
 ## Push Button utilization
 * S1 push button Reset<br>

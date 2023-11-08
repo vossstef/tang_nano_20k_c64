@@ -9,7 +9,7 @@ version=1.0
 [Config]
 DEPTH=16384
 LANG=1
-MEM_FILE=../../gowin_prom/c64kernal_sdplus.mi
+MEM_FILE=c64kernal_sdplus_blue.mi
 READ=0
 RESET_MODE=true
 WIDTH=8
