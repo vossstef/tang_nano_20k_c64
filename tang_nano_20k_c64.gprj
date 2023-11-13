@@ -5,6 +5,7 @@
     <Version>5</Version>
     <Device name="GW2AR-18C" pn="GW2AR-LV18QN88C8/I7">gw2ar18c-000</Device>
     <FileList>
+        <File path="src/dualshock_controller.v" type="file.verilog" enable="1"/>
         <File path="src/hdmi/hdmidataencoder.v" type="file.verilog" enable="1"/>
         <File path="src/mos6526.v" type="file.verilog" enable="1"/>
         <File path="src/sdram.v" type="file.verilog" enable="1"/>
