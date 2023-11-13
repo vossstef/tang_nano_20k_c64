@@ -37,7 +37,7 @@ entity tang_nano_20k_c64 is
     clk_27mhz   : in std_logic;
     reset_btn   : in std_logic;
     s2_btn      : in std_logic;
-    led         : out std_logic_vector(3 downto 0);
+    led         : out std_logic_vector(1 downto 0);
     btn         : in std_logic_vector(4 downto 0);
     ps2_data    : in std_logic;
     ps2_clk     : in std_logic;
@@ -55,7 +55,7 @@ entity tang_nano_20k_c64 is
     -- Debug
     debug       : out std_logic_vector(4 downto 0);
     ws2812      : out std_logic;
-    -- BL616 controller SPI interface connections
+    -- BL616 controller SPI interface connections (reserved)
     spi_csn     : in std_logic;
     spi_sclk    : in std_logic;
     spi_dat     : in std_logic;
@@ -70,7 +70,13 @@ entity tang_nano_20k_c64 is
     IO_sdram_dq  : inout std_logic_vector(31 downto 0); -- 32 bit bidirectional data bus
     O_sdram_addr : out std_logic_vector(10 downto 0);  -- 11 bit multiplexed address bus
     O_sdram_ba   : out std_logic_vector(1 downto 0);     -- two banks
-    O_sdram_dqm  : out std_logic_vector(3 downto 0)     -- 32/4
+    O_sdram_dqm  : out std_logic_vector(3 downto 0);     -- 32/4
+    -- Gamepad
+    joystick_clk  : out std_logic;
+    joystick_mosi : out std_logic;
+    joystick_miso : in std_logic;
+    joystick_cs   : out std_logic
+
     );
 end;
 
@@ -306,6 +312,11 @@ signal joyKeys      : std_logic_vector(6 downto 0);
 signal reset_key    : std_logic;
 signal disk_reset   : std_logic;
 
+-- CONTROLLER DUALSHOCK
+signal dscjoyKeys   : std_logic_vector(6 downto 0);
+signal dsc_joy_rx0  : std_logic_vector(7 downto 0);
+signal dsc_joy_rx1  : std_logic_vector(7 downto 0);
+
 component CLKDIV
     generic (
         DIV_MODE : STRING := "2";
@@ -366,7 +377,37 @@ begin
   spare(3) <= spi_sclk;
   spare(4) <= spi_dat;
   spare(5) <= spi_dir;
-  
+
+-- https://store.curiousinventor.com/guides/PS2/
+--  Digital Button State Mapping (which bits of bytes 4 & 5 goes to which button):
+--              dualshock buttons: 0:(Left Down Right Up Start Right3 Left3 Select)  
+--                                 1:(Square X O Triangle Right1 Left1 Right2 Left2)
+gamepad: entity work.dualshock_controller
+generic map (
+ FREQ => 32000000
+)
+port map (
+ clk         => clk32,     -- Any main clock faster than 1Mhz 
+ I_RSTn      => not reset, --  MAIN RESET
+
+ O_psCLK => joystick_clk,  --  psCLK CLK OUT
+ O_psSEL => joystick_cs,   --  psSEL OUT
+ O_psTXD => joystick_mosi, --  psTXD OUT
+ I_psRXD => joystick_miso, --  psRXD IN
+
+ O_RXD_1 => dsc_joy_rx0,  --  RX DATA 1 (8bit)
+ O_RXD_2 => dsc_joy_rx1,  --  RX DATA 2 (8bit)
+ O_RXD_3 => open,         --  RX DATA 3 (8bit)
+ O_RXD_4 => open,         --  RX DATA 4 (8bit)
+ O_RXD_5 => open,         --  RX DATA 5 (8bit)
+ O_RXD_6 => open,         --  RX DATA 6 (8bit) 
+
+ I_CONF_SW => '0',        --  Dualshook Config  ACTIVE-HI
+ I_MODE_SW => '1',        --  Dualshook Mode Set DIGITAL PAD 0, ANALOG PAD 1
+ I_MODE_EN => '0',        --  Dualshook Mode Control  OFF 0, ON 1
+ I_VIB_SW  => (others =>'0') --  Vibration SW  VIB_SW[0] Small Moter OFF 0, ON 1
+                          --  VIB_SW[1] Bic Moter   OFF 0, ON 1 (Dualshook Only)
+ );
 
 led_ws2812: entity work.ws2812led
   port map
@@ -407,8 +448,6 @@ c1541_sd : entity work.c1541_sd
   );
 
   disk_reset <= reset or reset_key;
-  led(2) <= not disk_num(0);
-  led(3) <= not disk_num(1);
 
   vga2hdmi_instance: entity work.C64_DBLSCAN 
   port map (
@@ -525,10 +564,16 @@ begin
   end if;
 end process;
 
+-- 4 3 2 1 0 digital
+-- F R L D U position
+--    triangle (4)
+-- square(7) circle (5)
+--       X (6)
+-- fire Left 1
+dscjoyKeys <= not("11" & dsc_joy_rx1(2) & dsc_joy_rx1(5) & dsc_joy_rx1(7) & dsc_joy_rx1(6) & dsc_joy_rx1(4));
 joyKeys <= not ("11" & R_btn_joy(4) & R_btn_joy(0) & R_btn_joy(1) & R_btn_joy(2) & R_btn_joy(3));
-joyA <=  unsigned(joyKeys) when joy_sel='0' else (others => '0');
-joyB <=  unsigned(joyKeys) when joy_sel='1' else (others => '0');
-
+joyA <=  unsigned(joyKeys) when joy_sel='0' else unsigned(dscjoyKeys); --(others => '0');
+joyB <=  unsigned(joyKeys) when joy_sel='1' else unsigned(dscjoyKeys); --(others => '0');
 -- -----------------------------------------------------------------------
 -- Local signal to outside world
 -- -----------------------------------------------------------------------

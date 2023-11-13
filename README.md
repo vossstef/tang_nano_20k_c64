@@ -3,16 +3,17 @@
 <br>
 Original C64 core by Peter Wendrich<br>
 Dram controller by Till Harbaum<br>
-c1541 by https://github.com/darfpga (https://darfpga.blogspot.com)<br> 
+c1541 by https://github.com/darfpga<br>
 
 Features:
 * HDMI 720x576p @50Hz Video and Audio Output
-* PS/2 Keyboard
-* Joystick (Atari / Commodore digital type)<br>
+* [PS/2](https://en.wikipedia.org/wiki/PS/2_port) Keyboard
+* [legacy Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)<br>
 * Joystick emulation on Keyboard Numpad<br>
-* emulated 1541 Diskdrive on **raw** microSD card with Userport parallel bus Speedloader<br>
+* [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock)<br>
+* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on **raw** microSD card with Userport parallel bus [Speedloader](https://www.c64-wiki.com/wiki/SpeedDOS)<br>
 
-<font color="red">Both PS/2 KEYBOAD AND digital JOYSTICK pinmaps aligned to match</font> [MiSTeryNano project](https://github.com/harbaum/MiSTeryNano). Described USB Keyboard to PS/2 converter based on [Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) can be used too. 
+<font color="red">Both PS/2 KEYBOAD AND legacy digital JOYSTICK pinmaps aligned to match</font> [MiSTeryNano project](https://github.com/harbaum/MiSTeryNano). Described USB Keyboard to PS/2 converter based on [Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) can be used too. 
 
 **Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS</b>
 <br>So far Video/Audio/Keyboard/Joystick/Cartride/c1541_sd working.<br>
@@ -30,16 +31,29 @@ LIST<br>
 Load first program from Disk:<br>
 LOAD"*",8<br>
 RUN<br>
-D64 Image on sdcard can be selected by CTRL+F8 (LED 2+3 will give a hint) followed by a Drive Reset pushing CTRL+F11. Sorry no OSD selection yet...
-
-
+D64 Image on sdcard can be selected by CTRL+F8 followed by a Drive Reset pushing CTRL+F11. Sorry no OSD selection yet...
 ## Push Button utilization
 * S1 push button Reset<br>
-* S2 to select physical Joystick in between [c64 Joystick port ](https://www.c64-wiki.com/wiki/Control_Port) 1 or 2 (selected port indicated by LED 0).<br>
+* S2 to swap physical Joystick or GamePad in between [c64 Joystick ports ](https://www.c64-wiki.com/wiki/Control_Port) 1 or 2 (selected port indicated by LED 0). Two Player control.<br>
+
+## Gamecontrol Joystick support
+legacy Digital Joystick<br>
+or<br>
+Gamepad Right **stick** for Move and Left **L1** shoulder Button for Fire or following Pad controls:<br>
+| Buttons | - | - |
+| - | - | -  |
+| Left L1<br>Fire | triangle button<br>Up  | .  |
+| square button<br>Left | - | circle button<br>Right |
+| - | cross button<br>Down | - |
+|-| - | - |
+
+or Keyboard Numpad<br>
+or USB Joystick via M0S Dock USB to digital converter<br>
+
 ## Keyboard 
 * left CTRL+F1 toggle Numpad Joystick emulation:<br>
- 	'default' - PORT 1 = Joystick or JOYKEYS on Numpad, PORT 2 = unused<br>
-	'toggle' - PORT 1 = unused,            PORT 2 = Joystick or JOYKEYS on Numpad <br>
+ 	'default' - PORT 1 = Joystick or JOYKEYS on Numpad, PORT 2 = Gamepad<br>
+	'toggle' - PORT 1 = Gamepad,            PORT 2 = Joystick or JOYKEYS on Numpad <br>
     Keypad layout: left 4, right 6, up 8, down 2 and fire 0
 * left CTRL+F8 change selected disk image on internal 1541 SD card<br>
           - left CTRL + F8 next image<br>
@@ -63,9 +77,7 @@ Keyboard specific keys:<br>
 
 ## LED
 0 Joystick selection indication<br>
-1 1541 drive activity<br>
-2 Disk image indicator bit 0<br>
-3 Disk image indicator bit 1<br>
+1 c1541 drive activity<br>
 
 ## Powering
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
@@ -109,6 +121,20 @@ From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images 
 | 5 | J5 5| 42 | CLK |
 | 6 | n.c. | - | n.c |
 
+**Pinmap Dualshock 2 Controller Interface** <br>
+![pinmap](\.assets/controller-pinout.jpg)
+| DS pin | Tang Nano pin | FPGA pin | DS Function |
+| ----------- | ---   | --------  | ----- |
+| 1 | J6 17 | 19 MISO | JOYDAT  |
+| 2 | J6 16 | 20 MOSI  | JOYCMD |
+| 3 | n.c. | - | 7V5 |
+| 4 | J6 20 | - | GND |
+| 5 | J6 19| - | 3V3 |
+| 6 | J6 18 | 18 CS | JOYn|
+| 7 | J6 15 | 17 MCLK | JOYCLK |
+| 8 | n.c. | - | IRQ |
+| 9 | n.c. | - | ACK |
+
 ### BOM
 
 [Sipeed Tang Nano 20k](https://api.dl.sipeed.com/shareURL/TANG/Nano%209K/1_Specification)<br> 
@@ -122,6 +148,9 @@ Prototype Board<br>
 TFT Monitor with HDMI Input<br>
 microSD or microSDHC card<br>
 <br>
+alternative Gamecontrol option:<br>
+Sipeed Gamepad Adapter for Tang FPGA<br>
+[Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock)<br>
 <br>
 alternative Keyboard option:<br>
 USB Keyboard<br>
@@ -129,7 +158,7 @@ USB Keyboard<br>
 USB-C to USB-A adapter to connect regular USB devices to the M0S Dock<br>
 [USB Keyboard firmware for M0S Dock](https://github.com/harbaum/MiSTeryNano/tree/d61060803bd5839fd0dca355d45b596c87f65832/bl616)<br>
 <br>
-alternative Joystick option (at this moment in time !):<br>
+another alternative Joystick option (at this moment in time !):<br>
 a 2nd M0S Dock and a 2nd USB-C to USB-A adapter<br>
 USB Joystick [COMPETITION PRO](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)<br>
 [USB Joystick firmware for M0S Dock](https://github.com/harbaum/Pacman-TangNano9k/tree/2b078bfd923d8f4e174b177ab0912dd4eef6a7f2/m0sdock_usb_joystick)
