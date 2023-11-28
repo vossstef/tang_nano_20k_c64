@@ -1,6 +1,12 @@
--- -----------------------------------------------------------------------
-
--- -----------------------------------------------------------------------
+-------------------------------------------------------------------------
+--  C64 Top level for Tang Nano
+--  2023 Stefan Voss
+--  based on the work of many others
+--
+--  FPGA64 is Copyrighted 2005-2008 by Peter Wendrich (pwsoft@syntiac.com)
+--  http://www.syntiac.com/fpga64.html
+--
+-------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
@@ -9,10 +15,10 @@ library work;
 use work.keyboard_matrix_pkg.all;
 
 entity tang_nano_20k_c64_top is
-	generic (
-		resetCycles : integer := 4095;
-        sysclk_frequency : integer := 315 -- Sysclk frequency * 10 (31.5Mhz)
-	);
+  generic (
+    resetCycles : integer := 4095;
+    sysclk_frequency : integer := 315 -- Sysclk frequency * 10 (31.5Mhz)
+  );
   port
   (
     clk_27mhz   : in std_logic;
@@ -22,8 +28,8 @@ entity tang_nano_20k_c64_top is
     btn         : in std_logic_vector(4 downto 0);
 
     -- Sipeed M0S Dock SPI interface
-    ps2_data    : in std_logic; -- spi MOSI
-    ps2_clk     : out std_logic;-- spi MISO
+    mosi        : in std_logic; -- spi MOSI / ps2_data
+    miso        : out std_logic;-- spi MISO / ps2_clk
     csn         : in std_logic; -- spi CSn
     sck         : in std_logic; -- spi CLK
 
@@ -34,9 +40,9 @@ entity tang_nano_20k_c64_top is
     -- sd interface
     sd_clk      : out std_logic; -- SCLK
     sd_cmd      : out std_logic; -- MOSI
-    sd_dat0     : in std_logic; -- MISO
-    sd_dat1     : in std_logic; -- unused
-    sd_dat2     : in std_logic; -- unused
+    sd_dat0     : in std_logic;  -- MISO
+    sd_dat1     : in std_logic;  -- unused
+    sd_dat2     : in std_logic;  -- unused
     sd_dat3     : out std_logic; -- CSn
 --  debug       : out std_logic_vector(4 downto 0);
     ws2812      : out std_logic;
@@ -88,7 +94,6 @@ signal audio_data_r  : std_logic_vector(17 downto 0);
 
 signal enablePixel  : std_logic;
 
-
 -- external memory
 signal ramAddr     : unsigned(15 downto 0);
 signal ramDataIn   : unsigned(7 downto 0);
@@ -99,7 +104,6 @@ signal dram_addr    : std_logic_vector(21 downto 0);
 signal ram_CE       : std_logic;
 signal ram_We       : std_logic;
 
-
 -- IEC
 signal  iec_data_o  : std_logic;
 signal  iec_data_i  : std_logic;
@@ -108,7 +112,7 @@ signal  iec_clk_i   : std_logic;
 signal  iec_atn_o   : std_logic;
 signal  iec_atn_i   : std_logic;
 
-	-- keyboard
+  -- keyboard
 signal newScanCode  : std_logic;
 signal recvByte     : std_logic_vector(10 downto 0);
 signal disk_num     : std_logic_vector(7 downto 0) := (others => '0');
@@ -142,10 +146,10 @@ signal r           :  unsigned(7 downto 0);
 signal g           :  unsigned(7 downto 0);
 signal b           :  unsigned(7 downto 0);
 
-signal pb_out    : std_logic_vector(7 downto 0);
-signal pc2_n   : std_logic;
-signal pb_in      : std_logic_vector(7 downto 0);
-signal flag2_n : std_logic;
+signal pb_out      : std_logic_vector(7 downto 0);
+signal pc2_n       : std_logic;
+signal pb_in       : std_logic_vector(7 downto 0);
+signal flag2_n     : std_logic;
 
 signal ps2_key     : std_logic_vector(10 downto 0);
 
@@ -157,15 +161,6 @@ signal mcu_data_out   : std_logic_vector(7 downto 0);
 signal hid_data_out   : std_logic_vector(7 downto 0);
 signal mouse          : std_logic_vector(5 downto 0);
 signal keyboard       : keyboard_t;
-
-	-- ps/2 keyboard emulation from USB IF
-	-- (used for ctrl module input - single key at a time only)
-	signal kbd_int : std_logic;
-	signal kbd_scancode : std_logic_vector(7 downto 0);
-
-  signal play_stop_toggle   : std_logic;
-  signal play_stop_toggle_d : std_logic;
-  signal led_sel            : std_logic;
 
 component CLKDIV
     generic (
@@ -237,7 +232,7 @@ c1541_sd : entity work.c1541_sd
   port map
   (
     clk32         => clk32,
-  	clk_spi_ctrlr => clk16,
+    clk_spi_ctrlr => clk16,
     reset         => disk_reset,
     
     disk_num      => ("00" & disk_num),
@@ -274,13 +269,13 @@ c1541_sd : entity work.c1541_sd
       clock     => clk32,
       clken     => enablepixel,
       clk_pixel => clk_pixel,
---
+      --
       r_in      => std_logic_vector(r),
       g_in      => std_logic_vector(g),
       b_in      => std_logic_vector(b),
       hSync_in  => hsync,
       vSync_in  => vsync,
---
+      --
       r_out     => r_31k,
       g_out     => g_31k,
       b_out     => b_31k,
@@ -330,8 +325,8 @@ c1541_sd : entity work.c1541_sd
     ready     => open,          -- ram is ready and has been initialized
     refresh   => idle,          -- chipset requests a refresh cycle
     din       => std_logic_vector(ramDataOut), -- data input from chipset/cpu
-    dout(7 downto 0)      => ramDataIn, --ramDataIn_vec,
-    dout(15 downto 8)      => open,
+    dout(7 downto 0)  => ramDataIn, --ramDataIn_vec,
+    dout(15 downto 8) => open,
     addr      => dram_addr,      -- 22 bit word address
     ds        => (others => '0'),-- upper/lower data strobe R = low and W = low
     cs        => ramCE,        -- cpu/chipset requests read/wrie
@@ -364,7 +359,6 @@ clock16m: CLKDIV
         resetn => clk32_locked
         );
 
-
 hdmi_clockgenerator: entity work.Gowin_rPLL_hdmi
 port map (
       clkin  => clk_27mhz,
@@ -383,14 +377,14 @@ port map (
     clkout => clk_pixel,
     hclkin => clk_shift,
     resetn => shift_locked
-    );
+  );
 
 -- process to toggle joy A/B with BTN2
 process(clk32)
 begin
   if rising_edge(clk32) then
     if vsync = '1' then
-      if s2_btn = '1' and btn_deb = '0' then  --risige edge of button
+      if s2_btn = '1' and btn_deb = '0' then  --rising edge of button
         joy_sel <= not joy_sel;
       end if;
       btn_deb <= s2_btn;
@@ -415,14 +409,15 @@ end process;
 -- fire Left 1
 dscjoyKeys <= not("11" & dsc_joy_rx1(2) & dsc_joy_rx1(5) & dsc_joy_rx1(7) & dsc_joy_rx1(6) & dsc_joy_rx1(4));
 joyKeys <= not ("11" & R_btn_joy(4) & R_btn_joy(0) & R_btn_joy(1) & R_btn_joy(2) & R_btn_joy(3));
-joyA <=  joyKeys when joy_sel='0' else dscjoyKeys; --(others => '0');
-joyB <=  joyKeys when joy_sel='1' else dscjoyKeys; --(others => '0');
+joyA <= joyKeys when joy_sel='0' else dscjoyKeys;
+joyB <= joyKeys when joy_sel='1' else dscjoyKeys;
 
+-- excess for now
 ps2recv: entity work.ps2
   port map (
     clk      => clk32,
-    ps2_clk  => ps2_clk,
-    ps2_data => ps2_data,
+    ps2_clk  => miso, --ps2_clk,
+    ps2_data => mosi, -- ps2_data,
     ps2_key  => ps2_key
   );
 
@@ -431,11 +426,11 @@ port map (
   clk => clk32,
   reset => not clk32_locked,
 
-  -- SPI interface to bl616 MCU
-  spi_io_ss   => csn,
-  spi_io_clk  => sck,
-  spi_io_din  => ps2_data,
-  spi_io_dout => ps2_clk,
+  -- SPI interface to Sipeed M0 Dock BL616 MCU
+  spi_io_ss   => csn,      -- SPI CSn
+  spi_io_clk  => sck,      -- SPI SCLK
+  spi_io_din  => mosi,     -- SPI MOSI
+  spi_io_dout => miso,     -- SPI MISO
 
   -- byte interface to the various core components
   mcu_hid_strobe => mcu_hid_strobe, -- byte strobe for HID target  
@@ -456,133 +451,132 @@ hid_inst: entity work.hid
   clk => clk32,
   reset => not clk32_locked,
 
-    -- interface to receive user data from MCU (mouse, kbd, ...)
+  -- interface to receive user data from MCU (mouse, kbd, ...)
   data_in_strobe =>mcu_hid_strobe,
   data_in_start => mcu_start,
   data_in => mcu_data_out,
   data_out => hid_data_out,
   mouse => mouse,
-  keyboard => keyboard
+  keyboard => keyboard  -- atari st keyboard 2D matrix
  );
 
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
-   epix             => enablepixel,
-   clk32            => clk32,
-   reset_n          => clk32_locked,
-   bios             => (others => '0'),
-   pause            => '0',
-   pause_out        => open,
-	-- keyboard interface
-  keyboard          => keyboard,
-	ps2_key           => ps2_key,
-	kbd_reset         => '0',
-	shift_mod         => (others => '0'),
-	reset_key         => reset_key,
-	disk_num          => disk_num,
+  epix         => enablepixel,
+  clk32        => clk32,
+  reset_n      => clk32_locked,
+  bios         => (others => '0'),
+  pause        => '0',
+  pause_out    => open,
+  -- keyboard interface
+  keyboard     => keyboard,
+  ps2_key      => ps2_key, -- excess for now
+  kbd_reset    => '0',
+  shift_mod    => (others => '0'),
+  reset_key    => reset_key,
+  disk_num     => disk_num,
 
   -- external memory
-	ramAddr           => ramAddr,
-	ramDin            => ramDataIn,
-	ramDout           => ramDataOut(7 downto 0),
-	ramCE             => ramCE,
-	ramWE             => ramWe,
-  io_cycle          => open,
-	ext_cycle         => open,
-	refresh           => idle,
+  ramAddr      => ramAddr,
+  ramDin       => ramDataIn,
+  ramDout      => ramDataOut(7 downto 0),
+  ramCE        => ramCE,
+  ramWE        => ramWe,
+  io_cycle     => open,
+  ext_cycle    => open,
+  refresh      => idle,
 
-	cia_mode          => '0',
-	turbo_mode        => "00",
-	turbo_speed       => "00",
+  cia_mode     => '0',
+  turbo_mode   => "00",
+  turbo_speed  => "00",
 
-   ntscMode         => '0',
-   hsync            => hsync,
-   vsync            => vsync,
-   r                => r,
-   g                => g,
-   b                => b,
+  ntscMode     => '0',
+  hsync        => hsync,
+  vsync        => vsync,
+  r            => r,
+  g            => g,
+  b            => b,
 
-  game            => '1',
-  exrom           => '1', -- set to 0 for cartridge demo
-	io_rom          => '0',
-	io_ext          => '0',
-	io_data         => (others => '0'),
-	irq_n           => '1',
-	nmi_n           => '1',
-	nmi_ack         => open,
-	romL            => open,
-	romH            => open,
-	UMAXromH 	      => open,
-	IOE			        => open,
-	IOF			        => open,
-	freeze_key      => open,
-	mod_key         => open,
-	tape_play       => open,
+  game         => '1',
+  exrom        => '1', -- set to 0 for cartridge demo
+  io_rom       => '0',
+  io_ext       => '0',
+  io_data      => (others => '0'),
+  irq_n        => '1',
+  nmi_n        => '1',
+  nmi_ack      => open,
+  romL         => open,
+  romH         => open,
+  UMAXromH     => open,
+  IOE          => open,
+  IOF          => open,
+  freeze_key   => open,
+  mod_key      => open,
+  tape_play    => open,
 
-  	-- dma access
-	dma_req         => '0',
-	dma_cycle       => open,
-	dma_addr        => (others => '0'),
-	dma_dout        => (others => '0'),
-	dma_din         => open,
-	dma_we          => '0',
-	irq_ext_n       => '1',
+  -- dma access
+  dma_req      => '0',
+  dma_cycle    => open,
+  dma_addr     => (others => '0'),
+  dma_dout     => (others => '0'),
+  dma_din      => open,
+  dma_we       => '0',
+  irq_ext_n    => '1',
 
   -- joystick interface
-  joyA        => JoyA,
-  joyB        => joyB,
-  pot1      => (others => '0'),
-  pot2      => (others => '0'),
-  pot3      => (others => '0'),
-  pot4      => (others => '0'),
+  joyA         => JoyA,
+  joyB         => joyB,
+  pot1         => (others => '0'),
+  pot2         => (others => '0'),
+  pot3         => (others => '0'),
+  pot4         => (others => '0'),
 
-	--SID
-	audio_l      => audio_data_l,
-	audio_r      => audio_data_r,
-	sid_filter   => (others => '0'),
-	sid_ver      => (others => '0'),
-	sid_mode     => (others => '0'),
-	sid_cfg      => (others => '0'),
-	sid_fc_off_l => (others => '0'),
-	sid_fc_off_r => (others => '0'),
-	sid_ld_clk   => '0',
-	sid_ld_addr  => (others => '0'),
-	sid_ld_data  => (others => '0'),
-	sid_ld_wr    => '0',
+  --SID
+  audio_l      => audio_data_l,
+  audio_r      => audio_data_r,
+  sid_filter   => (others => '0'),
+  sid_ver      => (others => '0'),
+  sid_mode     => (others => '0'),
+  sid_cfg      => (others => '0'),
+  sid_fc_off_l => (others => '0'),
+  sid_fc_off_r => (others => '0'),
+  sid_ld_clk   => '0',
+  sid_ld_addr  => (others => '0'),
+  sid_ld_data  => (others => '0'),
+  sid_ld_wr    => '0',
 
-	-- USER
-	pb_i        => unsigned(pb_in),
-	std_logic_vector(pb_o)        => pb_out,
-	pa2_i       => '1',
-	pa2_o       => open,
-	pc2_n_o     => pc2_n,
-	flag2_n_i   => flag2_n,
-	sp2_i       => '1',
-	sp2_o       => open,
-	sp1_i       => '1',
-	sp1_o       => open,
-	cnt2_i      => '1',
-	cnt2_o      => open,
-	cnt1_i      => '1',
-	cnt1_o      => open,
+  -- USER
+  pb_i         => unsigned(pb_in),
+  std_logic_vector(pb_o) => pb_out,
+  pa2_i        => '1',
+  pa2_o        => open,
+  pc2_n_o      => pc2_n,
+  flag2_n_i    => flag2_n,
+  sp2_i        => '1',
+  sp2_o        => open,
+  sp1_i        => '1',
+  sp1_o        => open,
+  cnt2_i       => '1',
+  cnt2_o       => open,
+  cnt1_i       => '1',
+  cnt1_o       => open,
 
-    -- IEC
-		iec_data_o	 => iec_data_o,
-		iec_data_i	 => iec_data_i,
-		iec_clk_o	   => iec_clk_o,
-		iec_clk_i	  => iec_clk_i,
-		iec_atn_o	  => iec_atn_o,
+  -- IEC
+  iec_data_o   => iec_data_o,
+  iec_data_i   => iec_data_i,
+  iec_clk_o    => iec_clk_o,
+  iec_clk_i    => iec_clk_i,
+  iec_atn_o    => iec_atn_o,
 
-    c64rom_addr => (others => '0'),
-    c64rom_data => (others => '0'),
-    c64rom_wr   => '0',
+  c64rom_addr  => (others => '0'),
+  c64rom_data  => (others => '0'),
+  c64rom_wr    => '0',
 
-    cass_motor  => open,
-    cass_write  => open,
-    cass_sense  => '0',
-    cass_read   => '0'
+  cass_motor   => open,
+  cass_write   => open,
+  cass_sense   => '0',
+  cass_read    => '0'
   );
-
 
 end Behavioral_top;
