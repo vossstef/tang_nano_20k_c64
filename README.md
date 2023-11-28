@@ -11,9 +11,9 @@ Features:
 * [legacy Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)<br>
 * Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock)<br>
-* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on **raw** microSD card with Userport parallel bus [Speedloader](https://www.c64-wiki.com/wiki/SpeedDOS)<br>
+* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on **raw** microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader](https://www.c64-wiki.com/wiki/SpeedDOS)<br>
 
-<font color="red">Keyboard and legacy digital Joystick interface aligned in pinmap and interface to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw). Basically BL616 µC is acting as a USB host for a USB keyboard and later on OSD using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/bl616/misterynano_fw/SPI.md). Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware. 
+<font color="red">Keyboard and legacy digital Joystick interface aligned in pinmap and interface to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC is acting as a USB host for a USB keyboard (and later on USB Joystick + OSD control) using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/bl616/misterynano_fw/SPI.md). Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware. 
 
 **Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS</b>
 <br>So far Video/Audio/Keyboard/Joystick/Cartride/c1541_sd working.<br>
@@ -39,21 +39,19 @@ Multiple D64 images on sdcard can be selected by Numpad '+' forwards followed by
 ## Gamecontrol Joystick support
 legacy Digital Joystick<br>
 or<br>
-Gamepad Right **stick** for Move and Left **L1** shoulder Button for Fire or following Pad controls:<br>
+Gamepad Right **stick** for Move and Left **L1** shoulder Button for Fire or following **Pad** controls:<br>
 | Buttons | - | - |
 | - | - | -  |
 | Left L1<br>Fire | triangle button<br>Up  | .  |
 | square button<br>Left | - | circle button<br>Right |
-| - | cross button<br>Down | - |
-|-| - | - |
+| - | cross button<br>Down | - |<br>
 
 or Keyboard Numpad Keys:<br>
-| -  | - | - |
-| - | - | - |
-| 0<br>Fire | 8<br>Up  | -  |
-| 4<br>Left | - | 6<br>Right |
-| - | 2<br>Down | - |
-|-| - | - |
+| | | |
+|-|-|-|
+|0<br>Fire|8<br>Up|-|
+|4<br>Left|-|6<br>Right|
+|-|2<br>Down|-|
 
 
 ## Keyboard 
