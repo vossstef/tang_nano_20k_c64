@@ -5,15 +5,15 @@
 --Part Number: GW1NR-LV9QN88PC6/I5
 --Device: GW1NR-9
 --Device Version: C
---Created Time: Sat Sep 16 23:35:32 2023
+--Created Time: Wed Nov 08 22:45:56 2023
 
 library IEEE;
 use IEEE.std_logic_1164.all;
 
 entity Gowin_DPBi is
     port (
-        douta: out std_logic_vector(3 downto 0);
-        doutb: out std_logic_vector(3 downto 0);
+        douta: out std_logic_vector(23 downto 0);
+        doutb: out std_logic_vector(23 downto 0);
         clka: in std_logic;
         ocea: in std_logic;
         cea: in std_logic;
@@ -25,25 +25,30 @@ entity Gowin_DPBi is
         resetb: in std_logic;
         wreb: in std_logic;
         ada: in std_logic_vector(9 downto 0);
-        dina: in std_logic_vector(3 downto 0);
+        dina: in std_logic_vector(23 downto 0);
         adb: in std_logic_vector(9 downto 0);
-        dinb: in std_logic_vector(3 downto 0)
+        dinb: in std_logic_vector(23 downto 0)
     );
 end Gowin_DPBi;
 
 architecture Behavioral of Gowin_DPBi is
 
-    signal dpb_inst_0_douta_w: std_logic_vector(11 downto 0);
-    signal dpb_inst_0_doutb_w: std_logic_vector(11 downto 0);
+    signal dpb_inst_1_douta_w: std_logic_vector(7 downto 0);
+    signal dpb_inst_1_doutb_w: std_logic_vector(7 downto 0);
+    signal gw_vcc: std_logic;
     signal gw_gnd: std_logic;
     signal dpb_inst_0_BLKSELA_i: std_logic_vector(2 downto 0);
     signal dpb_inst_0_BLKSELB_i: std_logic_vector(2 downto 0);
     signal dpb_inst_0_ADA_i: std_logic_vector(13 downto 0);
-    signal dpb_inst_0_DIA_i: std_logic_vector(15 downto 0);
     signal dpb_inst_0_ADB_i: std_logic_vector(13 downto 0);
-    signal dpb_inst_0_DIB_i: std_logic_vector(15 downto 0);
-    signal dpb_inst_0_DOA_o: std_logic_vector(15 downto 0);
-    signal dpb_inst_0_DOB_o: std_logic_vector(15 downto 0);
+    signal dpb_inst_1_BLKSELA_i: std_logic_vector(2 downto 0);
+    signal dpb_inst_1_BLKSELB_i: std_logic_vector(2 downto 0);
+    signal dpb_inst_1_ADA_i: std_logic_vector(13 downto 0);
+    signal dpb_inst_1_DIA_i: std_logic_vector(15 downto 0);
+    signal dpb_inst_1_ADB_i: std_logic_vector(13 downto 0);
+    signal dpb_inst_1_DIB_i: std_logic_vector(15 downto 0);
+    signal dpb_inst_1_DOA_o: std_logic_vector(15 downto 0);
+    signal dpb_inst_1_DOB_o: std_logic_vector(15 downto 0);
 
     --component declaration
     component DPB
@@ -145,18 +150,23 @@ architecture Behavioral of Gowin_DPBi is
     end component;
 
 begin
+    gw_vcc <= '1';
     gw_gnd <= '0';
 
     dpb_inst_0_BLKSELA_i <= gw_gnd & gw_gnd & gw_gnd;
     dpb_inst_0_BLKSELB_i <= gw_gnd & gw_gnd & gw_gnd;
-    dpb_inst_0_ADA_i <= gw_gnd & gw_gnd & ada(9 downto 0) & gw_gnd & gw_gnd;
-    dpb_inst_0_DIA_i <= gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & dina(3 downto 0);
-    dpb_inst_0_ADB_i <= gw_gnd & gw_gnd & adb(9 downto 0) & gw_gnd & gw_gnd;
-    dpb_inst_0_DIB_i <= gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & dinb(3 downto 0);
-    douta(3 downto 0) <= dpb_inst_0_DOA_o(3 downto 0) ;
-    dpb_inst_0_douta_w(11 downto 0) <= dpb_inst_0_DOA_o(15 downto 4) ;
-    doutb(3 downto 0) <= dpb_inst_0_DOB_o(3 downto 0) ;
-    dpb_inst_0_doutb_w(11 downto 0) <= dpb_inst_0_DOB_o(15 downto 4) ;
+    dpb_inst_0_ADA_i <= ada(9 downto 0) & gw_gnd & gw_gnd & gw_vcc & gw_vcc;
+    dpb_inst_0_ADB_i <= adb(9 downto 0) & gw_gnd & gw_gnd & gw_vcc & gw_vcc;
+    dpb_inst_1_BLKSELA_i <= gw_gnd & gw_gnd & gw_gnd;
+    dpb_inst_1_BLKSELB_i <= gw_gnd & gw_gnd & gw_gnd;
+    dpb_inst_1_ADA_i <= gw_gnd & ada(9 downto 0) & gw_gnd & gw_gnd & gw_gnd;
+    dpb_inst_1_DIA_i <= gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & dina(23 downto 16);
+    dpb_inst_1_ADB_i <= gw_gnd & adb(9 downto 0) & gw_gnd & gw_gnd & gw_gnd;
+    dpb_inst_1_DIB_i <= gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & dinb(23 downto 16);
+    douta(23 downto 16) <= dpb_inst_1_DOA_o(7 downto 0) ;
+    dpb_inst_1_douta_w(7 downto 0) <= dpb_inst_1_DOA_o(15 downto 8) ;
+    doutb(23 downto 16) <= dpb_inst_1_DOB_o(7 downto 0) ;
+    dpb_inst_1_doutb_w(7 downto 0) <= dpb_inst_1_DOB_o(15 downto 8) ;
 
     dpb_inst_0: DPB
         generic map (
@@ -164,15 +174,15 @@ begin
             READ_MODE1 => '0',
             WRITE_MODE0 => "00",
             WRITE_MODE1 => "00",
-            BIT_WIDTH_0 => 4,
-            BIT_WIDTH_1 => 4,
+            BIT_WIDTH_0 => 16,
+            BIT_WIDTH_1 => 16,
             RESET_MODE => "SYNC",
             BLK_SEL_0 => "000",
             BLK_SEL_1 => "000"
         )
         port map (
-            DOA => dpb_inst_0_DOA_o,
-            DOB => dpb_inst_0_DOB_o,
+            DOA => douta(15 downto 0),
+            DOB => doutb(15 downto 0),
             CLKA => clka,
             OCEA => ocea,
             CEA => cea,
@@ -186,9 +196,42 @@ begin
             BLKSELA => dpb_inst_0_BLKSELA_i,
             BLKSELB => dpb_inst_0_BLKSELB_i,
             ADA => dpb_inst_0_ADA_i,
-            DIA => dpb_inst_0_DIA_i,
+            DIA => dina(15 downto 0),
             ADB => dpb_inst_0_ADB_i,
-            DIB => dpb_inst_0_DIB_i
+            DIB => dinb(15 downto 0)
+        );
+
+    dpb_inst_1: DPB
+        generic map (
+            READ_MODE0 => '0',
+            READ_MODE1 => '0',
+            WRITE_MODE0 => "00",
+            WRITE_MODE1 => "00",
+            BIT_WIDTH_0 => 8,
+            BIT_WIDTH_1 => 8,
+            RESET_MODE => "SYNC",
+            BLK_SEL_0 => "000",
+            BLK_SEL_1 => "000"
+        )
+        port map (
+            DOA => dpb_inst_1_DOA_o,
+            DOB => dpb_inst_1_DOB_o,
+            CLKA => clka,
+            OCEA => ocea,
+            CEA => cea,
+            RESETA => reseta,
+            WREA => wrea,
+            CLKB => clkb,
+            OCEB => oceb,
+            CEB => ceb,
+            RESETB => resetb,
+            WREB => wreb,
+            BLKSELA => dpb_inst_1_BLKSELA_i,
+            BLKSELB => dpb_inst_1_BLKSELB_i,
+            ADA => dpb_inst_1_ADA_i,
+            DIA => dpb_inst_1_DIA_i,
+            ADB => dpb_inst_1_ADB_i,
+            DIB => dpb_inst_1_DIB_i
         );
 
 end Behavioral; --Gowin_DPBi

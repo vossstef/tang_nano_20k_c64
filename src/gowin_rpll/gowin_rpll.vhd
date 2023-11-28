@@ -5,7 +5,7 @@
 --Part Number: GW2AR-LV18QN88C8/I7
 --Device: GW2AR-18
 --Device Version: C
---Created Time: Tue Oct 17 18:30:41 2023
+--Created Time: Wed Nov 22 22:33:07 2023
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -94,9 +94,9 @@ begin
             DYN_IDIV_SEL => "false",
             IDIV_SEL => 2,
             DYN_FBDIV_SEL => "false",
-            FBDIV_SEL => 13,
+            FBDIV_SEL => 6,
             DYN_ODIV_SEL => "false",
-            ODIV_SEL => 4,
+            ODIV_SEL => 8,
             PSDA_SEL => "0000",
             DYN_DA_EN => "true",
             DUTYDA_SEL => "1000",
@@ -108,7 +108,7 @@ begin
             CLKOUT_BYPASS => "false",
             CLKOUTP_BYPASS => "false",
             CLKOUTD_BYPASS => "false",
-            DYN_SDIV_SEL => 4,
+            DYN_SDIV_SEL => 2,
             CLKOUTD_SRC => "CLKOUT",
             CLKOUTD3_SRC => "CLKOUT"
         )

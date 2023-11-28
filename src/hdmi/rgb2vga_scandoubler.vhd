@@ -27,12 +27,17 @@ port (
     clken     : in  std_logic;
     clk_pixel : in  std_logic;
     -- Input 15.625kHz RGB signals
-    rgbi_in   : in  std_logic_vector(WIDTH - 1 downto 0);
+--    rgbi_in   : in  std_logic_vector(WIDTH - 1 downto 0);
     hSync_in  : in  std_logic;
     vSync_in  : in  std_logic;
-
+    r_in      :in  std_logic_vector(7 downto 0);
+    g_in      :in  std_logic_vector(7 downto 0);
+    b_in      :in  std_logic_vector(7 downto 0);
     -- Output 31.250kHz VGA signals
-    rgbi_out  : out std_logic_vector(WIDTH - 1 downto 0);
+
+    r_out :out  std_logic_vector(7 downto 0);
+    g_out :out  std_logic_vector(7 downto 0);
+    b_out :out  std_logic_vector(7 downto 0);
     hSync_out : out std_logic;
     vSync_out : out std_logic
     );
@@ -77,36 +82,16 @@ architecture rtl of rgb2vga_scandoubler is
     signal ram0Data        : std_logic_vector(WIDTH - 1 downto 0);
     signal ram1Data        : std_logic_vector(WIDTH - 1 downto 0);
 
-component Gowin_DPBi
-    port (
-        douta: out std_logic_vector(3 downto 0);
-        doutb: out std_logic_vector(3 downto 0);
-        clka: in std_logic;
-        ocea: in std_logic;
-        cea: in std_logic;
-        reseta: in std_logic;
-        wrea: in std_logic;
-        clkb: in std_logic;
-        oceb: in std_logic;
-        ceb: in std_logic;
-        resetb: in std_logic;
-        wreb: in std_logic;
-        ada: in std_logic_vector(9 downto 0);
-        dina: in std_logic_vector(3 downto 0);
-        adb: in std_logic_vector(9 downto 0);
-        dinb: in std_logic_vector(3 downto 0)
-    );
-end component;
-
+    signal rgbi_out        : std_logic_vector(WIDTH - 1 downto 0);
 
 begin
     -- Two RAM blocks, each straddling the 8MHz and 25MHz clock domains, for storing pixel lines;
     -- whilst we're reading from one at 25MHz, we're writing to the other at 8MHz. Their roles
     -- swap every incoming 64us scanline.
 
-    ram0: Gowin_DPBi
+    ram0: entity work.Gowin_DPBi
     port map (
-        dina            => rgbi_in,
+        dina            => r_in & g_in & b_in,
         douta           => open,
         clka            => clock,
         ocea            => '1',
@@ -120,13 +105,13 @@ begin
         resetb          => '0',
         wreb            => '0',
         ADB             => std_logic_vector(hCount27(9 downto 0)/2),
-        dinb            => x"0", 
+        dinb            => (others => '0'), 
         doutb           => ram0data
     );
 
-    ram1: Gowin_DPBi
+    ram1: entity work.Gowin_DPBi
     port map (
-        dina            => rgbi_in,
+        dina            => r_in & g_in & b_in,
         douta           => open,
         clka            => clock,
         ocea            => '1',
@@ -140,7 +125,7 @@ begin
         resetb          => '0',
         wreb            => '0',
         ADB             => std_logic_vector(hCount27(9 downto 0)/2),
-        dinb            => x"0", 
+        dinb            => (others => '0'),
         doutb           => ram1data
     );
 
@@ -180,6 +165,10 @@ begin
         else '0';
 
     -- Interleave output of dual-port RAMs
+    b_out <= rgbi_out(7 downto 0);
+    g_out <= rgbi_out(15 downto 8);
+    r_out <= rgbi_out(23 downto 16);
+   
     rgbi_out <=
         ram0Data when lineToggle = '1'
         else ram1Data;

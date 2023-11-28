@@ -7,13 +7,13 @@ c1541 by https://github.com/darfpga<br>
 
 Features:
 * HDMI 720x576p @50Hz Video and Audio Output
-* [PS/2](https://en.wikipedia.org/wiki/PS/2_port) Keyboard
+* USB Keyboard via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) (future plan Tang onboard µC)
 * [legacy Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)<br>
 * Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock)<br>
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on **raw** microSD card with Userport parallel bus [Speedloader](https://www.c64-wiki.com/wiki/SpeedDOS)<br>
 
-<font color="red">Both PS/2 KEYBOAD AND legacy digital JOYSTICK pinmaps aligned to match</font> [MiSTeryNano project](https://github.com/harbaum/MiSTeryNano). Described USB Keyboard to PS/2 converter based on [Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) can be used too. 
+<font color="red">Keyboard and legacy digital Joystick interface aligned in pinmap and interface to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw). Basically BL616 µC is acting as a USB host for a USB keyboard and later on OSD using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/bl616/misterynano_fw/SPI.md). Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware. 
 
 **Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS</b>
 <br>So far Video/Audio/Keyboard/Joystick/Cartride/c1541_sd working.<br>
@@ -22,8 +22,8 @@ Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo
 **Info** HDMI Signal 720x576p@50Hz isn't an official [VESA](https://glenwing.github.io/docs/VESA-DMT-1.13.pdf) mode. Working on e.g. BENQ GL2450HM (FHD) , Acer VN247 (FHD), Dell S2721DGF (2k), LG 27UP85NP (4K). Check [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) timing of your target display for support. [Monitor Asset Manager](http://www.entechtaiwan.com/util/moninfo.shtm) might help to figure out.<br>
 
 ## emulated Diskdrive 1541
-Emulated 1541 on a raw microSD card (no FAT fs !) including parallel bus Speedloader<br>
-Place one or more [.D64](https://vice-emu.sourceforge.io/vice_toc.html#TOC405) file in the tools folder and run 'create_C64_ALL_D64.bat'. It will create a DISKSRAWC64.IMG. Use only SIMPLE D64 files : 174 848 octets (35 Tracks)<br> Use e.g. [win32diskimager](https://sourceforge.net/projects/win32diskimager/) to program a microSD card with DISKSRAWC64.IMG. BE CAREFUL NOT WRITING ON YOUR OWN HARDDRIVE! Insert card in TN slot.<br>
+Emulated 1541 on a raw microSD card (no FAT fs !) including parallel bus Speedloader.<br>
+Place one or more [.D64](https://vice-emu.sourceforge.io/vice_toc.html#TOC405) file in the tools folder and run 'create_C64_ALL_D64.bat'. It will create a DISKSRAWC64.IMG. Use only SIMPLE D64 files : 174 848 octets (35 Tracks)<br> Use e.g. [win32diskimager](https://sourceforge.net/projects/win32diskimager/) or [Balena Etcher](https://etcher.balena.io) to program a microSD card with DISKSRAWC64.IMG. BE CAREFUL NOT WRITING ON YOUR OWN HARDDRIVE! Insert card in TN slot.<br>
 LED 1 is the Drive activity indicator.<br> For those who forgot after all those years...<br>
 Disk directory listing:<br>
 LOAD"$",8<br>
@@ -31,7 +31,7 @@ LIST<br>
 Load first program from Disk:<br>
 LOAD"*",8<br>
 RUN<br>
-D64 Image on sdcard can be selected by CTRL+F8 followed by a Drive Reset pushing CTRL+F11. Sorry no OSD selection yet...
+Multiple D64 images on sdcard can be selected by Numpad '+' forwards followed by a Drive Reset pushing Numpad 'Enter' or one image backwards by Numpad '-' and Numpad 'Enter'. Sorry no OSD selection yet...
 ## Push Button utilization
 * S1 push button Reset<br>
 * S2 to swap physical Joystick or GamePad in between [c64 Joystick ports ](https://www.c64-wiki.com/wiki/Control_Port) 1 or 2 (selected port indicated by LED 0). Two Player control.<br>
@@ -47,33 +47,26 @@ Gamepad Right **stick** for Move and Left **L1** shoulder Button for Fire or fol
 | - | cross button<br>Down | - |
 |-| - | - |
 
-or Keyboard Numpad<br>
-or USB Joystick via M0S Dock USB to digital converter<br>
+or Keyboard Numpad Keys:<br>
+| -  | - | - |
+| - | - | - |
+| 0<br>Fire | 8<br>Up  | -  |
+| 4<br>Left | - | 6<br>Right |
+| - | 2<br>Down | - |
+|-| - | - |
+
 
 ## Keyboard 
-* left CTRL+F1 toggle Numpad Joystick emulation:<br>
+* Numpad '*' toggle Numpad Joystick emulation:<br>
  	'default' - PORT 1 = Joystick or JOYKEYS on Numpad, PORT 2 = Gamepad<br>
 	'toggle' - PORT 1 = Gamepad,            PORT 2 = Joystick or JOYKEYS on Numpad <br>
     Keypad layout: left 4, right 6, up 8, down 2 and fire 0
-* left CTRL+F8 change selected disk image on internal 1541 SD card<br>
-          - left CTRL + F8 next image<br>
-          - left CTRL + shift + F8  previous image<br>
-* left CTRL+F11 c1541_sd drive Reset (you have to press once after image selection change and wait for 2 sec) <br>
+* Numpad  change selected disk image on internal 1541 SD card<br>
+          - Numpad '+' next image<br>
+          - Numpad '-'  previous image<br>
+* Numpad 'Enter' c1541_sd drive Reset (you have to press once after image selection change and wait for 2 sec) <br>
 
-Keyboard specific keys:<br>
-
-| US KB | GER KB | c64|
-| ----------- | ---   | --------  |
-| Esc                | Esc | run stop |
-| <code>&#91;</code> | ü   | @ |
-| <code>&#93;</code> | *   | * |
-| \\ | #   | up arrow |
-| ` | esc   | left arrow |
-| ' | ä   | semi colon |
-|  | ö   | colon |
-| F9 | F9   | &pound; |
-| F10 | F10   | + |
-| Left Alt | Left Alt | commodore key |
+[Layout](https://github.com/MiSTer-devel/C64_MiSTer/blob/master/keymap.gif) similar with some enhancements.
 
 ## LED
 0 Joystick selection indication<br>
@@ -83,16 +76,13 @@ Keyboard specific keys:<br>
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
-Chage in fpga64_buslogic.vhd the attribute cartride to '1' if you want to compile a cartrige load varaint.
 ## Pin mapping 
 see pin configuration in .cst configuration file
 ## cartride ROM
 The bin2mi tool can be used to generate from a game ROM new pROM VHDL code (bin2mi xyz.crt xyz.mi)<br>
-From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images the first 0x40 bytes need to be discarded and filesize header in .mi need to be fixed to 8192/16384.<br>
+From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images the first 0x40 bytes need to be discarded and filesize header in .mi need to be fixed to 8192/16384.<br>Change in fpga64_buslogic.vhd (see comment) and top level (exrom = '0') needed to compile a cartrige load varaint.
 ## HW circuit considerations
-- PS/2 keyboard has to be connected to 3.3V tolerant FPGA via level shifter to avoid damage of inputs ! Use e.g. 2 pcs SN74LVC1G17DBVR 5V to 3V3 level shifter.<br> Add 10K pull-up resistors to Tang 5V for PS/2 Clock and Data Signals directly coming from Keyboard.
 - Joystick interface is 3.3V tolerant. Joystick 5V supply pin has to be left floating !
-- Tang Nano 5V output (J5 1) connected to Keyboard supply. Tang 3V3 output (J5 16) to level shifter supply.
 
 **Pinmap D-SUB 9 Joystick Interface** <br>
 ![pinmap](\.assets/vic20-Joystick.png)
@@ -108,18 +98,6 @@ From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images 
 | 7 | n.c | n.c | 5V | - |
 | 8 | J5 20 | - | GND | - |
 | 9 | - | - | POT X | - |
-
-**Pinmap PS2 Interface** <br>
-![pinmap](\.assets/ps2conn.png)
-
-| PS2 pin | Tang Nano pin | FPGA pin | PS2 Function |
-| ----------- | ---   | --------  | ----- |
-| 1 | J5 6 | 41   | DATA  |
-| 2 | n.c. | - | n.c. |
-| 3 | J5 2 | - | GND |
-| 4 | J5 1 | - | +5V |
-| 5 | J5 5| 42 | CLK |
-| 6 | n.c. | - | n.c |
 
 **Pinmap Dualshock 2 Controller Interface** <br>
 ![pinmap](\.assets/controller-pinout.jpg)
@@ -140,25 +118,15 @@ From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images 
 [Sipeed Tang Nano 20k](https://api.dl.sipeed.com/shareURL/TANG/Nano%209K/1_Specification)<br> 
 D-SUB 9 M connector<br> 
 Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible Joystick<br>
-PS/2 Keyboard<br>
-PS/2 Socket Adapter Module<br>
-2 x 10K Resistor<br>
-2 pcs [SN74LVC1G17DBVR](http://www.ti.com/document-viewer/SN74LVC1G17/datasheet) level shifter<br>
 Prototype Board<br>
 TFT Monitor with HDMI Input<br>
 microSD or microSDHC card<br>
+USB Keyboard<br>
+[Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
+USB-C to USB-A adapter to connect regular USB devices to the M0S Dock or alternatively a 4 port [mini USB hub](https://a.aliexpress.com/_EIidgjH)<br>
+[USB Keyboard firmware for M0S Dock](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw)<br>
 <br>
 alternative Gamecontrol option:<br>
 Sipeed Gamepad Adapter for Tang FPGA<br>
 [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock)<br>
-<br>
-alternative Keyboard option:<br>
-USB Keyboard<br>
-[Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
-USB-C to USB-A adapter to connect regular USB devices to the M0S Dock<br>
-[USB Keyboard firmware for M0S Dock](https://github.com/harbaum/MiSTeryNano/tree/d61060803bd5839fd0dca355d45b596c87f65832/bl616)<br>
-<br>
-another alternative Joystick option (at this moment in time !):<br>
-a 2nd M0S Dock and a 2nd USB-C to USB-A adapter<br>
-USB Joystick [COMPETITION PRO](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)<br>
-[USB Joystick firmware for M0S Dock](https://github.com/harbaum/Pacman-TangNano9k/tree/2b078bfd923d8f4e174b177ab0912dd4eef6a7f2/m0sdock_usb_joystick)
+
