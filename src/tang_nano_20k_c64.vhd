@@ -236,7 +236,7 @@ signal  game        : std_logic := '1';
 signal  exrom       : std_logic := '1';
 signal  ioE_rom     : std_logic := '1';
 signal  ioF_rom     : std_logic := '1';
-signal  max_ram     : std_logic := '0';
+signal  max_ram     : std_logic := '1';
 signal  irq_n       : std_logic := '1';
 signal  nmi_n       : std_logic := '1';
 signal  nmi_ack     : std_logic; 

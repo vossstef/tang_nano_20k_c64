@@ -9,7 +9,7 @@ version=1.0
 [Config]
 DEPTH=8192
 LANG=1
-MEM_FILE=../../tools/pac.mi
+MEM_FILE=pac.mi
 READ=0
 RESET_MODE=true
 WIDTH=8
