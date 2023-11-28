@@ -79,21 +79,22 @@ begin
 	process(clk)
 	begin
 		if rising_edge(clk) then
+			if accessIO = '1' then
+				if localWe = '0' and enable = '1' then
+					if localA(0) = '0' then
+						ioDir <= localDo;
+					else
+						ioData <= localDo;
+					end if;
+				end if;
+			end if;
+
+			currentIO <= (ioData and ioDir) or (std_logic_vector(diIO) and not ioDir);
+
 			if reset = '1' then
 				ioDir <= (others => '0');
 				ioData <= (others => '1');
-				currentIO <= (others => '1');
-			else
-				currentIO <= (ioData and ioDir) or (std_logic_vector(diIO) and not ioDir);
-				if accessIO = '1' then
-					if localWe = '0' and enable = '1' then
-						if localA(0) = '0' then
-							ioDir <= localDo;
-						else
-							ioData <= localDo;
-						end if;
-					end if;
-				end if;
+				currentIO <= "00111111";  -- upper two bits are unused; ensure that the KERNAL is able to set Zero Page address $01 to $37 by default
 			end if;
 		end if;
 	end process;

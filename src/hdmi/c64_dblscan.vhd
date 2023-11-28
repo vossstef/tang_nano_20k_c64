@@ -6,10 +6,11 @@ library ieee;
 entity C64_DBLSCAN is
   port (
   CLK               : in   std_logic;
-  ENA               : in   std_logic;
-  index             : in   unsigned(3 downto 0);
   clk_5x_pixel      : in   std_logic;
   clk_pixel         : in   std_logic;
+  I_R               : in   std_logic_vector(7 downto 0);
+  I_G               : in   std_logic_vector(7 downto 0);
+  I_B               : in   std_logic_vector(7 downto 0);
   I_HSYNC           : in   std_logic;
   I_VSYNC           : in   std_logic;
   I_AUDIO_PCM_L     : in   std_logic_vector( 15 downto 0);
@@ -26,13 +27,11 @@ architecture RTL of C64_DBLSCAN is
 signal O_R               :    std_logic_vector( 7 downto 0);
 signal O_G               :    std_logic_vector( 7 downto 0);
 signal O_B               :    std_logic_vector( 7 downto 0);
-signal vic_r             :    unsigned( 7 downto 0);
-signal vic_g             :    unsigned( 7 downto 0);
-signal vic_b             :    unsigned( 7 downto 0);
+
 signal O_HSYNC, O_VSYNC, O_BLANK : std_logic;
 signal int_BLANK, int_VSYNC, int_HSYNC : std_logic;
 
-signal o_rgb_out        : std_logic_vector(3 downto 0);
+
 signal serialized_c     : std_logic;
 signal serialized_r     : std_logic;
 signal serialized_g     : std_logic;
@@ -40,8 +39,8 @@ signal serialized_b     : std_logic;
 signal tmds_r           : std_logic_vector(9 downto 0);
 signal tmds_g           : std_logic_vector(9 downto 0);
 signal tmds_b           : std_logic_vector(9 downto 0);
-signal hsync_int        : std_logic;
-signal vsync_int        : std_logic;
+--signal hsync_int        : std_logic;
+--signal vsync_int        : std_logic;
 -- HDMI signals
 signal hsync1           : std_logic;
 signal vsync1           : std_logic;
@@ -59,32 +58,6 @@ signal audio_r_int      : std_logic_vector (15 downto 0);
 signal vid_debug        : std_logic := '0';
 signal hdmi_audio_en    : std_logic := '1';
 signal vic_audio_s      : std_logic_vector(15 downto 0);
-
-component fpga64_rgbcolor is
-	port (
-		index: in unsigned(3 downto 0);
-		r: out unsigned(7 downto 0);
-		g: out unsigned(7 downto 0);
-		b: out unsigned(7 downto 0)
-	);
-end component;
-
-component rgb2vga_scandoubler
-    generic (
-        WIDTH : integer
-        );
-    port (
-        clock     : in  std_logic;
-        clken     : in  std_logic;
-        clk_pixel : in  std_logic;
-        rgbi_in   : in  std_logic_vector(WIDTH - 1 downto 0);
-        hSync_in  : in  std_logic;
-        vSync_in  : in  std_logic;
-        rgbi_out  : out std_logic_vector(WIDTH - 1 downto 0);
-        hSync_out : out std_logic;
-        vSync_out : out std_logic
-        );
-end component;
 
 COMPONENT ELVDS_OBUF
   PORT (
@@ -149,30 +122,6 @@ end component;
 
 begin
 
-
-c64colors: entity work.fpga64_rgbcolor
-port map (
-	index => unsigned(o_rgb_out),
-	r => vic_r,
-	g => vic_g,
-	b => vic_b
-);
-
-rgb2vga: rgb2vga_scandoubler
-generic map (
-    WIDTH => 4 )
-port map (
-    clock     => CLK,
-    clken     => ENA,
-    clk_pixel => clk_pixel,
-    rgbi_in   => std_logic_vector(index),
-    hSync_in  => I_HSYNC,
-    vSync_in  => I_VSYNC,
-    rgbi_out  => o_rgb_out,
-    hSync_out => hsync_int,
-    vSync_out => vsync_int
-);
-
 --------------------------------------------------------
 -- HDMI
 --------------------------------------------------------
@@ -189,11 +138,11 @@ process(clk_pixel)
     variable vsize   : integer;
 begin
     if rising_edge(clk_pixel) then
-        hsync1 <= hsync_int;
-        if hsync1 = '0' and hsync_int = '1' then
+        hsync1 <= I_HSYNC;
+        if hsync1 = '0' and I_HSYNC = '1' then
             hcnt <= (others => '0');
-            vsync1 <= vsync_int;
-            if vsync1 = '0' and vsync_int = '1' then
+            vsync1 <= I_VSYNC;
+            if vsync1 = '0' and I_VSYNC = '1' then
                 vcnt <= (others => '0');
             else
                 vcnt <= vcnt + 1;
@@ -210,9 +159,9 @@ begin
             hdmi_blue  <= (others => '0');
         else
             hdmi_blank <= '0';
-            hdmi_red   <= std_logic_vector(vic_r);
-            hdmi_green <= std_logic_vector(vic_g);
-            hdmi_blue  <= std_logic_vector(vic_b);
+            hdmi_red   <= I_R;
+            hdmi_green <= I_G;
+            hdmi_blue  <= I_B;
         end if;
         if hcnt >= 732 + 68 then
             hdmi_hsync <= '1';
