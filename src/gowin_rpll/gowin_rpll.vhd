@@ -1,11 +1,11 @@
 --Copyright (C)2014-2023 Gowin Semiconductor Corporation.
 --All rights reserved.
 --File Title: IP file
---GOWIN Version: V1.9.8.11 Education
+--GOWIN Version: V1.9.9 Beta-4 Education
 --Part Number: GW2AR-LV18QN88C8/I7
 --Device: GW2AR-18
 --Device Version: C
---Created Time: Wed Nov 22 22:33:07 2023
+--Created Time: Wed Dec 06 22:15:55 2023
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -15,7 +15,6 @@ entity Gowin_rPLL is
         clkout: out std_logic;
         lock: out std_logic;
         clkoutd: out std_logic;
-        reset: in std_logic;
         clkin: in std_logic
     );
 end Gowin_rPLL;
@@ -118,7 +117,7 @@ begin
             CLKOUTP => clkoutp_o,
             CLKOUTD => clkoutd,
             CLKOUTD3 => clkoutd3_o,
-            RESET => reset,
+            RESET => gw_gnd,
             RESET_P => gw_gnd,
             CLKIN => clkin,
             CLKFB => gw_gnd,
