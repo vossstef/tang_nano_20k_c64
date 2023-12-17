@@ -154,7 +154,7 @@ always @(posedge clk) begin
 
       // cs independent refresh for c64 core compatibility
       // ... rising edge of refresh.
-      if(refresh && !refreshD)  
+      if(refresh && !refreshD && !cs)
         sd_cmd <= CMD_AUTO_REFRESH;
 
         // ... rising edge of cs

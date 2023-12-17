@@ -78,19 +78,19 @@ attribute syn_keep : integer;
 attribute syn_keep of clk64 : signal is 1;
 attribute syn_keep of clk32 : signal is 1;
 
-signal R_btn_joy: std_logic_vector(4 downto 0);
-signal spare        : std_logic_vector(5 downto 0);
+signal R_btn_joy     : std_logic_vector(4 downto 0);
+signal spare         : std_logic_vector(5 downto 0);
 signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
 
 -- external memory
-signal ramAddr     : unsigned(15 downto 0);
-signal ramDataIn   : unsigned(7 downto 0);
-signal ramDataOut  : unsigned(15 downto 0);
-signal ramDataIn_v : std_logic_vector(15 downto 0);
+signal ramAddr      : unsigned(15 downto 0);
+signal ramDataIn    : unsigned(7 downto 0);
+signal ramDataOut   : unsigned(15 downto 0);
+signal ramDataIn_v  : std_logic_vector(15 downto 0);
 signal idle         : std_logic;
 signal dram_addr    : std_logic_vector(21 downto 0);
-
+signal ram_ready    : std_logic;
 
 -- IEC
 signal  iec_data_o  : std_logic;
@@ -208,13 +208,13 @@ begin
   spi_io_din  <= mosi when spi_ext = '1' else spi_dat;
   spi_io_ss   <= csn  when spi_ext = '1' else spi_csn;
   spi_io_clk  <= sck  when spi_ext = '1' else spi_sclk;
-  jtag_tck    <= spi_io_dout when spi_ext = '0' else 'Z'; -- onboad bl616 back-up miso signal 
-  miso        <= spi_io_dout when spi_ext = '1' else 'Z'; -- M0 Dock
-  spi_dir     <= spi_io_dout when spi_ext = '0' else 'Z'; -- unusable due to hw bug
+  jtag_tck    <= spi_io_dout; -- onboad bl616 back-up miso signal
+  miso        <= spi_io_dout; -- M0 Dock
+  spi_dir     <= spi_io_dout; -- unusable due to hw bug
 
 -- by default the internal SPI is being used. Once there is
 -- a select from the external spi (M0S Dock) , then the connection is being switched
-process (clk32)
+process (clk32, pll_locked)
 begin
   if rising_edge(clk32) then
     if pll_locked = '0' then
@@ -398,8 +398,8 @@ port map(
     sd_cas    => O_sdram_cas_n, -- columns address select
     -- cpu/chipset interface
     clk       => clk64,         -- sdram is accessed at 64MHz
-    reset_n   => pll_locked,  -- init signal after FPGA config to initialize RAM
-    ready     => open,          -- ram is ready and has been initialized
+    reset_n   => pll_locked,    -- init signal after FPGA config to initialize RAM
+    ready     => ram_ready,     -- ram is ready and has been initialized
     refresh   => idle,          -- chipset requests a refresh cycle
     din       => std_logic_vector(ramDataOut), -- data input from chipset/cpu
     dout      => ramDataIn_v,
@@ -534,7 +534,7 @@ process(clk32, pll_locked)
 variable reset_cnt : integer range 0 to 2147483647;
 begin
 if pll_locked = '0' then
-  reset_cnt := 47483648;
+  reset_cnt := 157483648;
 elsif rising_edge(clk32) then
   if reset_cnt /= 0 then
     reset_cnt := reset_cnt - 1;
@@ -552,7 +552,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
   clk32        => clk32,
-  reset_n      => not system_reset(0) and pll_locked and core_resetn,
+  reset_n      => not system_reset(0) and pll_locked and core_resetn and ram_ready,
+--  reset_n      => pll_locked and core_resetn and ram_ready,
   bios         => (others => '0'),
   pause        => '0', -- freeze,
   pause_out    => c64_pause,
