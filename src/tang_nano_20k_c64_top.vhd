@@ -174,15 +174,14 @@ signal reset_counter  : integer;
 signal reset_n        : std_logic;
 signal sd_img_size    : std_logic_vector(31 downto 0);
 signal sd_img_mounted : std_logic_vector(1 downto 0);
-signal sd_rd          : std_logic_vector(1 downto 0);
-signal sd_lba         : std_logic_vector(31 downto 0);
+signal sd_rd          : std_logic_vector(1 downto 0) := (others => '0');
+signal sd_lba         : std_logic_vector(31 downto 0) := (others => '0');
 signal sd_busy        : std_logic;
 signal sd_done        : std_logic;
 signal sd_rd_byte_strobe : std_logic;
 signal sd_byte_index  : std_logic_vector(8 downto 0);
 signal sd_rd_data     : std_logic_vector(7 downto 0);
 signal sd_mount       : std_logic;
-signal sd_change      : std_logic_vector(1 downto 0);
 signal spi_ext        : std_logic;
 signal spi_io_din     : std_logic;
 signal spi_io_ss      : std_logic;
@@ -310,7 +309,7 @@ generic map (
     -- SD card signals
     sdclk           => open, -- sd_clk,
     sdcmd           => open, -- sd_cmd,
-    sddat0          => '0', -- sd_dat0,
+    sddat0          => '1', -- sd_dat0,
 
     -- mcu interface
     data_strobe     => mcu_sdc_strobe,
@@ -534,7 +533,7 @@ process(clk32, pll_locked)
 variable reset_cnt : integer range 0 to 2147483647;
 begin
 if pll_locked = '0' then
-  reset_cnt := 157483648;
+  reset_cnt := 47483647;
 elsif rising_edge(clk32) then
   if reset_cnt /= 0 then
     reset_cnt := reset_cnt - 1;
@@ -552,8 +551,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
   clk32        => clk32,
-  reset_n      => not system_reset(0) and pll_locked and core_resetn and ram_ready,
---  reset_n      => pll_locked and core_resetn and ram_ready,
+  reset_n      => not system_reset(0) and pll_locked and ram_ready,
   bios         => (others => '0'),
   pause        => '0', -- freeze,
   pause_out    => c64_pause,
