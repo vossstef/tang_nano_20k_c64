@@ -23,7 +23,7 @@ entity tang_nano_20k_c64_top is
     clk_27mhz   : in std_logic;
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
-    led         : out std_logic_vector(1 downto 0);
+    led         : out std_logic_vector(5 downto 0);
     btn         : in std_logic_vector(4 downto 0);
 
     -- SPI interface Sipeed M0S Dock external BL616 uC
@@ -31,6 +31,8 @@ entity tang_nano_20k_c64_top is
     miso        : out std_logic;-- spi MISO / ps2_clk
     csn         : in std_logic; -- spi CSn
     sck         : in std_logic; -- spi CLK
+    irq_n       : out std_logic; -- spi irq
+
     -- SPI interface onboard BL616 uC
     spi_csn     : in std_logic;
     spi_sclk    : in std_logic;
@@ -479,6 +481,11 @@ begin
 end process;
 
 led(0) <= joy_sel;
+-- led(1)  c1541 activity
+led(2) <= sd_rd(0);
+led(3) <= sd_rd(1);
+led(4) <= '1';
+led(5) <= spi_ext;
 
 process(clk32)
 begin
@@ -493,11 +500,11 @@ end process;
 -- square(7) circle (5)
 --       X (6)
 -- fire Left 1
-joyDS2 <= not("11" & dsc_joy_rx1(2) & dsc_joy_rx1(5) & dsc_joy_rx1(7) & dsc_joy_rx1(6) & dsc_joy_rx1(4));
-joyDigital <= not ("11" & R_btn_joy(4) & R_btn_joy(0) & R_btn_joy(1) & R_btn_joy(2) & R_btn_joy(3));
-joyUsb <= ("00" & joystick(4) & joystick(0) & joystick(1) & joystick(2) & joystick(3));
-joyA <= (joyUsb or joyDigital) when joy_sel='0' else joyDS2;
-joyB <= (joyUsb or joyDigital) when joy_sel='1' else joyDS2;
+joyDS2     <= not("11" & dsc_joy_rx1(2) & dsc_joy_rx1(5) & dsc_joy_rx1(7) & dsc_joy_rx1(6) & dsc_joy_rx1(4));
+joyDigital <= not("11" & R_btn_joy(4) & R_btn_joy(0) & R_btn_joy(1) & R_btn_joy(2) & R_btn_joy(3));
+joyUsb     <=    ("00" & joystick(4) & joystick(0) & joystick(1) & joystick(2) & joystick(3));
+joyA       <= (joyUsb or joyDigital) when joy_sel='0' else joyDS2;
+joyB       <= (joyUsb or joyDigital) when joy_sel='1' else joyDS2;
 
 mcu_spi_inst: entity work.mcu_spi 
 port map (
@@ -558,7 +565,7 @@ hid_inst: entity work.hid
   system_scanlines  => system_scanlines,
   system_volume     => system_volume,
 
-  int_out_n         => open, -- io[10],
+  int_out_n         => irq_n,
   int_in            => std_logic_vector(unsigned'("0000" & sdc_int & "000")),
   int_ack           => int_ack,
 

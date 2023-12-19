@@ -92,8 +92,8 @@ The bin2mi tool can be used to generate from a game ROM new pROM VHDL code (bin2
 From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images the first 0x40 bytes need to be discarded and filesize header in .mi need to be fixed to 8192/16384.<br>Change in fpga64_buslogic.vhd (see comment) and top level (exrom = '0') needed to compile a cartrige load varaint.
 ## HW circuit considerations
 **Pinmap TN20k Interfaces** <br>
- Sipeed M0S Dock and digital Joystick D9 connection. Dualshock 2 Controller not shown as default according to circuit diagram.<br>
- ![wiring](\.assets/wiring_spi.png)
+ Sipeed M0S Dock and digital Joystick D9 connection.<br>
+ ![wiring](\.assets/wiring_spi_irq.png)
 
 **Pinmap D-SUB 9 Joystick Interface** <br>
 - Joystick interface is 3.3V tolerant. Joystick 5V supply pin has to be left floating !<br>
@@ -115,19 +115,18 @@ From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images 
 ![pinmap](\.assets/controller-pinout.jpg)
 | DS pin | Tang Nano pin | FPGA pin | DS Function |
 | ----------- | ---   | --------  | ----- |
-| 1 | J6 17 | 19 MISO | JOYDAT  |
-| 2 | J6 16 | 20 MOSI  | JOYCMD |
+| 1 | J5 18 | 71 MISO | JOYDAT  |
+| 2 | J5 19 | 53 MOSI  | JOYCMD |
 | 3 | n.c. | - | 7V5 |
-| 4 | J6 20 | - | GND |
-| 5 | J6 19| - | 3V3 |
-| 6 | J6 18 | 18 CS | JOYn|
-| 7 | J6 15 | 17 MCLK | JOYCLK |
+| 4 | J5 15 | - | GND |
+| 5 | J5 16| - | 3V3 |
+| 6 | J5 17 | 72 CS | JOYn|
+| 7 | J5 20 | 52 MCLK | JOYCLK |
 | 8 | n.c. | - | IRQ |
 | 9 | n.c. | - | ACK |
 
 ### BOM
-
-[Sipeed Tang Nano 20k](https://api.dl.sipeed.com/shareURL/TANG/Nano%209K/1_Specification)<br> 
+[Sipeed Tang Nano 20k](https://api.dl.sipeed.com/shareURL/TANG/Nano_20K)<br> 
 D-SUB 9 M connector<br> 
 Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible Joystick<br>
 Prototype Board<br>
