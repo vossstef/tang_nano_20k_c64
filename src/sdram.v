@@ -19,7 +19,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 //
 
-// additions and change for c64 core compatibility (refresh and RASCAS_DELAY)
+// additions and change for c64 core compatibility (refresh, RASCAS_DELAY, 2013 variant)
 
 module sdram (
 
@@ -71,14 +71,13 @@ localparam MODE = { 1'b0, NO_WRITE_BURST, OP_MODE, CAS_LATENCY, ACCESS_TYPE, BUR
 localparam STATE_IDLE      = 3'd0;   // first state in cycle
 localparam STATE_CMD_CONT  = STATE_IDLE + RASCAS_DELAY; // command can be continued
 localparam STATE_READ      = STATE_CMD_CONT + CAS_LATENCY + 3'd1;
-localparam STATE_LAST      = 3'd6;  // last state in cycle
-   
+localparam STATE_LAST      = 3'd7;   // last state in cycle
 // ---------------------------------------------------------------------
 // --------------------------- startup/reset ---------------------------
 // ---------------------------------------------------------------------
 
-reg [2:0] state;
-reg [4:0] init_state;
+reg [2:0] state /* synthesis noprune=1 */;
+reg [4:0] init_state /* synthesis noprune=1 */;
 
 // wait 1ms (32 8Mhz cycles) after FPGA config is done before going
 // into normal operation. Initialize the ram in the last 16 reset cycles (cycles 15-0)
@@ -89,7 +88,6 @@ assign ready = !(|init_state);
 // ---------------------------------------------------------------------
 
 // all possible commands
-localparam CMD_INHIBIT         = 4'b1111;
 localparam CMD_NOP             = 4'b0111;
 localparam CMD_ACTIVE          = 4'b0011;
 localparam CMD_READ            = 4'b0101;
@@ -113,7 +111,7 @@ assign sd_dqm = (!cs || !we)?4'b0000:addr[0]?{2'b11,ds}:{ds,2'b11};
 always @(posedge clk) begin
    reg csD;   
    reg refreshD;
-   sd_cmd <= CMD_INHIBIT;  // default: idle
+   sd_cmd <= CMD_NOP;  // default: idle
 
    // init state machines runs once reset ends
    if(!reset_n) begin
@@ -154,19 +152,16 @@ always @(posedge clk) begin
 
       // cs independent refresh for c64 core compatibility
       // ... rising edge of refresh.
-      if(refresh && !refreshD)  
+      if(refresh && !refreshD)
         sd_cmd <= CMD_AUTO_REFRESH;
 
         // ... rising edge of cs
         if (cs && !csD) begin
-          if(!refresh) begin
             // RAS phase
             sd_cmd <= CMD_ACTIVE;
             sd_addr <= addr[19:9];
             sd_ba <= addr[21:20];
             state <= 3'd1;
-          end else
-            sd_cmd <= CMD_AUTO_REFRESH;
         end
       end else begin
         // always advance state unless we are in idle state
