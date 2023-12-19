@@ -79,7 +79,6 @@ attribute syn_keep of clk64 : signal is 1;
 attribute syn_keep of clk32 : signal is 1;
 
 signal R_btn_joy     : std_logic_vector(4 downto 0);
-signal spare         : std_logic_vector(5 downto 0);
 signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
 
@@ -174,14 +173,20 @@ signal reset_counter  : integer;
 signal reset_n        : std_logic;
 signal sd_img_size    : std_logic_vector(31 downto 0);
 signal sd_img_mounted : std_logic_vector(1 downto 0);
-signal sd_rd          : std_logic_vector(1 downto 0) := (others => '0');
-signal sd_lba         : std_logic_vector(31 downto 0) := (others => '0');
+signal sd_rd          : std_logic_vector(1 downto 0);
+signal sd_wr          : std_logic_vector(1 downto 0);
+signal sd_lba         : std_logic_vector(31 downto 0);
 signal sd_busy        : std_logic;
 signal sd_done        : std_logic;
 signal sd_rd_byte_strobe : std_logic;
 signal sd_byte_index  : std_logic_vector(8 downto 0);
 signal sd_rd_data     : std_logic_vector(7 downto 0);
+signal sd_wr_data     : std_logic_vector(7 downto 0);
 signal sd_mount       : std_logic;
+signal sd_change      : std_logic_vector(1 downto 0);
+signal sdc_int        : std_logic;
+signal sdc_iack       : std_logic;
+signal int_ack        : std_logic_vector(7 downto 0);
 signal spi_ext        : std_logic;
 signal spi_io_din     : std_logic;
 signal spi_io_ss      : std_logic;
@@ -265,6 +270,29 @@ led_ws2812: entity work.ws2812
    data   => ws2812
   );
 
+  process(clk32, reset_n)
+  variable reset_cnt : integer range 0 to 32000000;
+begin
+  if reset_n = '0' then
+    reset_cnt := 4000000;
+    elsif rising_edge(clk32) then
+    if reset_cnt /= 0 then
+      reset_cnt := reset_cnt - 1;
+    end if;
+  end if;
+
+  if reset_cnt = 0 then
+    c1541_reset <= '0';
+  else 
+    c1541_reset <= '1';
+  end if;
+end process;
+
+disk_reset <= system_reset(0) or reset_key or not pll_locked or not core_resetn;
+
+sd_rd(1) <= '0';
+sd_wr(1) <= '0';
+
 c1541_sd : entity work.c1541_sd
   port map
   (
@@ -296,20 +324,21 @@ c1541_sd : entity work.c1541_sd
     dbg_act       => led(1)  -- LED floppy indicator
   );
 
-disk_reset <= system_reset(0) or reset_key or not pll_locked or not core_resetn;
+sdc_iack <= int_ack(3);
 
 sd_card_inst: entity work.sd_card
 generic map (
-    CLK_DIV => 1                    -- for 32 Mhz clock
+    CLK_DIV  => 1,                    -- for 32 Mhz clock
+    SIMULATE => 0
   )
     port map (
     rstn            => pll_locked, 
     clk             => clk32,
   
     -- SD card signals
-    sdclk           => open, -- sd_clk,
-    sdcmd           => open, -- sd_cmd,
-    sddat0          => '1', -- sd_dat0,
+    sdclk           => open, 
+    sdcmd           => open, 
+    sddat           => open, 
 
     -- mcu interface
     data_strobe     => mcu_sdc_strobe,
@@ -317,18 +346,24 @@ generic map (
     data_in         => mcu_data_out,
     data_out        => sdc_data_out,
 
+    -- interrupt to signal communication request
+    irq             => sdc_int,
+    iack            => sdc_iack,
+
     -- output file/image information. Image size is e.g. used by fdc to 
     -- translate between sector/track/side and lba sector
     image_size      => sd_img_size,           -- length of image file
     image_mounted   => sd_img_mounted,
 
     -- user read sector command interface (sync with clk)
-    rstart          => sd_rd,              --
-    rsector         => sd_lba,             --
+    rstart          => sd_rd,
+    wstart          => sd_wr, 
+    rsector         => sd_lba,
     rbusy           => sd_busy,
-    rdone           => sd_done,  -- // done from sd reader acknowledges/clears start
+    rdone           => sd_done,           --  done from sd reader acknowledges/clears start
 
     -- sector data output interface (sync with clk)
+    inbyte          => sd_wr_data,        -- sector data output interface (sync with clk)
     outen           => sd_rd_byte_strobe, -- when outen=1, a byte of sector content is read out from outbyte
     outaddr         => sd_byte_index,     -- outaddr from 0 to 511, because the sector size is 512
     outbyte         => sd_rd_data         -- a byte of sector content
@@ -515,18 +550,22 @@ hid_inst: entity work.hid
   data_in           => mcu_data_out,
   data_out          => sys_data_out,
 
-  buttons           => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
-
-  leds              => open,         -- two leds can be controlled from the MCU
-  color             => ws2812_color, -- a 24bit color to e.g. be used to drive the ws2812
-
   -- values that can be configured by the user
   system_chipset    => open,
   system_memory     => open,
   system_video      => open,
   system_reset      => system_reset,
   system_scanlines  => system_scanlines,
-  system_volume     => system_volume
+  system_volume     => system_volume,
+
+  int_out_n         => open, -- io[10],
+  int_in            => std_logic_vector(unsigned'("0000" & sdc_int & "000")),
+  int_ack           => int_ack,
+
+  buttons           => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
+  leds              => open,         -- two leds can be controlled from the MCU
+  color             => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
+
 );
 
 process(clk32, pll_locked)            

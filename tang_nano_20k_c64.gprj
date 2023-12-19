@@ -18,14 +18,12 @@
         <File path="src/hdmi/serializer.sv" type="file.verilog" enable="1"/>
         <File path="src/hdmi/source_product_description_info_frame.sv" type="file.verilog" enable="1"/>
         <File path="src/hdmi/tmds_channel.sv" type="file.verilog" enable="1"/>
-        <File path="src/misc/font_8x8_fnt.v" type="file.verilog" enable="1"/>
         <File path="src/misc/hid.v" type="file.verilog" enable="1"/>
         <File path="src/misc/mcu_spi.v" type="file.verilog" enable="1"/>
-        <File path="src/misc/osd_ascii.v" type="file.verilog" enable="1"/>
         <File path="src/misc/osd_u8g2.v" type="file.verilog" enable="1"/>
         <File path="src/misc/scandoubler.v" type="file.verilog" enable="1"/>
         <File path="src/misc/sd_card.v" type="file.verilog" enable="1"/>
-        <File path="src/misc/sd_reader.v" type="file.verilog" enable="1"/>
+        <File path="src/misc/sd_rw.v" type="file.verilog" enable="1"/>
         <File path="src/misc/sdcmd_ctrl.v" type="file.verilog" enable="1"/>
         <File path="src/misc/sysctrl.v" type="file.verilog" enable="1"/>
         <File path="src/misc/video.v" type="file.verilog" enable="1"/>
@@ -43,7 +41,6 @@
         <File path="src/fpga64_keyboard.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_rgbcolor.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_sid_iec.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/gowin_dpb/gowin_dpbi.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_prom/gowin_prom_1541_rom.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_prom/gowin_prom_basic_kernal.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_prom/gowin_prom_cart.vhd" type="file.vhdl" enable="1"/>
