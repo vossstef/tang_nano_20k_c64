@@ -92,7 +92,7 @@ The bin2mi tool can be used to generate from a game ROM new pROM VHDL code (bin2
 From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images the first 0x40 bytes need to be discarded and filesize header in .mi need to be fixed to 8192/16384.<br>Change in fpga64_buslogic.vhd (see comment) and top level (exrom = '0') needed to compile a cartrige load varaint.
 ## HW circuit considerations
 **Pinmap TN20k Interfaces** <br>
- Sipeed M0S Dock and digital Joystick D9 connection.<br>
+ Sipeed M0S Dock, digital Joystick D9 and DualShock Gamepad connection.<br>
  ![wiring](\.assets/wiring_spi_irq.png)
 
 **Pinmap D-SUB 9 Joystick Interface** <br>
