@@ -41,9 +41,8 @@ Multiple D64 images on sdcard can be selected by Numpad '+' forwards followed by
 invoke by F12 keypress<br>
 * Reset<br>
 * Audio Volume<br>
-* Scanlines
-<br>don't touch Drive A/B, as not implemented yet<br>
-Note: You might need to increase audio volume to 100%.
+* Scanlines<br>
+<br>don't touch Drive A/B and save configuration, as not implemented yet. µC will stuck.<br>
 
 ## Gamecontrol Joystick support
 legacy Digital Joystick<br>
@@ -64,12 +63,10 @@ or Keyboard **Numpad** Keys:<br>
 |4<br>Left|-|6<br>Right|
 |-|2<br>Down|-|
 
-
 ## Keyboard 
 * Numpad '*' toggle Numpad Joystick emulation:<br>
- 	'default' - PORT 1 = Joystick or JOYKEYS on Numpad, PORT 2 = Gamepad<br>
-	'toggle' - PORT 1 = Gamepad,            PORT 2 = Joystick or JOYKEYS on Numpad <br>
-    Keypad layout: left 4, right 6, up 8, down 2 and fire 0
+ 	'default' - PORT 1 = JOYKEYS on Numpad<br>
+	'toggle' - PORT 2 = JOYKEYS on Numpad<br>
 * Numpad  change selected disk image on internal 1541 SD card<br>
           - Numpad '+' next image<br>
           - Numpad '-'  previous image<br>
@@ -89,7 +86,9 @@ Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or 
 see pin configuration in .cst configuration file
 ## cartride ROM
 The bin2mi tool can be used to generate from a game ROM new pROM VHDL code (bin2mi xyz.crt xyz.mi)<br>
-From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images the first 0x40 bytes need to be discarded and filesize header in .mi need to be fixed to 8192/16384.<br>Change in fpga64_buslogic.vhd (see comment) and top level (exrom = '0') needed to compile a cartrige load varaint.
+From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images the first 0x40 bytes need to be discarded and filesize header in .mi need to be fixed to 8192/16384.<br>Change in fpga64_buslogic.vhd (see comment) and top level (exrom = '0') needed to compile a cartrige load varaint.<br>
+For the included Demo you need to toggle JoysKeys port by hitting Numpad '*'<br>
+
 ## HW circuit considerations
 **Pinmap TN20k Interfaces** <br>
  Sipeed M0S Dock, digital Joystick D9 and DualShock Gamepad connection.<br>
