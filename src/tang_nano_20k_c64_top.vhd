@@ -397,8 +397,8 @@ port map(
       g_in      => std_logic_vector(g(7 downto 4)),
       b_in      => std_logic_vector(b(7 downto 4)),
 
-      audio_l => audio_data_l(17 downto 2),
-      audio_r => audio_data_r(17 downto 2),
+      audio_l => '0' & audio_data_l(17 downto 11) & audio_data_l(17 downto 10),
+      audio_r => '0' & audio_data_l(17 downto 11) & audio_data_l(17 downto 10),
       enabled => osd_status,
 
       mcu_start => mcu_start,
