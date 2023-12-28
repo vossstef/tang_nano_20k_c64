@@ -327,6 +327,8 @@ c1541_sd : entity work.c1541_sd
   );
 
 sdc_iack <= int_ack(3);
+sd_rd(0) <= '0'; -- remove later on 
+sd_wr(0) <= '0';
 
 sd_card_inst: entity work.sd_card
 generic map (
@@ -397,8 +399,8 @@ port map(
       g_in      => std_logic_vector(g(7 downto 4)),
       b_in      => std_logic_vector(b(7 downto 4)),
 
-      audio_l => '0' & audio_data_l(17 downto 11) & audio_data_l(17 downto 10),
-      audio_r => '0' & audio_data_l(17 downto 11) & audio_data_l(17 downto 10),
+      audio_l => audio_data_l,  -- interface C64 core specific
+      audio_r => audio_data_r,
       enabled => osd_status,
 
       mcu_start => mcu_start,
