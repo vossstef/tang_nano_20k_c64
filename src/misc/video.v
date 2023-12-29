@@ -15,8 +15,8 @@ module video (
 	      input [3:0]  g_in,
 	      input [3:0]  b_in,
 
-          input [15:0] audio_l,
-          input [15:0] audio_r,
+          input [17:0] audio_l,
+          input [17:0] audio_r,
 
           output enabled,
 
@@ -141,25 +141,37 @@ osd_u8g2 osd_u8g2 (
 wire [2:0] tmds;
 wire tmds_clock;
 
+// Audio c64 core specific
+reg [15:0] alo,aro;
+always @(posedge clk32_i) begin
+	reg [16:0] alm,arm;
+
+	arm <= {audio_r[17],audio_r[17:2]};
+	alm <= {audio_l[17],audio_l[17:2]};
+	alo <= ^alm[16:15] ? {alm[16], {15{alm[15]}}} : alm[15:0];
+	aro <= ^arm[16:15] ? {arm[16], {15{arm[15]}}} : arm[15:0];
+end
+
 // scale audio for valume by signed division
 wire [15:0] audio_vol_l = 
     (system_volume == 2'd0)?16'd0:
-    (system_volume == 2'd1)?{ {2{audio_l[15]}}, audio_l[15:2] }:
-    (system_volume == 2'd2)?{ audio_l[15], audio_l[15:1] }:
-    audio_l;
+    (system_volume == 2'd1)?{ {2{alo[15]}}, alo[15:2] }:
+    (system_volume == 2'd2)?{ alo[15], alo[15:1] }:
+    alo;
 
 wire [15:0] audio_vol_r = 
     (system_volume == 2'd0)?16'd0:
-    (system_volume == 2'd1)?{ {2{audio_r[15]}}, audio_r[15:2] }:
-    (system_volume == 2'd2)?{ audio_r[15], audio_r[15:1] }:
-    audio_r;
+    (system_volume == 2'd1)?{ {2{aro[15]}}, aro[15:2] }:
+    (system_volume == 2'd2)?{ aro[15], aro[15:1] }:
+    aro;
 
 hdmi #(
-    .AUDIO_RATE(48000), .AUDIO_BIT_WIDTH(16),
+    .AUDIO_RATE(48000), 
+    .AUDIO_BIT_WIDTH(16),
     .VENDOR_NAME( { "MiSTle", 16'd0} ),
     .PRODUCT_DESCRIPTION( {"C64", 64'd0} ),
-    .START_X(70)
-//    .START_Y(30)
+    .START_X(30)
+//  .START_Y(30)
 ) hdmi(
   .clk_pixel_x5(clk_pixel_x5),
   .clk_pixel(clk_pixel),

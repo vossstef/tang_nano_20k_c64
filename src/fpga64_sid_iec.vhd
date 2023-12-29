@@ -670,8 +670,8 @@ port map (
   extfilter_en => '1',
 
   start_iter => clk_1MHz_en,
-  signed(sample_left) => audio_l,
-  signed(sample_right) => audio_r
+  std_logic_vector(sample_left) => audio_l,
+  std_logic_vector(sample_right) => audio_r
 );
 
 -- -----------------------------------------------------------------------
