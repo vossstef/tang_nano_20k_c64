@@ -16,8 +16,9 @@ use work.keyboard_matrix_pkg.all;
 
 entity tang_nano_20k_c64_top is
   generic (
-    sysclk_frequency : integer := 315 -- Sysclk frequency * 10 (31.5Mhz)
-  );
+    sysclk_frequency : integer := 315; -- Sysclk frequency * 10 (31.5Mhz)
+    mister           : integer := 0    -- 0:no, 1:yes
+    );
   port
   (
     clk_27mhz   : in std_logic;
@@ -45,13 +46,10 @@ entity tang_nano_20k_c64_top is
     tmds_d_n    : out std_logic_vector( 2 downto 0);
     tmds_d_p    : out std_logic_vector( 2 downto 0);
     -- sd interface
-    sd_clk      : out std_logic; -- SCLK
-    sd_cmd      : inout std_logic; -- MOSI
-    sd_dat0     : inout std_logic;  -- MISO
-    sd_dat1     : inout std_logic;  -- unused
-    sd_dat2     : inout std_logic;  -- unused
-    sd_dat3     : inout std_logic; -- CSn
---  debug       : out std_logic_vector(4 downto 0);
+    sd_clk      : out std_logic;
+    sd_cmd      : inout std_logic;
+    sd_dat      : inout std_logic_vector(3 downto 0);
+    --  debug       : out std_logic_vector(4 downto 0);
     ws2812      : out std_logic;
     -- "Magic" port names that the gowin compiler connects to the on-chip SDRAM
     O_sdram_clk  : out std_logic;
@@ -74,7 +72,8 @@ end;
 
 architecture Behavioral_top of tang_nano_20k_c64_top is
 
-signal clk64, clk32, clk16, pll_locked, pll2_locked,core_resetn : std_logic;
+signal clk64, clk32, pll_locked, pll2_locked : std_logic;
+signal core_resetn : std_logic;
 
 attribute syn_keep : integer;
 attribute syn_keep of clk64 : signal is 1;
@@ -184,8 +183,7 @@ signal sd_rd_byte_strobe : std_logic;
 signal sd_byte_index  : std_logic_vector(8 downto 0);
 signal sd_rd_data     : std_logic_vector(7 downto 0);
 signal sd_wr_data     : std_logic_vector(7 downto 0);
-signal sd_mount       : std_logic;
-signal sd_change      : std_logic_vector(1 downto 0);
+signal sd_change      : std_logic;
 signal sdc_int        : std_logic;
 signal sdc_iack       : std_logic;
 signal int_ack        : std_logic_vector(7 downto 0);
@@ -194,6 +192,7 @@ signal spi_io_din     : std_logic;
 signal spi_io_ss      : std_logic;
 signal spi_io_clk     : std_logic;
 signal spi_io_dout    : std_logic;
+signal disk_g64       : std_logic;
 
 component CLKDIV
     generic (
@@ -243,7 +242,7 @@ generic map (
 )
 port map (
  clk         => clk32,     -- Any main clock faster than 1Mhz 
- I_RSTn      => not system_reset(0), --  pll_locked,
+ I_RSTn      => not system_reset(0),   -- MAIN RESET
 
  O_psCLK => joystick_clk,  --  psCLK CLK OUT
  O_psSEL => joystick_cs,   --  psSEL OUT
@@ -272,16 +271,16 @@ led_ws2812: entity work.ws2812
    data   => ws2812
   );
 
-  process(clk32, reset_n)
-  variable reset_cnt : integer range 0 to 32000000;
-begin
-  if reset_n = '0' then
-    reset_cnt := 4000000;
-    elsif rising_edge(clk32) then
-    if reset_cnt /= 0 then
-      reset_cnt := reset_cnt - 1;
-    end if;
-  end if;
+	process(clk32, reset_n)
+		variable reset_cnt : integer range 0 to 32000000;
+	begin
+		if reset_n = '0' then
+			reset_cnt := 4000000;
+      elsif rising_edge(clk32) then
+			if reset_cnt /= 0 then
+				reset_cnt := reset_cnt - 1;
+			end if;
+		end if;
 
   if reset_cnt = 0 then
     c1541_reset <= '0';
@@ -295,14 +294,34 @@ disk_reset <= system_reset(0) or reset_key or not pll_locked or not core_resetn;
 sd_rd(1) <= '0';
 sd_wr(1) <= '0';
 
-c1541_sd : entity work.c1541_sd
-  port map
-  (
+process(clk32, pll_locked)
+  begin
+  if pll_locked = '0' then
+    sd_change <= '0';
+    disk_g64 <= '0';
+    elsif rising_edge(clk32) then
+    if sd_img_size = 0 then
+      sd_change  <= '1';
+    elsif sd_img_size /= 0 then   -- d64 or g64 disk
+      sd_change  <= '0';
+    elsif sd_img_size = 333744 then  -- g64 disk only
+      disk_g64 <= '1';
+    end if;
+  end if;
+end process;
+
+no_mister: if mister = 0 generate
+c1541_sd_inst : entity work.c1541_sd
+port map
+ (
     clk32         => clk32,
-    clk_spi_ctrlr => clk16,
     reset         => disk_reset,
-    
-    disk_num      => ("00" & disk_num),
+
+    disk_num      =>(others =>'0'),
+    disk_change   => sd_change, 
+    disk_mount    => '1',
+    disk_readonly => '1',
+    disk_g64      => disk_g64,
 
     iec_atn_i     => iec_atn_o,
     iec_data_i    => iec_data_o,
@@ -312,37 +331,91 @@ c1541_sd : entity work.c1541_sd
     iec_data_o    => iec_data_i,
     iec_clk_o     => iec_clk_i,
 
-    sd_miso       => sd_dat0,
-    sd_cs_n       => sd_dat3,
-    sd_mosi       => sd_cmd,
-    sd_sclk       => sd_clk,
-   
     -- Userport parallel bus to 1541 disk
-    par_data_i    => std_logic_vector(pb_out),
+    par_data_i    => pb_out,
     par_stb_i     => pc2_n,
     par_data_o    => pb_in,
     par_stb_o     => flag2_n,
 
-    dbg_act       => led(1)  -- LED floppy indicator
-  );
+    sd_lba        => sd_lba,
+    sd_rd         => sd_rd(0),
+    sd_wr         => sd_wr(0),
+    sd_ack        => sd_busy,
 
-sdc_iack <= int_ack(3);
-sd_rd(0) <= '0'; -- remove later on 
-sd_wr(0) <= '0';
+    sd_buff_addr  => sd_byte_index,
+    sd_buff_dout  => sd_rd_data,
+    sd_buff_din   => sd_wr_data,
+    sd_buff_wr    => sd_rd_byte_strobe,
+
+    led           => led(1),  -- LED floppy indicator
+
+    c1541rom_clk  => '0',
+    c1541rom_wr   => '0',
+    c1541rom_addr => (others =>'0'),
+    c1541rom_data => (others =>'0')
+);
+end generate;
+
+yes_mister: if mister /= 0 generate
+c1541_sd_inst : entity work.c1541_drv
+port map
+ (
+    clk           => clk32,
+    reset         => disk_reset,
+    pause         => '0',
+
+    gcr_mode      => disk_g64,
+    img_mounted   => sd_change, -- sd_img_mounted(0),
+    img_readonly  => '0',
+    img_size      => sd_img_size,
+
+    drive_num     => (others =>'0'),
+    led           => led(1),  -- LED floppy indicator
+
+    iec_atn_i     => iec_atn_o,
+    iec_data_i    => iec_data_o,
+    iec_clk_i     => iec_clk_o,
+    iec_data_o    => iec_data_i,
+    iec_clk_o     => iec_clk_i,
+
+    -- Userport parallel bus to 1541 disk
+    par_data_i    => pb_out,
+    par_stb_i     => pc2_n,
+    par_data_o    => pb_in,
+    par_stb_o     => flag2_n,
+
+    ext_en        => '0',
+    rom_addr      => open,
+    rom_data      => (others =>'0'),
+
+    clk_sys       => clk32,
+
+    sd_lba        => sd_lba,
+    sd_blk_cnt    => open,
+    sd_rd         => sd_rd(0),
+    sd_wr         => sd_wr(0),
+    sd_ack        => sd_busy,
+
+    sd_buff_addr  => "00000" & sd_byte_index,
+    sd_buff_dout  => sd_rd_data,
+    sd_buff_din   => sd_wr_data,
+    sd_buff_wr    => sd_rd_byte_strobe
+);
+end generate;
+
 
 sd_card_inst: entity work.sd_card
 generic map (
-    CLK_DIV  => 1,                    -- for 32 Mhz clock
-    SIMULATE => 0
+    CLK_DIV  => 1  -- for 32 Mhz clock
   )
     port map (
     rstn            => pll_locked, 
     clk             => clk32,
   
     -- SD card signals
-    sdclk           => open, 
-    sdcmd           => open, 
-    sddat           => open, 
+    sdclk           => sd_clk,
+    sdcmd           => sd_cmd,
+    sddat           => sd_dat,
 
     -- mcu interface
     data_strobe     => mcu_sdc_strobe,
@@ -457,19 +530,7 @@ mainclock: entity work.Gowin_rPLL
         clkin   => clk_27mhz
     );
 
-clock16m: CLKDIV
-    generic map (
-        DIV_MODE => "2",
-        GSREN  => "false"
-    )
-    port map (
-        CALIB  => '0',
-        clkout => clk16,
-        hclkin => clk32,
-        resetn => pll_locked
-        );
-
-    -- process to toggle joy A/B with BTN
+-- process to toggle joy A/B with BTN
 process(clk32)
 begin
   if rising_edge(clk32) then
