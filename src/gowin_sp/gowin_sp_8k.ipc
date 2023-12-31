@@ -1,0 +1,16 @@
+[General]
+ipc_version=4
+file=gowin_sp_8k
+module=Gowin_SP_8k
+target_device=gw2ar18c-000
+type=ram_sp
+version=3.0
+
+[Config]
+BYTE_SIZE=0
+DEPTH=8192
+LANG=1
+READ=0
+RESET_MODE=true
+WIDTH=8
+WRITE=0

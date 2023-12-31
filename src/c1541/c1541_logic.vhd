@@ -5,6 +5,7 @@ use IEEE.numeric_std.all;
 --
 -- Model 1541B
 --
+-- 2023 Stefan Voss Dolphindos 2.0 added
 
 entity c1541_logic is
   generic
@@ -131,6 +132,12 @@ architecture SYN of c1541_logic is
   signal uc1_cb1_oe     : std_logic;
   signal cb1_i          : std_logic;
 
+  signal cpu_b_slice    : std_logic_vector(2 downto 0);
+  signal extram_cs      : std_logic;
+  signal extrom_cs      : std_logic;
+  signal extram_do      : std_logic_vector(7 downto 0);
+  signal extrom_do      : std_logic_vector(7 downto 0);
+  signal extram_wr      : std_logic;
 
   begin
 
@@ -154,7 +161,6 @@ architecture SYN of c1541_logic is
     ram_cs <= '0';
     uc1_cs2_n <= '1';
     uc3_cs2_n <= '1';
-    rom_cs <= cpu_a(15);  -- ROM $C000-$FFFF (16KB)
 
     -- address decoder logic using a 74LS42 BCD decoder
     cpu_a_slice <= cpu_a(15)&cpu_a(12)&cpu_a(11)&cpu_a(10);
@@ -165,11 +171,50 @@ architecture SYN of c1541_logic is
       when "0111" => uc3_cs2_n <= '0';  -- UC3 (VIA6522) $1C00-$1C0F + mirrors
       when others => null;
     end case;
-
   end process;
 
   -- qualified write signals
   ram_wr <= '1' when ram_cs = '1' and cpu_rw_n = '0' else '0';
+  extram_wr <= '1' when extram_cs = '1' and cpu_rw_n = '0' else '0';
+
+  process (cpu_a, cpu_b_slice)
+  begin
+  rom_cs <= '0';
+  extrom_cs <= '0';
+  extram_cs <= '0';
+  cpu_b_slice <= cpu_a(15)&cpu_a(14)&cpu_a(13);
+    case cpu_b_slice is
+      when "110" => rom_cs <= '1';    -- 16k standard rom low
+      when "111" => rom_cs <= '1';    -- 16k standard rom high
+      when "101" => extrom_cs <= '1'; -- 8k extra rom
+      when "100" => extram_cs <= '1'; -- 8k extra ram 
+      when others => null;
+    end case;
+  end process;
+
+-- 8k extra sram extension for dolphindos
+ram_8kinst :  entity work.Gowin_SP_8k
+port map (
+    dout => extram_do,
+    clk => clk_32M,
+    oce => '1',
+    ce => '1',
+    reset => '0',
+    wre => extram_wr,
+    ad => cpu_a(12 downto 0),
+    din => cpu_do
+);
+
+-- 8k extra rom for dolphindos
+rom_8k_inst : entity work.Gowin_pROM_1541_8k_rom
+port map (
+    dout => extrom_do,
+    clk =>  clk_32M,
+    oce => '1',
+    ce => '1',
+    reset => '0',
+    ad => cpu_a(12 downto 0)
+);
 
   --
   -- hook up UC1 ports
@@ -226,6 +271,8 @@ architecture SYN of c1541_logic is
             ram_do when ram_cs = '1' else
             uc1_do when (uc1_cs1 = '1' and uc1_cs2_n = '0') else
             uc3_do when (uc3_cs1 = '1' and uc3_cs2_n = '0') else
+            extram_do when extram_cs = '1' else
+            extrom_do when extrom_cs = '1' else
             (others => '1');
   cpu_irq_n <= uc1_irq_n and uc3_irq_n;
   cpu_so_n <= byte_n or not soe;

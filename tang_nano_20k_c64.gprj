@@ -41,12 +41,14 @@
         <File path="src/fpga64_keyboard.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_rgbcolor.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_sid_iec.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_prom/gowin_prom_1541_8k_rom.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_prom/gowin_prom_1541_rom.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_prom/gowin_prom_basic_kernal.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_prom/gowin_prom_cart.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_prom/gowin_prom_chargen.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_rpll/gowin_rpll.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_sp/gowin_sp_2k.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_sp/gowin_sp_8k.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_sp/gowin_sp_trackbuf.vhd" type="file.vhdl" enable="1"/>
         <File path="src/keyboard_matrix_pkg.vhd" type="file.vhdl" enable="1"/>
         <File path="src/sid6581/Q_table.vhd" type="file.vhdl" enable="1"/>

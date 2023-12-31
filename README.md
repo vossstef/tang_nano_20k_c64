@@ -12,7 +12,7 @@ Features:
 * [legacy Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)<br>
 * Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) as Joystick<br>
-* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on **raw** microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader](https://www.c64-wiki.com/wiki/SpeedDOS)<br>
+* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on **raw** microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * OSD partially<br>
 
 <font color="red">HMI interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for a USB keyboard, USB Joystick and OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/bl616/misterynano_fw/SPI.md). Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware. 
@@ -23,7 +23,7 @@ Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo
 <br><br>
 
 ## emulated Diskdrive 1541
-Emulated 1541 on a raw microSD card (no FAT fs !) including parallel bus Speedloader.<br>
+Emulated 1541 on a raw microSD card (no FAT fs !) including parallel bus Speedloader Dolphin Dos 2.0.<br>
 Place one or more [.D64](https://vice-emu.sourceforge.io/vice_toc.html#TOC405) file in the tools folder and run 'create_C64_ALL_D64.bat'. It will create a DISKSRAWC64.IMG. Use only SIMPLE D64 files : 174 848 octets (35 Tracks)<br> Use e.g. [win32diskimager](https://sourceforge.net/projects/win32diskimager/) or [Balena Etcher](https://etcher.balena.io) to program a microSD card with DISKSRAWC64.IMG. BE CAREFUL NOT WRITING ON YOUR OWN HARDDRIVE! Insert card in TN slot.<br>
 LED 1 is the Drive activity indicator.<br> For those who forgot after all those years...<br>
 Disk directory listing: (or F7 keypress)<br> 
