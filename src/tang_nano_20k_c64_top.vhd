@@ -294,6 +294,7 @@ disk_reset <= system_reset(0) or reset_key or not pll_locked or not core_resetn;
 
 sd_rd(1) <= '0';
 sd_wr(1) <= '0';
+sd_wr(0) <= '0';
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
@@ -348,7 +349,7 @@ port map
 
     sd_lba        => sd_lba,
     sd_rd         => sd_rd(0),
-    sd_wr         => sd_wr(0),
+    sd_wr         => open, -- sd_wr(0),
     sd_ack        => sd_busy,
 
     sd_buff_addr  => sd_byte_index,
@@ -671,7 +672,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   clk32        => clk32,
   reset_n      => not system_reset(0) and pll_locked and ram_ready,
   bios         => (others => '0'),
-  pause        => '0', -- freeze,
+  pause        => freeze,
   pause_out    => c64_pause,
   -- keyboard interface
   keyboard     => keyboard,
