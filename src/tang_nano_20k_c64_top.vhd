@@ -193,6 +193,7 @@ signal spi_io_ss      : std_logic;
 signal spi_io_clk     : std_logic;
 signal spi_io_dout    : std_logic;
 signal disk_g64       : std_logic;
+signal sd_img_size_d  : std_logic_vector(31 downto 0);
 
 component CLKDIV
     generic (
@@ -294,18 +295,26 @@ disk_reset <= system_reset(0) or reset_key or not pll_locked or not core_resetn;
 sd_rd(1) <= '0';
 sd_wr(1) <= '0';
 
+-- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
   begin
   if pll_locked = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
+    sd_img_size_d <= (others => '0');
     elsif rising_edge(clk32) then
-    if sd_img_size = 0 then
-      sd_change  <= '1';
-    elsif sd_img_size /= 0 then   -- d64 or g64 disk
-      sd_change  <= '0';
-    elsif sd_img_size = 333744 then  -- g64 disk only
-      disk_g64 <= '1';
+      sd_img_size_d <= sd_img_size;
+      if sd_img_size /= sd_img_size_d then
+          sd_change  <= '1';
+        else
+          sd_change  <= '0';
+      if sd_img_size >= 333744 then  -- g64 disk
+        disk_g64 <= '1';
+        led(4) <= '0';
+      else
+        disk_g64 <= '0';
+        led(4) <= '1';
+      end if;
     end if;
   end if;
 end process;
