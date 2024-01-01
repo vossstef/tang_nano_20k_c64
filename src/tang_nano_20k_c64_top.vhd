@@ -556,7 +556,7 @@ led(0) <= joy_sel;
 -- led(1)  c1541 activity
 led(2) <= sd_rd(0);
 led(3) <= sd_rd(1);
-led(4) <= '1';
+-- led(4) <= '1';
 led(5) <= spi_ext;
 
 process(clk32)
