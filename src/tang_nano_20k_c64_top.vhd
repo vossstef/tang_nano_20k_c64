@@ -294,7 +294,6 @@ disk_reset <= system_reset(0) or reset_key or not pll_locked or not core_resetn;
 
 sd_rd(1) <= '0';
 sd_wr(1) <= '0';
-sd_wr(0) <= '0';
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
@@ -305,7 +304,7 @@ process(clk32, pll_locked)
     sd_img_size_d <= (others => '0');
     elsif rising_edge(clk32) then
       sd_img_size_d <= sd_img_size;
-      if sd_img_size /= sd_img_size_d then
+      if (sd_img_size /= sd_img_size_d) then -- or sd_img_mounted(0) = '1' then
           sd_change  <= '1';
         else
           sd_change  <= '0';
@@ -349,7 +348,7 @@ port map
 
     sd_lba        => sd_lba,
     sd_rd         => sd_rd(0),
-    sd_wr         => open, -- sd_wr(0),
+    sd_wr         => sd_wr(0),
     sd_ack        => sd_busy,
 
     sd_buff_addr  => sd_byte_index,
@@ -413,6 +412,7 @@ port map
 );
 end generate;
 
+sdc_iack <= int_ack(3);
 
 sd_card_inst: entity work.sd_card
 generic map (
