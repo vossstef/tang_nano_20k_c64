@@ -84,8 +84,7 @@ localparam [2:0] IDLE         = 3'd0,
                  CORE_IO      = 3'd5;   // core itself does SD card IO
 
 reg [2:0] state;
-//reg [7:0] inbyte_int;  
-wire [7:0] inbyte_int = (state == MCU_WRITE_SD) && linen ? douta : 8'bxxxxxxxx;
+wire [7:0] inbyte_int = (state == MCU_WRITE_SD) && linen ? douta : 8'bzzzz_zzzz;
 
 // interrupt handling
 wire rstart_any = rstart[0] || rstart[1];
@@ -142,7 +141,6 @@ Gowin_DPB_buffer buffer(
     // writing from buffer to SD card
 //    if((state == MCU_WRITE_SD) && linen)
 //        inbyte_int <= buffer[outaddr];
-//         inbyte_int <= douta;
 //end
 
 // register the rising edge of rstart and clear it once
@@ -258,8 +256,8 @@ always @(posedge clk) begin
 	       if(!wstart_int && state == MCU_WRITE_RX) begin	  
 		  // data transfer into local buffer
 		  if(byte_cnt > 4'd3) begin
-         dinb_we <=1'b1;
-  //     buffer[mcu_tx_cnt] <= data_in;
+           dinb_we <= 1'b1;
+    //     buffer[mcu_tx_cnt] <= data_in;
 		     
 		     if(mcu_tx_cnt < 9'd511)
 		       mcu_tx_cnt <= mcu_tx_cnt + 9'd1;
@@ -268,7 +266,7 @@ always @(posedge clk) begin
 			state <= MCU_WRITE_SD;
 		     end
 		  end
-     dinb_we <=1'b0;
+          dinb_we <=1'b0;
 	       end else begin
 		  // sd card write in progress ...
 		  
