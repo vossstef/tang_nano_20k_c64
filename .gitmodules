@@ -1,13 +1,9 @@
-#[submodule "DeMiSTify"]
-#	path = DeMiSTify
-#	url = https://github.com/robinsonb5/DeMiSTify.git
+[submodule "T65"]
+	path = src/T65
+	url = https://github.com/mist-devel/T65.git
 #[submodule "mist-modules"]
 #	path = mist-modules
 #	url = https://github.com/mist-devel/mist-modules.git
-#[submodule "T65"]
-#	path = T65
-#	url = https://github.com/mist-devel/T65.git
-#[submodule "bl616"]
-#	path = MiSTeryNano
-#	url = https://github.com/harbaum/MiSTeryNano.git
-
+[submodule "bl616"]
+	path = MiSTeryNano
+	url = https://github.com/harbaum/MiSTeryNano.git

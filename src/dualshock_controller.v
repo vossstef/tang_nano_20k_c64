@@ -64,7 +64,7 @@ reg [$clog2(CLK_DELAY)-1:0] clk_cnt;
 
 // Generate I_CLK
 always @(posedge clk) begin
-    clk_cnt <= clk_cnt + 1;
+    clk_cnt <= clk_cnt + 7'd1;
     if (clk_cnt == CLK_DELAY-1) begin
         I_CLK = ~I_CLK;
         clk_cnt <= 0;
@@ -187,7 +187,7 @@ reg psCLK_gate, psSEL;
 
 always @(posedge I_CLK or negedge I_RSTn) begin
    if (~I_RSTn) Timer <= 0;
-   else         Timer <= Timer+1;
+   else         Timer <= Timer+ 11'd1;
 end
 
 always @(posedge I_CLK or negedge I_RSTn) begin
@@ -247,7 +247,7 @@ always @(posedge I_CLK or negedge I_RSTn) begin
             else if (I_TYPE == 1 && O_byte_cnt == 9)
                O_byte_cnt <= O_byte_cnt;
             else
-               O_byte_cnt <= O_byte_cnt+1;
+               O_byte_cnt <= O_byte_cnt+4'd1;
          end    
       end
    end
