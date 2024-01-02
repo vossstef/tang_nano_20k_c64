@@ -15,7 +15,7 @@ Features:
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader Dolphin DOS](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * On Screen Display (OSD) for configuration and selection<br>
 
-<font color="red">HMI interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for a USB keyboard, USB Joystick and OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/bl616/misterynano_fw/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware. 
+<font color="red">HMI interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for a USB keyboard, USB Joystick and OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware. 
 
 **Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS</b>
 <br><br>
@@ -38,7 +38,7 @@ RUN<br>
 
 ## OSD
 invoke by F12 keypress<br>
-* D64 Disk selection for c1541 Drive (DISK A)<br>
+* Disk image selection for c1541 Drive (DISK A)<br>
 * Reset<br>
 * Audio Volume<br>
 * Scanlines<br>
@@ -81,13 +81,12 @@ or Keyboard **Numpad** Keys:<br>
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis and Flash program
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
-Program .fs bitsteam to external Flash and power cycle the board.<br>
+For proper operation program .fs bitsteam to 'external Flash' and power cycle the board.<br>
 ## Pin mapping 
 see pin configuration in .cst configuration file
-## cartride ROM
+## cartridge ROM
 The bin2mi tool can be used to generate from a game ROM new pROM VHDL code (bin2mi xyz.crt xyz.mi)<br>
-From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images the first 0x40 bytes need to be discarded and filesize header in .mi need to be fixed to 8192/16384.<br>Change in fpga64_buslogic.vhd (see comment) and top level (exrom = '0') needed to compile a cartrige load varaint.<br>
-For the included Demo you need to toggle JoysKeys port by hitting Numpad '*'<br>
+From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images the first 0x40 bytes need to be discarded and filesize header in .mi need to be fixed to 8192/16384.<br>Changes in fpga64_buslogic.vhd (see comment) and top level (exrom = '0') needed to compile a cartrige load varaint.<br>
 
 ## HW circuit considerations
 **Pinmap TN20k Interfaces** <br>
@@ -125,18 +124,17 @@ For the included Demo you need to toggle JoysKeys port by hitting Numpad '*'<br>
 | 9 | n.c. | - | ACK |
 
 ### BOM
-[Sipeed Tang Nano 20k](https://api.dl.sipeed.com/shareURL/TANG/Nano_20K)<br> 
+[Sipeed Tang Nano 20k](https://api.dl.sipeed.com/shareURL/TANG/Nano_20K)<br>
+[Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
+USB-C to USB-A adapter to connect regular USB devices to the M0S Dock or alternatively a 4 port [mini USB hub](https://a.aliexpress.com/_EIidgjH)<br>
+microSD or microSDHC card FAT/exFAT formatted<br>
+USB Keyboard<br>
 D-SUB 9 M connector<br> 
 Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible Joystick<br>
 Prototype Board<br>
 TFT Monitor with HDMI Input<br>
-microSD or microSDHC card FAT/exFAT formatted<br>
-USB Keyboard<br>
-[Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
-USB-C to USB-A adapter to connect regular USB devices to the M0S Dock or alternatively a 4 port [mini USB hub](https://a.aliexpress.com/_EIidgjH)<br>
-[firmware for M0S Dock](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw)<br>
 <br>
 alternative Gamecontrol option:<br>
-Sipeed Gamepad Adapter for Tang FPGA<br>
+Gamepad Adapter Board (Sipeed Joystick to DIP)<br>
 [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock)<br>
 [USB Joystick](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)<br>
