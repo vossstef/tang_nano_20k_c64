@@ -474,6 +474,8 @@ begin
 			joyKeys(1)    <= not keyboard(13,6); -- PAD 2 down
 			joyKeys(3)    <= not keyboard(14,4); -- PAD 6 right
 			joyKeys(0)    <= not keyboard(13,3); -- PAD 8 up
+			joyKeys(5)    <= '0';
+            joyKeys(6)    <= '0';
 
 -- mod_key1   
 -- mod_key2

@@ -65,7 +65,7 @@ reg [31:0] lsector;
 
 // local buffer to hold one sector to be forwarded to the MCU
 reg [8:0]  mcu_tx_cnt;  
-reg [7:0] buffer [512];  
+//reg [7:0] buffer [512];  
 
 // only export outen if the resulting data is for the core
 wire louten;  
@@ -84,14 +84,17 @@ localparam [2:0] IDLE         = 3'd0,
                  CORE_IO      = 3'd5;   // core itself does SD card IO
 
 reg [2:0] state;
-reg [7:0] inbyte_int;  
-reg [7:0] dummy;  // to be removed later on
+wire [7:0] inbyte_int = (state == MCU_WRITE_SD) && linen ? douta : 8'bzzzz_zzzz;
 
 // interrupt handling
 wire rstart_any = rstart[0] || rstart[1];
 wire wstart_any = wstart[0] || wstart[1];
 wire start_any = rstart_any || wstart_any;
-   
+
+wire [7:0] douta;
+wire [7:0] doutb;
+reg  dinb_we = 0;
+
 always @(posedge clk) begin
     reg	  startD;   
 
@@ -110,16 +113,35 @@ always @(posedge clk) begin
             irq <= 1'b0;
     end   
 end
+
+Gowin_DPB_buffer buffer(
+    .douta(douta),
+    .doutb(doutb), 
+    .clka(clk), 
+    .ocea(1'b1), 
+    .cea(1'b1), 
+    .reseta(1'b0), 
+    .wrea((state == MCU_READ_SD) && louten), 
+    .clkb(clk), 
+    .oceb(1'b1), 
+    .ceb(1'b1), 
+    .resetb(1'b0), 
+    .wreb(dinb_we), 
+    .ada(outaddr), 
+    .dina(outbyte),
+    .adb(mcu_tx_cnt), 
+    .dinb(data_in)
+);
    
-always @(posedge clk) begin
+//always @(posedge clk) begin
     // reading data from SD into buffer
-    if((state == MCU_READ_SD) && louten)
-        buffer[outaddr] <= outbyte;   
+//    if((state == MCU_READ_SD) && louten)
+//        buffer[outaddr] <= outbyte;   
 
     // writing from buffer to SD card
-    if((state == MCU_WRITE_SD) && linen)
-        inbyte_int <= buffer[outaddr];
-end
+//    if((state == MCU_WRITE_SD) && linen)
+//        inbyte_int <= buffer[outaddr];
+//end
 
 // register the rising edge of rstart and clear it once
 // it has been reported to the MCU
@@ -193,7 +215,8 @@ always @(posedge clk) begin
                   end
 		  
                   if(state == MCU_READ_TX) begin
-                     data_out <= buffer[mcu_tx_cnt];
+//                     data_out <= buffer[mcu_tx_cnt];
+                     data_out <= doutb;
                      mcu_tx_cnt <= mcu_tx_cnt + 9'd1;
                   end
                end	       
@@ -233,9 +256,9 @@ always @(posedge clk) begin
 	       if(!wstart_int && state == MCU_WRITE_RX) begin	  
 		  // data transfer into local buffer
 		  if(byte_cnt > 4'd3) begin
-//		     buffer[mcu_tx_cnt] <= data_in;
-		     dummy <= data_in;
-
+           dinb_we <= 1'b1;
+    //     buffer[mcu_tx_cnt] <= data_in;
+		     
 		     if(mcu_tx_cnt < 9'd511)
 		       mcu_tx_cnt <= mcu_tx_cnt + 9'd1;
 		     else begin
@@ -243,6 +266,7 @@ always @(posedge clk) begin
 			state <= MCU_WRITE_SD;
 		     end
 		  end
+          dinb_we <=1'b0;
 	       end else begin
 		  // sd card write in progress ...
 		  

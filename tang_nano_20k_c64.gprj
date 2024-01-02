@@ -5,8 +5,12 @@
     <Version>5</Version>
     <Device name="GW2AR-18C" pn="GW2AR-LV18QN88C8/I7">gw2ar18c-000</Device>
     <FileList>
+        <File path="src/c1541/mist_sd_card.sv" type="file.verilog" enable="1"/>
         <File path="src/dualshock_controller.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_clkdiv/gowin_clkdiv.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_dpb/gowin_dpb_buffer.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_dpb/gowin_dpb_track_buffer_b.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_dpb/gowin_dpb_trkbuf.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_rpll/pll_160m.v" type="file.verilog" enable="1"/>
         <File path="src/hdmi/audio_clock_regeneration_packet.sv" type="file.verilog" enable="1"/>
         <File path="src/hdmi/audio_info_frame.sv" type="file.verilog" enable="1"/>
@@ -34,7 +38,6 @@
         <File path="src/c1541/c1541_logic.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/c1541_sd.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/gcr_floppy.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/c1541/spi_controller.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/via6522.vhd" type="file.vhdl" enable="1"/>
         <File path="src/cpu_6510.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_buslogic.vhd" type="file.vhdl" enable="1"/>
@@ -49,7 +52,6 @@
         <File path="src/gowin_rpll/gowin_rpll.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_sp/gowin_sp_2k.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_sp/gowin_sp_8k.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/gowin_sp/gowin_sp_trackbuf.vhd" type="file.vhdl" enable="1"/>
         <File path="src/keyboard_matrix_pkg.vhd" type="file.vhdl" enable="1"/>
         <File path="src/sid6581/Q_table.vhd" type="file.vhdl" enable="1"/>
         <File path="src/sid6581/adsr_multi.vhd" type="file.vhdl" enable="1"/>

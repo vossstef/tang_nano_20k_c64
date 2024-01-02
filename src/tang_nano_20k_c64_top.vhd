@@ -16,8 +16,9 @@ use work.keyboard_matrix_pkg.all;
 
 entity tang_nano_20k_c64_top is
   generic (
-    sysclk_frequency : integer := 315 -- Sysclk frequency * 10 (31.5Mhz)
-  );
+    sysclk_frequency : integer := 315; -- Sysclk frequency * 10 (31.5Mhz)
+    mister           : integer := 0    -- 0:no, 1:yes
+    );
   port
   (
     clk_27mhz   : in std_logic;
@@ -45,13 +46,10 @@ entity tang_nano_20k_c64_top is
     tmds_d_n    : out std_logic_vector( 2 downto 0);
     tmds_d_p    : out std_logic_vector( 2 downto 0);
     -- sd interface
-    sd_clk      : out std_logic; -- SCLK
-    sd_cmd      : inout std_logic; -- MOSI
-    sd_dat0     : inout std_logic;  -- MISO
-    sd_dat1     : inout std_logic;  -- unused
-    sd_dat2     : inout std_logic;  -- unused
-    sd_dat3     : inout std_logic; -- CSn
---  debug       : out std_logic_vector(4 downto 0);
+    sd_clk      : out std_logic;
+    sd_cmd      : inout std_logic;
+    sd_dat      : inout std_logic_vector(3 downto 0);
+    --  debug       : out std_logic_vector(4 downto 0);
     ws2812      : out std_logic;
     -- "Magic" port names that the gowin compiler connects to the on-chip SDRAM
     O_sdram_clk  : out std_logic;
@@ -74,7 +72,7 @@ end;
 
 architecture Behavioral_top of tang_nano_20k_c64_top is
 
-signal clk64, clk32, clk16, pll_locked, pll2_locked,core_resetn : std_logic;
+signal clk64, clk32, pll_locked, pll2_locked : std_logic;
 
 attribute syn_keep : integer;
 attribute syn_keep of clk64 : signal is 1;
@@ -94,12 +92,12 @@ signal dram_addr    : std_logic_vector(21 downto 0);
 signal ram_ready    : std_logic;
 
 -- IEC
-signal  iec_data_o  : std_logic;
-signal  iec_data_i  : std_logic;
-signal  iec_clk_o   : std_logic;
-signal  iec_clk_i   : std_logic;
-signal  iec_atn_o   : std_logic;
-signal  iec_atn_i   : std_logic;
+signal iec_data_o  : std_logic;
+signal iec_data_i  : std_logic;
+signal iec_clk_o   : std_logic;
+signal iec_clk_i   : std_logic;
+signal iec_atn_o   : std_logic;
+signal iec_atn_i   : std_logic;
 
   -- keyboard
 signal disk_num     : std_logic_vector(7 downto 0) := (others => '0');
@@ -153,28 +151,19 @@ signal mouse          : std_logic_vector(5 downto 0);
 signal keyboard       : keyboard_t;
 signal joystick       : std_logic_vector(7 downto 0);
 
-signal osd_r          : std_logic_vector(5 downto 0);
-signal osd_g          : std_logic_vector(5 downto 0);
-signal osd_b          : std_logic_vector(5 downto 0);
-signal r_out          : std_logic_vector(7 downto 0);
-signal g_out          : std_logic_vector(7 downto 0);
-signal b_out          : std_logic_vector(7 downto 0);
-signal hsync_out      : std_logic;
-signal vsync_out      : std_logic;
-signal c64_r          : std_logic_vector(5 downto 0);
-signal c64_g          : std_logic_vector(5 downto 0);
-signal c64_b          : std_logic_vector(5 downto 0);
-signal freeze, freeze_sync  : std_logic;
+signal freeze         : std_logic;
+signal freeze_sync    : std_logic;
 signal c64_pause      : std_logic;
 signal old_sync       : std_logic;
 signal osd_status     : std_logic;
 signal ws2812_color   : std_logic_vector(23 downto 0);
-signal system_reset   : std_logic_vector(1 downto 0);   -- reset and coldboot flag
-signal c1541_reset    : std_logic;
-signal reset_counter  : integer;
-signal reset_n        : std_logic;
+signal system_reset   : std_logic_vector(1 downto 0);
+signal disk_chg_trg   : std_logic;
+signal disk_chg_trg_d : std_logic;
 signal sd_img_size    : std_logic_vector(31 downto 0);
+signal sd_img_size_d  : std_logic_vector(31 downto 0);
 signal sd_img_mounted : std_logic_vector(1 downto 0);
+signal sd_img_mounted_d : std_logic;
 signal sd_rd          : std_logic_vector(1 downto 0);
 signal sd_wr          : std_logic_vector(1 downto 0);
 signal sd_lba         : std_logic_vector(31 downto 0);
@@ -184,8 +173,7 @@ signal sd_rd_byte_strobe : std_logic;
 signal sd_byte_index  : std_logic_vector(8 downto 0);
 signal sd_rd_data     : std_logic_vector(7 downto 0);
 signal sd_wr_data     : std_logic_vector(7 downto 0);
-signal sd_mount       : std_logic;
-signal sd_change      : std_logic_vector(1 downto 0);
+signal sd_change      : std_logic;
 signal sdc_int        : std_logic;
 signal sdc_iack       : std_logic;
 signal int_ack        : std_logic_vector(7 downto 0);
@@ -194,6 +182,9 @@ signal spi_io_din     : std_logic;
 signal spi_io_ss      : std_logic;
 signal spi_io_clk     : std_logic;
 signal spi_io_dout    : std_logic;
+signal disk_g64       : std_logic;
+signal disk_g64_d     : std_logic;
+signal c1541_reset    : std_logic;
 
 component CLKDIV
     generic (
@@ -239,11 +230,11 @@ end process;
 --                                 1:(Square X O Triangle Right1 Left1 Right2 Left2)
 gamepad: entity work.dualshock_controller
 generic map (
- FREQ => 32000000
+ FREQ => 31500000
 )
 port map (
  clk         => clk32,     -- Any main clock faster than 1Mhz 
- I_RSTn      => not system_reset(0), --  pll_locked,
+ I_RSTn      => not system_reset(0),   -- MAIN RESET
 
  O_psCLK => joystick_clk,  --  psCLK CLK OUT
  O_psSEL => joystick_cs,   --  psSEL OUT
@@ -272,37 +263,73 @@ led_ws2812: entity work.ws2812
    data   => ws2812
   );
 
-  process(clk32, reset_n)
-  variable reset_cnt : integer range 0 to 32000000;
-begin
-  if reset_n = '0' then
-    reset_cnt := 4000000;
-    elsif rising_edge(clk32) then
-    if reset_cnt /= 0 then
-      reset_cnt := reset_cnt - 1;
-    end if;
-  end if;
+	process(clk32, disk_reset)
+    variable reset_cnt : integer range 0 to 2147483647;
+    begin
+		if disk_reset = '1' then
+      disk_chg_trg <= '0';
+			reset_cnt := 64000000;
+      elsif rising_edge(clk32) then
+			if reset_cnt /= 0 then
+				reset_cnt := reset_cnt - 1;
+			end if;
+		end if;
 
   if reset_cnt = 0 then
-    c1541_reset <= '0';
+    disk_chg_trg <= '1';
   else 
-    c1541_reset <= '1';
+    disk_chg_trg <= '0';
   end if;
 end process;
 
-disk_reset <= system_reset(0) or reset_key or not pll_locked or not core_resetn;
+disk_reset <= system_reset(0) or not pll_locked or c1541_reset;
 
-sd_rd(1) <= '0';
-sd_wr(1) <= '0';
+-- rising edge sd_change triggers detection of new disk
+process(clk32, pll_locked)
+  begin
+  if pll_locked = '0' then
+    sd_change <= '0';
+    disk_g64 <= '0';
+    disk_g64_d <= '0';
+    sd_img_size_d <= (others => '0');
+    sd_img_mounted_d <= '0';
+    disk_chg_trg_d <= '0';
+    elsif rising_edge(clk32) then
+      sd_img_size_d <= sd_img_size;
+      sd_img_mounted_d <= sd_img_mounted(0);
+      disk_chg_trg_d <= disk_chg_trg;
+      disk_g64_d <= disk_g64;
+      if (sd_img_size /= sd_img_size_d) or (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
+          sd_change  <= '1';
+          else
+          sd_change  <= '0';
+      if sd_img_size >= 333744 then  -- g64 disk selected
+        disk_g64 <= '1';
+        led(4) <= '0'; -- g64 indicator
+      else
+        disk_g64 <= '0';
+        led(4) <= '1';
+      end if;
+      if (disk_g64 /= disk_g64_d) then
+        c1541_reset  <= '1'; -- reset needed after G64 change
+        else
+        c1541_reset  <= '0';
+        end if;
+      end if;
+  end if;
+end process;
 
-c1541_sd : entity work.c1541_sd
-  port map
-  (
+c1541_sd_inst : entity work.c1541_sd
+port map
+ (
     clk32         => clk32,
-    clk_spi_ctrlr => clk16,
     reset         => disk_reset,
-    
-    disk_num      => ("00" & disk_num),
+
+    disk_num      =>(others =>'0'),
+    disk_change   => sd_change, 
+    disk_mount    => '1',
+    disk_readonly => '0',
+    disk_g64      => disk_g64,
 
     iec_atn_i     => iec_atn_o,
     iec_data_i    => iec_data_o,
@@ -312,37 +339,46 @@ c1541_sd : entity work.c1541_sd
     iec_data_o    => iec_data_i,
     iec_clk_o     => iec_clk_i,
 
-    sd_miso       => sd_dat0,
-    sd_cs_n       => sd_dat3,
-    sd_mosi       => sd_cmd,
-    sd_sclk       => sd_clk,
-   
     -- Userport parallel bus to 1541 disk
-    par_data_i    => std_logic_vector(pb_out),
+    par_data_i    => pb_out,
     par_stb_i     => pc2_n,
     par_data_o    => pb_in,
     par_stb_o     => flag2_n,
 
-    dbg_act       => led(1)  -- LED floppy indicator
-  );
+    sd_lba        => sd_lba,
+    sd_rd         => sd_rd(0),
+    sd_wr         => sd_wr(0),
+    sd_ack        => sd_busy,
 
+    sd_buff_addr  => sd_byte_index,
+    sd_buff_dout  => sd_rd_data,
+    sd_buff_din   => sd_wr_data,
+    sd_buff_wr    => sd_rd_byte_strobe,
+
+    led           => led(0),  -- LED floppy indicator
+
+    c1541rom_clk  => '0',
+    c1541rom_wr   => '0',
+    c1541rom_addr => (others =>'0'),
+    c1541rom_data => (others =>'0')
+);
+
+sd_rd(1) <= '0';
+sd_wr(1) <= '0';
 sdc_iack <= int_ack(3);
-sd_rd(0) <= '0'; -- remove later on 
-sd_wr(0) <= '0';
 
 sd_card_inst: entity work.sd_card
 generic map (
-    CLK_DIV  => 1,                    -- for 32 Mhz clock
-    SIMULATE => 0
+    CLK_DIV  => 1  -- for 32 Mhz clock
   )
     port map (
     rstn            => pll_locked, 
     clk             => clk32,
   
     -- SD card signals
-    sdclk           => open, 
-    sdcmd           => open, 
-    sddat           => open, 
+    sdclk           => sd_clk,
+    sdcmd           => sd_cmd,
+    sddat           => sd_dat,
 
     -- mcu interface
     data_strobe     => mcu_sdc_strobe,
@@ -457,19 +493,7 @@ mainclock: entity work.Gowin_rPLL
         clkin   => clk_27mhz
     );
 
-clock16m: CLKDIV
-    generic map (
-        DIV_MODE => "2",
-        GSREN  => "false"
-    )
-    port map (
-        CALIB  => '0',
-        clkout => clk16,
-        hclkin => clk32,
-        resetn => pll_locked
-        );
-
-    -- process to toggle joy A/B with BTN
+-- process to toggle joy A/B with BTN
 process(clk32)
 begin
   if rising_edge(clk32) then
@@ -482,11 +506,11 @@ begin
   end if;
 end process;
 
-led(0) <= joy_sel;
--- led(1)  c1541 activity
+-- led(0)  c1541 activity
+led(1) <= joy_sel;
 led(2) <= sd_rd(0);
-led(3) <= sd_rd(1);
-led(4) <= '1';
+led(3) <= sd_wr(0);
+-- led(4) G64 indicator
 led(5) <= spi_ext;
 
 process(clk32)
@@ -577,31 +601,13 @@ hid_inst: entity work.hid
 
 );
 
-process(clk32, pll_locked)            
-variable reset_cnt : integer range 0 to 2147483647;
-begin
-if pll_locked = '0' then
-  reset_cnt := 47483647;
-elsif rising_edge(clk32) then
-  if reset_cnt /= 0 then
-    reset_cnt := reset_cnt - 1;
-  end if;
-end if;
-
-if reset_cnt = 0 then
-  core_resetn <= '1';
-else 
-  core_resetn <= '0';
-end if;
-end process;
-
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
   clk32        => clk32,
   reset_n      => not system_reset(0) and pll_locked and ram_ready,
   bios         => (others => '0'),
-  pause        => '0', -- freeze,
+  pause        => freeze,
   pause_out    => c64_pause,
   -- keyboard interface
   keyboard     => keyboard,

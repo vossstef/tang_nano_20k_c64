@@ -12,37 +12,36 @@ Features:
 * [legacy Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)<br>
 * Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) as Joystick<br>
-* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on **raw** microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
-* OSD partially<br>
+* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader Dolphin DOS](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
+* On Screen Display (OSD) for configuration and selection<br>
 
-<font color="red">HMI interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for a USB keyboard, USB Joystick and OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/bl616/misterynano_fw/SPI.md). Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware. 
+<font color="red">HMI interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for a USB keyboard, USB Joystick and OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/bl616/misterynano_fw/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware. 
 
 **Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS</b>
-<br>So far Video/Audio/Keyboard/Joystick/Cartride/c1541_sd working.<br>
-Dedicated .fs bitstream for default configuration and .fs for cartridge ROM demo included.
 <br><br>
 
-## emulated Diskdrive 1541
-Emulated 1541 on a raw microSD card (no FAT fs !) including parallel bus Speedloader Dolphin Dos 2.0.<br>
-Place one or more [.D64](https://vice-emu.sourceforge.io/vice_toc.html#TOC405) file in the tools folder and run 'create_C64_ALL_D64.bat'. It will create a DISKSRAWC64.IMG. Use only SIMPLE D64 files : 174 848 octets (35 Tracks)<br> Use e.g. [win32diskimager](https://sourceforge.net/projects/win32diskimager/) or [Balena Etcher](https://etcher.balena.io) to program a microSD card with DISKSRAWC64.IMG. BE CAREFUL NOT WRITING ON YOUR OWN HARDDRIVE! Insert card in TN slot.<br>
-LED 1 is the Drive activity indicator.<br> For those who forgot after all those years...<br>
+## emulated Diskdrive c1541
+Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS.<br>
+Copy a D64 Disk image to your sdcard and rename it to disk_a.st  (for the time being as default boot image). In case a disk_b.st exists delete that.<br>
+Add further D64 (or G64) images as you like and insert card in TN slot. Power Cycle TN. LED 0 acts as Drive activity indicator.<br> 
+For those who forgot after all those years...<br>
 Disk directory listing: (or F7 keypress)<br> 
 LOAD"$",8<br>
 LIST<br> 
 Load first program from Disk:<br>
 LOAD"*",8<br>
 RUN<br>
-Multiple D64 images on sdcard can be selected by Numpad '+' forwards followed by a Drive Reset pushing Numpad 'Enter' or one image backwards by Numpad '-' and Numpad 'Enter'. Sorry no OSD selection yet...
+
 ## Push Button utilization
-* S2 push button Reset<br>
-* S1 to swap physical Joystick or GamePad in between [c64 Joystick ports ](https://www.c64-wiki.com/wiki/Control_Port) 1 or 2 (selected port indicated by LED 0). Two Player control.<br>
+* S2 reserved<br>
+* S1 to swap physical Joystick or GamePad in between [c64 Joystick ports ](https://www.c64-wiki.com/wiki/Control_Port) 1 or 2 (selected port indicated by LED 1). Two Player control.<br>
 
 ## OSD
 invoke by F12 keypress<br>
+* D64 Disk selection for c1541 Drive (DISK A)<br>
 * Reset<br>
 * Audio Volume<br>
 * Scanlines<br>
-<br>don't touch Drive A/B and save configuration, as not implemented yet. µC will stuck.<br>
 
 ## Gamecontrol Joystick support
 legacy Digital Joystick<br>
@@ -67,21 +66,22 @@ or Keyboard **Numpad** Keys:<br>
 * Numpad '*' toggle Numpad Joystick emulation:<br>
  	'default' - PORT 1 = JOYKEYS on Numpad<br>
 	'toggle' - PORT 2 = JOYKEYS on Numpad<br>
-* Numpad  change selected disk image on internal 1541 SD card<br>
-          - Numpad '+' next image<br>
-          - Numpad '-'  previous image<br>
-* Numpad 'Enter' c1541_sd drive Reset (you have to press once after image selection change and wait for 2 sec) <br>
 
 [Layout](https://github.com/MiSTer-devel/C64_MiSTer/blob/master/keymap.gif) similar with some enhancements.
 
 ## LED
-0 Joystick selection indication<br>
-1 c1541 drive activity<br>
+0 c1541 Drive activity<br>
+1 Joystick port selection<br>
+2 sdcard Drive A<br>
+3 unused<br>
+4 G64 Disk image<br>
+5 M0S Dock detect<br>
 
 ## Powering
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
-## Synthesis
+## Synthesis and Flash program
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
+Program .fs bitsteam to external Flash and power cycle the board.<br>
 ## Pin mapping 
 see pin configuration in .cst configuration file
 ## cartride ROM
@@ -130,7 +130,7 @@ D-SUB 9 M connector<br>
 Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible Joystick<br>
 Prototype Board<br>
 TFT Monitor with HDMI Input<br>
-microSD or microSDHC card<br>
+microSD or microSDHC card FAT/exFAT formatted<br>
 USB Keyboard<br>
 [Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
 USB-C to USB-A adapter to connect regular USB devices to the M0S Dock or alternatively a 4 port [mini USB hub](https://a.aliexpress.com/_EIidgjH)<br>

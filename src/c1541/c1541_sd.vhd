@@ -8,13 +8,11 @@
 --
 -- c1541_logic    from : Mark McDougall
 -- spi_controller from : Michel Stempin, Stephen A. Edwards
--- via6522        from : Arnim Laeuger, Mark McDougall, MikeJ
+-- via6522        from : Gideon Zweijtzer  <gideon.zweijtzer@gmail.com>
 -- T65            from : Daniel Wallner, MikeJ, ehenciak
 --
--- c1541_logic    modified for : slow down CPU (EOI ack missed by real c64)
---                             : remove iec internal OR wired
---                             : synched atn_in (sometime no IRQ with real c64)
--- spi_controller modified for : sector start and size adapted + busy signal
+-- c1541_logic    modified for  : remove iec internal OR wired
+-- spi_controller replaced with mist_sd_card
 -- via6522        modified for : no modification
 --
 --
@@ -30,10 +28,13 @@ use ieee.numeric_std.all;
 entity c1541_sd is
 port(
 	clk32 : in std_logic;
-	clk_spi_ctrlr : in std_logic;
 	reset : in std_logic;
 	
 	disk_num : in std_logic_vector(9 downto 0);
+	disk_change : in std_logic;
+	disk_mount  : in std_logic := '1';
+	disk_readonly : in std_logic;
+	disk_g64    : in std_logic := '0';
 
 	iec_atn_i  : in std_logic;
 	iec_data_i : in std_logic;
@@ -43,10 +44,17 @@ port(
 	iec_data_o : out std_logic;
 	iec_clk_o  : out std_logic;
 	
-	sd_miso  : in std_logic;
-	sd_cs_n  : out std_logic;
-	sd_mosi  : out std_logic;
-	sd_sclk  : out std_logic;
+	sd_lba         : out std_logic_vector(31 downto 0);
+	sd_rd          : out std_logic;
+	sd_wr          : out std_logic;
+	sd_ack         : in  std_logic;
+
+	sd_buff_addr   : in  std_logic_vector(8 downto 0);
+	sd_buff_dout   : in  std_logic_vector(7 downto 0);
+	sd_buff_din    : out std_logic_vector(7 downto 0);
+	sd_buff_wr     : in std_logic;
+
+	led            : out std_logic;
 
 	-- parallel bus
 	par_data_i : in std_logic_vector(7 downto 0);
@@ -54,25 +62,14 @@ port(
 	par_data_o : out std_logic_vector(7 downto 0);
 	par_stb_o  : out std_logic;
 
-	dbg_track_num_dbl : out std_logic_vector(6 downto 0);
-	dbg_sd_busy     : out std_logic;
-	dbg_sd_state    : out std_logic_vector(7 downto 0);
-	dbg_read_sector : out std_logic_vector(4 downto 0);
-	dbg_mtr         : out std_logic;
-	dbg_act         : out std_logic
+   c1541rom_clk    : in std_logic;
+   c1541rom_addr   : in std_logic_vector(13 downto 0);
+   c1541rom_data   : in std_logic_vector(7 downto 0);
+   c1541rom_wr     : in std_logic
 );
 end c1541_sd;
 
 architecture struct of c1541_sd is
-
-signal spi_ram_addr    : std_logic_vector(12 downto 0);
-signal spi_ram_di      : std_logic_vector( 7 downto 0);
-signal spi_ram_we      : std_logic;
-
-signal ram_addr        : std_logic_vector(12 downto 0);
-signal ram_di          : std_logic_vector( 7 downto 0);
-signal ram_do          : std_logic_vector( 7 downto 0);
-signal ram_we          : std_logic;
 
 signal floppy_ram_addr : std_logic_vector(12 downto 0);
 signal floppy_ram_di   : std_logic_vector( 7 downto 0);
@@ -86,7 +83,6 @@ signal mode_r : std_logic;                    -- read/write
 signal stp    : std_logic_vector(1 downto 0); -- stepper motor control
 signal stp_r  : std_logic_vector(1 downto 0); -- stepper motor control
 signal mtr    : std_logic ;                   -- stepper motor on/off
---signal mtr_r  : std_logic ;                   -- stepper motor on/off
 signal freq   : std_logic_vector(1 downto 0); -- motor (gcr_bit) frequency
 signal sync_n : std_logic;                    -- reading SYNC bytes
 signal byte_n : std_logic;                    -- byte ready
@@ -96,27 +92,19 @@ signal act_r  : std_logic;                    -- activity LED
 signal track_num_dbl     : std_logic_vector(6 downto 0);
 signal new_track_num_dbl : std_logic_vector(6 downto 0);
 signal sd_busy           : std_logic;
+
 signal save_track      : std_logic;
 signal track_modified   : std_logic;
-signal sector_offset    : std_logic;
 signal save_track_stage : std_logic_vector(3 downto 0);
 signal id1 : std_logic_vector(7 downto 0);
 signal id2 : std_logic_vector(7 downto 0);
 signal disk_freq : std_logic_vector(1 downto 0);
 signal raw_disk : std_logic;
 signal raw_track_len : std_logic_vector(15 downto 0);
-signal max_track : std_logic_vector(6 downto 0) := "1010000";
-signal wps_flag : std_logic := '0';
+signal max_track : std_logic_vector(6 downto 0);
+signal wps_flag : std_logic;
 signal change_timer : integer;
-signal mounted : std_logic := '1';
-
-signal dbg_sector : std_logic_vector(4 downto 0); 
-signal dbg_adr_fetch : std_logic_vector(15 downto 0); 
-
-signal disk_change : std_logic := '1';
-signal disk_mount  : std_logic := '1';
-signal disk_readonly : std_logic := '0';
-signal disk_g64    : std_logic := '0';
+signal mounted : std_logic := '0';
 
 begin
 	
@@ -138,14 +126,13 @@ begin
     sb_data_in => iec_data_i,
     sb_clk_in  => iec_clk_i,
     sb_atn_in  => iec_atn_i,
-
     -- parallel bus
     par_data_i => par_data_i,
     par_stb_i  => par_stb_i,
     par_data_o => par_data_o,
     par_stb_o  => par_stb_o,
 
-    -- drive-side interface
+	-- drive-side interface
     ds              => "00",     -- device select
     di              => c1541_logic_din,  -- data read 
     do              => c1541_logic_dout, -- data to write
@@ -158,11 +145,11 @@ begin
     wps_n           => not wps_flag,      -- write-protect sense (0 = protected)
     tr00_sense_n    => '1',      -- track 0 sense (unused?)
     act             => act,      -- activity LED
-		
-    c1541rom_clk    => '0',
-    c1541rom_addr   =>(others => '0'),
-    c1541rom_data   =>(others => '0'),
-    c1541rom_wr     => '0'
+
+    c1541rom_clk    => c1541rom_clk,
+    c1541rom_addr   => c1541rom_addr,
+    c1541rom_data   => c1541rom_data,
+    c1541rom_wr     => c1541rom_wr
   );
 
 floppy : entity work.gcr_floppy
@@ -181,24 +168,84 @@ port map
 	byte_n => byte_n, -- byte ready
 
 	track_num  => new_track_num_dbl(6 downto 1),
-	id1          => x"20",
-	id2          => x"20",
-	raw_freq     => b"00",
-	mounted      => mounted,
-	raw          => '0',
-	raw_track_len => (others => '0'),
+	id1        => id1,
+	id2        => id2,
+	mounted    => mounted,
+	raw        => raw_disk,
+	raw_freq   => disk_freq,
+	raw_track_len => raw_track_len,
 
 	ram_addr   => floppy_ram_addr,
-	ram_do     => ram_do, 	
+	ram_do     => floppy_ram_do,
 	ram_di     => floppy_ram_di,
 	ram_we     => floppy_ram_we,
 	ram_ready  => not sd_busy,
 		
-	dbg_sector  => dbg_sector
+	dbg_sector  => open
 );
-	
---wps_flag <= disk_readonly when change_timer = 0 else not disk_readonly;
-wps_flag <= '0';
+
+sd: entity work.mist_sd_card
+port map
+(
+	clk           => clk32,
+	reset         => reset,
+
+	ram_addr      => floppy_ram_addr,
+	ram_di        => floppy_ram_di,
+	ram_do        => floppy_ram_do,
+	ram_we        => floppy_ram_we,
+
+	track         => new_track_num_dbl(6 downto 0),
+	busy          => sd_busy,
+	save_track    => save_track,
+	id1           => id1,
+	id2           => id2,
+	freq          => disk_freq,
+	raw           => raw_disk,
+	raw_track_len => raw_track_len,
+	change        => disk_change,
+	mount         => disk_mount,
+	g64           => disk_g64,
+	max_track     => max_track,
+
+	sd_buff_addr  => sd_buff_addr,
+	sd_buff_dout  => sd_buff_dout,
+	sd_buff_din   => sd_buff_din,
+	sd_buff_wr    => sd_buff_wr,
+
+	sd_lba        => sd_lba,
+	sd_rd         => sd_rd,
+	sd_wr         => sd_wr,
+	sd_ack        => sd_ack
+);
+
+--sd_spi : entity work.spi_controller
+--port map
+--(
+--	cs_n => sd_cs_n,  --: out std_logic; -- MMC chip select
+--	mosi => sd_mosi,  --: out std_logic; -- Data to card (master out slave in)
+--	miso => sd_miso,  --: in  std_logic; -- Data from card (master in slave out)
+--	sclk => sd_sclk,  --: out std_logic; -- Card clock
+--	bus_available => bus_available,
+--
+--	ram_addr => spi_ram_addr, -- out unsigned(13 downto 0);
+--	ram_di   => spi_ram_di,   -- out unsigned(7 downto 0);
+--	ram_do   => ram_do,       -- in  unsigned(7 downto 0);
+--	ram_we   => spi_ram_we,
+--		
+--	track_num     => new_track_num_dbl(6 downto 1),
+--	disk_num      => disk_num,
+--	busy          => sd_busy,
+--	save_track    => save_track,
+--	sector_offset => sector_offset,
+--
+--	clk => clk_spi_ctrlr,
+--	reset => reset,
+--
+--	dbg_state => dbg_sd_state
+--);
+
+wps_flag <= disk_readonly when change_timer = 0 else not disk_readonly;
 
 process (clk32,reset)
 begin
@@ -299,60 +346,6 @@ begin
 end process;
 
 
-sd_spi : entity work.spi_controller
-port map
-(
-	cs_n => sd_cs_n,  --: out std_logic; -- MMC chip select
-	mosi => sd_mosi,  --: out std_logic; -- Data to card (master out slave in)
-	miso => sd_miso,  --: in  std_logic; -- Data from card (master in slave out)
-	sclk => sd_sclk,  --: out std_logic; -- Card clock
-	bus_available => '1',
---
-	ram_addr => spi_ram_addr, -- out unsigned(13 downto 0);
-	ram_di   => spi_ram_di,   -- out unsigned(7 downto 0);
-	ram_do   => ram_do,       -- in  unsigned(7 downto 0);
-	ram_we   => spi_ram_we,
-		
-	track_num     => new_track_num_dbl(6 downto 1),
-	disk_num      => disk_num,
-	busy          => sd_busy,
-	save_track    => save_track,
-	sector_offset => sector_offset,
-
-	clk => clk_spi_ctrlr,
-	reset => reset,
-
-	dbg_state => dbg_sd_state
-);
-
-trackbuffer: entity work.Gowin_SP_trackbuf
-    port map (
-        dout => ram_do,
-        clk => clk32,
-        oce => '1',
-        ce => '1',
-        reset => '0',
-        wre => ram_we,
-        ad => ram_addr,
-        din => ram_di
-    );
-
-ram_addr <= spi_ram_addr when sd_busy = '1' else floppy_ram_addr + ("000"&sector_offset&X"00"); 		
-ram_we   <= spi_ram_we   when sd_busy = '1' else floppy_ram_we;
-ram_di   <= spi_ram_di   when sd_busy = '1' else floppy_ram_di;
-
-process (clk32)
-begin
-	if rising_edge(clk32) then
-		if dbg_adr_fetch = X"F4D7" then
-			dbg_read_sector <= dbg_sector;
-		end if;
-	end if;
-end process;
-
-dbg_sd_busy  <= sd_busy;	
-dbg_track_num_dbl <= new_track_num_dbl;
-dbg_mtr <= mtr;
-dbg_act <= act;
+led <= act;
 
 end struct;
