@@ -162,10 +162,10 @@ signal disk_chg_trg   : std_logic;
 signal disk_chg_trg_d : std_logic;
 signal sd_img_size    : std_logic_vector(31 downto 0);
 signal sd_img_size_d  : std_logic_vector(31 downto 0);
-signal sd_img_mounted : std_logic_vector(1 downto 0);
+signal sd_img_mounted : std_logic_vector(3 downto 0);
 signal sd_img_mounted_d : std_logic;
-signal sd_rd          : std_logic_vector(1 downto 0);
-signal sd_wr          : std_logic_vector(1 downto 0);
+signal sd_rd          : std_logic_vector(3 downto 0);
+signal sd_wr          : std_logic_vector(3 downto 0);
 signal sd_lba         : std_logic_vector(31 downto 0);
 signal sd_busy        : std_logic;
 signal sd_done        : std_logic;
@@ -185,6 +185,8 @@ signal spi_io_dout    : std_logic;
 signal disk_g64       : std_logic;
 signal disk_g64_d     : std_logic;
 signal c1541_reset    : std_logic;
+signal system_wide_screen : std_logic;
+signal system_floppy_wprot : std_logic_vector(1 downto 0);
 
 component CLKDIV
     generic (
@@ -328,7 +330,7 @@ port map
     disk_num      =>(others =>'0'),
     disk_change   => sd_change, 
     disk_mount    => '1',
-    disk_readonly => '0',
+    disk_readonly => '0', -- system_floppy_wprot(0),
     disk_g64      => disk_g64,
 
     iec_atn_i     => iec_atn_o,
@@ -363,8 +365,8 @@ port map
     c1541rom_data => (others =>'0')
 );
 
-sd_rd(1) <= '0';
-sd_wr(1) <= '0';
+sd_rd(3 downto 1) <= "000";
+sd_wr(3 downto 1) <= "000";
 sdc_iack <= int_ack(3);
 
 sd_card_inst: entity work.sd_card
@@ -444,6 +446,7 @@ port map(
       mcu_data  => mcu_data_out,
 
       -- values that can be configure by the user via osd
+      system_wide_screen => system_wide_screen,
       system_scanlines => system_scanlines,
       system_volume => system_volume,
 
@@ -590,6 +593,8 @@ hid_inst: entity work.hid
   system_reset      => system_reset,
   system_scanlines  => system_scanlines,
   system_volume     => system_volume,
+  system_wide_screen => system_wide_screen,
+  system_floppy_wprot => system_floppy_wprot,
 
   int_out_n         => irq_n,
   int_in            => std_logic_vector(unsigned'("0000" & sdc_int & "000")),
@@ -597,8 +602,15 @@ hid_inst: entity work.hid
 
   buttons           => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
   leds              => open,         -- two leds can be controlled from the MCU
-  color             => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
+  color             => ws2812_color, -- a 24bit color to e.g. be used to drive the ws2812
 
+  acsi_status_byte  => (others => '0'),
+  acsi_status_byte_index => open,
+  acsi_ack          => open,
+  acsi_nak          => open,
+  acsi_dma_status   => open,
+  acsi_data_in_strobe => open,
+  acsi_data_in      => open
 );
 
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec

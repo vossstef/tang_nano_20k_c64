@@ -63,9 +63,10 @@ module hdmi
     input logic clk_pixel,
     input logic clk_audio,
     // synchronous reset back to 0,0
-    input logic reset,
-    input logic [1:0] stmode,         // atari st video mode, 0=60hz ntsc, 1=50hz pal, 2=mono
-    input logic [23:0] rgb,    
+    input logic			      reset,
+    input logic [1:0]		      stmode, // atari st video mode, 0=60hz ntsc, 1=50hz pal, 2=mono
+    input			      wide,   // try to adopt to wide (4:3) screens
+    input logic [23:0]		      rgb, 
     input logic [AUDIO_BIT_WIDTH-1:0] audio_sample_word [1:0],
 
     // These outputs go to your HDMI port
@@ -105,20 +106,19 @@ logic [1:0] invert;
 // V front porch 5
 // V sync 5
 // V back porch 39
-//assign frame_width = (stmode==2'd0)?1016:(stmode==2'd1)?1024:896;  // Atari ST
 assign frame_width = (stmode==2'd0)?1016:(stmode==2'd1)?864:896;
 // is usually 800, but Atari ST in PAL outputs 840 pixels per line
 // and (our) HDMI implementation expects the width to be a multiple of 16
 // Also demos openeing the screen can only address 832 pixels properly
 assign screen_width = (stmode==2'd0)?848:(stmode==2'd1)?720:640;   //0 NTSC, 1 PAL 2 = ST MONO 
-assign hsync_pulse_start = 12; // 24
-assign hsync_pulse_size = 64; // 72
+assign hsync_pulse_start = (stmode==2'd0)?16:24;
+assign hsync_pulse_size = (stmode==2'd0)?62:72;
 // should be 625/525, has to be 626/526 for Atari ST in PAL/NTSC mode
-//assign frame_height = (stmode==2'd0)?526:(stmode==2'd1)?626:501;  // Atari ST
+// need to be 624 for c64 core
 assign frame_height = (stmode==2'd0)?526:(stmode==2'd1)?624:501;
-assign screen_height = 576;
-assign vsync_pulse_start = 5;
-assign vsync_pulse_size = 5;
+assign screen_height = (stmode==2'd0)?484:(stmode==2'd1)?576:400;
+assign vsync_pulse_start = (stmode==2'd0)?9:5;
+assign vsync_pulse_size = (stmode==2'd0)?6:5;
 assign invert = 2'b11;
 
 always_comb begin
@@ -166,7 +166,7 @@ logic [5:0] control_data = 6'd0;
 logic [11:0] data_island_data = 12'd0;
 
 generate
-    if (!DVI_OUTPUT)
+if (!DVI_OUTPUT)
     begin: true_hdmi_output
         logic video_guard = 1;
         logic video_preamble = 0;
@@ -263,7 +263,7 @@ generate
             end
         end
     end
-    else // DVI_OUTPUT = 1
+else // DVI_OUTPUT = 1
     begin
         always_ff @(posedge clk_pixel)
         begin

@@ -55,8 +55,6 @@ module mist_sd_card
 	output reg    busy
 );
 
-assign sd_lba = lba;
-
 wire [9:0] start_sectors[42] =
 		'{  0,  0, 21, 42, 63, 84,105,126,147,168,189,210,231,252,273,294,315,336,357,376,395,
 		  414,433,452,471,490,508,526,544,562,580,598,615,632,649,666,683,700,717,734,751,768};
@@ -73,6 +71,8 @@ reg   [7:0] g64_tlen_lo;
 reg   [1:0] freq_table[88];
 
 reg  [31:0] lba;
+assign sd_lba = lba;
+
 reg   [4:0] rel_lba;
 reg   [4:0] track_lbas;
 
