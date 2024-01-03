@@ -6,7 +6,7 @@ project new "." sim
 project addfile "./../../src/c1541/mist_sd_card.sv" 
 project addfile "./../../src/dualshock_controller.v" 
 project addfile "./../../src/gowin_clkdiv/gowin_clkdiv.v" 
-project addfile "./../../src/gowin_dpb/gowin_dpb_buffer.v" 
+project addfile "./../../src/gowin_dpb/sector_dpram.v" 
 project addfile "./../../src/gowin_dpb/gowin_dpb_track_buffer_b.v" 
 project addfile "./../../src/gowin_dpb/gowin_dpb_trkbuf.v" 
 project addfile "./../../src/gowin_rpll/pll_160m.v" 
@@ -70,6 +70,7 @@ project addfile "./../../src/t65/T65_MCode.vhd"
 project addfile "./../../src/t65/T65_Pack.vhd"
 project addfile "./../../src/tang_nano_20k_c64_top.vhd"
 project addfile "./../../src/video_vicII_656x.vhd"
+project addfile "./../../tb/c64_tb.vhd"
 
  if [file exists work] {
     vdel -lib work -all
@@ -81,38 +82,38 @@ vcom -work gw2a -2008 -autoorder -explicit \
 "./../../tb/prim_sim.vhd" \
 "./../../tb/prim_syn.vhd"
 
-vlog -sv -suppress 2730,2388 -work work \
+vlog -work work -sv -incr \
 "./../../src/c1541/mist_sd_card.sv" \
-"./../../src/hdmi/audio_clock_regeneration_packet.sv" \ 
-"./../../src/hdmi/audio_info_frame.sv" \ 
-"./../../src/hdmi/audio_sample_packet.sv" \ 
-"./../../src/hdmi/auxiliary_video_information_info_frame.sv" \ 
-"./../../src/hdmi/hdmi.sv" \ 
-"./../../src/hdmi/packet_assembler.sv" \ 
-"./../../src/hdmi/packet_picker.sv" \ 
-"./../../src/hdmi/serializer.sv" \ 
-"./../../src/hdmi/source_product_description_info_frame.sv" \ 
+"./../../src/hdmi/audio_clock_regeneration_packet.sv" \
+"./../../src/hdmi/audio_info_frame.sv" \
+"./../../src/hdmi/audio_sample_packet.sv" \
+"./../../src/hdmi/auxiliary_video_information_info_frame.sv" \
+"./../../src/hdmi/hdmi.sv" \
+"./../../src/hdmi/packet_assembler.sv" \
+"./../../src/hdmi/packet_picker.sv" \
+"./../../src/hdmi/serializer.sv" \
+"./../../src/hdmi/source_product_description_info_frame.sv" \
 "./../../src/hdmi/tmds_channel.sv"
 
-vlog -vlog01compat -work work \
-"./../../src/misc/hid.v" \ 
-"./../../src/misc/mcu_spi.v" \ 
-"./../../src/misc/osd_u8g2.v" \ 
-"./../../src/misc/scandoubler.v" \ 
-"./../../src/misc/sd_card.v" \ 
-"./../../src/misc/sd_rw.v" \ 
-"./../../src/misc/sdcmd_ctrl.v" \ 
-"./../../src/misc/sysctrl.v" \ 
-"./../../src/misc/video.v" \ 
-"./../../src/misc/video_analyzer.v" \ 
-"./../../src/mos6526.v" \ 
-"./../../src/sdram.v" \ 
-"./../../src/ws2812.v" 
+vlog -work work -vlog01compat -incr \
+"./../../src/misc/hid.v" \
+"./../../src/misc/mcu_spi.v" \
+"./../../src/misc/osd_u8g2.v" \
+"./../../src/misc/scandoubler.v" \
+"./../../src/misc/sd_card.v" \
+"./../../src/misc/sd_rw.v" \
+"./../../src/misc/sdcmd_ctrl.v" \
+"./../../src/misc/sysctrl.v" \
+"./../../src/misc/video.v" \
+"./../../src/misc/video_analyzer.v" \
+"./../../src/mos6526.v" \
+"./../../src/sdram.v" \
+"./../../src/ws2812.v"
 "./../../src/dualshock_controller.v" \
-"./../../src/gowin_clkdiv/gowin_clkdiv.v" \ 
-"./../../src/gowin_dpb/gowin_dpb_buffer.v" \ 
-"./../../src/gowin_dpb/gowin_dpb_track_buffer_b.v" \ 
-"./../../src/gowin_dpb/gowin_dpb_trkbuf.v" \ 
+"./../../src/gowin_clkdiv/gowin_clkdiv.v" \
+"./../../src/gowin_dpb/sector_dpram.v" \
+"./../../src/gowin_dpb/gowin_dpb_track_buffer_b.v" \
+"./../../src/gowin_dpb/gowin_dpb_trkbuf.v" \
 "./../../src/gowin_rpll/pll_160m.v"
 
 vcom -work work -2008 -autoorder -explicit \
@@ -152,7 +153,8 @@ vcom -work work -2008 -autoorder -explicit \
 "./../../src/t65/T65_MCode.vhd" \
 "./../../src/t65/T65_Pack.vhd" \
 "./../../src/tang_nano_20k_c64_top.vhd" \
-"./../../src/video_vicII_656x.vhd" 
+"./../../src/video_vicII_656x.vhd" \
+"./../../tb/c64_tb.vhd"
 } else {
  project open "./sim"
  project compileoutofdate
