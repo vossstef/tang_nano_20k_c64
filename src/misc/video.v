@@ -2,11 +2,11 @@
 
 module video (
 	      input	   clk,
-	      input	   clk32_i,
+          input	   clk32_i,
           input    hdmi_pll_reset,
-
-	      output	clk_32,
-	      output	pll_lock,
+	      
+	      output	   clk_32,
+	      output	   pll_lock,
 
 	      input	   vs_in_n,
 	      input	   hs_in_n,
@@ -21,13 +21,14 @@ module video (
           output enabled,
 
           // (spi) interface from MCU
-          input        mcu_start,
-          input        mcu_osd_strobe,
-          input [7:0]  mcu_data,
+              input	   mcu_start,
+              input	   mcu_osd_strobe,
+              input [7:0]  mcu_data,
 
           // values that can be configure by the user via osd          
-          input [1:0] system_scanlines,
-          input [1:0] system_volume,
+              input [1:0]  system_scanlines,
+              input [1:0]  system_volume,
+	      input	   system_wide_screen, 	      
 		 
 	      // hdmi/tdms
 	      output	   tmds_clk_n,
@@ -35,7 +36,7 @@ module video (
 	      output [2:0] tmds_d_n,
 	      output [2:0] tmds_d_p  
 	      );
-
+   
 wire clk_pixel_x5 /* synthesis syn_keep=1 */;
 wire clk_pixel /* synthesis syn_keep=1 */;
 
@@ -182,11 +183,12 @@ hdmi #(
 
   // video input
   .stmode(vmode),    // current video mode PAL/NTSC/MONO
+  .wide(system_wide_screen),       // adopt to wide screen video
   .reset(vreset),    // signal to synchronize HDMI
 
   // Atari STE outputs 4 bits per color. Scandoubler outputs 6 bits (to be
   // able to implement dark scanlines) and HDMI expects 8 bits per color
-  .rgb( { osd_r, 2'b00, osd_g, 2'b00, osd_b, 2'b00 } ) 
+  .rgb( { osd_r, 2'b00, osd_g, 2'b00, osd_b, 2'b00 } )
 );
 
 // differential output
