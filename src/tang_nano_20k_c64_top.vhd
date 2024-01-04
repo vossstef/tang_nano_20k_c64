@@ -89,7 +89,10 @@ signal ramDataOut   : unsigned(15 downto 0);
 signal ramDataIn_v  : std_logic_vector(15 downto 0);
 signal idle         : std_logic;
 signal dram_addr    : std_logic_vector(21 downto 0);
+signal dram_addr_s  : std_logic_vector(21 downto 0);
+signal ram_scramble : std_logic_vector(1 downto 0);
 signal ram_ready    : std_logic;
+signal cb_D         : std_logic;
 
 -- IEC
 signal iec_data_o  : std_logic;
@@ -459,6 +462,26 @@ port map(
   dram_addr(15 downto 0)  <= std_logic_vector(ramAddr);
   dram_addr(21 downto 16) <= (others => '0');
   ramDataOut(15 downto 8) <= (others => '0');
+  ramDataIn <= unsigned(ramDataIn_v(7 downto 0));
+
+-- system_reset[0] indicates whether a reset is requested. This
+-- can either be triggered implicitely by the user changing hardware
+-- specs or explicitely via an OSD menu entry.
+-- A cold boot means that the ram contents becomes invalid. We achieve this
+-- by scrambling the RAM address space a little bit on every rising edge
+-- of system_reset[0] 
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    cb_D <= system_reset(0);
+      if system_reset(0) = '1' and cb_D = '0' then  --rising edge of reset trigger
+        ram_scramble <= ram_scramble + 1;
+      end if;
+    end if;
+end process;
+
+-- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
+  dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
 
   dram_inst: entity work.sdram
    port map(
@@ -480,13 +503,11 @@ port map(
     refresh   => idle,          -- chipset requests a refresh cycle
     din       => std_logic_vector(ramDataOut), -- data input from chipset/cpu
     dout      => ramDataIn_v,
-    addr      => dram_addr,      -- 22 bit word address
+    addr      => dram_addr_s,      -- 22 bit word address
     ds        => (others => '0'),-- upper/lower data strobe R = low and W = low
     cs        => ramCE,        -- cpu/chipset requests read/wrie
     we        => ramWe         -- cpu/chipset requests write
   );
-
-ramDataIn <= unsigned(ramDataIn_v(7 downto 0));
 
 mainclock: entity work.Gowin_rPLL
     port map (
