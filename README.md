@@ -38,8 +38,8 @@ RUN<br>
 
 ## OSD
 invoke by F12 keypress<br>
-* Disk image selection for c1541 Drive (DISK A)<br>
-* Reset<br>
+* Image selection (D64 / G64) for c1541 Drive (DISK A)<br>
+* Reset + memory scrubbing<br>
 * Audio Volume<br>
 * Scanlines<br>
 

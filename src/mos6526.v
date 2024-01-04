@@ -89,6 +89,12 @@ reg        int_reset;
 wire       rd = phi2_n & !cs_n & rw;
 wire       wr = phi2_n & !cs_n & !rw;
 
+reg timerAff;
+reg timerBff;
+
+wire timerAoverflow;
+wire timerBoverflow;
+
 // Register Decoding
 always @(posedge clk) begin
   if (!res_n) db_out <= 8'h00;
@@ -184,10 +190,9 @@ end
 
 // Timer A
 reg countA0, countA1, countA2, countA3, loadA1, oneShotA0;
-reg timerAff;
 wire timerAin = cra[5] ? countA1 : 1'b1;
 wire [15:0] newTimerAVal = countA3 ? (timer_a - 1'b1) : timer_a;
-wire timerAoverflow = !newTimerAVal & countA2;
+assign timerAoverflow = !newTimerAVal & countA2;
 
 always @(posedge clk) begin
 
@@ -254,10 +259,9 @@ end
 
 // Timer B
 reg countB0, countB1, countB2, countB3, loadB1, oneShotB0;
-reg timerBff;
 wire timerBin = crb[6] ? timerAoverflow & (~crb[5] | cnt_in) : (~crb[5] | countB1);
 wire [15:0] newTimerBVal = countB3 ? (timer_b - 1'b1) : timer_b;
-wire timerBoverflow = !newTimerBVal & countB2;
+assign timerBoverflow = !newTimerBVal & countB2;
 
 always @(posedge clk) begin
 

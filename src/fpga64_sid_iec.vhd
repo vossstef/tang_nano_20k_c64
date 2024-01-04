@@ -415,18 +415,17 @@ end process;
 -- -----------------------------------------------------------------------
 -- Color RAM
 -- -----------------------------------------------------------------------
-colorram: entity work.spram
-generic map (
-	DATA_WIDTH => 4,
-	ADDR_WIDTH => 10
-)
-port map (
-	clk => clk32,
-	we => cs_color and pulseWr_io,
-	addr => systemAddr(9 downto 0),
-	data => cpuDo(3 downto 0),
-	q => colorData
-);
+colorram: entity work.Gowin_SP_cram
+    port map (
+        unsigned(dout) => colorData,
+        clk => clk32,
+        oce => '1',
+        ce => '1',
+        reset => '0',
+        wre => cs_color and pulseWr_io,
+        ad => std_logic_vector(systemAddr(9 downto 0)),
+        din => std_logic_vector(cpuDo(3 downto 0))
+    );
 
 -- -----------------------------------------------------------------------
 -- PLA and bus-switches
@@ -843,7 +842,7 @@ begin
 					when "00" => turbo_m <= "010";
 					when "01" => turbo_m <= "110";
 					when "10" => turbo_m <= "111";
-					when "11" => turbo_m <= "111"; -- unused
+					when others => turbo_m <= "111";
 				end case;
 			end if;
 		end if;

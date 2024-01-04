@@ -21,19 +21,12 @@ architecture c64_tb of c64_tb is
   signal tmds_d_n         : std_logic_vector(2 downto 0);
   signal tmds_d_p         : std_logic_vector(2 downto 0);
   --
-  signal O_AUDIO          :  std_logic;
-  --
-  signal I_CLK_REF        :  std_logic;
+  signal I_CLK_REF        : std_logic;
  --
-  signal IEC_ATN          :  std_logic;
-  signal IEC_CLOCK        :  std_logic;
-  signal IEC_DATA         :  std_logic;
- 
-  signal push_reset_n     : std_logic;
-  signal User_Button_n    : std_logic;
+  signal reset            : std_logic;
+  signal user             : std_logic;
+  signal btn              : std_logic_vector(4 downto 0);
 
-  signal joy             : std_logic_vector(3 downto 0);
-  signal joy_fire        : std_logic;
  
   component tang_nano_20k_c64_top
   generic (
@@ -94,15 +87,50 @@ architecture c64_tb of c64_tb is
 begin
   u0 : tang_nano_20k_c64_top
     port map (
-      tmds_clk_n      => tmds_clk_n,
-      tmds_clk_p      => tmds_clk_p,
-      tmds_d_n        => tmds_d_n,
-      tmds_d_p        => tmds_d_p, 
-      --
-      clk_27mhz       => I_CLK_REF,
-      reset           => reset,
-      user            => user
-    );
+      clk_27mhz   => I_CLK_REF,
+      reset       => reset,
+      user        => user,
+      led         => open,
+      btn         => btn,
+    -- SPI interface Sipeed M0S Dock external BL616 uC
+    mosi          => '0',
+    miso          => open,
+    csn           => '0',
+    sck           => '0',
+    irq_n         => open,
+    -- SPI interface onboard BL616 uC
+    spi_csn       => '0',
+    spi_sclk      =>'0',
+    spi_dat       =>'0',
+    spi_dir       => open,
+    jtag_tck      => open,
+    --
+    tmds_clk_n    => tmds_clk_n,
+    tmds_clk_p    => tmds_clk_p,
+    tmds_d_n      => tmds_d_n,
+    tmds_d_p      => tmds_d_p, 
+    -- sd interface
+    sd_clk        => open,
+    sd_cmd        => '0',
+    sd_dat        => (others => '0'),
+    ws2812        => open,
+    --
+    O_sdram_clk   => open,
+    O_sdram_cke   => open,
+    O_sdram_cs_n  => open,
+    O_sdram_cas_n => open,
+    O_sdram_ras_n => open,
+    O_sdram_wen_n => open,
+    IO_sdram_dq   => (others => '0'),
+    O_sdram_addr  => open,
+    O_sdram_ba    => open,
+    O_sdram_dqm   => open,
+    -- Gamepad
+    joystick_clk  => open,
+    joystick_mosi => open,
+    joystick_miso => '0',
+    joystick_cs   => open
+      );
 
   p_clk_27mhz  : process
   begin

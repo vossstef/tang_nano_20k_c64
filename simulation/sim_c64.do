@@ -63,7 +63,6 @@ project addfile "./../../src/sid6581/sid_mixer.vhd"
 project addfile "./../../src/sid6581/sid_regs.vhd"
 project addfile "./../../src/sid6581/sid_top.vhd"
 project addfile "./../../src/sid6581/wave_map.vhd"
-project addfile "./../../src/spram.vhd"
 project addfile "./../../src/t65/T65.vhd"
 project addfile "./../../src/t65/T65_ALU.vhd"
 project addfile "./../../src/t65/T65_MCode.vhd"
@@ -71,6 +70,7 @@ project addfile "./../../src/t65/T65_Pack.vhd"
 project addfile "./../../src/tang_nano_20k_c64_top.vhd"
 project addfile "./../../src/video_vicII_656x.vhd"
 project addfile "./../../tb/c64_tb.vhd"
+project addfile "./../../src/gowin_sp/gowin_sp_cram.vhd"
 
  if [file exists work] {
     vdel -lib work -all
@@ -93,22 +93,22 @@ vlog -work work -sv -incr \
 "./../../src/hdmi/packet_picker.sv" \
 "./../../src/hdmi/serializer.sv" \
 "./../../src/hdmi/source_product_description_info_frame.sv" \
-"./../../src/hdmi/tmds_channel.sv"
-
-vlog -work work -vlog01compat -incr \
+"./../../src/hdmi/tmds_channel.sv" \
 "./../../src/misc/hid.v" \
 "./../../src/misc/mcu_spi.v" \
 "./../../src/misc/osd_u8g2.v" \
-"./../../src/misc/scandoubler.v" \
-"./../../src/misc/sd_card.v" \
-"./../../src/misc/sd_rw.v" \
-"./../../src/misc/sdcmd_ctrl.v" \
 "./../../src/misc/sysctrl.v" \
 "./../../src/misc/video.v" \
+"./../../src/misc/sd_card.v" \
 "./../../src/misc/video_analyzer.v" \
+"./../../src/misc/sd_rw.v" \
+"./../../src/misc/scandoubler.v" \
 "./../../src/mos6526.v" \
-"./../../src/sdram.v" \
-"./../../src/ws2812.v"
+"./../../src/sdram.v"
+
+vlog -work work -incr \
+"./../../src/misc/sdcmd_ctrl.v" \
+"./../../src/ws2812.v" \
 "./../../src/dualshock_controller.v" \
 "./../../src/gowin_clkdiv/gowin_clkdiv.v" \
 "./../../src/gowin_dpb/sector_dpram.v" \
@@ -116,7 +116,9 @@ vlog -work work -vlog01compat -incr \
 "./../../src/gowin_dpb/gowin_dpb_trkbuf.v" \
 "./../../src/gowin_rpll/pll_160m.v"
 
-vcom -work work -2008 -autoorder -explicit \
+vcom -work work -suppress 1583 -2008 -autoorder -explicit \
+"./../../tb/c64_tb.vhd" \
+"./../../src/gowin_sp/gowin_sp_cram.vhd" \
 "./../../src/c1541/c1541_logic.vhd" \
 "./../../src/c1541/c1541_sd.vhd" \
 "./../../src/c1541/gcr_floppy.vhd" \
@@ -147,14 +149,12 @@ vcom -work work -2008 -autoorder -explicit \
 "./../../src/sid6581/sid_regs.vhd" \
 "./../../src/sid6581/sid_top.vhd" \
 "./../../src/sid6581/wave_map.vhd" \
-"./../../src/spram.vhd" \
 "./../../src/t65/T65.vhd" \
 "./../../src/t65/T65_ALU.vhd" \
 "./../../src/t65/T65_MCode.vhd" \
 "./../../src/t65/T65_Pack.vhd" \
 "./../../src/tang_nano_20k_c64_top.vhd" \
-"./../../src/video_vicII_656x.vhd" \
-"./../../tb/c64_tb.vhd"
+"./../../src/video_vicII_656x.vhd"
 } else {
  project open "./sim"
  project compileoutofdate
