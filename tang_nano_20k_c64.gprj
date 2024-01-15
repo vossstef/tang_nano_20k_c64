@@ -53,7 +53,6 @@
         <File path="src/gowin_sp/gowin_sp_2k.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_sp/gowin_sp_8k.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_sp/gowin_sp_cram.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/keyboard_matrix_pkg.vhd" type="file.vhdl" enable="1"/>
         <File path="src/sid6581/Q_table.vhd" type="file.vhdl" enable="1"/>
         <File path="src/sid6581/adsr_multi.vhd" type="file.vhdl" enable="1"/>
         <File path="src/sid6581/mult_acc.vhd" type="file.vhdl" enable="1"/>

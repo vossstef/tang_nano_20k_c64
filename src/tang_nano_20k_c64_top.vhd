@@ -11,8 +11,6 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.numeric_std.ALL;
-library work;
-use work.keyboard_matrix_pkg.all;
 
 entity tang_nano_20k_c64_top is
   generic (
@@ -103,10 +101,10 @@ signal iec_atn_o   : std_logic;
 signal iec_atn_i   : std_logic;
 
   -- keyboard
-signal disk_num     : std_logic_vector(7 downto 0) := (others => '0');
+signal keyboard_matrix_out : std_logic_vector(7 downto 0);
+signal keyboard_matrix_in  : std_logic_vector(7 downto 0);
 signal joyUsb       : std_logic_vector(6 downto 0);
 signal joyDigital   : std_logic_vector(6 downto 0);
-signal reset_key    : std_logic := '0';
 signal disk_reset   : std_logic;
 -- CONTROLLER DUALSHOCK
 signal joyDS2       : std_logic_vector(6 downto 0);
@@ -117,7 +115,10 @@ signal  joyA        : std_logic_vector(6 downto 0) := (others => '1');
 signal  joyB        : std_logic_vector(6 downto 0) := (others => '1');
 signal  joy_sel     : std_logic := '0'; -- toggles joy A/B
 signal  btn_debounce: std_logic_vector(6 downto 0);
-signal  user_deb     : std_logic;
+signal  user_deb    : std_logic;
+-- mouse / paddle
+signal pot1         : std_logic_vector(7 downto 0) := (others => '0');
+signal pot2         : std_logic_vector(7 downto 0) := (others => '0');
 
 signal ramCE       :  std_logic;
 signal ramWe       :  std_logic;
@@ -151,7 +152,6 @@ signal system_scanlines : std_logic_vector(1 downto 0);
 signal system_volume  : std_logic_vector(1 downto 0);
 
 signal mouse          : std_logic_vector(5 downto 0);
-signal keyboard       : keyboard_t;
 signal joystick       : std_logic_vector(7 downto 0);
 
 signal freeze         : std_logic;
@@ -591,9 +591,10 @@ hid_inst: entity work.hid
   data_in         => mcu_data_out,
   data_out        => hid_data_out,
   mouse           => mouse,
-  keyboard        => keyboard,  -- atari st keyboard 2D matrix 
   joystick0       => joystick,
-  joystick1       => open
+  joystick1       => open,
+  keyboard_matrix_out => keyboard_matrix_out,
+  keyboard_matrix_in  => keyboard_matrix_in
  );
 
  module_inst: entity work.sysctrl 
@@ -643,12 +644,10 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   pause        => freeze,
   pause_out    => c64_pause,
   -- keyboard interface
-  keyboard     => keyboard,
-  ps2_key      => (others => '0'),
+  keyboard_matrix_out => keyboard_matrix_out,
+  keyboard_matrix_in => keyboard_matrix_in,
   kbd_reset    => '0',
   shift_mod    => (others => '0'),
-  reset_key    => reset_key,
-  disk_num     => disk_num,
 
   -- external memory
   ramAddr      => ramAddr,
@@ -700,8 +699,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   -- joystick interface
   joyA         => JoyA,
   joyB         => joyB,
-  pot1         => (others => '0'),
-  pot2         => (others => '0'),
+  pot1         => pot1,
+  pot2         => pot2,
   pot3         => (others => '0'),
   pot4         => (others => '0'),
 

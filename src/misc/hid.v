@@ -14,10 +14,15 @@ module hid (
   output reg [7:0] data_out,
 
   output [5:0]     mouse,
-  output reg [7:0] keyboard[14:0],
+
   output reg [7:0] joystick0,
-  output reg [7:0] joystick1
+  output reg [7:0] joystick1,
+
+  input  [7:0] keyboard_matrix_out,
+  output [7:0] keyboard_matrix_in
 );
+
+reg [7:0] keyboard[7:0]; // array of 8 elements of width 8bit
 
 reg [1:0] mouse_btns;
 reg [1:0] mouse_x;
@@ -25,6 +30,17 @@ reg [1:0] mouse_y;
 
 assign dbg = { mouse_x, mouse_y };
 assign mouse = { mouse_btns, mouse_x, mouse_y };
+
+//keyboard 
+assign keyboard_matrix_in =
+	      (!keyboard_matrix_out[0]?keyboard[0]:8'hff)&
+	      (!keyboard_matrix_out[1]?keyboard[1]:8'hff)&
+	      (!keyboard_matrix_out[2]?keyboard[2]:8'hff)&
+	      (!keyboard_matrix_out[3]?keyboard[3]:8'hff)&
+	      (!keyboard_matrix_out[4]?keyboard[4]:8'hff)&
+	      (!keyboard_matrix_out[5]?keyboard[5]:8'hff)&
+	      (!keyboard_matrix_out[6]?keyboard[6]:8'hff)&
+	      (!keyboard_matrix_out[7]?keyboard[7]:8'hff);
 
 // limit the rate at which mouse movement data is sent to the
 // ikbd
@@ -45,9 +61,7 @@ always @(posedge clk) begin
       // reset entire keyboard to 1's
       keyboard[ 0] <= 8'hff; keyboard[ 1] <= 8'hff; keyboard[ 2] <= 8'hff;
       keyboard[ 3] <= 8'hff; keyboard[ 4] <= 8'hff; keyboard[ 5] <= 8'hff;
-      keyboard[ 6] <= 8'hff; keyboard[ 7] <= 8'hff; keyboard[ 8] <= 8'hff;
-      keyboard[ 9] <= 8'hff; keyboard[10] <= 8'hff; keyboard[11] <= 8'hff;
-      keyboard[12] <= 8'hff; keyboard[13] <= 8'hff; keyboard[14] <= 8'hff;      
+      keyboard[ 6] <= 8'hff; keyboard[ 7] <= 8'hff; 
 
    end else begin
       if(data_in_strobe) begin      
@@ -66,7 +80,7 @@ always @(posedge clk) begin
 	   
             // CMD 1: keyboard data
             if(command == 8'd1) begin
-                if(state == 4'd1) keyboard[data_in[3:0]][data_in[6:4]] <= data_in[7]; 
+                if(state == 4'd1) keyboard[data_in[2:0]][data_in[5:3]] <= data_in[7]; 
             end
 	       
             // CMD 2: mouse data

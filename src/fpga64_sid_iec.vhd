@@ -37,8 +37,6 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.std_logic_unsigned.ALL;
 use IEEE.numeric_std.all;
-library work;
-use work.keyboard_matrix_pkg.all;
 
 -- -----------------------------------------------------------------------
 
@@ -53,12 +51,10 @@ port(
 	pause_out   : out std_logic;
 
 	-- keyboard interface
-	keyboard    : in  keyboard_t;
-	ps2_key     : in  std_logic_vector(10 downto 0);
+	keyboard_matrix_out : out  std_logic_vector(7 downto 0);
+	keyboard_matrix_in  :  in  std_logic_vector(7 downto 0);
 	kbd_reset   : in  std_logic := '0';
 	shift_mod   : in  std_logic_vector(1 downto 0);
-	reset_key   : out std_logic;
-	disk_num    : out std_logic_vector(7 downto 0);
 
 	-- external memory
 	ramAddr     : out unsigned(15 downto 0);
@@ -660,8 +656,8 @@ port map (
   wdata => std_logic_vector(cpuDo),
   unsigned(rdata) => sid_do,
 
-  potx => (others => '0'),
-  poty => (others => '0'),
+  potx => pot_x1,
+  poty => pot_y1,
 
   comb_wave_l => '0',
   comb_wave_r => '0',
@@ -865,8 +861,9 @@ port map (
 	clk => clk32,
 	
 	reset => kbd_reset,
-	ps2_key => ps2_key,
-	keyboard => keyboard,
+
+	keyboard_matrix_out => keyboard_matrix_out,
+	keyboard_matrix_in => keyboard_matrix_in,
 
 	joyA => not unsigned(joyA(6 downto 0)),
 	joyB => not unsigned(joyB(6 downto 0)),
@@ -880,8 +877,6 @@ port map (
 	restore_key => freeze_key,
 	tape_play => tape_play,
 	mod_key => mod_key,
-	reset_key => reset_key,
-	disk_num => disk_num,
 	backwardsReadingEnabled => '1'
 );
 

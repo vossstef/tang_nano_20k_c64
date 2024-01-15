@@ -50,7 +50,6 @@ project addfile "./../../src/gowin_prom/gowin_prom_chargen.vhd"
 project addfile "./../../src/gowin_rpll/gowin_rpll.vhd"
 project addfile "./../../src/gowin_sp/gowin_sp_2k.vhd"
 project addfile "./../../src/gowin_sp/gowin_sp_8k.vhd"
-project addfile "./../../src/keyboard_matrix_pkg.vhd"
 project addfile "./../../src/sid6581/Q_table.vhd"
 project addfile "./../../src/sid6581/adsr_multi.vhd"
 project addfile "./../../src/sid6581/mult_acc.vhd"
@@ -136,7 +135,6 @@ vcom -work work -suppress 1583 -2008 -autoorder -explicit \
 "./../../src/gowin_rpll/gowin_rpll.vhd" \
 "./../../src/gowin_sp/gowin_sp_2k.vhd" \
 "./../../src/gowin_sp/gowin_sp_8k.vhd" \
-"./../../src/keyboard_matrix_pkg.vhd" \
 "./../../src/sid6581/Q_table.vhd" \
 "./../../src/sid6581/adsr_multi.vhd" \
 "./../../src/sid6581/mult_acc.vhd" \
