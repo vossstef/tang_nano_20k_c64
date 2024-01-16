@@ -14,8 +14,7 @@ use IEEE.numeric_std.ALL;
 
 entity tang_nano_20k_c64_top is
   generic (
-    sysclk_frequency : integer := 315; -- Sysclk frequency * 10 (31.5Mhz)
-    mister           : integer := 0    -- 0:no, 1:yes
+    sysclk_frequency : integer := 315 -- Sysclk frequency * 10 (31.5Mhz)
     );
   port
   (
@@ -26,12 +25,7 @@ entity tang_nano_20k_c64_top is
     btn         : in std_logic_vector(4 downto 0);
 
     -- SPI interface Sipeed M0S Dock external BL616 uC
-    mosi        : in std_logic; -- spi MOSI / ps2_data
-    miso        : out std_logic;-- spi MISO / ps2_clk
-    csn         : in std_logic; -- spi CSn
-    sck         : in std_logic; -- spi CLK
-    irq_n       : out std_logic; -- spi irq
-
+    m0s         : inout std_logic_vector(5 downto 0);
     -- SPI interface onboard BL616 uC
     spi_csn     : in std_logic;
     spi_sclk    : in std_logic;
@@ -207,12 +201,13 @@ end component;
 begin
 -- ----------------- SPI input parser ----------------------
 -- map output data onto both spi outputs
-  spi_io_din  <= mosi when spi_ext = '1' else spi_dat;
-  spi_io_ss   <= csn  when spi_ext = '1' else spi_csn;
-  spi_io_clk  <= sck  when spi_ext = '1' else spi_sclk;
+  spi_io_din  <= m0s(1) when spi_ext = '1' else spi_dat;
+  spi_io_ss   <= m0s(2) when spi_ext = '1' else spi_csn;
+  spi_io_clk  <= m0s(3) when spi_ext = '1' else spi_sclk;
   jtag_tck    <= spi_io_dout; -- onboad bl616 back-up miso signal
-  miso        <= spi_io_dout; -- M0 Dock
+  m0s(0)      <= spi_io_dout; -- M0 Dock
   spi_dir     <= spi_io_dout; -- unusable due to hw bug
+  m0s(5)      <= 'Z';
 
 -- by default the internal SPI is being used. Once there is
 -- a select from the external spi (M0S Dock) , then the connection is being switched
@@ -221,7 +216,7 @@ begin
   if rising_edge(clk32) then
     if pll_locked = '0' then
         spi_ext <= '0';
-    elsif csn = '0' then
+    elsif m0s(2) = '0' then
         spi_ext <= '1';
     else 
         spi_ext <= spi_ext;
@@ -333,7 +328,7 @@ port map
     disk_num      =>(others =>'0'),
     disk_change   => sd_change, 
     disk_mount    => '1',
-    disk_readonly => '0', -- system_floppy_wprot(0),
+    disk_readonly => system_floppy_wprot(0),
     disk_g64      => disk_g64,
 
     iec_atn_i     => iec_atn_o,
@@ -560,7 +555,7 @@ mcu_spi_inst: entity work.mcu_spi
 port map (
   clk            => clk32,
   reset          => not pll_locked,
-  -- SPI interface to Sipeed M0 Dock BL616 MCU
+  -- SPI interface to BL616 MCU
   spi_io_ss      => spi_io_ss,      -- SPI CSn
   spi_io_clk     => spi_io_clk,     -- SPI SCLK
   spi_io_din     => spi_io_din,     -- SPI MOSI
@@ -617,22 +612,15 @@ hid_inst: entity work.hid
   system_volume     => system_volume,
   system_wide_screen => system_wide_screen,
   system_floppy_wprot => system_floppy_wprot,
+  system_cubase_en  => open,
 
-  int_out_n         => irq_n,
+  int_out_n         => m0s(4), -- irq_n
   int_in            => std_logic_vector(unsigned'("0000" & sdc_int & "000")),
   int_ack           => int_ack,
 
   buttons           => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
   leds              => open,         -- two leds can be controlled from the MCU
-  color             => ws2812_color, -- a 24bit color to e.g. be used to drive the ws2812
-
-  acsi_status_byte  => (others => '0'),
-  acsi_status_byte_index => open,
-  acsi_ack          => open,
-  acsi_nak          => open,
-  acsi_dma_status   => open,
-  acsi_data_in_strobe => open,
-  acsi_data_in      => open
+  color             => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
 
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
@@ -683,7 +671,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   UMAXromH     => open,
   IOE          => open,
   IOF          => open,
-  freeze_key   => open,
+  freeze_key   => open,  -- Keyboard Restore (NMI Interrupt)
   mod_key      => open,
   tape_play    => open,
 

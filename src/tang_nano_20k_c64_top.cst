@@ -29,17 +29,19 @@ IO_PORT "led[1]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
 IO_LOC "led[0]" 15;
 IO_PORT "led[0]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
 
-// SPI interface to M0 Dock (former ps2 keyboard)
-IO_LOC "miso" 42; // MISO / ps2_clk
-IO_PORT "miso" IO_TYPE=LVCMOS33 PULL_MODE=UP;
-IO_LOC "mosi" 41; // MOSI / ps2_data
-IO_PORT "mosi" IO_TYPE=LVCMOS33 PULL_MODE=UP;
-IO_LOC "csn" 56; // CSn
-IO_PORT "csn" IO_TYPE=LVCMOS33 PULL_MODE=UP;
-IO_LOC "sck" 54; // CLK
-IO_PORT "sck" IO_TYPE=LVCMOS33 PULL_MODE=UP;
-IO_LOC "irq_n" 51; // IRQn
-IO_PORT "irq_n" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+// connection to the external BL616/M0S
+IO_LOC "m0s[0]" 42; // MISO / ps2_clk
+IO_PORT "m0s[0]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "m0s[1]" 41; // MOSI / ps2_data
+IO_PORT "m0s[1]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "m0s[2]" 56; // CSn
+IO_PORT "m0s[2]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "m0s[3]" 54; // CLK
+IO_PORT "m0s[3]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "m0s[4]" 51; // IRQn
+IO_PORT "m0s[4]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "m0s[5]" 48; //
+IO_PORT "m0s[5]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 
 // digital D9 Joystick
 IO_LOC "btn[4]" 27;

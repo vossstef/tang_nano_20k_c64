@@ -10,7 +10,7 @@ Features:
 * USB Keyboard via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) (future plan Tang onboard µC)
 * USB Joystick via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) (future plan Tang onboard µC)
 * [legacy Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)<br>
-* Joystick emulation on Keyboard Numpad<br>
+* ~~Joystick emulation on Keyboard Numpad~~<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) as Joystick<br>
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader Dolphin DOS](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * On Screen Display (OSD) for configuration and selection<br>
@@ -42,6 +42,7 @@ invoke by F12 keypress<br>
 * Reset + memory scrubbing<br>
 * Audio Volume<br>
 * Scanlines<br>
+* c1541 Disk Write Protetcion<br>
 
 ## Gamecontrol Joystick support
 legacy Digital Joystick<br>

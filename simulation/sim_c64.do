@@ -32,7 +32,7 @@ project addfile "./../../src/misc/video.v"
 project addfile "./../../src/misc/video_analyzer.v" 
 project addfile "./../../src/mos6526.v" 
 project addfile "./../../src/sdram.v" 
-project addfile "./../../src/ws2812.v" 
+project addfile "./../../src/misc/ws2812.v" 
 project addfile "./../../src/c1541/c1541_logic.vhd"
 project addfile "./../../src/c1541/c1541_sd.vhd"
 project addfile "./../../src/c1541/gcr_floppy.vhd"
@@ -107,7 +107,7 @@ vlog -work work -sv -incr \
 
 vlog -work work -incr \
 "./../../src/misc/sdcmd_ctrl.v" \
-"./../../src/ws2812.v" \
+"./../../src/misc/ws2812.v" \
 "./../../src/dualshock_controller.v" \
 "./../../src/gowin_clkdiv/gowin_clkdiv.v" \
 "./../../src/gowin_dpb/sector_dpram.v" \
