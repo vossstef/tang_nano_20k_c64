@@ -13,23 +13,24 @@ module hid (
   input [7:0]      data_in,
   output reg [7:0] data_out,
 
-  output [5:0]     mouse,
-
   output reg [7:0] joystick0,
   output reg [7:0] joystick1,
 
   input  [7:0] keyboard_matrix_out,
-  output [7:0] keyboard_matrix_in
+  output [7:0] keyboard_matrix_in,
+  reg [1:0]    mouse_btns,
+  reg [7:0]    mouse_x_cnt,
+  reg [7:0]    mouse_y_cnt,
+  reg          mouse_strobe
 );
 
 reg [7:0] keyboard[7:0]; // array of 8 elements of width 8bit
 
-reg [1:0] mouse_btns;
 reg [1:0] mouse_x;
 reg [1:0] mouse_y;
 
 assign dbg = { mouse_x, mouse_y };
-assign mouse = { mouse_btns, mouse_x, mouse_y };
+//assign mouse = { mouse_btns, mouse_x, mouse_y };
 
 //keyboard 
 assign keyboard_matrix_in =
@@ -49,14 +50,13 @@ reg [3:0] state;
 reg [7:0] command;  
 reg [7:0] device;   // used for joystick
    
-reg [7:0] mouse_x_cnt;
-reg [7:0] mouse_y_cnt;
      
 // process mouse events
 always @(posedge clk) begin
    if(reset) begin
       state <= 4'd0;
       mouse_div <= 14'd0;
+      mouse_strobe <=1'b0;
 
       // reset entire keyboard to 1's
       keyboard[ 0] <= 8'hff; keyboard[ 1] <= 8'hff; keyboard[ 2] <= 8'hff;
@@ -64,6 +64,7 @@ always @(posedge clk) begin
       keyboard[ 6] <= 8'hff; keyboard[ 7] <= 8'hff; 
 
    end else begin
+      mouse_strobe <=1'b0;
       if(data_in_strobe) begin      
         if(data_in_start) begin
             state <= 4'd1;
@@ -87,7 +88,10 @@ always @(posedge clk) begin
             if(command == 8'd2) begin
                 if(state == 4'd1) mouse_btns <= data_in[1:0];
                 if(state == 4'd2) mouse_x_cnt <= mouse_x_cnt + data_in;
-                if(state == 4'd3) mouse_y_cnt <= mouse_y_cnt + data_in;
+                if(state == 4'd3) begin 
+                    mouse_y_cnt <= mouse_y_cnt + data_in; 
+                    mouse_strobe <=1'b1;
+                  end
             end
 
             // CMD 3: digital joystick data

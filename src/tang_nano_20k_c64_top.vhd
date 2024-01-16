@@ -111,8 +111,11 @@ signal  joy_sel     : std_logic := '0'; -- toggles joy A/B
 signal  btn_debounce: std_logic_vector(6 downto 0);
 signal  user_deb    : std_logic;
 -- mouse / paddle
-signal pot1         : std_logic_vector(7 downto 0) := (others => '0');
-signal pot2         : std_logic_vector(7 downto 0) := (others => '0');
+signal pot1         : std_logic_vector(7 downto 0);
+signal pot2         : std_logic_vector(7 downto 0);
+signal mouse_x_pos  : signed(10 downto 0);
+signal mouse_y_pos  : signed(10 downto 0);
+signal mouse1_en    : std_logic := '0';
 
 signal ramCE       :  std_logic;
 signal ramWe       :  std_logic;
@@ -144,10 +147,11 @@ signal sys_data_out   : std_logic_vector(7 downto 0);
 signal sdc_data_out   : std_logic_vector(7 downto 0);
 signal system_scanlines : std_logic_vector(1 downto 0);
 signal system_volume  : std_logic_vector(1 downto 0);
-
-signal mouse          : std_logic_vector(5 downto 0);
 signal joystick       : std_logic_vector(7 downto 0);
-
+signal mouse_btns     : std_logic_vector(1 downto 0);
+signal mouse_x_cnt    : signed(7 downto 0); -- signed( 8 downto 0);
+signal mouse_y_cnt    : signed(7 downto 0); -- signed( 8 downto 0);
+signal mouse_strobe   : std_logic;
 signal freeze         : std_logic;
 signal freeze_sync    : std_logic;
 signal c64_pause      : std_logic;
@@ -546,10 +550,29 @@ end process;
 --       X (6)
 -- fire Left 1
 joyDS2     <= not("11" & dsc_joy_rx1(2) & dsc_joy_rx1(5) & dsc_joy_rx1(7) & dsc_joy_rx1(6) & dsc_joy_rx1(4));
-joyDigital <= not("11" & R_btn_joy(4) & R_btn_joy(0) & R_btn_joy(1) & R_btn_joy(2) & R_btn_joy(3));
+joyDigital <= not("11" & (R_btn_joy(4) or (mouse1_en and mouse_btns(0))) & R_btn_joy(0) & R_btn_joy(1) & R_btn_joy(2) & (R_btn_joy(3)or (mouse1_en and mouse_btns(1))));
 joyUsb     <=    ("00" & joystick(4) & joystick(0) & joystick(1) & joystick(2) & joystick(3));
 joyA       <= (joyUsb or joyDigital) when joy_sel='0' else joyDS2;
 joyB       <= (joyUsb or joyDigital) when joy_sel='1' else joyDS2;
+
+-- paddle pins - mouse 
+pot1 <= '0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0';
+pot2 <= '0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0';
+
+process(clk32)
+  variable mov_x: signed(6 downto 0);
+  variable mov_y: signed(6 downto 0);
+begin
+  if rising_edge(clk32) then
+    if mouse_strobe = '1' then
+      -- due to limited resolution on the c64 side, limit the mouse movement speed
+      if mouse_x_cnt > 40 then mov_x:="0101000"; elsif mouse_x_cnt < -40 then mov_x:= "1011000"; else mov_x := mouse_x_cnt(6 downto 0); end if;
+      if mouse_y_cnt > 40 then mov_y:="0101000"; elsif mouse_y_cnt < -40 then mov_y:= "1011000"; else mov_y := mouse_y_cnt(6 downto 0); end if;
+      mouse_x_pos <= mouse_x_pos + mov_x;
+      mouse_y_pos <= mouse_y_pos + mov_y;
+    end if;
+  end if;
+end process;
 
 mcu_spi_inst: entity work.mcu_spi 
 port map (
@@ -585,11 +608,14 @@ hid_inst: entity work.hid
   data_in_start   => mcu_start,
   data_in         => mcu_data_out,
   data_out        => hid_data_out,
-  mouse           => mouse,
   joystick0       => joystick,
   joystick1       => open,
   keyboard_matrix_out => keyboard_matrix_out,
-  keyboard_matrix_in  => keyboard_matrix_in
+  keyboard_matrix_in  => keyboard_matrix_in,
+  mouse_btns      => mouse_btns,
+  mouse_x_cnt     => mouse_x_cnt,
+  mouse_y_cnt     => mouse_y_cnt,
+  mouse_strobe    => mouse_strobe
  );
 
  module_inst: entity work.sysctrl 
@@ -614,7 +640,7 @@ hid_inst: entity work.hid
   system_floppy_wprot => system_floppy_wprot,
   system_cubase_en  => open,
 
-  int_out_n         => m0s(4), -- irq_n
+  int_out_n         => m0s(4),
   int_in            => std_logic_vector(unsigned'("0000" & sdc_int & "000")),
   int_ack           => int_ack,
 
