@@ -145,6 +145,7 @@ signal hid_data_out   : std_logic_vector(7 downto 0);
 signal osd_data_out   : std_logic_vector(7 downto 0) :=  X"55";
 signal sys_data_out   : std_logic_vector(7 downto 0);
 signal sdc_data_out   : std_logic_vector(7 downto 0);
+signal hid_int        : std_logic;
 signal system_scanlines : std_logic_vector(1 downto 0);
 signal system_volume  : std_logic_vector(1 downto 0);
 signal joystick       : std_logic_vector(7 downto 0);
@@ -188,6 +189,7 @@ signal disk_g64_d     : std_logic;
 signal c1541_reset    : std_logic;
 signal system_wide_screen : std_logic;
 signal system_floppy_wprot : std_logic_vector(1 downto 0);
+signal system_port_mouse  : std_logic_vector(1 downto 0);
 
 component CLKDIV
     generic (
@@ -516,19 +518,6 @@ mainclock: entity work.Gowin_rPLL
         clkin   => clk_27mhz
     );
 
--- process to toggle joy A/B with BTN
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    if vsync = '1' then
-      if user = '1' and user_deb = '0' then  --rising edge of button
-        joy_sel <= not joy_sel;
-      end if;
-      user_deb <= user;
-    end if;
-  end if;
-end process;
-
 -- led(0)  c1541 activity
 led(1) <= joy_sel;
 led(2) <= sd_rd(0);
@@ -608,6 +597,12 @@ hid_inst: entity work.hid
   data_in_start   => mcu_start,
   data_in         => mcu_data_out,
   data_out        => hid_data_out,
+
+  -- input local db9 port events to be sent to MCU
+  db9_port        => (others => '0'),
+  irq             => hid_int,
+  iack            => int_ack(1),
+  -- output HID data received from USB
   joystick0       => joystick,
   joystick1       => open,
   keyboard_matrix_out => keyboard_matrix_out,
@@ -618,7 +613,9 @@ hid_inst: entity work.hid
   mouse_strobe    => mouse_strobe
  );
 
- module_inst: entity work.sysctrl 
+mouse1_en <= system_port_mouse(0);
+
+module_inst: entity work.sysctrl 
  port map 
  (
   clk               => clk32,
@@ -632,16 +629,17 @@ hid_inst: entity work.hid
   -- values that can be configured by the user
   system_chipset    => open,
   system_memory     => open,
-  system_video      => open,
+  system_video      => joy_sel,            -- D9 or Dualshock 2
   system_reset      => system_reset,
   system_scanlines  => system_scanlines,
   system_volume     => system_volume,
-  system_wide_screen => system_wide_screen,
+  system_wide_screen  => system_wide_screen,
   system_floppy_wprot => system_floppy_wprot,
-  system_cubase_en  => open,
+  system_cubase_en  => open,               -- Numpad Joyport
+  system_port_mouse => system_port_mouse,  -- Mouse emulation
 
   int_out_n         => m0s(4),
-  int_in            => std_logic_vector(unsigned'("0000" & sdc_int & "000")),
+  int_in            => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
   int_ack           => int_ack,
 
   buttons           => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k

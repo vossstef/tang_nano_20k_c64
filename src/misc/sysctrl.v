@@ -35,7 +35,8 @@ module sysctrl (
   output reg [1:0]  system_volume,
   output reg	    system_wide_screen,
   output reg [1:0]  system_floppy_wprot,
-  output reg	    system_cubase_en
+  output reg	    system_cubase_en,
+  output reg [1:0]  system_port_mouse
 );
 
 reg [3:0] state;
@@ -83,7 +84,7 @@ always @(posedge clk) begin
 	            // on e.g. an unprogrammed device
                 if(state == 4'd1) data_out <= 8'h5c;
                 if(state == 4'd2) data_out <= 8'h42;
-                if(state == 4'd3) data_out <= 8'h01;   // core id 1 = Atari ST
+                if(state == 4'd3) data_out <= 8'h02;   // core id 2 = C64 
             end
 	   
             // CMD 1: there are two MCU controlled LEDs
@@ -108,13 +109,17 @@ always @(posedge clk) begin
                 // second byte can be any character which identifies the variable to set 
                 if(state == 4'd1) id <= data_in;
 
+//  "L,Joy Swap:,D9 Digital|DualShock,V;" // Swap Digital D9 versus Dualshock
+//  "L,Numpad:,Port 1|Port 2,Q;"    // Numpad Joystick emulation mapping
+//  "L,Mouse:,Off|Port 1|Port 2,J;"// Mouse port mapping
+
                 if(state == 4'd2) begin
                     // Value "C": chipset ST(0), MegaST(1) or STE(2)
-                    if(id == "C") system_chipset <= data_in[1:0];
+                    if(id == "C") system_chipset <= data_in[1:0];      // unused presently
                     // Value "M": 4MB(0) or 8MB(1)
-                    if(id == "M") system_memory <= data_in[0];
+                    if(id == "M") system_memory <= data_in[0];         // unused presently
                     // Value "V": color(0) or monochrome(1)
-                    if(id == "V") system_video <= data_in[0];
+                    if(id == "V") system_video <= data_in[0];          // D9 DualShock 2
                     // Value "R": coldboot(3), reset(1) or run(0)
                     if(id == "R") system_reset <= data_in[1:0];
                     // Value "S": scanlines none(0), 25%(1), 50%(2) or 75%(3)
@@ -126,7 +131,9 @@ always @(posedge clk) begin
                     // Value "P": floppy write protecion None(0), A(1), B(2) both(3)
                     if(id == "P") system_floppy_wprot <= data_in[1:0];
                     // Value "Q": enable (1) or disable (0) Cubase dongle(s)
-                    if(id == "Q") system_cubase_en <= data_in[0];
+                    if(id == "Q") system_cubase_en <= data_in[0];      // Numpad Joyport selection
+                    // Value "J": use DB9 for joystick(0) or mouse(1)
+                    if(id == "J") system_port_mouse <= data_in[1:0];   // c1351 mouse port 
                 end
             end
 

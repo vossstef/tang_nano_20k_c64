@@ -13,9 +13,13 @@ module hid (
   input [7:0]      data_in,
   output reg [7:0] data_out,
 
+  // input local db9 port events to be sent to MCU
+  input  [5:0]    db9_port,
+  output reg	  irq,
+  input			  iack,
+  // output HID data received from USB
   output reg [7:0] joystick0,
   output reg [7:0] joystick1,
-
   input  [7:0] keyboard_matrix_out,
   output [7:0] keyboard_matrix_in,
   reg [1:0]    mouse_btns,
@@ -29,7 +33,6 @@ reg [7:0] keyboard[7:0]; // array of 8 elements of width 8bit
 reg [1:0] mouse_x;
 reg [1:0] mouse_y;
 
-assign dbg = { mouse_x, mouse_y };
 //assign mouse = { mouse_btns, mouse_x, mouse_y };
 
 //keyboard 
@@ -49,7 +52,8 @@ reg [13:0] mouse_div;
 reg [3:0] state;
 reg [7:0] command;  
 reg [7:0] device;   // used for joystick
-   
+reg irq_enable;
+reg [5:0] db9_portD;
      
 // process mouse events
 always @(posedge clk) begin
@@ -57,6 +61,8 @@ always @(posedge clk) begin
       state <= 4'd0;
       mouse_div <= 14'd0;
       mouse_strobe <=1'b0;
+      irq <= 1'b0;
+      irq_enable <= 1'b0;
 
       // reset entire keyboard to 1's
       keyboard[ 0] <= 8'hff; keyboard[ 1] <= 8'hff; keyboard[ 2] <= 8'hff;
@@ -64,6 +70,18 @@ always @(posedge clk) begin
       keyboard[ 6] <= 8'hff; keyboard[ 7] <= 8'hff; 
 
    end else begin
+      // monitor db9 port for changes and raise interrupt
+      if(irq_enable) begin
+        db9_portD <= db9_port;
+        if(db9_portD != db9_port) begin
+            // irq_enable prevents further interrupts until
+            // the db9 state has actually been read by the MCU
+            irq <= 1'b1;
+            irq_enable <= 1'b0;
+        end
+      end
+
+      if(iack) irq <= 1'b0;      // iack clears interrupt
       mouse_strobe <=1'b0;
       if(data_in_strobe) begin      
         if(data_in_start) begin
@@ -88,13 +106,10 @@ always @(posedge clk) begin
             if(command == 8'd2) begin
                 if(state == 4'd1) mouse_btns <= data_in[1:0];
                 if(state == 4'd2) mouse_x_cnt <= mouse_x_cnt + data_in;
-                if(state == 4'd3) begin 
-                    mouse_y_cnt <= mouse_y_cnt + data_in; 
-                    mouse_strobe <=1'b1;
-                  end
-            end
+                if(state == 4'd3) mouse_y_cnt <= mouse_y_cnt + data_in; 
+                                end
 
-            // CMD 3: digital joystick data
+            // CMD 3: receive digital joystick data
             if(command == 8'd3) begin
                 if(state == 4'd1) device <= data_in;
                 if(state == 4'd2) begin
@@ -102,6 +117,13 @@ always @(posedge clk) begin
                     if(device == 8'd1) joystick1 <= data_in;
                 end 
             end
+
+            // CMD 4: send digital joystick data to MCU
+            if(command == 8'd4) begin
+                if(state == 4'd1) irq_enable <= 1'b1;    // (re-)enable interrupt
+                data_out <= {2'b00, db9_port };               
+            end
+
         end
       end else begin // if (data_in_strobe)
         mouse_div <= mouse_div + 14'd1;      
