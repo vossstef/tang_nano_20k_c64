@@ -7,15 +7,16 @@ c1541 by https://github.com/darfpga<br>
 
 Features:
 * HDMI 720x576p @50Hz Video and Audio Output
-* USB Keyboard via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) (future plan Tang onboard µC)
-* USB Joystick via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) (future plan Tang onboard µC)
-* [legacy Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)<br>
-* ~~Joystick emulation on Keyboard Numpad~~<br>
+* USB Keyboard via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) (future plan Tang onboard BL616 µC)
+* USB Joystick via µC
+* c1351 Mouse emulation via USB Mouse by µC
+* [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)<br>
+* Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) as Joystick<br>
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader Dolphin DOS](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
-* On Screen Display (OSD) for configuration and selection<br>
+* On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
 
-<font color="red">HMI interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for a USB keyboard, USB Joystick and OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware. 
+<font color="red">HMI interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for a USB keyboard, USB Joystick and OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.
 
 **Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS</b>
 <br><br>
@@ -38,14 +39,17 @@ RUN<br>
 
 ## OSD
 invoke by F12 keypress<br>
-* Image selection (D64 / G64) for c1541 Drive (DISK A)<br>
+* Image selection for c1541 Drive (DISK A)<br>
 * Reset + memory scrubbing<br>
 * Audio Volume<br>
 * Scanlines<br>
-* c1541 Disk Write Protetcion<br>
+* c1541 Disk write protetcion<br>
+* Joystick Port Swap D9 Joystick / Dualshock 2<br>
+* Mouse Off or Port 1 / 2<br>
+* Numpad Joystick Port Swap 1 / 2<br>
 
 ## Gamecontrol Joystick support
-legacy Digital Joystick<br>
+legacy D9 Digital Joystick<br>
 or<br>
 USB Joystick<br>
 or<br>
@@ -64,13 +68,9 @@ or Keyboard **Numpad** Keys:<br>
 |-|2<br>Down|-|
 
 ## Keyboard 
-* Numpad '*' toggle Numpad Joystick emulation:<br>
- 	'default' - PORT 1 = JOYKEYS on Numpad<br>
-	'toggle' - PORT 2 = JOYKEYS on Numpad<br>
+ ![Layout](\.assets/keymap.gif)
 
-[Layout](https://github.com/MiSTer-devel/C64_MiSTer/blob/master/keymap.gif) similar with some enhancements.
-
-## LED
+## LED UI
 0 c1541 Drive activity<br>
 1 Joystick port selection<br>
 2 sdcard Drive A<br>
@@ -124,18 +124,23 @@ From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images 
 | 8 | n.c. | - | IRQ |
 | 9 | n.c. | - | ACK |
 
-### BOM
-[Sipeed Tang Nano 20k](https://api.dl.sipeed.com/shareURL/TANG/Nano_20K)<br>
+
+## Getting started
+
+In order to use this Design the following things are needed:
+
+[Sipeed Tang Nano 20k](https://wiki.sipeed.com/nano20k)<br>
 [Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
-USB-C to USB-A adapter to connect regular USB devices to the M0S Dock or alternatively a 4 port [mini USB hub](https://a.aliexpress.com/_EIidgjH)<br>
+USB-C to USB-A adapter to connect regular USB devices to the M0S Dock<br> &nbsp;&nbsp;or alternatively a 4 port [mini USB hub](https://a.aliexpress.com/_EIidgjH)<br>
 microSD or microSDHC card FAT/exFAT formatted<br>
 USB Keyboard<br>
 D-SUB 9 M connector<br> 
 Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible Joystick<br>
-Prototype Board<br>
+a breadboard to wire everything up<br>
+some jumper wires<br>
 TFT Monitor with HDMI Input<br>
 <br>
-alternative Gamecontrol option:<br>
+alternative Gamecontrol Hardware option:<br>
 Gamepad Adapter Board (Sipeed Joystick to DIP)<br>
 [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock)<br>
 [USB Joystick](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)<br>
