@@ -21,7 +21,7 @@ entity tang_nano_20k_c64_top is
     clk_27mhz   : in std_logic;
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
-    led         : out std_logic_vector(5 downto 0);
+    leds_n      : out std_logic_vector(5 downto 0);
     btn         : in std_logic_vector(4 downto 0);
 
     -- SPI interface Sipeed M0S Dock external BL616 uC
@@ -99,23 +99,25 @@ signal keyboard_matrix_out : std_logic_vector(7 downto 0);
 signal keyboard_matrix_in  : std_logic_vector(7 downto 0);
 signal joyUsb       : std_logic_vector(6 downto 0);
 signal joyDigital   : std_logic_vector(6 downto 0);
-signal disk_reset   : std_logic;
+signal joyNumpad    : std_logic_vector(6 downto 0);
+signal joyMouse     : std_logic_vector(6 downto 0);
+signal numpad       : std_logic_vector(7 downto 0);
 -- CONTROLLER DUALSHOCK
 signal joyDS2       : std_logic_vector(6 downto 0);
 signal dsc_joy_rx0  : std_logic_vector(7 downto 0);
 signal dsc_joy_rx1  : std_logic_vector(7 downto 0);
 -- joystick interface
-signal  joyA        : std_logic_vector(6 downto 0) := (others => '1');
-signal  joyB        : std_logic_vector(6 downto 0) := (others => '1');
-signal  joy_sel     : std_logic := '0'; -- toggles joy A/B
-signal  btn_debounce: std_logic_vector(6 downto 0);
-signal  user_deb    : std_logic;
+signal joyA        : std_logic_vector(6 downto 0) := (others => '1');
+signal joyB        : std_logic_vector(6 downto 0) := (others => '1');
+signal btn_debounce: std_logic_vector(6 downto 0);
+signal user_deb    : std_logic;
+signal port_1_sel  : std_logic_vector(2 downto 0);
+signal port_2_sel  : std_logic_vector(2 downto 0);
 -- mouse / paddle
-signal pot1         : std_logic_vector(7 downto 0);
-signal pot2         : std_logic_vector(7 downto 0);
-signal mouse_x_pos  : signed(10 downto 0);
-signal mouse_y_pos  : signed(10 downto 0);
-signal mouse1_en    : std_logic := '0';
+signal pot1        : std_logic_vector(7 downto 0);
+signal pot2        : std_logic_vector(7 downto 0);
+signal mouse_x_pos : signed(10 downto 0);
+signal mouse_y_pos : signed(10 downto 0);
 
 signal ramCE       :  std_logic;
 signal ramWe       :  std_logic;
@@ -150,8 +152,8 @@ signal system_scanlines : std_logic_vector(1 downto 0);
 signal system_volume  : std_logic_vector(1 downto 0);
 signal joystick       : std_logic_vector(7 downto 0);
 signal mouse_btns     : std_logic_vector(1 downto 0);
-signal mouse_x_cnt    : signed(7 downto 0); -- signed( 8 downto 0);
-signal mouse_y_cnt    : signed(7 downto 0); -- signed( 8 downto 0);
+signal mouse_x_cnt    : signed(7 downto 0);
+signal mouse_y_cnt    : signed(7 downto 0);
 signal mouse_strobe   : std_logic;
 signal freeze         : std_logic;
 signal freeze_sync    : std_logic;
@@ -160,6 +162,7 @@ signal old_sync       : std_logic;
 signal osd_status     : std_logic;
 signal ws2812_color   : std_logic_vector(23 downto 0);
 signal system_reset   : std_logic_vector(1 downto 0);
+signal disk_reset   : std_logic;
 signal disk_chg_trg   : std_logic;
 signal disk_chg_trg_d : std_logic;
 signal sd_img_size    : std_logic_vector(31 downto 0);
@@ -189,7 +192,9 @@ signal disk_g64_d     : std_logic;
 signal c1541_reset    : std_logic;
 signal system_wide_screen : std_logic;
 signal system_floppy_wprot : std_logic_vector(1 downto 0);
-signal system_port_mouse  : std_logic_vector(1 downto 0);
+signal leds           : std_logic_vector(5 downto 0);
+signal system_leds    : std_logic_vector(1 downto 0);
+signal led1541        : std_logic;
 
 component CLKDIV
     generic (
@@ -311,10 +316,8 @@ process(clk32, pll_locked)
           sd_change  <= '0';
       if sd_img_size >= 333744 then  -- g64 disk selected
         disk_g64 <= '1';
-        led(4) <= '0'; -- g64 indicator
       else
         disk_g64 <= '0';
-        led(4) <= '1';
       end if;
       if (disk_g64 /= disk_g64_d) then
         c1541_reset  <= '1'; -- reset needed after G64 change
@@ -361,7 +364,7 @@ port map
     sd_buff_din   => sd_wr_data,
     sd_buff_wr    => sd_rd_byte_strobe,
 
-    led           => led(0),  -- LED floppy indicator
+    led           => led1541, -- LED floppy indicator
 
     c1541rom_clk  => '0',
     c1541rom_wr   => '0',
@@ -518,12 +521,11 @@ mainclock: entity work.Gowin_rPLL
         clkin   => clk_27mhz
     );
 
--- led(0)  c1541 activity
-led(1) <= joy_sel;
-led(2) <= sd_rd(0);
-led(3) <= sd_wr(0);
--- led(4) G64 indicator
-led(5) <= spi_ext;
+leds_n <=  not leds;
+leds(0) <= led1541;
+leds(2 downto 1) <= "00";
+leds(3) <= spi_ext;
+leds(5 downto 4) <= system_leds;
 
 process(clk32)
 begin
@@ -539,26 +541,59 @@ end process;
 --       X (6)
 -- fire Left 1
 joyDS2     <= not("11" & dsc_joy_rx1(2) & dsc_joy_rx1(5) & dsc_joy_rx1(7) & dsc_joy_rx1(6) & dsc_joy_rx1(4));
-joyDigital <= not("11" & (R_btn_joy(4) or (mouse1_en and mouse_btns(0))) & R_btn_joy(0) & R_btn_joy(1) & R_btn_joy(2) & (R_btn_joy(3)or (mouse1_en and mouse_btns(1))));
+joyDigital <= not("11" &   R_btn_joy(4) &   R_btn_joy(0) &   R_btn_joy(1) & R_btn_joy(2)   & (R_btn_joy(3)));
 joyUsb     <=    ("00" & joystick(4) & joystick(0) & joystick(1) & joystick(2) & joystick(3));
-joyA       <= (joyUsb or joyDigital) when joy_sel='0' else joyDS2;
-joyB       <= (joyUsb or joyDigital) when joy_sel='1' else joyDS2;
+joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
+joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
+
+process(clk32)
+begin
+	if rising_edge(clk32) then
+    case port_1_sel is
+      when "000"  => joyA <= joyDigital;
+      when "001"  => joyA <= joyUsb;
+      when "010"  => joyA <= joyNumpad;
+      when "011"  => joyA <= joyDS2;
+      when "100"  => joyA <= joyMouse;
+      when "101"  => joyA <= (others => '0');
+      when others => null;
+    end case;
+  end if;
+end process;
+
+process(clk32)
+begin
+	if rising_edge(clk32) then
+    case port_2_sel is
+      when "000"  => joyB <= joyDigital;
+      when "001"  => joyB <= joyUsb;
+      when "010"  => joyB <= joyNumpad;
+      when "011"  => joyB <= joyDS2;
+      when "100"  => joyB <= joyMouse;
+      when "101"  => joyB <= (others => '0');
+      when others => null;
+      end case;
+  end if;
+end process;
 
 -- paddle pins - mouse 
 pot1 <= '0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0';
 pot2 <= '0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0';
 
-process(clk32)
-  variable mov_x: signed(6 downto 0);
-  variable mov_y: signed(6 downto 0);
+process(clk32, pll_locked)
+ variable mov_x: signed(6 downto 0);
+ variable mov_y: signed(6 downto 0);
 begin
-  if rising_edge(clk32) then
+  if pll_locked = '0' then
+    mouse_x_pos <= (others => '0');
+    mouse_y_pos <= (others => '0');
+  elsif rising_edge(clk32) then
     if mouse_strobe = '1' then
-      -- due to limited resolution on the c64 side, limit the mouse movement speed
-      if mouse_x_cnt > 40 then mov_x:="0101000"; elsif mouse_x_cnt < -40 then mov_x:= "1011000"; else mov_x := mouse_x_cnt(6 downto 0); end if;
-      if mouse_y_cnt > 40 then mov_y:="0101000"; elsif mouse_y_cnt < -40 then mov_y:= "1011000"; else mov_y := mouse_y_cnt(6 downto 0); end if;
-      mouse_x_pos <= mouse_x_pos + mov_x;
-      mouse_y_pos <= mouse_y_pos + mov_y;
+     -- due to limited resolution on the c64 side, limit the mouse movement speed
+     if mouse_x_cnt > 40 then mov_x:="0101000"; elsif mouse_x_cnt < -40 then mov_x:= "1011000"; else mov_x := mouse_x_cnt(6 downto 0); end if;
+     if mouse_y_cnt > 40 then mov_y:="0101000"; elsif mouse_y_cnt < -40 then mov_y:= "1011000"; else mov_y := mouse_y_cnt(6 downto 0); end if;
+     mouse_x_pos <= mouse_x_pos + mov_x;
+     mouse_y_pos <= mouse_y_pos + mov_y;
     end if;
   end if;
 end process;
@@ -605,6 +640,7 @@ hid_inst: entity work.hid
   -- output HID data received from USB
   joystick0       => joystick,
   joystick1       => open,
+  numpad          => numpad,
   keyboard_matrix_out => keyboard_matrix_out,
   keyboard_matrix_in  => keyboard_matrix_in,
   mouse_btns      => mouse_btns,
@@ -612,8 +648,6 @@ hid_inst: entity work.hid
   mouse_y_cnt     => mouse_y_cnt,
   mouse_strobe    => mouse_strobe
  );
-
-mouse1_en <= system_port_mouse(0);
 
 module_inst: entity work.sysctrl 
  port map 
@@ -629,21 +663,21 @@ module_inst: entity work.sysctrl
   -- values that can be configured by the user
   system_chipset    => open,
   system_memory     => open,
-  system_video      => joy_sel,            -- D9 or Dualshock 2
+  system_video      => open,
   system_reset      => system_reset,
   system_scanlines  => system_scanlines,
   system_volume     => system_volume,
   system_wide_screen  => system_wide_screen,
   system_floppy_wprot => system_floppy_wprot,
-  system_cubase_en  => open,               -- Numpad Joyport
-  system_port_mouse => system_port_mouse,  -- Mouse emulation
+  system_port_1     => port_1_sel,  -- Joystick port 1 input device selection 
+  system_port_2     => port_2_sel,  -- Joystick port 2 input device selection 
 
   int_out_n         => m0s(4),
   int_in            => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
   int_ack           => int_ack,
 
   buttons           => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
-  leds              => open,         -- two leds can be controlled from the MCU
+  leds              => system_leds,         -- two leds can be controlled from the MCU
   color             => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
 
@@ -657,7 +691,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   pause_out    => c64_pause,
   -- keyboard interface
   keyboard_matrix_out => keyboard_matrix_out,
-  keyboard_matrix_in => keyboard_matrix_in,
+  keyboard_matrix_in  => keyboard_matrix_in,
   kbd_reset    => '0',
   shift_mod    => (others => '0'),
 

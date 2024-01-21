@@ -542,7 +542,8 @@ port map (
 	
 	turbo_en => turbo_en,
 	turbo_state => turbo_state,
-	
+	variant => "00",  -- 00 - NMOS, 01 - HMOS, 10 - old HMOS
+
 	cs => cs_vic,
 	we => cpuWe,
 	lp_n => cia1_pbi(4),

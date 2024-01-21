@@ -9,22 +9,22 @@ Features:
 * HDMI 720x576p @50Hz Video and Audio Output
 * USB Keyboard via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) (future plan Tang onboard BL616 µC)
 * USB Joystick via µC
-* c1351 Mouse emulation via USB Mouse by µC
+* USB Mouse via µC as c1351 Mouse emulation (partly working)
 * [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)<br>
 * Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) as Joystick<br>
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader Dolphin DOS](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
 
-<font color="red">HMI interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for a USB keyboard, USB Joystick and OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.
+<font color="red">HID interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for a USB devices and OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.
 
 **Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS</b>
 <br><br>
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS.<br>
-Copy a D64 Disk image to your sdcard and rename it to disk_a.st  (for the time being as default boot image). In case a disk_b.st exists delete that.<br>
-Add further D64 (or G64) images as you like and insert card in TN slot. Power Cycle TN. LED 0 acts as Drive activity indicator.<br> 
+Copy a D64 Disk image to your sdcard and rename it to **disk8.d64** as default boot image.<br>
+Add further D64 or G64 images as you like and insert card in TN slot. Power Cycle TN. LED 0 acts as Drive activity indicator.<br> 
 For those who forgot after all those years...<br>
 Disk directory listing: (or F7 keypress)<br> 
 LOAD"$",8<br>
@@ -34,19 +34,17 @@ LOAD"*",8<br>
 RUN<br>
 
 ## Push Button utilization
-* S2 reserved<br>
-* S1 to swap physical Joystick or GamePad in between [c64 Joystick ports ](https://www.c64-wiki.com/wiki/Control_Port) 1 or 2 (selected port indicated by LED 1). Two Player control.<br>
+* S2 Reset (for Flasher)<br>
+* S1 reserved <br>
 
 ## OSD
 invoke by F12 keypress<br>
-* Image selection for c1541 Drive (DISK A)<br>
+* Image selection for c1541 Drive<br>
 * Reset + memory scrubbing<br>
 * Audio Volume<br>
 * Scanlines<br>
 * c1541 Disk write protetcion<br>
-* Joystick Port Swap D9 Joystick / Dualshock 2<br>
-* Mouse Off or Port 1 / 2<br>
-* Numpad Joystick Port Swap 1 / 2<br>
+* HID device selection for Joystick Port 1 and Port 2<br>
 
 ## Gamecontrol Joystick support
 legacy D9 Digital Joystick<br>
@@ -69,14 +67,15 @@ or Keyboard **Numpad** Keys:<br>
 
 ## Keyboard 
  ![Layout](\.assets/keymap.gif)
+ Restore and Tape Play not implemented.
 
 ## LED UI
 0 c1541 Drive activity<br>
-1 Joystick port selection<br>
-2 sdcard Drive A<br>
-3 unused<br>
-4 G64 Disk image<br>
-5 M0S Dock detect<br>
+1 unused<br>
+2 unused<br>
+3 M0S Dock detect<br>
+4 System LED 0<br>
+5 System LED 1<br>
 
 ## Powering
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 

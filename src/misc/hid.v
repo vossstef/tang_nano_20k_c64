@@ -20,6 +20,7 @@ module hid (
   // output HID data received from USB
   output reg [7:0] joystick0,
   output reg [7:0] joystick1,
+  output reg [7:0] numpad,
   input  [7:0] keyboard_matrix_out,
   output [7:0] keyboard_matrix_in,
   reg [1:0]    mouse_btns,
@@ -106,7 +107,9 @@ always @(posedge clk) begin
             if(command == 8'd2) begin
                 if(state == 4'd1) mouse_btns <= data_in[1:0];
                 if(state == 4'd2) mouse_x_cnt <= mouse_x_cnt + data_in;
-                if(state == 4'd3) mouse_y_cnt <= mouse_y_cnt + data_in; 
+                if(state == 4'd3) begin 
+                    mouse_y_cnt <= mouse_y_cnt + data_in; 
+                    mouse_strobe <=1'b1; end
                                 end
 
             // CMD 3: receive digital joystick data
@@ -115,7 +118,8 @@ always @(posedge clk) begin
                 if(state == 4'd2) begin
                     if(device == 8'd0) joystick0 <= data_in;
                     if(device == 8'd1) joystick1 <= data_in;
-                end 
+                    if(device == 8'h80) numpad <= data_in;  // 0, 0, KP * button2, KP0 trigger, KP 8 up, KP 2 down, KP 4 left, KP 6 right
+                end                                            
             end
 
             // CMD 4: send digital joystick data to MCU
