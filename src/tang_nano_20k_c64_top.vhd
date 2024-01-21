@@ -11,29 +11,21 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.numeric_std.ALL;
-library work;
-use work.keyboard_matrix_pkg.all;
 
 entity tang_nano_20k_c64_top is
   generic (
-    sysclk_frequency : integer := 315; -- Sysclk frequency * 10 (31.5Mhz)
-    mister           : integer := 0    -- 0:no, 1:yes
+    sysclk_frequency : integer := 315 -- Sysclk frequency * 10 (31.5Mhz)
     );
   port
   (
     clk_27mhz   : in std_logic;
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
-    led         : out std_logic_vector(5 downto 0);
+    leds_n      : out std_logic_vector(5 downto 0);
     btn         : in std_logic_vector(4 downto 0);
 
     -- SPI interface Sipeed M0S Dock external BL616 uC
-    mosi        : in std_logic; -- spi MOSI / ps2_data
-    miso        : out std_logic;-- spi MISO / ps2_clk
-    csn         : in std_logic; -- spi CSn
-    sck         : in std_logic; -- spi CLK
-    irq_n       : out std_logic; -- spi irq
-
+    m0s         : inout std_logic_vector(5 downto 0);
     -- SPI interface onboard BL616 uC
     spi_csn     : in std_logic;
     spi_sclk    : in std_logic;
@@ -103,21 +95,29 @@ signal iec_atn_o   : std_logic;
 signal iec_atn_i   : std_logic;
 
   -- keyboard
-signal disk_num     : std_logic_vector(7 downto 0) := (others => '0');
+signal keyboard_matrix_out : std_logic_vector(7 downto 0);
+signal keyboard_matrix_in  : std_logic_vector(7 downto 0);
 signal joyUsb       : std_logic_vector(6 downto 0);
 signal joyDigital   : std_logic_vector(6 downto 0);
-signal reset_key    : std_logic := '0';
-signal disk_reset   : std_logic;
+signal joyNumpad    : std_logic_vector(6 downto 0);
+signal joyMouse     : std_logic_vector(6 downto 0);
+signal numpad       : std_logic_vector(7 downto 0);
 -- CONTROLLER DUALSHOCK
 signal joyDS2       : std_logic_vector(6 downto 0);
 signal dsc_joy_rx0  : std_logic_vector(7 downto 0);
 signal dsc_joy_rx1  : std_logic_vector(7 downto 0);
 -- joystick interface
-signal  joyA        : std_logic_vector(6 downto 0) := (others => '1');
-signal  joyB        : std_logic_vector(6 downto 0) := (others => '1');
-signal  joy_sel     : std_logic := '0'; -- toggles joy A/B
-signal  btn_debounce: std_logic_vector(6 downto 0);
-signal  user_deb     : std_logic;
+signal joyA        : std_logic_vector(6 downto 0) := (others => '1');
+signal joyB        : std_logic_vector(6 downto 0) := (others => '1');
+signal btn_debounce: std_logic_vector(6 downto 0);
+signal user_deb    : std_logic;
+signal port_1_sel  : std_logic_vector(2 downto 0);
+signal port_2_sel  : std_logic_vector(2 downto 0);
+-- mouse / paddle
+signal pot1        : std_logic_vector(7 downto 0);
+signal pot2        : std_logic_vector(7 downto 0);
+signal mouse_x_pos : signed(10 downto 0);
+signal mouse_y_pos : signed(10 downto 0);
 
 signal ramCE       :  std_logic;
 signal ramWe       :  std_logic;
@@ -147,13 +147,14 @@ signal hid_data_out   : std_logic_vector(7 downto 0);
 signal osd_data_out   : std_logic_vector(7 downto 0) :=  X"55";
 signal sys_data_out   : std_logic_vector(7 downto 0);
 signal sdc_data_out   : std_logic_vector(7 downto 0);
+signal hid_int        : std_logic;
 signal system_scanlines : std_logic_vector(1 downto 0);
 signal system_volume  : std_logic_vector(1 downto 0);
-
-signal mouse          : std_logic_vector(5 downto 0);
-signal keyboard       : keyboard_t;
 signal joystick       : std_logic_vector(7 downto 0);
-
+signal mouse_btns     : std_logic_vector(1 downto 0);
+signal mouse_x_cnt    : signed(7 downto 0);
+signal mouse_y_cnt    : signed(7 downto 0);
+signal mouse_strobe   : std_logic;
 signal freeze         : std_logic;
 signal freeze_sync    : std_logic;
 signal c64_pause      : std_logic;
@@ -161,6 +162,7 @@ signal old_sync       : std_logic;
 signal osd_status     : std_logic;
 signal ws2812_color   : std_logic_vector(23 downto 0);
 signal system_reset   : std_logic_vector(1 downto 0);
+signal disk_reset   : std_logic;
 signal disk_chg_trg   : std_logic;
 signal disk_chg_trg_d : std_logic;
 signal sd_img_size    : std_logic_vector(31 downto 0);
@@ -190,6 +192,9 @@ signal disk_g64_d     : std_logic;
 signal c1541_reset    : std_logic;
 signal system_wide_screen : std_logic;
 signal system_floppy_wprot : std_logic_vector(1 downto 0);
+signal leds           : std_logic_vector(5 downto 0);
+signal system_leds    : std_logic_vector(1 downto 0);
+signal led1541        : std_logic;
 
 component CLKDIV
     generic (
@@ -207,12 +212,13 @@ end component;
 begin
 -- ----------------- SPI input parser ----------------------
 -- map output data onto both spi outputs
-  spi_io_din  <= mosi when spi_ext = '1' else spi_dat;
-  spi_io_ss   <= csn  when spi_ext = '1' else spi_csn;
-  spi_io_clk  <= sck  when spi_ext = '1' else spi_sclk;
+  spi_io_din  <= m0s(1) when spi_ext = '1' else spi_dat;
+  spi_io_ss   <= m0s(2) when spi_ext = '1' else spi_csn;
+  spi_io_clk  <= m0s(3) when spi_ext = '1' else spi_sclk;
   jtag_tck    <= spi_io_dout; -- onboad bl616 back-up miso signal
-  miso        <= spi_io_dout; -- M0 Dock
+  m0s(0)      <= spi_io_dout; -- M0 Dock
   spi_dir     <= spi_io_dout; -- unusable due to hw bug
+  m0s(5)      <= 'Z';
 
 -- by default the internal SPI is being used. Once there is
 -- a select from the external spi (M0S Dock) , then the connection is being switched
@@ -221,7 +227,7 @@ begin
   if rising_edge(clk32) then
     if pll_locked = '0' then
         spi_ext <= '0';
-    elsif csn = '0' then
+    elsif m0s(2) = '0' then
         spi_ext <= '1';
     else 
         spi_ext <= spi_ext;
@@ -310,10 +316,8 @@ process(clk32, pll_locked)
           sd_change  <= '0';
       if sd_img_size >= 333744 then  -- g64 disk selected
         disk_g64 <= '1';
-        led(4) <= '0'; -- g64 indicator
       else
         disk_g64 <= '0';
-        led(4) <= '1';
       end if;
       if (disk_g64 /= disk_g64_d) then
         c1541_reset  <= '1'; -- reset needed after G64 change
@@ -333,7 +337,7 @@ port map
     disk_num      =>(others =>'0'),
     disk_change   => sd_change, 
     disk_mount    => '1',
-    disk_readonly => '0', -- system_floppy_wprot(0),
+    disk_readonly => system_floppy_wprot(0),
     disk_g64      => disk_g64,
 
     iec_atn_i     => iec_atn_o,
@@ -360,7 +364,7 @@ port map
     sd_buff_din   => sd_wr_data,
     sd_buff_wr    => sd_rd_byte_strobe,
 
-    led           => led(0),  -- LED floppy indicator
+    led           => led1541, -- LED floppy indicator
 
     c1541rom_clk  => '0',
     c1541rom_wr   => '0',
@@ -517,25 +521,11 @@ mainclock: entity work.Gowin_rPLL
         clkin   => clk_27mhz
     );
 
--- process to toggle joy A/B with BTN
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    if vsync = '1' then
-      if user = '1' and user_deb = '0' then  --rising edge of button
-        joy_sel <= not joy_sel;
-      end if;
-      user_deb <= user;
-    end if;
-  end if;
-end process;
-
--- led(0)  c1541 activity
-led(1) <= joy_sel;
-led(2) <= sd_rd(0);
-led(3) <= sd_wr(0);
--- led(4) G64 indicator
-led(5) <= spi_ext;
+leds_n <=  not leds;
+leds(0) <= led1541;
+leds(2 downto 1) <= "00";
+leds(3) <= spi_ext;
+leds(5 downto 4) <= system_leds;
 
 process(clk32)
 begin
@@ -551,16 +541,68 @@ end process;
 --       X (6)
 -- fire Left 1
 joyDS2     <= not("11" & dsc_joy_rx1(2) & dsc_joy_rx1(5) & dsc_joy_rx1(7) & dsc_joy_rx1(6) & dsc_joy_rx1(4));
-joyDigital <= not("11" & R_btn_joy(4) & R_btn_joy(0) & R_btn_joy(1) & R_btn_joy(2) & R_btn_joy(3));
+joyDigital <= not("11" &   R_btn_joy(4) &   R_btn_joy(0) &   R_btn_joy(1) & R_btn_joy(2)   & (R_btn_joy(3)));
 joyUsb     <=    ("00" & joystick(4) & joystick(0) & joystick(1) & joystick(2) & joystick(3));
-joyA       <= (joyUsb or joyDigital) when joy_sel='0' else joyDS2;
-joyB       <= (joyUsb or joyDigital) when joy_sel='1' else joyDS2;
+joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
+joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
+
+process(clk32)
+begin
+	if rising_edge(clk32) then
+    case port_1_sel is
+      when "000"  => joyA <= joyDigital;
+      when "001"  => joyA <= joyUsb;
+      when "010"  => joyA <= joyNumpad;
+      when "011"  => joyA <= joyDS2;
+      when "100"  => joyA <= joyMouse;
+      when "101"  => joyA <= (others => '0');
+      when others => null;
+    end case;
+  end if;
+end process;
+
+process(clk32)
+begin
+	if rising_edge(clk32) then
+    case port_2_sel is
+      when "000"  => joyB <= joyDigital;
+      when "001"  => joyB <= joyUsb;
+      when "010"  => joyB <= joyNumpad;
+      when "011"  => joyB <= joyDS2;
+      when "100"  => joyB <= joyMouse;
+      when "101"  => joyB <= (others => '0');
+      when others => null;
+      end case;
+  end if;
+end process;
+
+-- paddle pins - mouse 
+pot1 <= '0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0';
+pot2 <= '0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0';
+
+process(clk32, pll_locked)
+ variable mov_x: signed(6 downto 0);
+ variable mov_y: signed(6 downto 0);
+begin
+  if pll_locked = '0' then
+    mouse_x_pos <= (others => '0');
+    mouse_y_pos <= (others => '0');
+  elsif rising_edge(clk32) then
+    if mouse_strobe = '1' then
+     -- due to limited resolution on the c64 side, limit the mouse movement speed
+     if mouse_x_cnt > 40 then mov_x:="0101000"; elsif mouse_x_cnt < -40 then mov_x:= "1011000"; else mov_x := mouse_x_cnt(6 downto 0); end if;
+     if mouse_y_cnt > 40 then mov_y:="0101000"; elsif mouse_y_cnt < -40 then mov_y:= "1011000"; else mov_y := mouse_y_cnt(6 downto 0); end if;
+     mouse_x_pos <= mouse_x_pos + mov_x;
+     mouse_y_pos <= mouse_y_pos + mov_y;
+    end if;
+  end if;
+end process;
 
 mcu_spi_inst: entity work.mcu_spi 
 port map (
   clk            => clk32,
   reset          => not pll_locked,
-  -- SPI interface to Sipeed M0 Dock BL616 MCU
+  -- SPI interface to BL616 MCU
   spi_io_ss      => spi_io_ss,      -- SPI CSn
   spi_io_clk     => spi_io_clk,     -- SPI SCLK
   spi_io_din     => spi_io_din,     -- SPI MOSI
@@ -590,13 +632,24 @@ hid_inst: entity work.hid
   data_in_start   => mcu_start,
   data_in         => mcu_data_out,
   data_out        => hid_data_out,
-  mouse           => mouse,
-  keyboard        => keyboard,  -- atari st keyboard 2D matrix 
+
+  -- input local db9 port events to be sent to MCU
+  db9_port        => (others => '0'),
+  irq             => hid_int,
+  iack            => int_ack(1),
+  -- output HID data received from USB
   joystick0       => joystick,
-  joystick1       => open
+  joystick1       => open,
+  numpad          => numpad,
+  keyboard_matrix_out => keyboard_matrix_out,
+  keyboard_matrix_in  => keyboard_matrix_in,
+  mouse_btns      => mouse_btns,
+  mouse_x_cnt     => mouse_x_cnt,
+  mouse_y_cnt     => mouse_y_cnt,
+  mouse_strobe    => mouse_strobe
  );
 
- module_inst: entity work.sysctrl 
+module_inst: entity work.sysctrl 
  port map 
  (
   clk               => clk32,
@@ -614,24 +667,18 @@ hid_inst: entity work.hid
   system_reset      => system_reset,
   system_scanlines  => system_scanlines,
   system_volume     => system_volume,
-  system_wide_screen => system_wide_screen,
+  system_wide_screen  => system_wide_screen,
   system_floppy_wprot => system_floppy_wprot,
+  system_port_1     => port_1_sel,  -- Joystick port 1 input device selection 
+  system_port_2     => port_2_sel,  -- Joystick port 2 input device selection 
 
-  int_out_n         => irq_n,
-  int_in            => std_logic_vector(unsigned'("0000" & sdc_int & "000")),
+  int_out_n         => m0s(4),
+  int_in            => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
   int_ack           => int_ack,
 
   buttons           => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
-  leds              => open,         -- two leds can be controlled from the MCU
-  color             => ws2812_color, -- a 24bit color to e.g. be used to drive the ws2812
-
-  acsi_status_byte  => (others => '0'),
-  acsi_status_byte_index => open,
-  acsi_ack          => open,
-  acsi_nak          => open,
-  acsi_dma_status   => open,
-  acsi_data_in_strobe => open,
-  acsi_data_in      => open
+  leds              => system_leds,         -- two leds can be controlled from the MCU
+  color             => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
 
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
@@ -643,12 +690,10 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   pause        => freeze,
   pause_out    => c64_pause,
   -- keyboard interface
-  keyboard     => keyboard,
-  ps2_key      => (others => '0'),
+  keyboard_matrix_out => keyboard_matrix_out,
+  keyboard_matrix_in  => keyboard_matrix_in,
   kbd_reset    => '0',
   shift_mod    => (others => '0'),
-  reset_key    => reset_key,
-  disk_num     => disk_num,
 
   -- external memory
   ramAddr      => ramAddr,
@@ -684,7 +729,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   UMAXromH     => open,
   IOE          => open,
   IOF          => open,
-  freeze_key   => open,
+  freeze_key   => open,  -- Keyboard Restore (NMI Interrupt)
   mod_key      => open,
   tape_play    => open,
 
@@ -700,8 +745,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   -- joystick interface
   joyA         => JoyA,
   joyB         => joyB,
-  pot1         => (others => '0'),
-  pot2         => (others => '0'),
+  pot1         => pot1,
+  pot2         => pot2,
   pot3         => (others => '0'),
   pot4         => (others => '0'),
 

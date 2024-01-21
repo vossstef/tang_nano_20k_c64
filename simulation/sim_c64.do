@@ -32,7 +32,7 @@ project addfile "./../../src/misc/video.v"
 project addfile "./../../src/misc/video_analyzer.v" 
 project addfile "./../../src/mos6526.v" 
 project addfile "./../../src/sdram.v" 
-project addfile "./../../src/ws2812.v" 
+project addfile "./../../src/misc/ws2812.v" 
 project addfile "./../../src/c1541/c1541_logic.vhd"
 project addfile "./../../src/c1541/c1541_sd.vhd"
 project addfile "./../../src/c1541/gcr_floppy.vhd"
@@ -50,7 +50,6 @@ project addfile "./../../src/gowin_prom/gowin_prom_chargen.vhd"
 project addfile "./../../src/gowin_rpll/gowin_rpll.vhd"
 project addfile "./../../src/gowin_sp/gowin_sp_2k.vhd"
 project addfile "./../../src/gowin_sp/gowin_sp_8k.vhd"
-project addfile "./../../src/keyboard_matrix_pkg.vhd"
 project addfile "./../../src/sid6581/Q_table.vhd"
 project addfile "./../../src/sid6581/adsr_multi.vhd"
 project addfile "./../../src/sid6581/mult_acc.vhd"
@@ -108,7 +107,7 @@ vlog -work work -sv -incr \
 
 vlog -work work -incr \
 "./../../src/misc/sdcmd_ctrl.v" \
-"./../../src/ws2812.v" \
+"./../../src/misc/ws2812.v" \
 "./../../src/dualshock_controller.v" \
 "./../../src/gowin_clkdiv/gowin_clkdiv.v" \
 "./../../src/gowin_dpb/sector_dpram.v" \
@@ -136,7 +135,6 @@ vcom -work work -suppress 1583 -2008 -autoorder -explicit \
 "./../../src/gowin_rpll/gowin_rpll.vhd" \
 "./../../src/gowin_sp/gowin_sp_2k.vhd" \
 "./../../src/gowin_sp/gowin_sp_8k.vhd" \
-"./../../src/keyboard_matrix_pkg.vhd" \
 "./../../src/sid6581/Q_table.vhd" \
 "./../../src/sid6581/adsr_multi.vhd" \
 "./../../src/sid6581/mult_acc.vhd" \

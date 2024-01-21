@@ -7,4 +7,5 @@
 *.do linguist-language=Text
 *.cfg linguist-language=Text
 *.fs linguist-language=Text
+*.gao linguist-language=XML
 

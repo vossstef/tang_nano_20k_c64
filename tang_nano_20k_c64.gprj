@@ -32,9 +32,9 @@
         <File path="src/misc/sysctrl.v" type="file.verilog" enable="1"/>
         <File path="src/misc/video.v" type="file.verilog" enable="1"/>
         <File path="src/misc/video_analyzer.v" type="file.verilog" enable="1"/>
+        <File path="src/misc/ws2812.v" type="file.verilog" enable="1"/>
         <File path="src/mos6526.v" type="file.verilog" enable="1"/>
         <File path="src/sdram.v" type="file.verilog" enable="1"/>
-        <File path="src/ws2812.v" type="file.verilog" enable="1"/>
         <File path="src/c1541/c1541_logic.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/c1541_sd.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/gcr_floppy.vhd" type="file.vhdl" enable="1"/>
@@ -53,7 +53,6 @@
         <File path="src/gowin_sp/gowin_sp_2k.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_sp/gowin_sp_8k.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_sp/gowin_sp_cram.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/keyboard_matrix_pkg.vhd" type="file.vhdl" enable="1"/>
         <File path="src/sid6581/Q_table.vhd" type="file.vhdl" enable="1"/>
         <File path="src/sid6581/adsr_multi.vhd" type="file.vhdl" enable="1"/>
         <File path="src/sid6581/mult_acc.vhd" type="file.vhdl" enable="1"/>
