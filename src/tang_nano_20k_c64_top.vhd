@@ -152,8 +152,8 @@ signal system_scanlines : std_logic_vector(1 downto 0);
 signal system_volume  : std_logic_vector(1 downto 0);
 signal joystick       : std_logic_vector(7 downto 0);
 signal mouse_btns     : std_logic_vector(1 downto 0);
-signal mouse_x_cnt    : signed(7 downto 0);
-signal mouse_y_cnt    : signed(7 downto 0);
+signal mouse_x        : signed(7 downto 0);
+signal mouse_y        : signed(7 downto 0);
 signal mouse_strobe   : std_logic;
 signal freeze         : std_logic;
 signal freeze_sync    : std_logic;
@@ -590,9 +590,9 @@ begin
   elsif rising_edge(clk32) then
     if mouse_strobe = '1' then
      -- due to limited resolution on the c64 side, limit the mouse movement speed
-     if mouse_x_cnt > 40 then mov_x:="0101000"; elsif mouse_x_cnt < -40 then mov_x:= "1011000"; else mov_x := mouse_x_cnt(6 downto 0); end if;
-     if mouse_y_cnt > 40 then mov_y:="0101000"; elsif mouse_y_cnt < -40 then mov_y:= "1011000"; else mov_y := mouse_y_cnt(6 downto 0); end if;
-     mouse_x_pos <= mouse_x_pos + mov_x;
+     if mouse_x > 40 then mov_x:="0101000"; elsif mouse_x < -40 then mov_x:= "1011000"; else mov_x := mouse_x(6 downto 0); end if;
+     if mouse_y > 40 then mov_y:="0101000"; elsif mouse_y < -40 then mov_y:= "1011000"; else mov_y := mouse_y(6 downto 0); end if;
+     mouse_x_pos <= mouse_x_pos - mov_x;
      mouse_y_pos <= mouse_y_pos + mov_y;
     end if;
   end if;
@@ -644,8 +644,8 @@ hid_inst: entity work.hid
   keyboard_matrix_out => keyboard_matrix_out,
   keyboard_matrix_in  => keyboard_matrix_in,
   mouse_btns      => mouse_btns,
-  mouse_x_cnt     => mouse_x_cnt,
-  mouse_y_cnt     => mouse_y_cnt,
+  mouse_x         => mouse_x,
+  mouse_y         => mouse_y,
   mouse_strobe    => mouse_strobe
  );
 
