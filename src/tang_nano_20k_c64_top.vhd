@@ -620,8 +620,7 @@ port map (
   mcu_dout       => mcu_data_out
 );
 
--- decode SPI/MCU data received for human input devices (HID) and
--- convert into ST compatible mouse and keyboard signals
+-- decode SPI/MCU data received for human input devices (HID) 
 hid_inst: entity work.hid
  port map 
  (
@@ -643,6 +642,7 @@ hid_inst: entity work.hid
   numpad          => numpad,
   keyboard_matrix_out => keyboard_matrix_out,
   keyboard_matrix_in  => keyboard_matrix_in,
+  key_restore     => open,
   mouse_btns      => mouse_btns,
   mouse_x         => mouse_x,
   mouse_y         => mouse_y,
