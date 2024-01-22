@@ -171,7 +171,7 @@ hdmi #(
     .AUDIO_BIT_WIDTH(16),
     .VENDOR_NAME( { "MiSTle", 16'd0} ),
     .PRODUCT_DESCRIPTION( {"C64", 64'd0} ),
-    .START_X(30)
+    .START_X(80)
 //  .START_Y(30)
 ) hdmi(
   .clk_pixel_x5(clk_pixel_x5),

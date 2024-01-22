@@ -58,6 +58,7 @@ always @(posedge clk) begin
       mouse_strobe <=1'b0;
       irq <= 1'b0;
       irq_enable <= 1'b0;
+      key_restore <= 1'b0;
 
       // reset entire keyboard to 1's
       keyboard[ 0] <= 8'hff; keyboard[ 1] <= 8'hff; keyboard[ 2] <= 8'hff;
@@ -113,7 +114,10 @@ always @(posedge clk) begin
                 if(state == 4'd2) begin
                     if(device == 8'd0) joystick0 <= data_in;
                     if(device == 8'd1) joystick1 <= data_in;
-                    if(device == 8'h80) begin numpad <= data_in; restore <= data_in(6); end // 0, 0, KP * button2, KP0 trigger, KP 8 up, KP 2 down, KP 4 left, KP 6 right
+                    if(device == 8'h80) begin 
+                             numpad <= data_in; 
+                             key_restore <= data_in[6]; 
+                          end // 0, 0, KP * button2, KP0 trigger, KP 8 up, KP 2 down, KP 4 left, KP 6 right
                 end
             end
 
