@@ -86,6 +86,11 @@ signal ram_scramble : std_logic_vector(1 downto 0);
 signal ram_ready    : std_logic;
 signal cb_D         : std_logic;
 
+signal addr         : std_logic_vector(21 downto 0);
+signal cs           : std_logic;
+signal we           : std_logic;
+signal din          : std_logic_vector(15 downto 0);
+
 -- IEC
 signal iec_data_o  : std_logic;
 signal iec_data_i  : std_logic;
@@ -195,6 +200,24 @@ signal system_floppy_wprot : std_logic_vector(1 downto 0);
 signal leds           : std_logic_vector(5 downto 0);
 signal system_leds    : std_logic_vector(1 downto 0);
 signal led1541        : std_logic;
+signal reu_cfg        : std_logic_vector(1 downto 0) := (others => '1'); 
+signal dma_req        : std_logic;
+signal dma_cycle      : std_logic;
+signal dma_addr       : std_logic_vector(15 downto 0);
+signal dma_dout       : std_logic_vector(7 downto 0);
+signal dma_din        : std_logic_vector(7 downto 0);
+signal dma_we         : std_logic;
+signal io_cycle       : std_logic;
+signal ext_cycle      : std_logic;
+signal ext_cycle_d    : std_logic;
+signal reu_ram_addr   : std_logic_vector(24 downto 0);
+signal reu_ram_dout   : std_logic_vector(7 downto 0);
+signal reu_ram_we     : std_logic;
+signal reu_irq        : std_logic;
+signal IOF            : std_logic;
+signal reu_dout       : std_logic_vector(7 downto 0);
+signal reu_oe         : std_logic;
+signal reu_ram_ce     : std_logic;
 
 component CLKDIV
     generic (
@@ -465,7 +488,6 @@ port map(
 
   dram_addr(15 downto 0)  <= std_logic_vector(ramAddr);
   dram_addr(21 downto 16) <= (others => '0');
-  ramDataOut(15 downto 8) <= (others => '0');
   ramDataIn <= unsigned(ramDataIn_v(7 downto 0));
 
 -- system_reset[0] indicates whether a reset is requested. This
@@ -485,7 +507,12 @@ begin
 end process;
 
 -- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
-  dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
+dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
+-- REU muxer
+addr <= reu_ram_addr(21 downto 0) when ext_cycle = '1' else dram_addr_s;
+cs <= reu_ram_ce when ext_cycle = '1' else ramCE;
+we <= reu_ram_we when ext_cycle = '1' else ramWe;
+din <= ("00000000" & reu_ram_dout) when ext_cycle = '1' else ("00000000" & std_logic_vector(ramDataOut(7 downto 0)));
 
   dram_inst: entity work.sdram
    port map(
@@ -505,12 +532,12 @@ end process;
     reset_n   => pll_locked,    -- init signal after FPGA config to initialize RAM
     ready     => ram_ready,     -- ram is ready and has been initialized
     refresh   => idle,          -- chipset requests a refresh cycle
-    din       => std_logic_vector(ramDataOut), -- data input from chipset/cpu
+    din       => din,           -- data input from chipset/cpu
     dout      => ramDataIn_v,
-    addr      => dram_addr_s,      -- 22 bit word address
+    addr      => addr,          -- 22 bit word address
     ds        => (others => '0'),-- upper/lower data strobe R = low and W = low
-    cs        => ramCE,        -- cpu/chipset requests read/wrie
-    we        => ramWe         -- cpu/chipset requests write
+    cs        => cs,            -- cpu/chipset requests read/wrie
+    we        => we             -- cpu/chipset requests write
   );
 
 mainclock: entity work.Gowin_rPLL
@@ -663,7 +690,7 @@ module_inst: entity work.sysctrl
   -- values that can be configured by the user
   system_chipset    => open,
   system_memory     => open,
-  system_video      => open,
+  system_reu_cfg    => reu_cfg,
   system_reset      => system_reset,
   system_scanlines  => system_scanlines,
   system_volume     => system_volume,
@@ -697,12 +724,12 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
 
   -- external memory
   ramAddr      => ramAddr,
-  ramDin       => ramDataIn,
+  ramDin       => ramDataIn(7 downto 0),
   ramDout      => ramDataOut(7 downto 0),
-  ramCE        => ramCE,
-  ramWE        => ramWe,
-  io_cycle     => open,
-  ext_cycle    => open,
+  ramCE        => ramCE, -- ram_ce
+  ramWE        => ramWe, -- ram_we
+  io_cycle     => io_cycle,
+  ext_cycle    => ext_cycle,
   refresh      => idle,
 
   cia_mode     => '0',
@@ -719,8 +746,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => '1',
   exrom        => '1', -- set to 0 for cartridge demo
   io_rom       => '0',
-  io_ext       => '0',
-  io_data      => (others => '0'),
+  io_ext       => reu_oe,
+  io_data      => unsigned(reu_dout),
   irq_n        => '1',
   nmi_n        => '1',
   nmi_ack      => open,
@@ -728,19 +755,19 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   romH         => open,
   UMAXromH     => open,
   IOE          => open,
-  IOF          => open,
-  freeze_key   => open,  -- Keyboard Restore (NMI Interrupt)
+  IOF          => IOF,
+  freeze_key   => open,
   mod_key      => open,
   tape_play    => open,
 
   -- dma access
-  dma_req      => '0',
-  dma_cycle    => open,
-  dma_addr     => (others => '0'),
-  dma_dout     => (others => '0'),
-  dma_din      => open,
-  dma_we       => '0',
-  irq_ext_n    => '1',
+  dma_req      => dma_req,
+  dma_cycle    => dma_cycle,
+  dma_addr     => unsigned(dma_addr),
+  dma_dout     => unsigned(dma_dout),
+  unsigned(dma_din) => dma_din,
+  dma_we       => dma_we,
+  irq_ext_n    => not reu_irq,
 
   -- joystick interface
   joyA         => JoyA,
@@ -795,6 +822,44 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   cass_write   => open,
   cass_sense   => '0',
   cass_read    => '0'
+  );
+
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    ext_cycle_d <= ext_cycle;
+  end if;
+end process;
+
+reu_oe  <= IOF and reu_cfg(1) and reu_cfg(0);
+reu_ram_ce <= not ext_cycle_d and ext_cycle and dma_req;
+
+reu: entity work.reu
+port map(
+    clk       => clk32,
+    reset     => system_reset(0),
+    cfg       => reu_cfg,
+  
+    dma_req   => dma_req,
+    dma_cycle => dma_cycle,
+    dma_addr  => dma_addr,
+    dma_dout  => dma_dout,
+    dma_din   => dma_din,
+    dma_we    => dma_we,
+  
+    ram_cycle => ext_cycle,
+    ram_addr  => reu_ram_addr,
+    ram_dout  => reu_ram_dout,
+    ram_din   => ramDataIn,
+    ram_we    => reu_ram_we,
+    
+    cpu_addr  => ramAddr, 
+    cpu_dout  => ramDataOut(7 downto 0),
+    cpu_din   => reu_dout,
+    cpu_we    => ramWe,
+    cpu_cs    => IOF,
+    
+    irq       => reu_irq
   );
 
 end Behavioral_top;

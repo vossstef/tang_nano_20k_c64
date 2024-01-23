@@ -29,7 +29,7 @@ module sysctrl (
   // values that can be configured by the user
   output reg [1:0]  system_chipset,
   output reg	    system_memory,
-  output reg	    system_video,
+  output reg [1:0]  system_reu_cfg,
   output reg [1:0]  system_reset,
   output reg [1:0]  system_scanlines,
   output reg [1:0]  system_volume,
@@ -63,7 +63,7 @@ always @(posedge clk) begin
       // will very likely override these early
       system_chipset <= 2'b0;
       system_memory <= 1'b0;
-      system_video <= 1'b0;   
+      system_reu_cfg <= 2'b00;
       system_scanlines <= 2'b00;
       system_volume <= 2'b10;
       system_wide_screen <= 1'b0;
@@ -116,8 +116,8 @@ always @(posedge clk) begin
                     if(id == "C") system_chipset <= data_in[1:0];      // unused presently
                     // Value "M": 
                     if(id == "M") system_memory <= data_in[0];         // unused presently
-                    // Value "V":
-                    if(id == "V") system_video <= data_in[0];         // unused presently
+                    // Value "V": REU cfg: none, 512K, 2MB (512KB wrap), 16MB
+                    if(id == "V") system_reu_cfg <= data_in[1:0];
                     // Value "R": coldboot(3), reset(1) or run(0)
                     if(id == "R") system_reset <= data_in[1:0];
                     // Value "S": scanlines none(0), 25%(1), 50%(2) or 75%(3)
