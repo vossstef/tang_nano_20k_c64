@@ -831,7 +831,7 @@ begin
   end if;
 end process;
 
-reu_oe  <= IOF and reu_cfg(1) and reu_cfg(0);
+reu_oe  <= IOF and (reu_cfg(1) or reu_cfg(0));
 reu_ram_ce <= not ext_cycle_d and ext_cycle and dma_req;
 
 reu: entity work.reu

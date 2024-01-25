@@ -14,6 +14,7 @@ Features:
 * Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) as Joystick<br>
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader Dolphin DOS](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
+* emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
 
 <font color="red">HID interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for a USB devices and OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.
@@ -45,6 +46,7 @@ invoke by F12 keypress<br>
 * Scanlines<br>
 * c1541 Disk write protetcion<br>
 * HID device selection for Joystick Port 1 and Port 2<br>
+* REU configuration
 
 ## Gamecontrol Joystick support
 legacy D9 Digital Joystick<br>
