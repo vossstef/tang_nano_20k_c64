@@ -75,9 +75,9 @@ signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
 
 -- external memory
-signal ramAddr      : unsigned(15 downto 0);
-signal ramDataIn    : unsigned(7 downto 0);
-signal ramDataOut   : unsigned(15 downto 0);
+signal c64_addr     : unsigned(15 downto 0);
+signal c64_data_out : unsigned(7 downto 0);
+signal sdram_data   : unsigned(7 downto 0);
 signal ramDataIn_v  : std_logic_vector(15 downto 0);
 signal idle         : std_logic;
 signal dram_addr    : std_logic_vector(21 downto 0);
@@ -85,7 +85,6 @@ signal dram_addr_s  : std_logic_vector(21 downto 0);
 signal ram_scramble : std_logic_vector(1 downto 0);
 signal ram_ready    : std_logic;
 signal cb_D         : std_logic;
-
 signal addr         : std_logic_vector(21 downto 0);
 signal cs           : std_logic;
 signal we           : std_logic;
@@ -124,8 +123,8 @@ signal pot2        : std_logic_vector(7 downto 0);
 signal mouse_x_pos : signed(10 downto 0);
 signal mouse_y_pos : signed(10 downto 0);
 
-signal ramCE       :  std_logic;
-signal ramWe       :  std_logic;
+signal ram_ce       :  std_logic;
+signal ram_we       :  std_logic;
 signal romCE       :  std_logic;
 
 signal ntscMode    :  std_logic := '0';
@@ -218,6 +217,7 @@ signal IOF            : std_logic;
 signal reu_dout       : std_logic_vector(7 downto 0);
 signal reu_oe         : std_logic;
 signal reu_ram_ce     : std_logic;
+signal io_data        : unsigned(7 downto 0);
 
 component CLKDIV
     generic (
@@ -486,9 +486,8 @@ port map(
       tmds_d_p   => tmds_d_p
       );
 
-  dram_addr(15 downto 0)  <= std_logic_vector(ramAddr);
-  dram_addr(21 downto 16) <= (others => '0');
-  ramDataIn <= unsigned(ramDataIn_v(7 downto 0));
+  dram_addr(21 downto 0) <= B"000000" & std_logic_vector(c64_addr);
+  c64_data_out <= unsigned(ramDataIn_v(7 downto 0));
 
 -- system_reset[0] indicates whether a reset is requested. This
 -- can either be triggered implicitely by the user changing hardware
@@ -509,10 +508,10 @@ end process;
 -- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
 dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
 
-addr <= (B"000001_00000000_00000000" or reu_ram_addr(21 downto 0)) when ext_cycle = '1' else dram_addr_s; -- REU memory start's at 0x10000 in dram
-cs <= reu_ram_ce when ext_cycle = '1' else ramCE;
-we <= reu_ram_we when ext_cycle = '1' else ramWe;
-din <= ("00000000" & reu_ram_dout) when ext_cycle = '1' else ("00000000" & std_logic_vector(ramDataOut(7 downto 0)));
+addr <= (B"100000_00000000_00000000" or reu_ram_addr(21 downto 0)) when ext_cycle = '1' else dram_addr_s;
+cs <= reu_ram_ce when ext_cycle = '1' else ram_ce;
+we <= reu_ram_we when ext_cycle = '1' else ram_we;
+din <= ("00000000" & reu_ram_dout) when ext_cycle = '1' else ("00000000" & std_logic_vector(sdram_data));
 
   dram_inst: entity work.sdram
    port map(
@@ -708,6 +707,8 @@ module_inst: entity work.sysctrl
   color             => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
 
+io_data <= unsigned(reu_dout) when reu_oe = '1' else (others => '0');
+
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
@@ -723,11 +724,11 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   shift_mod    => (others => '0'),
 
   -- external memory
-  ramAddr      => ramAddr,
-  ramDin       => ramDataIn(7 downto 0),
-  ramDout      => ramDataOut(7 downto 0),
-  ramCE        => ramCE, -- ram_ce
-  ramWE        => ramWe, -- ram_we
+  ramAddr      => c64_addr,
+  ramDin       => c64_data_out,
+  ramDout      => sdram_data,
+  ramCE        => ram_ce,
+  ramWE        => ram_we,
   io_cycle     => io_cycle,
   ext_cycle    => ext_cycle,
   refresh      => idle,
@@ -747,7 +748,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   exrom        => '1', -- set to 0 for cartridge demo
   io_rom       => '0',
   io_ext       => reu_oe,
-  io_data      => unsigned(reu_dout),
+  io_data      => io_data,
   irq_n        => '1',
   nmi_n        => '1',
   nmi_ack      => open,
@@ -850,13 +851,13 @@ port map(
     ram_cycle => ext_cycle,
     ram_addr  => reu_ram_addr,
     ram_dout  => reu_ram_dout,
-    ram_din   => ramDataIn,
+    ram_din   => c64_data_out,
     ram_we    => reu_ram_we,
     
-    cpu_addr  => ramAddr, 
-    cpu_dout  => ramDataOut(7 downto 0),
+    cpu_addr  => c64_addr, 
+    cpu_dout  => sdram_data,
     cpu_din   => reu_dout,
-    cpu_we    => ramWe,
+    cpu_we    => ram_we,
     cpu_cs    => IOF,
     
     irq       => reu_irq
