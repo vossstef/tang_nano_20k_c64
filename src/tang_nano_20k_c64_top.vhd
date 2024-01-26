@@ -508,8 +508,8 @@ end process;
 
 -- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
 dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
--- REU muxer
-addr <= reu_ram_addr(21 downto 0) when ext_cycle = '1' else dram_addr_s;
+
+addr <= (B"000001_00000000_00000000" or reu_ram_addr(21 downto 0)) when ext_cycle = '1' else dram_addr_s; -- REU memory start's at 0x10000 in dram
 cs <= reu_ram_ce when ext_cycle = '1' else ramCE;
 we <= reu_ram_we when ext_cycle = '1' else ramWe;
 din <= ("00000000" & reu_ram_dout) when ext_cycle = '1' else ("00000000" & std_logic_vector(ramDataOut(7 downto 0)));
