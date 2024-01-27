@@ -806,12 +806,7 @@ cass_write <= cpuIO(3);
 ramDout <= cpuDo;
 ramAddr <= systemAddr;
 ramWE   <= systemWe when sysCycle >= CYCLE_CPU0 else '0';
---ramCE   <= cs_ram when sysCycle = CYCLE_VIC0 or cpu_cyc = '1' else '0';
-
---working
-ramCE <= cs_ram when (sysCycle = CYCLE_VIC0) or
-                     (sysCycle > CYCLE_CPU0 and sysCycle <  CYCLE_CPUF and cs_ram = '1') or
-					 (sysCycle = CYCLE_CPUC and (io_enable = '1' or cs_ram = '1')) else '0';
+ramCE   <= cs_ram when sysCycle = CYCLE_VIC0 or cpu_cyc = '1' else '0';
 
 cpu_cyc <= '1' when 
 				(sysCycle = CYCLE_CPU0 and turbo_m(0) = '1' and cs_ram = '1' ) or

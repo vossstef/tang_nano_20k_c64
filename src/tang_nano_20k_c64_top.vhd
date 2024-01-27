@@ -78,7 +78,7 @@ signal audio_data_r  : std_logic_vector(17 downto 0);
 signal c64_addr     : unsigned(15 downto 0);
 signal c64_data_out : unsigned(7 downto 0);
 signal sdram_data   : unsigned(7 downto 0);
-signal ramDataIn_v  : std_logic_vector(15 downto 0);
+signal dout         : std_logic_vector(15 downto 0);
 signal idle         : std_logic;
 signal dram_addr    : std_logic_vector(21 downto 0);
 signal dram_addr_s  : std_logic_vector(21 downto 0);
@@ -218,6 +218,7 @@ signal reu_dout       : std_logic_vector(7 downto 0);
 signal reu_oe         : std_logic;
 signal reu_ram_ce     : std_logic;
 signal io_data        : unsigned(7 downto 0);
+signal db9_joy        : std_logic_vector(5 downto 0);
 
 component CLKDIV
     generic (
@@ -487,7 +488,7 @@ port map(
       );
 
   dram_addr(21 downto 0) <= B"000000" & std_logic_vector(c64_addr);
-  c64_data_out <= unsigned(ramDataIn_v(7 downto 0));
+  c64_data_out <= unsigned(dout(7 downto 0));
 
 -- system_reset[0] indicates whether a reset is requested. This
 -- can either be triggered implicitely by the user changing hardware
@@ -508,7 +509,8 @@ end process;
 -- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
 dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
 
-addr <= ((B"100000_00000000_0000000" or reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s;
+-- A(0) workaround till sdram ctrl properly adjusted
+addr <= ((B"100000_00000000_0000000" or reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s(20 downto 0) & '0';
 cs <= reu_ram_ce when ext_cycle = '1' else ram_ce;
 we <= reu_ram_we when ext_cycle = '1' else ram_we;
 din <= ("00000000" & reu_ram_dout) when ext_cycle = '1' else ("00000000" & std_logic_vector(sdram_data));
@@ -532,7 +534,7 @@ din <= ("00000000" & reu_ram_dout) when ext_cycle = '1' else ("00000000" & std_l
     ready     => ram_ready,     -- ram is ready and has been initialized
     refresh   => idle,          -- chipset requests a refresh cycle
     din       => din,           -- data input from chipset/cpu
-    dout      => ramDataIn_v,
+    dout      => dout,
     addr      => addr,          -- 22 bit word address
     ds        => (others => '0'),-- upper/lower data strobe R = low and W = low
     cs        => cs,            -- cpu/chipset requests read/wrie
@@ -571,6 +573,9 @@ joyDigital <= not("11" &   R_btn_joy(4) &   R_btn_joy(0) &   R_btn_joy(1) & R_bt
 joyUsb     <=    ("00" & joystick(4) & joystick(0) & joystick(1) & joystick(2) & joystick(3));
 joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
+
+-- send external DB9 joystick port to µC
+db9_joy <= "000000";
 
 process(clk32)
 begin
@@ -659,7 +664,7 @@ hid_inst: entity work.hid
   data_out        => hid_data_out,
 
   -- input local db9 port events to be sent to MCU
-  db9_port        => (others => '0'),
+  db9_port        => db9_joy,
   irq             => hid_int,
   iack            => int_ack(1),
   -- output HID data received from USB
@@ -707,8 +712,6 @@ module_inst: entity work.sysctrl
   color             => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
 
-io_data <= unsigned(reu_dout) when reu_oe = '1' else (others => '0');
-
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
@@ -748,7 +751,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   exrom        => '1', -- set to 0 for cartridge demo
   io_rom       => '0',
   io_ext       => reu_oe,
-  io_data      => io_data,
+  io_data      => unsigned(reu_dout),
   irq_n        => '1',
   nmi_n        => '1',
   nmi_ack      => open,
