@@ -58,7 +58,14 @@ entity tang_nano_20k_c64_top is
     joystick_clk  : out std_logic;
     joystick_mosi : out std_logic;
     joystick_miso : in std_logic;
-    joystick_cs   : out std_logic
+    joystick_cs   : out std_logic;
+    -- spi flash interface
+    mspi_cs       : out std_logic;
+    mspi_clk      : out std_logic;
+    mspi_di       : inout std_logic;
+    mspi_hold     : inout std_logic;
+    mspi_wp       : inout std_logic;
+    mspi_do       : inout std_logic
     );
 end;
 
@@ -194,12 +201,13 @@ signal spi_io_dout    : std_logic;
 signal disk_g64       : std_logic;
 signal disk_g64_d     : std_logic;
 signal c1541_reset    : std_logic;
+signal c1541_osd_reset : std_logic;
 signal system_wide_screen : std_logic;
 signal system_floppy_wprot : std_logic_vector(1 downto 0);
 signal leds           : std_logic_vector(5 downto 0);
 signal system_leds    : std_logic_vector(1 downto 0);
 signal led1541        : std_logic;
-signal reu_cfg        : std_logic_vector(1 downto 0) := (others => '1'); 
+signal reu_cfg        : std_logic:= '1'; 
 signal dma_req        : std_logic;
 signal dma_cycle      : std_logic;
 signal dma_addr       : std_logic_vector(15 downto 0);
@@ -219,6 +227,11 @@ signal reu_oe         : std_logic;
 signal reu_ram_ce     : std_logic;
 signal io_data        : unsigned(7 downto 0);
 signal db9_joy        : std_logic_vector(5 downto 0);
+signal flash_ready    : std_logic;
+signal dos_sel        : std_logic_vector(1 downto 0);
+signal c1541rom_cs    : std_logic;
+signal c1541rom_addr  : std_logic_vector(14 downto 0);
+signal c1541rom_data  : std_logic_vector(7 downto 0);
 
 component CLKDIV
     generic (
@@ -356,7 +369,7 @@ c1541_sd_inst : entity work.c1541_sd
 port map
  (
     clk32         => clk32,
-    reset         => disk_reset,
+    reset         => not flash_ready, -- disk_reset,
 
     disk_num      =>(others =>'0'),
     disk_change   => sd_change, 
@@ -390,10 +403,9 @@ port map
 
     led           => led1541, -- LED floppy indicator
 
-    c1541rom_clk  => '0',
-    c1541rom_wr   => '0',
-    c1541rom_addr => (others =>'0'),
-    c1541rom_data => (others =>'0')
+    c1541rom_cs   => c1541rom_cs,
+    c1541rom_addr => c1541rom_addr,
+    c1541rom_data => c1541rom_data
 );
 
 sd_rd(3 downto 1) <= "000";
@@ -545,6 +557,7 @@ mainclock: entity work.Gowin_rPLL
     port map (
         clkout  => clk64,
         lock    => pll_locked,
+        clkoutp => mspi_clk,
         clkoutd => clk32,
         clkin   => clk_27mhz
     );
@@ -702,6 +715,8 @@ module_inst: entity work.sysctrl
   system_floppy_wprot => system_floppy_wprot,
   system_port_1     => port_1_sel,  -- Joystick port 1 input device selection 
   system_port_2     => port_2_sel,  -- Joystick port 2 input device selection 
+  system_dos_sel    => dos_sel,
+  system_1541_reset => c1541_osd_reset,
 
   int_out_n         => m0s(4),
   int_in            => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
@@ -835,14 +850,14 @@ begin
   end if;
 end process;
 
-reu_oe  <= IOF and (reu_cfg(1) or reu_cfg(0));
+reu_oe  <= IOF and reu_cfg;
 reu_ram_ce <= not ext_cycle_d and ext_cycle and dma_req;
 
-reu: entity work.reu
+reu_inst: entity work.reu
 port map(
     clk       => clk32,
     reset     => system_reset(0),
-    cfg       => reu_cfg,
+    cfg       => std_logic_vector(unsigned'( '0' & reu_cfg) ), -- limit to 512k REU 1750 
   
     dma_req   => dma_req,
     dma_cycle => dma_cycle,
@@ -864,6 +879,25 @@ port map(
     cpu_cs    => IOF,
     
     irq       => reu_irq
-  );
+  ); 
+
+-- c1541 ROM's in SPI Flash
+flash_inst: entity work.flash 
+port map(
+    clk       => clk64,
+    resetn    => pll_locked,
+    ready     => flash_ready,
+    busy      => open,
+    -- offset in spi flash $100000
+    address   => ("0001" & "000" & dos_sel & c1541rom_addr),
+ -- address   => ("0001" & "0000" & '0' & c1541rom_addr),
+    cs        => c1541rom_cs,
+    dout      => c1541rom_data,
+    mspi_cs   => mspi_cs,
+    mspi_di   => mspi_di,
+    mspi_hold => mspi_hold,
+    mspi_wp   => mspi_wp,
+    mspi_do   => mspi_do
+);
 
 end Behavioral_top;

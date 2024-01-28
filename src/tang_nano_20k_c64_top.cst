@@ -29,6 +29,20 @@ IO_PORT "leds_n[1]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
 IO_LOC "leds_n[0]" 15;
 IO_PORT "leds_n[0]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
 
+// SPI flash
+IO_LOC "mspi_wp" 57;
+IO_PORT "mspi_wp" PULL_MODE=DOWN IO_TYPE=LVCMOS33;
+IO_LOC "mspi_clk" 59;
+IO_PORT "mspi_clk" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
+IO_LOC "mspi_cs" 60;
+IO_PORT "mspi_cs" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "mspi_di" 61;
+IO_PORT "mspi_di" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
+IO_LOC "mspi_do" 62;
+IO_PORT "mspi_do" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
+IO_LOC "mspi_hold" 63;
+IO_PORT "mspi_hold" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
 // connection to the external BL616/M0S
 IO_LOC "m0s[0]" 42; // MISO / ps2_clk
 IO_PORT "m0s[0]" PULL_MODE=UP IO_TYPE=LVCMOS33;
@@ -76,18 +90,6 @@ IO_LOC "sd_dat[2]" 80;
 IO_PORT "sd_dat[2]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 IO_LOC "sd_dat[3]" 81;
 IO_PORT "sd_dat[3]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-
-// Debug
-//IO_LOC "debug[0]" 42;
-//IO_PORT "debug[0]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "debug[1]" 41;
-//IO_PORT "debug[1]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "debug[2]" 56;
-//IO_PORT "debug[2]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "debug[3]" 54;
-//IO_PORT "debug[3]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "debug[4]" 51;
-//IO_PORT "debug[4]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
 // Tang Nano onboard BL616 controller
 IO_LOC "spi_csn" 86;

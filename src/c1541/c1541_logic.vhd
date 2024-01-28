@@ -45,10 +45,9 @@ entity c1541_logic is
     tr00_sense_n    : in std_logic;                       -- track 0 sense (unused?)
     act             : out std_logic;                       -- activity LED
 
-    c1541rom_clk    : in std_logic;
-    c1541rom_addr   : in std_logic_vector(13 downto 0);
+    c1541rom_addr   : out std_logic_vector(14 downto 0);
     c1541rom_data   : in std_logic_vector(7 downto 0);
-    c1541rom_wr     : in std_logic
+    c1541rom_cs     : out std_logic
   );
 end c1541_logic;
 
@@ -134,16 +133,14 @@ architecture SYN of c1541_logic is
 
   signal cpu_b_slice    : std_logic_vector(2 downto 0);
   signal extram_cs      : std_logic;
-  signal extrom_cs      : std_logic;
   signal extram_do      : std_logic_vector(7 downto 0);
-  signal extrom_do      : std_logic_vector(7 downto 0);
   signal extram_wr      : std_logic;
 
   begin
 
   reset_n <= not reset;
   
-  process (clk_32M, reset)
+  process (clk_32M)
     variable count  : std_logic_vector(4 downto 0) := (others => '0');
   begin
     if rising_edge(clk_32M) then
@@ -180,18 +177,21 @@ architecture SYN of c1541_logic is
   process (cpu_a, cpu_b_slice)
   begin
   rom_cs <= '0';
-  extrom_cs <= '0';
   extram_cs <= '0';
   cpu_b_slice <= cpu_a(15)&cpu_a(14)&cpu_a(13);
     case cpu_b_slice is
-      when "110" => rom_cs <= '1';    -- 16k standard rom low
-      when "111" => rom_cs <= '1';    -- 16k standard rom high
-      when "101" => extrom_cs <= '1'; -- 8k extra rom
+      when "110" => rom_cs <= '1';    -- 8k standard rom low
+      when "111" => rom_cs <= '1';    -- 8k standard rom high
+      when "101" => rom_cs <= '1';    -- 8k extra rom
       when "100" => extram_cs <= '1'; -- 8k extra ram 
       when others => null;
     end case;
   end process;
 
+  c1541rom_cs <= rom_cs;
+  c1541rom_addr <= cpu_a(14 downto 0);
+  rom_do <= c1541rom_data;
+  
 -- 8k extra sram extension for dolphindos
 ram_8kinst :  entity work.Gowin_SP_8k
 port map (
@@ -203,17 +203,6 @@ port map (
     wre => extram_wr,
     ad => cpu_a(12 downto 0),
     din => cpu_do
-);
-
--- 8k extra rom for dolphindos
-rom_8k_inst : entity work.Gowin_pROM_1541_8k_rom
-port map (
-    dout => extrom_do,
-    clk =>  clk_32M,
-    oce => '1',
-    ce => '1',
-    reset => '0',
-    ad => cpu_a(12 downto 0)
 );
 
   --
@@ -272,7 +261,6 @@ port map (
             uc1_do when (uc1_cs1 = '1' and uc1_cs2_n = '0') else
             uc3_do when (uc3_cs1 = '1' and uc3_cs2_n = '0') else
             extram_do when extram_cs = '1' else
-            extrom_do when extrom_cs = '1' else
             (others => '1');
   cpu_irq_n <= uc1_irq_n and uc3_irq_n;
   cpu_so_n <= byte_n or not soe;
@@ -309,17 +297,6 @@ port map (
       DI          => cpu_di,
       DO          => cpu_do
     );
-
-    rom_inst : entity work.Gowin_pROM_1541_rom
-    port map (
-        dout => rom_do,
-        clk =>  clk_32M,
-        oce => '1',
-        ce => '1',
-        reset => '0',
-        ad => cpu_a(13 downto 0)
-    );
-
 
     ram_inst :  entity work.Gowin_SP_2k
     port map (

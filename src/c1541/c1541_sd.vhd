@@ -62,10 +62,9 @@ port(
 	par_data_o : out std_logic_vector(7 downto 0);
 	par_stb_o  : out std_logic;
 
-   c1541rom_clk    : in std_logic;
-   c1541rom_addr   : in std_logic_vector(13 downto 0);
+   c1541rom_addr   : out std_logic_vector(14 downto 0);
    c1541rom_data   : in std_logic_vector(7 downto 0);
-   c1541rom_wr     : in std_logic
+   c1541rom_cs     : out std_logic
 );
 end c1541_sd;
 
@@ -146,10 +145,9 @@ begin
     tr00_sense_n    => '1',      -- track 0 sense (unused?)
     act             => act,      -- activity LED
 
-    c1541rom_clk    => c1541rom_clk,
     c1541rom_addr   => c1541rom_addr,
     c1541rom_data   => c1541rom_data,
-    c1541rom_wr     => c1541rom_wr
+    c1541rom_cs     => c1541rom_cs
   );
 
 floppy : entity work.gcr_floppy
