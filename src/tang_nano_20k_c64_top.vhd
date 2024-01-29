@@ -194,12 +194,13 @@ signal spi_io_dout    : std_logic;
 signal disk_g64       : std_logic;
 signal disk_g64_d     : std_logic;
 signal c1541_reset    : std_logic;
+signal c1541_osd_reset : std_logic;
 signal system_wide_screen : std_logic;
 signal system_floppy_wprot : std_logic_vector(1 downto 0);
 signal leds           : std_logic_vector(5 downto 0);
 signal system_leds    : std_logic_vector(1 downto 0);
 signal led1541        : std_logic;
-signal reu_cfg        : std_logic_vector(1 downto 0) := (others => '1'); 
+signal reu_cfg        : std_logic:= '1'; 
 signal dma_req        : std_logic;
 signal dma_cycle      : std_logic;
 signal dma_addr       : std_logic_vector(15 downto 0);
@@ -356,9 +357,9 @@ c1541_sd_inst : entity work.c1541_sd
 port map
  (
     clk32         => clk32,
-    reset         => disk_reset,
+    reset         => c1541_osd_reset,
 
-    disk_num      =>(others =>'0'),
+    disk_num      => (others =>'0'),
     disk_change   => sd_change, 
     disk_mount    => '1',
     disk_readonly => system_floppy_wprot(0),
@@ -702,6 +703,8 @@ module_inst: entity work.sysctrl
   system_floppy_wprot => system_floppy_wprot,
   system_port_1     => port_1_sel,  -- Joystick port 1 input device selection 
   system_port_2     => port_2_sel,  -- Joystick port 2 input device selection 
+  system_dos_sel    => dos_sel,
+  system_1541_reset => c1541_osd_reset,
 
   int_out_n         => m0s(4),
   int_in            => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
@@ -835,14 +838,14 @@ begin
   end if;
 end process;
 
-reu_oe  <= IOF and (reu_cfg(1) or reu_cfg(0));
+reu_oe  <= IOF and reu_cfg;
 reu_ram_ce <= not ext_cycle_d and ext_cycle and dma_req;
 
-reu: entity work.reu
+reu_inst: entity work.reu
 port map(
     clk       => clk32,
     reset     => system_reset(0),
-    cfg       => reu_cfg,
+    cfg       => std_logic_vector(unsigned'( '0' & reu_cfg) ), -- limit to 512k REU 1750 
   
     dma_req   => dma_req,
     dma_cycle => dma_cycle,
