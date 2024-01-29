@@ -663,7 +663,7 @@ port map (
   comb_wave_l => '0',
   comb_wave_r => '0',
 
-  extfilter_en => '1',
+  extfilter_en => sid_filter(0),
 
   start_iter => clk_1MHz_en,
   std_logic_vector(sample_left) => audio_l,

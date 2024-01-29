@@ -220,6 +220,9 @@ signal reu_oe         : std_logic;
 signal reu_ram_ce     : std_logic;
 signal io_data        : unsigned(7 downto 0);
 signal db9_joy        : std_logic_vector(5 downto 0);
+signal sid_filter     : std_logic_vector(1 downto 0) := "11";
+signal turbo_mode     : std_logic_vector(1 downto 0) := (others => '0');
+signal turbo_speed    : std_logic_vector(1 downto 0) := (others => '0');
 
 component CLKDIV
     generic (
@@ -703,8 +706,11 @@ module_inst: entity work.sysctrl
   system_floppy_wprot => system_floppy_wprot,
   system_port_1     => port_1_sel,  -- Joystick port 1 input device selection 
   system_port_2     => port_2_sel,  -- Joystick port 2 input device selection 
-  system_dos_sel    => dos_sel,
+  system_dos_sel    => open,
   system_1541_reset => c1541_osd_reset,
+  system_audio_filter => sid_filter(0),
+  system_turbo_mode   => turbo_mode,
+  system_turbo_speed  => turbo_speed,
 
   int_out_n         => m0s(4),
   int_in            => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
@@ -740,8 +746,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   refresh      => idle,
 
   cia_mode     => '0',
-  turbo_mode   => "00",
-  turbo_speed  => "00",
+  turbo_mode   => turbo_mode,
+  turbo_speed  => turbo_speed,
 
   ntscMode     => ntscMode,
   hsync        => hsync,
@@ -787,7 +793,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   --SID
   audio_l      => audio_data_l,
   audio_r      => audio_data_r,
-  sid_filter   => (others => '0'),
+  sid_filter   => sid_filter,
   sid_ver      => (others => '0'),
   sid_mode     => (others => '0'),
   sid_cfg      => (others => '0'),

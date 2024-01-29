@@ -34,6 +34,16 @@ Load first program from Disk:<br>
 LOAD"*",8<br>
 RUN<br>
 
+## emulated RAM Expansion Unit REU 1750
+For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.<br>
+Playing [Sonic the Hedgehog](https://csdb.dk/release/?id=212190).<br>
+Enable REU.<br>
+Select first Disk Image and load the PRG.<br>
+**Important**: Disable Dolphin Dos 2 Speedloader by typing:<br> 
+[@XF- (RETURN)](https://project64.c64.org/hw/dolphindos.txt) <br>	
+Then type RUN (RETURN)<br>	
+When asked select the 'compatibility mode' for loading the full game as Dolphin DOS isn't compatible with Sonic's build in speedloader.<br>	
+
 ## Push Button utilization
 * S2 Reset (for Flasher)<br>
 * S1 reserved <br>
