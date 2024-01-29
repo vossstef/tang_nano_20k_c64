@@ -75,16 +75,20 @@ signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
 
 -- external memory
-signal ramAddr      : unsigned(15 downto 0);
-signal ramDataIn    : unsigned(7 downto 0);
-signal ramDataOut   : unsigned(15 downto 0);
-signal ramDataIn_v  : std_logic_vector(15 downto 0);
+signal c64_addr     : unsigned(15 downto 0);
+signal c64_data_out : unsigned(7 downto 0);
+signal sdram_data   : unsigned(7 downto 0);
+signal dout         : std_logic_vector(15 downto 0);
 signal idle         : std_logic;
 signal dram_addr    : std_logic_vector(21 downto 0);
 signal dram_addr_s  : std_logic_vector(21 downto 0);
 signal ram_scramble : std_logic_vector(1 downto 0);
 signal ram_ready    : std_logic;
 signal cb_D         : std_logic;
+signal addr         : std_logic_vector(21 downto 0);
+signal cs           : std_logic;
+signal we           : std_logic;
+signal din          : std_logic_vector(15 downto 0);
 
 -- IEC
 signal iec_data_o  : std_logic;
@@ -119,8 +123,8 @@ signal pot2        : std_logic_vector(7 downto 0);
 signal mouse_x_pos : signed(10 downto 0);
 signal mouse_y_pos : signed(10 downto 0);
 
-signal ramCE       :  std_logic;
-signal ramWe       :  std_logic;
+signal ram_ce       :  std_logic;
+signal ram_we       :  std_logic;
 signal romCE       :  std_logic;
 
 signal ntscMode    :  std_logic := '0';
@@ -190,11 +194,35 @@ signal spi_io_dout    : std_logic;
 signal disk_g64       : std_logic;
 signal disk_g64_d     : std_logic;
 signal c1541_reset    : std_logic;
+signal c1541_osd_reset : std_logic;
 signal system_wide_screen : std_logic;
 signal system_floppy_wprot : std_logic_vector(1 downto 0);
 signal leds           : std_logic_vector(5 downto 0);
 signal system_leds    : std_logic_vector(1 downto 0);
 signal led1541        : std_logic;
+signal reu_cfg        : std_logic:= '1'; 
+signal dma_req        : std_logic;
+signal dma_cycle      : std_logic;
+signal dma_addr       : std_logic_vector(15 downto 0);
+signal dma_dout       : std_logic_vector(7 downto 0);
+signal dma_din        : std_logic_vector(7 downto 0);
+signal dma_we         : std_logic;
+signal io_cycle       : std_logic;
+signal ext_cycle      : std_logic;
+signal ext_cycle_d    : std_logic;
+signal reu_ram_addr   : std_logic_vector(24 downto 0);
+signal reu_ram_dout   : std_logic_vector(7 downto 0);
+signal reu_ram_we     : std_logic;
+signal reu_irq        : std_logic;
+signal IOF            : std_logic;
+signal reu_dout       : std_logic_vector(7 downto 0);
+signal reu_oe         : std_logic;
+signal reu_ram_ce     : std_logic;
+signal io_data        : unsigned(7 downto 0);
+signal db9_joy        : std_logic_vector(5 downto 0);
+signal sid_filter     : std_logic_vector(1 downto 0) := "11";
+signal turbo_mode     : std_logic_vector(1 downto 0) := (others => '0');
+signal turbo_speed    : std_logic_vector(1 downto 0) := (others => '0');
 
 component CLKDIV
     generic (
@@ -332,9 +360,9 @@ c1541_sd_inst : entity work.c1541_sd
 port map
  (
     clk32         => clk32,
-    reset         => disk_reset,
+    reset         => c1541_osd_reset,
 
-    disk_num      =>(others =>'0'),
+    disk_num      => (others =>'0'),
     disk_change   => sd_change, 
     disk_mount    => '1',
     disk_readonly => system_floppy_wprot(0),
@@ -463,10 +491,8 @@ port map(
       tmds_d_p   => tmds_d_p
       );
 
-  dram_addr(15 downto 0)  <= std_logic_vector(ramAddr);
-  dram_addr(21 downto 16) <= (others => '0');
-  ramDataOut(15 downto 8) <= (others => '0');
-  ramDataIn <= unsigned(ramDataIn_v(7 downto 0));
+  dram_addr(21 downto 0) <= B"000000" & std_logic_vector(c64_addr);
+  c64_data_out <= unsigned(dout(7 downto 0));
 
 -- system_reset[0] indicates whether a reset is requested. This
 -- can either be triggered implicitely by the user changing hardware
@@ -485,7 +511,13 @@ begin
 end process;
 
 -- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
-  dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
+dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
+
+-- A(0) workaround till sdram ctrl properly adjusted
+addr <= ((B"100000_00000000_0000000" or reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s(20 downto 0) & '0';
+cs <= reu_ram_ce when ext_cycle = '1' else ram_ce;
+we <= reu_ram_we when ext_cycle = '1' else ram_we;
+din <= ("00000000" & reu_ram_dout) when ext_cycle = '1' else ("00000000" & std_logic_vector(sdram_data));
 
   dram_inst: entity work.sdram
    port map(
@@ -505,12 +537,12 @@ end process;
     reset_n   => pll_locked,    -- init signal after FPGA config to initialize RAM
     ready     => ram_ready,     -- ram is ready and has been initialized
     refresh   => idle,          -- chipset requests a refresh cycle
-    din       => std_logic_vector(ramDataOut), -- data input from chipset/cpu
-    dout      => ramDataIn_v,
-    addr      => dram_addr_s,      -- 22 bit word address
+    din       => din,           -- data input from chipset/cpu
+    dout      => dout,
+    addr      => addr,          -- 22 bit word address
     ds        => (others => '0'),-- upper/lower data strobe R = low and W = low
-    cs        => ramCE,        -- cpu/chipset requests read/wrie
-    we        => ramWe         -- cpu/chipset requests write
+    cs        => cs,            -- cpu/chipset requests read/wrie
+    we        => we             -- cpu/chipset requests write
   );
 
 mainclock: entity work.Gowin_rPLL
@@ -545,6 +577,9 @@ joyDigital <= not("11" &   R_btn_joy(4) &   R_btn_joy(0) &   R_btn_joy(1) & R_bt
 joyUsb     <=    ("00" & joystick(4) & joystick(0) & joystick(1) & joystick(2) & joystick(3));
 joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
+
+-- send external DB9 joystick port to µC
+db9_joy <= "000000";
 
 process(clk32)
 begin
@@ -633,7 +668,7 @@ hid_inst: entity work.hid
   data_out        => hid_data_out,
 
   -- input local db9 port events to be sent to MCU
-  db9_port        => (others => '0'),
+  db9_port        => db9_joy,
   irq             => hid_int,
   iack            => int_ack(1),
   -- output HID data received from USB
@@ -663,7 +698,7 @@ module_inst: entity work.sysctrl
   -- values that can be configured by the user
   system_chipset    => open,
   system_memory     => open,
-  system_video      => open,
+  system_reu_cfg    => reu_cfg,
   system_reset      => system_reset,
   system_scanlines  => system_scanlines,
   system_volume     => system_volume,
@@ -671,6 +706,11 @@ module_inst: entity work.sysctrl
   system_floppy_wprot => system_floppy_wprot,
   system_port_1     => port_1_sel,  -- Joystick port 1 input device selection 
   system_port_2     => port_2_sel,  -- Joystick port 2 input device selection 
+  system_dos_sel    => open,
+  system_1541_reset => c1541_osd_reset,
+  system_audio_filter => sid_filter(0),
+  system_turbo_mode   => turbo_mode,
+  system_turbo_speed  => turbo_speed,
 
   int_out_n         => m0s(4),
   int_in            => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
@@ -696,18 +736,18 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   shift_mod    => (others => '0'),
 
   -- external memory
-  ramAddr      => ramAddr,
-  ramDin       => ramDataIn,
-  ramDout      => ramDataOut(7 downto 0),
-  ramCE        => ramCE,
-  ramWE        => ramWe,
-  io_cycle     => open,
-  ext_cycle    => open,
+  ramAddr      => c64_addr,
+  ramDin       => c64_data_out,
+  ramDout      => sdram_data,
+  ramCE        => ram_ce,
+  ramWE        => ram_we,
+  io_cycle     => io_cycle,
+  ext_cycle    => ext_cycle,
   refresh      => idle,
 
   cia_mode     => '0',
-  turbo_mode   => "00",
-  turbo_speed  => "00",
+  turbo_mode   => turbo_mode,
+  turbo_speed  => turbo_speed,
 
   ntscMode     => ntscMode,
   hsync        => hsync,
@@ -719,8 +759,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => '1',
   exrom        => '1', -- set to 0 for cartridge demo
   io_rom       => '0',
-  io_ext       => '0',
-  io_data      => (others => '0'),
+  io_ext       => reu_oe,
+  io_data      => unsigned(reu_dout),
   irq_n        => '1',
   nmi_n        => '1',
   nmi_ack      => open,
@@ -728,19 +768,19 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   romH         => open,
   UMAXromH     => open,
   IOE          => open,
-  IOF          => open,
-  freeze_key   => open,  -- Keyboard Restore (NMI Interrupt)
+  IOF          => IOF,
+  freeze_key   => open,
   mod_key      => open,
   tape_play    => open,
 
   -- dma access
-  dma_req      => '0',
-  dma_cycle    => open,
-  dma_addr     => (others => '0'),
-  dma_dout     => (others => '0'),
-  dma_din      => open,
-  dma_we       => '0',
-  irq_ext_n    => '1',
+  dma_req      => dma_req,
+  dma_cycle    => dma_cycle,
+  dma_addr     => unsigned(dma_addr),
+  dma_dout     => unsigned(dma_dout),
+  unsigned(dma_din) => dma_din,
+  dma_we       => dma_we,
+  irq_ext_n    => not reu_irq,
 
   -- joystick interface
   joyA         => JoyA,
@@ -753,7 +793,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   --SID
   audio_l      => audio_data_l,
   audio_r      => audio_data_r,
-  sid_filter   => (others => '0'),
+  sid_filter   => sid_filter,
   sid_ver      => (others => '0'),
   sid_mode     => (others => '0'),
   sid_cfg      => (others => '0'),
@@ -795,6 +835,44 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   cass_write   => open,
   cass_sense   => '0',
   cass_read    => '0'
+  );
+
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    ext_cycle_d <= ext_cycle;
+  end if;
+end process;
+
+reu_oe  <= IOF and reu_cfg;
+reu_ram_ce <= not ext_cycle_d and ext_cycle and dma_req;
+
+reu_inst: entity work.reu
+port map(
+    clk       => clk32,
+    reset     => system_reset(0),
+    cfg       => std_logic_vector(unsigned'( '0' & reu_cfg) ), -- limit to 512k REU 1750 
+  
+    dma_req   => dma_req,
+    dma_cycle => dma_cycle,
+    dma_addr  => dma_addr,
+    dma_dout  => dma_dout,
+    dma_din   => dma_din,
+    dma_we    => dma_we,
+  
+    ram_cycle => ext_cycle,
+    ram_addr  => reu_ram_addr,
+    ram_dout  => reu_ram_dout,
+    ram_din   => c64_data_out,
+    ram_we    => reu_ram_we,
+    
+    cpu_addr  => c64_addr, 
+    cpu_dout  => sdram_data,
+    cpu_din   => reu_dout,
+    cpu_we    => ram_we,
+    cpu_cs    => IOF,
+    
+    irq       => reu_irq
   );
 
 end Behavioral_top;

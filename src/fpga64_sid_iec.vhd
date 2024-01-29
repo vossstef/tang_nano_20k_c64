@@ -663,7 +663,7 @@ port map (
   comb_wave_l => '0',
   comb_wave_r => '0',
 
-  extfilter_en => '1',
+  extfilter_en => sid_filter(0),
 
   start_iter => clk_1MHz_en,
   std_logic_vector(sample_left) => audio_l,
@@ -806,11 +806,7 @@ cass_write <= cpuIO(3);
 ramDout <= cpuDo;
 ramAddr <= systemAddr;
 ramWE   <= systemWe when sysCycle >= CYCLE_CPU0 else '0';
---ramCE   <= cs_ram when sysCycle = CYCLE_VIC0 or cpu_cyc = '1' else '0';
-
---working
-ramCE <= cs_ram when (sysCycle >= CYCLE_VIC0 and sysCycle <= CYCLE_VIC3) or
-                     (sysCycle >  CYCLE_CPU0 and sysCycle <  CYCLE_CPUF and cs_ram = '1') else '0';
+ramCE   <= cs_ram when sysCycle = CYCLE_VIC0 or cpu_cyc = '1' else '0';
 
 cpu_cyc <= '1' when 
 				(sysCycle = CYCLE_CPU0 and turbo_m(0) = '1' and cs_ram = '1' ) or

@@ -29,14 +29,19 @@ module sysctrl (
   // values that can be configured by the user
   output reg [1:0]  system_chipset,
   output reg	    system_memory,
-  output reg	    system_video,
+  output reg        system_reu_cfg,
   output reg [1:0]  system_reset,
   output reg [1:0]  system_scanlines,
   output reg [1:0]  system_volume,
   output reg	    system_wide_screen,
   output reg [1:0]  system_floppy_wprot,
   output reg [2:0]  system_port_1,
-  output reg [2:0]  system_port_2
+  output reg [2:0]  system_port_2,
+  output reg [1:0]  system_dos_sel,
+  output reg        system_1541_reset,
+  output reg        system_audio_filter,
+  output reg [1:0]  system_turbo_mode,
+  output reg [1:0]  system_turbo_speed
 
 );
 
@@ -63,13 +68,18 @@ always @(posedge clk) begin
       // will very likely override these early
       system_chipset <= 2'b0;
       system_memory <= 1'b0;
-      system_video <= 1'b0;   
+      system_reu_cfg <= 1'b0;
       system_scanlines <= 2'b00;
       system_volume <= 2'b10;
       system_wide_screen <= 1'b0;
       system_floppy_wprot <= 2'b00;
-      system_port_1 <= 3'b000;
-      system_port_2 <= 3'b001;
+      system_port_1 <= 3'b011;
+      system_port_2 <= 3'b000;
+      system_dos_sel <= 2'b00;
+      system_1541_reset <= 1'b0;
+      system_audio_filter <= 1'b1;
+      system_turbo_mode <= 2'b00;
+      system_turbo_speed <= 2'b00;
 
    end else begin
       int_ack <= 8'h00;
@@ -116,8 +126,8 @@ always @(posedge clk) begin
                     if(id == "C") system_chipset <= data_in[1:0];      // unused presently
                     // Value "M": 
                     if(id == "M") system_memory <= data_in[0];         // unused presently
-                    // Value "V":
-                    if(id == "V") system_video <= data_in[0];         // unused presently
+                    // Value "V": REU cfg: off, on
+                    if(id == "V") system_reu_cfg <= data_in[0];
                     // Value "R": coldboot(3), reset(1) or run(0)
                     if(id == "R") system_reset <= data_in[1:0];
                     // Value "S": scanlines none(0), 25%(1), 50%(2) or 75%(3)
@@ -132,6 +142,16 @@ always @(posedge clk) begin
                     if(id == "Q") system_port_1 <= data_in[2:0];
                     // Joystick port 2 input device selection
                     if(id == "J") system_port_2 <= data_in[2:0];
+                    // DOS system
+                    if(id == "D") system_dos_sel <= data_in[1:0];
+                    // c1541 reset
+                    if(id == "Z") system_1541_reset <= data_in[0];
+                    // sid audio filter
+                    if(id == "U") system_audio_filter <= data_in[0];
+                    // turbo mode
+                    if(id == "X") system_turbo_mode <= data_in[1:0];
+                    // turbo speed
+                    if(id == "Y") system_turbo_speed <= data_in[1:0];
                 end
             end
 
