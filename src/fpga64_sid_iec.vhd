@@ -648,6 +648,9 @@ begin
 end process;
 
 sid_6581: entity work.sid_top
+generic map (
+	g_num_voices => 11
+)
 port map (
   clock => clk32,
   reset => reset,

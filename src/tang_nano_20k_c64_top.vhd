@@ -372,7 +372,7 @@ c1541_sd_inst : entity work.c1541_sd
 port map
  (
     clk32         => clk32,
-    reset         => c1541_osd_reset,
+    reset         => not flash_ready or c1541_osd_reset,
 
     disk_num      => (others =>'0'),
     disk_change   => sd_change, 
@@ -561,7 +561,8 @@ mainclock: entity work.Gowin_rPLL
         clkout  => clk64,
         lock    => pll_locked,
         clkoutp => mspi_clk,
-        clkoutd => clk32,
+        clkoutd => open, -- clk32,
+        clkoutd3 => clk32,
         clkin   => clk_27mhz
     );
 
@@ -887,16 +888,16 @@ port map(
     irq       => reu_irq
   ); 
 
--- c1541 ROM's in SPI Flash
+-- c1541 ROM's SPI Flash
 flash_inst: entity work.flash 
 port map(
     clk       => clk64,
-    resetn    => pll_locked,
+    resetn    => not c1541_osd_reset,
     ready     => flash_ready,
     busy      => open,
     -- offset in spi flash $100000
-    address   => ("0001" & "000" & dos_sel & c1541rom_addr),
- -- address   => ("0001" & "0000" & '0' & c1541rom_addr),
+ --   address   => ("0001" & "000" & dos_sel & c1541rom_addr),
+    address   => ("0001" & "0000" & '0' & c1541rom_addr),
     cs        => c1541rom_cs,
     dout      => c1541rom_data,
     mspi_cs   => mspi_cs,

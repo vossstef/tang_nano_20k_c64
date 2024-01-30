@@ -45,7 +45,6 @@ project addfile "./../../src/fpga64_sid_iec.vhd"
 project addfile "./../../src/gowin_prom/gowin_prom_1541_8k_rom.vhd"
 project addfile "./../../src/gowin_prom/gowin_prom_1541_rom.vhd"
 project addfile "./../../src/gowin_prom/gowin_prom_basic_kernal.vhd"
-project addfile "./../../src/gowin_prom/gowin_prom_cart.vhd"
 project addfile "./../../src/gowin_prom/gowin_prom_chargen.vhd"
 project addfile "./../../src/gowin_rpll/gowin_rpll.vhd"
 project addfile "./../../src/gowin_sp/gowin_sp_2k.vhd"
@@ -70,6 +69,7 @@ project addfile "./../../src/tang_nano_20k_c64_top.vhd"
 project addfile "./../../src/video_vicII_656x.vhd"
 project addfile "./../../tb/c64_tb.vhd"
 project addfile "./../../src/gowin_sp/gowin_sp_cram.vhd"
+project addfile "./../../src/misc/flash_dspi.v"
 
  if [file exists work] {
     vdel -lib work -all
@@ -103,7 +103,8 @@ vlog -work work -sv -incr \
 "./../../src/misc/sd_rw.v" \
 "./../../src/misc/scandoubler.v" \
 "./../../src/mos6526.v" \
-"./../../src/sdram.v"
+"./../../src/sdram.v" \
+"./../../src/misc/flash_dspi.v"
 
 vlog -work work -incr \
 "./../../src/misc/sdcmd_ctrl.v" \
@@ -130,7 +131,6 @@ vcom -work work -suppress 1583 -2008 -autoorder -explicit \
 "./../../src/gowin_prom/gowin_prom_1541_8k_rom.vhd" \
 "./../../src/gowin_prom/gowin_prom_1541_rom.vhd" \
 "./../../src/gowin_prom/gowin_prom_basic_kernal.vhd" \
-"./../../src/gowin_prom/gowin_prom_cart.vhd" \
 "./../../src/gowin_prom/gowin_prom_chargen.vhd" \
 "./../../src/gowin_rpll/gowin_rpll.vhd" \
 "./../../src/gowin_sp/gowin_sp_2k.vhd" \
