@@ -5,7 +5,7 @@
 --Part Number: GW2AR-LV18QN88C8/I7
 --Device: GW2AR-18
 --Device Version: C
---Created Time: Sat Jan 27 21:30:43 2024
+--Created Time: Tue Jan 30 21:44:09 2024
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -16,13 +16,13 @@ entity Gowin_rPLL is
         lock: out std_logic;
         clkoutp: out std_logic;
         clkoutd: out std_logic;
+        clkoutd3: out std_logic;
         clkin: in std_logic
     );
 end Gowin_rPLL;
 
 architecture Behavioral of Gowin_rPLL is
 
-    signal clkoutd3_o: std_logic;
     signal gw_vcc: std_logic;
     signal gw_gnd: std_logic;
     signal FBDSEL_i: std_logic_vector(5 downto 0);
@@ -93,9 +93,9 @@ begin
             FCLKIN => "27",
             DEVICE => "GW2AR-18C",
             DYN_IDIV_SEL => "false",
-            IDIV_SEL => 2,
+            IDIV_SEL => 6,
             DYN_FBDIV_SEL => "false",
-            FBDIV_SEL => 6,
+            FBDIV_SEL => 25,
             DYN_ODIV_SEL => "false",
             ODIV_SEL => 8,
             PSDA_SEL => "1111",
@@ -109,7 +109,7 @@ begin
             CLKOUT_BYPASS => "false",
             CLKOUTP_BYPASS => "false",
             CLKOUTD_BYPASS => "false",
-            DYN_SDIV_SEL => 2,
+            DYN_SDIV_SEL => 4,
             CLKOUTD_SRC => "CLKOUT",
             CLKOUTD3_SRC => "CLKOUT"
         )
@@ -118,7 +118,7 @@ begin
             LOCK => lock,
             CLKOUTP => clkoutp,
             CLKOUTD => clkoutd,
-            CLKOUTD3 => clkoutd3_o,
+            CLKOUTD3 => clkoutd3,
             RESET => gw_gnd,
             RESET_P => gw_gnd,
             CLKIN => clkin,

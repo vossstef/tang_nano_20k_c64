@@ -15,10 +15,10 @@ module flash
  // chipset read interface
  input [23:0]	   address, // 8 bit word address
  input		   cs, 
- output reg [7:0] dout,
+ output reg [15:0] dout,
  
  // interface to the chip
- output reg  mspi_cs,
+ output reg	   mspi_cs,
  inout		   mspi_di, // data in into flash chip
  inout		   mspi_hold,
  inout		   mspi_wp,
@@ -134,13 +134,17 @@ always @(posedge clk or negedge resetn) begin
             dspi_mode <= 1'b1;
 
         // latch output
-        if(state == 6'd25) dout[7:6]   <= dspi_in;
-        if(state == 6'd26) dout[5:4]   <= dspi_in;
-        if(state == 6'd27) dout[3:2]   <= dspi_in;
-        if(state == 6'd28) dout[1:0]   <= dspi_in;
+        if(state == 6'd25) dout[15:14] <= dspi_in;
+        if(state == 6'd26) dout[13:12] <= dspi_in;
+        if(state == 6'd27) dout[11:10] <= dspi_in;
+        if(state == 6'd28) dout[9:8]   <= dspi_in;
+        if(state == 6'd29) dout[7:6]   <= dspi_in;
+        if(state == 6'd30) dout[5:4]   <= dspi_in;
+        if(state == 6'd31) dout[3:2]   <= dspi_in;
+        if(state == 6'd32) dout[1:0]   <= dspi_in;
 
         // signal that the transfer is done
-        if(state == 6'd28) begin
+        if(state == 6'd32) begin
             state <= 6'd0;	    
             busy <= 1'b0;
             mspi_cs <= 1'b1;	// deselect flash chip	 

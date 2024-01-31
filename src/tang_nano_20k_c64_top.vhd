@@ -899,7 +899,7 @@ port map(
  --   address   => ("0001" & "000" & dos_sel & c1541rom_addr),
     address   => ("0001" & "0000" & '0' & c1541rom_addr),
     cs        => c1541rom_cs,
-    dout      => c1541rom_data,
+    dout(15 downto 8)      => c1541rom_data,
     mspi_cs   => mspi_cs,
     mspi_di   => mspi_di,
     mspi_hold => mspi_hold,
