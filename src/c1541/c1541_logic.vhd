@@ -188,7 +188,7 @@ architecture SYN of c1541_logic is
     end case;
   end process;
 
-  c1541rom_cs <= rom_cs;
+  c1541rom_cs <= rom_cs and p2_h_r and cpu_rw_n;
   c1541rom_addr <= cpu_a(14 downto 0);
   rom_do <= c1541rom_data;
   
