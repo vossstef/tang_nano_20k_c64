@@ -15,7 +15,7 @@ Features:
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) as Joystick<br>
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader Dolphin DOS](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
-* c1541 ROM selection
+* c1541 DOS ROM selection
 * On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
 
 <font color="red">HID interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for a USB devices and OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.
@@ -46,6 +46,20 @@ Select first Disk Image and load the PRG.<br>
 Then type RUN (RETURN)<br>	
 When asked select the 'compatibility mode' for loading the full game as Dolphin DOS isn't compatible with Sonic's build in speedloader.<br>	
 
+## Flash program
+M0 Dock Bl616 Firmware: Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.<br>
+For proper operation program .fs bitsteam to 'external Flash' and power cycle the board. Just SRAM load will not be sufficient.<br>
+
+Memory Layout SPI Flash:<br>
+0x000000 reserved for FPGA bitstream<br>
+0x100000 c1541 Dolphin Dos 2<br>
+0x108000 c1541 factory default CBM DOS 2.6<br>
+0x110000 c1541 SpeedDOS<br>
+0x118000 c1541 other<br>
+
+Use Gowin Programmer GUI or OpenFpgaLoader(Linux) to program at least **Dolphin DOS and factory CBM DOS** to 'external Flash' at mentioned offsets.<br>
+The FPGA bitstream (.fs) does not contain the ROM for c1541. ROM DOS will be executed from SPI FLASH and therefore have to be programmed first.<br>
+
 ## Push Button utilization
 * S2 Reset (for Flasher)<br>
 * S1 reserved <br>
@@ -61,7 +75,7 @@ invoke by F12 keypress<br>
 * REU configuration
 * Audio Filter
 * Disk Reset
-* c1541 DOS ROM selection
+* c1541 DOS selection
 
 ## Gamecontrol Joystick support
 legacy D9 Digital Joystick<br>
@@ -96,15 +110,10 @@ or Keyboard **Numpad** Keys:<br>
 
 ## Powering
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
-## Synthesis and Flash program
+## Synthesis
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
-For proper operation program .fs bitsteam to 'external Flash' and power cycle the board.<br>
 ## Pin mapping 
 see pin configuration in .cst configuration file
-## cartridge ROM
-The bin2mi tool can be used to generate from a game ROM new pROM VHDL code (bin2mi xyz.crt xyz.mi)<br>
-From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images the first 0x40 bytes need to be discarded and filesize header in .mi need to be fixed to 8192/16384.<br>Changes in fpga64_buslogic.vhd (see comment) and top level (exrom = '0') needed to compile a cartrige load varaint.<br>
-
 ## HW circuit considerations
 **Pinmap TN20k Interfaces** <br>
  Sipeed M0S Dock, digital Joystick D9 and DualShock Gamepad connection.<br>
