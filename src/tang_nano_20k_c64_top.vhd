@@ -131,8 +131,8 @@ signal pot2        : std_logic_vector(7 downto 0);
 signal mouse_x_pos : signed(10 downto 0);
 signal mouse_y_pos : signed(10 downto 0);
 
-signal ram_ce       :  std_logic;
-signal ram_we       :  std_logic;
+signal ram_ce      :  std_logic;
+signal ram_we      :  std_logic;
 signal romCE       :  std_logic;
 
 signal ntscMode    :  std_logic := '0';
