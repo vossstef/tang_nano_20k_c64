@@ -5,7 +5,7 @@ use IEEE.numeric_std.all;
 --
 -- Model 1541B
 --
--- 2023 Stefan Voss Dolphindos 2.0 added
+-- 2023 Stefan Voss Dolphindos 2 and external ROM added
 
 entity c1541_logic is
   generic
@@ -199,7 +199,7 @@ port map (
     clk => clk_32M,
     oce => '1',
     ce => '1',
-    reset => '0',
+    reset => reset,
     wre => extram_wr,
     ad => cpu_a(12 downto 0),
     din => cpu_do
@@ -304,7 +304,7 @@ port map (
         clk => clk_32M,
         oce => '1',
         ce => '1',
-        reset => '0',
+        reset => reset,
         wre => ram_wr,
         ad => cpu_a(10 downto 0),
         din => cpu_do
