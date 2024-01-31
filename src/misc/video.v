@@ -1,12 +1,13 @@
 // video.v
 
 module video (
-	      input	   clk,
+          input	   clk,
           input	   clk32_i,
           input    hdmi_pll_reset,
-	      
-	      output	   clk_32,
-	      output	   pll_lock,
+      
+          output   pll_lock,
+          output   clk_pixel_x5,
+          output   mspi_clk,
 
 	      input	   vs_in_n,
 	      input	   hs_in_n,
@@ -37,14 +38,13 @@ module video (
 	      output [2:0] tmds_d_p  
 	      );
    
-wire clk_pixel_x5 /* synthesis syn_keep=1 */;
 wire clk_pixel /* synthesis syn_keep=1 */;
 
-assign clk_32 = clk_pixel;
     
 `define PIXEL_CLOCK 27000000
 pll_160m pll_hdmi (
                .clkout(clk_pixel_x5),
+               .clkoutp(mspi_clk), // phase shift
                .lock(pll_lock),
                .reset(hdmi_pll_reset),
                .clkin(clk)

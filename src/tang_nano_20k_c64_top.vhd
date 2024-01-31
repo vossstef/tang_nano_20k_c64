@@ -71,9 +71,10 @@ end;
 
 architecture Behavioral_top of tang_nano_20k_c64_top is
 
-signal clk64, clk32, pll_locked, pll2_locked : std_logic;
+signal clk_pixel_x5, clk64, clk32, pll_locked, pll2_locked : std_logic;
 
 attribute syn_keep : integer;
+attribute syn_keep of clk_pixel_x5 : signal is 1;
 attribute syn_keep of clk64 : signal is 1;
 attribute syn_keep of clk32 : signal is 1;
 
@@ -417,7 +418,7 @@ sdc_iack <= int_ack(3);
 
 sd_card_inst: entity work.sd_card
 generic map (
-    CLK_DIV  => 1  -- for 32 Mhz clock
+    CLK_DIV  => 1
   )
     port map (
     rstn            => pll_locked, 
@@ -472,7 +473,8 @@ port map(
       clk       => clk_27mhz, -- XO
       clk32_i   => clk32, -- core clock for sync purposes
       hdmi_pll_reset  => not pll_locked,
-      clk_32    => open,  -- 27Mhz pixel clock 720x576@50
+      clk_pixel_x5  => clk_pixel_x5,
+      mspi_clk  => mspi_clk,
       pll_lock  => pll2_locked, -- hdmi pll lock
 
       hs_in_n   => hsync,
@@ -560,9 +562,7 @@ mainclock: entity work.Gowin_rPLL
     port map (
         clkout  => clk64,
         lock    => pll_locked,
-        clkoutp => mspi_clk,
-        clkoutd => open,
-        clkoutd3 => clk32, -- open,
+        clkoutd => clk32,
         clkin   => clk_27mhz
     );
 
@@ -888,16 +888,14 @@ port map(
     irq       => reu_irq
   ); 
 
--- c1541 ROM's SPI Flash
+-- c1541 ROM's SPI Flash, offset in spi flash $100000
 flash_inst: entity work.flash 
 port map(
-    clk       => clk64,
-    resetn    => pll_locked,
+    clk       => clk_pixel_x5,
+    resetn    => pll2_locked,
     ready     => flash_ready,
     busy      => open,
-    -- offset in spi flash $100000
- --   address   => ("0001" & "000" & dos_sel & c1541rom_addr),
-    address   => ("0001" & "0000" & '0' & c1541rom_addr),
+    address   => ("0001" & "000" & dos_sel & c1541rom_addr),
     cs        => c1541rom_cs,
     dout      => c1541rom_data,
     mspi_cs   => mspi_cs,

@@ -15,6 +15,7 @@ Features:
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) as Joystick<br>
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader Dolphin DOS](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
+* c1541 ROM selection
 * On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
 
 <font color="red">HID interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for a USB devices and OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.
@@ -33,6 +34,17 @@ LIST<br>
 Load first program from Disk:<br>
 LOAD"*",8<br>
 RUN<br>
+c1541 DOS ROM to be selected from OSD (default Dolphin, factory or other)<br>
+
+## emulated RAM Expansion Unit REU 1750
+For those programs that require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated via OSD on demand.<br>
+Playing [Sonic the Hedgehog](https://csdb.dk/release/?id=212190).<br>
+Enable REU.<br>
+Select first Disk Image and load the PRG.<br>
+**Important**: Disable Dolphin Dos 2 Speedloader by typing:<br> 
+[@XF- (RETURN)](https://project64.c64.org/hw/dolphindos.txt) <br>	
+Then type RUN (RETURN)<br>	
+When asked select the 'compatibility mode' for loading the full game as Dolphin DOS isn't compatible with Sonic's build in speedloader.<br>	
 
 ## Push Button utilization
 * S2 Reset (for Flasher)<br>
@@ -47,6 +59,9 @@ invoke by F12 keypress<br>
 * c1541 Disk write protetcion<br>
 * HID device selection for Joystick Port 1 and Port 2<br>
 * REU configuration
+* Audio Filter
+* Disk Reset
+* c1541 DOS ROM selection
 
 ## Gamecontrol Joystick support
 legacy D9 Digital Joystick<br>
