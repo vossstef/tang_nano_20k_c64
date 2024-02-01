@@ -79,6 +79,13 @@ reg [3:0] r;
 reg [3:0] g;
 reg [3:0] b;
 
+reg [4*3-1:0] sd_buffer_out, sd_bypass_out;
+reg [HCNT_WIDTH-1:0] sd_hcnt;
+reg        hs_sd, vs_sd;
+
+// scan doubler output register
+wire [11:0] sd_out = bypass ? sd_bypass_out : sd_buffer_out;
+
 always @(*) begin
    b = sd_out[3:0];
    g = sd_out[7:4];
@@ -131,9 +138,6 @@ always @(posedge clk_sys) begin
 	end
 end
 
-// scan doubler output register
-wire [11:0] sd_out = bypass ? sd_bypass_out : sd_buffer_out;
-
 // ==================================================================
 // ======================== the line buffers ========================
 // ==================================================================
@@ -180,9 +184,7 @@ end
 // ==================== output timing generation ====================
 // ==================================================================
 
-reg [4*3-1:0] sd_buffer_out, sd_bypass_out;
-reg [HCNT_WIDTH-1:0] sd_hcnt;
-reg        hs_sd, vs_sd;
+
 
 // timing generation runs 32 MHz (twice the input signal analysis speed)
 always @(posedge clk_sys) begin

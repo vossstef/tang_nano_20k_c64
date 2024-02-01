@@ -42,8 +42,6 @@ project addfile "./../../src/fpga64_buslogic.vhd"
 project addfile "./../../src/fpga64_keyboard.vhd"
 project addfile "./../../src/fpga64_rgbcolor.vhd"
 project addfile "./../../src/fpga64_sid_iec.vhd"
-project addfile "./../../src/gowin_prom/gowin_prom_1541_8k_rom.vhd"
-project addfile "./../../src/gowin_prom/gowin_prom_1541_rom.vhd"
 project addfile "./../../src/gowin_prom/gowin_prom_basic_kernal.vhd"
 project addfile "./../../src/gowin_prom/gowin_prom_chargen.vhd"
 project addfile "./../../src/gowin_rpll/gowin_rpll.vhd"
@@ -70,10 +68,16 @@ project addfile "./../../src/video_vicII_656x.vhd"
 project addfile "./../../tb/c64_tb.vhd"
 project addfile "./../../src/gowin_sp/gowin_sp_cram.vhd"
 project addfile "./../../src/misc/flash_dspi.v"
+project addfile "./../../src/reu.v"
 
  if [file exists work] {
     vdel -lib work -all
    }
+
+ if [file exists gw2a] {
+    vdel -lib gw2a -all
+   }
+
 vlib work
 vlib gw2a
 
@@ -104,7 +108,8 @@ vlog -work work -sv -incr \
 "./../../src/misc/scandoubler.v" \
 "./../../src/mos6526.v" \
 "./../../src/sdram.v" \
-"./../../src/misc/flash_dspi.v"
+"./../../src/misc/flash_dspi.v" \
+"./../../src/reu.v"
 
 vlog -work work -incr \
 "./../../src/misc/sdcmd_ctrl.v" \
@@ -128,8 +133,6 @@ vcom -work work -suppress 1583 -2008 -autoorder -explicit \
 "./../../src/fpga64_keyboard.vhd" \
 "./../../src/fpga64_rgbcolor.vhd" \
 "./../../src/fpga64_sid_iec.vhd" \
-"./../../src/gowin_prom/gowin_prom_1541_8k_rom.vhd" \
-"./../../src/gowin_prom/gowin_prom_1541_rom.vhd" \
 "./../../src/gowin_prom/gowin_prom_basic_kernal.vhd" \
 "./../../src/gowin_prom/gowin_prom_chargen.vhd" \
 "./../../src/gowin_rpll/gowin_rpll.vhd" \

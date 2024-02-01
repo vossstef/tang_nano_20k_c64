@@ -30,24 +30,18 @@ architecture c64_tb of c64_tb is
  
   component tang_nano_20k_c64_top
   generic (
-    sysclk_frequency : integer := 315; -- Sysclk frequency * 10 (31.5Mhz)
-    mister           : integer := 0    -- 0:no, 1:yes
+    sysclk_frequency : integer := 315 -- Sysclk frequency * 10 (31.5Mhz)
     );
   port
   (
     clk_27mhz   : in std_logic;
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
-    led         : out std_logic_vector(5 downto 0);
+    leds_n      : out std_logic_vector(5 downto 0);
     btn         : in std_logic_vector(4 downto 0);
 
     -- SPI interface Sipeed M0S Dock external BL616 uC
-    mosi        : in std_logic; -- spi MOSI / ps2_data
-    miso        : out std_logic;-- spi MISO / ps2_clk
-    csn         : in std_logic; -- spi CSn
-    sck         : in std_logic; -- spi CLK
-    irq_n       : out std_logic; -- spi irq
-
+    m0s         : inout std_logic_vector(5 downto 0);
     -- SPI interface onboard BL616 uC
     spi_csn     : in std_logic;
     spi_sclk    : in std_logic;
@@ -80,7 +74,14 @@ architecture c64_tb of c64_tb is
     joystick_clk  : out std_logic;
     joystick_mosi : out std_logic;
     joystick_miso : in std_logic;
-    joystick_cs   : out std_logic
+    joystick_cs   : out std_logic;
+    -- spi flash interface
+    mspi_cs       : out std_logic;
+    mspi_clk      : out std_logic;
+    mspi_di       : inout std_logic;
+    mspi_hold     : inout std_logic;
+    mspi_wp       : inout std_logic;
+    mspi_do       : inout std_logic
     );
   end component;
 
@@ -90,14 +91,10 @@ begin
       clk_27mhz   => I_CLK_REF,
       reset       => reset,
       user        => user,
-      led         => open,
+      leds_n      => open,
       btn         => btn,
     -- SPI interface Sipeed M0S Dock external BL616 uC
-    mosi          => '0',
-    miso          => open,
-    csn           => '0',
-    sck           => '0',
-    irq_n         => open,
+    m0s           => (others => '0'),
     -- SPI interface onboard BL616 uC
     spi_csn       => '0',
     spi_sclk      =>'0',

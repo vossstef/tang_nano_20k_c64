@@ -213,7 +213,7 @@ signal dma_req        : std_logic;
 signal dma_cycle      : std_logic;
 signal dma_addr       : std_logic_vector(15 downto 0);
 signal dma_dout       : std_logic_vector(7 downto 0);
-signal dma_din        : std_logic_vector(7 downto 0);
+signal dma_din        : unsigned(7 downto 0);
 signal dma_we         : std_logic;
 signal io_cycle       : std_logic;
 signal ext_cycle      : std_logic;
@@ -791,7 +791,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   dma_cycle    => dma_cycle,
   dma_addr     => unsigned(dma_addr),
   dma_dout     => unsigned(dma_dout),
-  unsigned(dma_din) => dma_din,
+  dma_din      => dma_din,
   dma_we       => dma_we,
   irq_ext_n    => not reu_irq,
 

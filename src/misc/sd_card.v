@@ -77,10 +77,7 @@ reg [8:0]  mcu_tx_cnt;
    
 // only export outen if the resulting data is for the core
 wire louten;  
-
-// drive outen only if the core reads data for itself
-assign outen = (state == CORE_IO && rstart_int)?louten:1'b0;   
-   
+  
 // Keep track of current sector destination. We cannot use the command
 // directly as the MCU may alter this during sector transfer
 localparam [2:0] IDLE         = 3'd0,
@@ -91,6 +88,9 @@ localparam [2:0] IDLE         = 3'd0,
                  CORE_IO      = 3'd5;   // core itself does SD card IO
 
 reg [2:0] state; 
+// drive outen only if the core reads data for itself
+assign outen = (state == CORE_IO && rstart_int)?louten:1'b0; 
+
 wire [7:0] inbyte_int;  
 
 // interrupt handling

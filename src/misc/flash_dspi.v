@@ -38,20 +38,7 @@ wire [1:0]	   dspi_out;
 // drive hold and wp to their static default
 assign mspi_hold = 1'b1;
 assign mspi_wp   = 1'b0;
-
-wire [1:0] output_en = { 
-    dspi_mode?(state<=6'd22):1'b0,    // io1 is do in SPI mode and thus never driven
-    dspi_mode?(state<=6'd22):1'b1     // io0 is di in SPI mode and thus always driven
-};
       
-wire [1:0] data_out = {
-    dspi_mode?dspi_out[1]:1'bx,      // never driven in SPI mode
-    dspi_mode?dspi_out[0]:spi_di       
-};
-
-assign mspi_do   = output_en[1]?data_out[1]:1'bz;
-assign mspi_di   = output_en[0]?data_out[0]:1'bz;
-
 // use "fast read dual IO" command
 wire [7:0]   CMD_RD_DIO = 8'hbb;  
 
@@ -61,12 +48,24 @@ wire [7:0] M = 8'b0010_0000;
 reg [5:0] state;
 reg [4:0] init;
 
+wire [1:0] output_en = { 
+    dspi_mode?(state<=6'd22):1'b0,    // io1 is do in SPI mode and thus never driven
+    dspi_mode?(state<=6'd22):1'b1     // io0 is di in SPI mode and thus always driven
+};
+
 // flash is ready when init phase has ended
 assign ready = (init == 5'd0);  
    
 // send 16 1's during init on IO0 to make sure M4 = 1 and dspi is left
 wire spi_di = (init>1)?1'b1:CMD_RD_DIO[3'd7-state[2:0]];  // the command is sent in spi mode
-   
+  
+wire [1:0] data_out = {
+    dspi_mode?dspi_out[1]:1'bx,      // never driven in SPI mode
+    dspi_mode?dspi_out[0]:spi_di       
+};
+
+assign mspi_do   = output_en[1]?data_out[1]:1'bz;
+assign mspi_di   = output_en[0]?data_out[0]:1'bz;
 assign dspi_out = 
 		  (state==6'd8)?address[23:22]:
 		  (state==6'd9)?address[21:20]:
