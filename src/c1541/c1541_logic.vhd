@@ -45,6 +45,7 @@ entity c1541_logic is
     tr00_sense_n    : in std_logic;                       -- track 0 sense (unused?)
     act             : out std_logic;                       -- activity LED
 
+    ext_en          : in std_logic;
     c1541rom_clk    : in std_logic;
     c1541rom_addr   : in std_logic_vector(13 downto 0);
     c1541rom_data   : in std_logic_vector(7 downto 0);
@@ -91,6 +92,8 @@ architecture SYN of c1541_logic is
   signal uc1_pb_i       : std_logic_vector(7 downto 0);
   signal uc1_pb_o       : std_logic_vector(7 downto 0);
   signal uc1_pb_oe_n    : std_logic_vector(7 downto 0);
+  signal uc1_cb2_o      : std_logic;
+  signal uc1_cb2_oe     : std_logic;
     
   -- UC3 (VIA6522) signals
   signal uc3_do         : std_logic_vector(7 downto 0);
@@ -109,6 +112,8 @@ architecture SYN of c1541_logic is
   signal uc3_pb_i       : std_logic_vector(7 downto 0);
   signal uc3_pb_o       : std_logic_vector(7 downto 0);
   signal uc3_pb_oe_n    : std_logic_vector(7 downto 0);
+  signal uc3_cb1_o      : std_logic;
+  signal uc3_cb1_oe     : std_logic;
 
   -- internal signals
   signal atna           : std_logic; -- ATN ACK - input gate array
@@ -134,9 +139,9 @@ architecture SYN of c1541_logic is
 
   signal cpu_b_slice    : std_logic_vector(2 downto 0);
   signal extram_cs      : std_logic;
-  signal extrom_cs      : std_logic;
+signal extrom_cs      : std_logic;
   signal extram_do      : std_logic_vector(7 downto 0);
-  signal extrom_do      : std_logic_vector(7 downto 0);
+signal extrom_do      : std_logic_vector(7 downto 0);
   signal extram_wr      : std_logic;
 
   begin
@@ -180,7 +185,7 @@ architecture SYN of c1541_logic is
   process (cpu_a, cpu_b_slice)
   begin
   rom_cs <= '0';
-  extrom_cs <= '0';
+extrom_cs <= '0';
   extram_cs <= '0';
   cpu_b_slice <= cpu_a(15)&cpu_a(14)&cpu_a(13);
     case cpu_b_slice is
@@ -192,14 +197,14 @@ architecture SYN of c1541_logic is
     end case;
   end process;
 
--- 8k extra sram extension for dolphindos
+  -- 8k extra sram extension for dolphindos
 ram_8kinst :  entity work.Gowin_SP_8k
 port map (
     dout => extram_do,
     clk => clk_32M,
     oce => '1',
-    ce => '1',
-    reset => '0',
+    ce => ext_en,
+    reset => reset,
     wre => extram_wr,
     ad => cpu_a(12 downto 0),
     din => cpu_do
@@ -226,8 +231,8 @@ port map (
   -- PA
   par_stb_o  <= uc1_ca2_o or not uc1_ca2_oe;
   par_data_o <= uc1_pa_o or not uc1_pa_oe; 
-  cb1_i      <= par_stb_i;
-  uc1_pa_i   <= par_data_i;
+  cb1_i <= par_stb_i when ext_en = '1' else '1';
+  uc1_pa_i <= par_data_i when ext_en = '1' else  "1111111" & tr00_sense_n;
 
   -- PB
   uc1_pb_i(0) <=  not (sb_data_in and sb_data_oe);
@@ -327,7 +332,7 @@ port map (
         clk => clk_32M,
         oce => '1',
         ce => '1',
-        reset => '0',
+        reset => reset,
         wre => ram_wr,
         ad => cpu_a(10 downto 0),
         din => cpu_do
@@ -351,7 +356,7 @@ port map (
       data_in         => cpu_do,
       data_out        => uc1_do,
 
-      port_a_i        => uc1_pa_i,
+      port_a_i        => (uc1_pa_o  or not uc1_pa_oe) and uc1_pa_i,
       port_a_t        => uc1_pa_oe,
       port_a_o        => uc1_pa_o,
 
@@ -367,11 +372,13 @@ port map (
       ca2_o           => uc1_ca2_o,
       ca2_t           => uc1_ca2_oe,
 
-      cb1_i           => cb1_i,
+      cb1_i           => (uc1_cb1_o or not uc1_cb1_oe) and cb1_i,
       cb1_o           => uc1_cb1_o,
       cb1_t           => uc1_cb1_oe, 
 
-      cb2_i           => '1',
+      cb2_i           => (uc1_cb2_o or not uc1_cb2_oe),
+      cb2_t           => uc1_cb2_oe,
+      cb2_o           => uc1_cb2_o,
 
       irq             => uc1_irq
     );
@@ -407,13 +414,15 @@ port map (
       ca1_i           => uc3_ca1_i,
 
       ca2_o           => uc3_ca2_o,
-      ca2_i           => '1',
+      ca2_i           => (uc3_ca2_o or not uc3_ca2_oe),
       ca2_t           => uc3_ca2_oe,
 
-      cb1_i           => '1',
+      cb1_i           => (uc3_cb1_o or not uc3_cb1_oe),
+      cb1_o           => uc3_cb1_o,
+      cb1_t           => uc3_cb1_oe,
 
       cb2_o           => uc3_cb2_o,
-      cb2_i           => '1',
+      cb2_i           => (uc3_cb2_o or not uc3_cb2_oe),
       cb2_t           => uc3_cb2_oe,
 
       irq             => uc3_irq

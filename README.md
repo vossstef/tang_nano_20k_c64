@@ -26,23 +26,18 @@ Features:
 Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS.<br>
 Copy a D64 Disk image to your sdcard and rename it to **disk8.d64** as default boot image.<br>
 Add further D64 or G64 images as you like and insert card in TN slot. Power Cycle TN. LED 0 acts as Drive activity indicator.<br> 
-For those who forgot after all those years...<br>
 Disk directory listing: (or F7 keypress)<br> 
 LOAD"$",8<br>
 LIST<br> 
-Load first program from Disk:<br>
+Load first program from Disk: (or just LOAD)<br> 
 LOAD"*",8<br>
 RUN<br>
 
 ## emulated RAM Expansion Unit REU 1750
 For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.<br>
-Playing [Sonic the Hedgehog](https://csdb.dk/release/?id=212190).<br>
-Enable REU.<br>
-Select first Disk Image and load the PRG.<br>
-**Important**: Disable Dolphin Dos 2 Speedloader by typing:<br> 
-[@XF- (RETURN)](https://project64.c64.org/hw/dolphindos.txt) <br>	
-Then type RUN (RETURN)<br>	
-When asked select the 'compatibility mode' for loading the full game as Dolphin DOS isn't compatible with Sonic's build in speedloader.<br>	
+<br>
+Playing [Sonic the Hedgehog V1.2](https://csdb.dk/release/?id=212523)<br>
+Enable REU, do via OSD a cold c64 core reset and load the PRG.<br>
 
 ## Push Button utilization
 * S2 Reset (for Flasher)<br>
@@ -56,7 +51,7 @@ invoke by F12 keypress<br>
 * Scanlines<br>
 * c1541 Disk write protetcion<br>
 * HID device selection for Joystick Port 1 and Port 2<br>
-* REU configuration
+* REU activation
 
 ## Gamecontrol Joystick support
 legacy D9 Digital Joystick<br>
@@ -96,10 +91,6 @@ Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or 
 For proper operation program .fs bitsteam to 'external Flash' and power cycle the board.<br>
 ## Pin mapping 
 see pin configuration in .cst configuration file
-## cartridge ROM
-The bin2mi tool can be used to generate from a game ROM new pROM VHDL code (bin2mi xyz.crt xyz.mi)<br>
-From typical [.CRT](https://vice-emu.sourceforge.io/vice_17.html#SEC429) images the first 0x40 bytes need to be discarded and filesize header in .mi need to be fixed to 8192/16384.<br>Changes in fpga64_buslogic.vhd (see comment) and top level (exrom = '0') needed to compile a cartrige load varaint.<br>
-
 ## HW circuit considerations
 **Pinmap TN20k Interfaces** <br>
  Sipeed M0S Dock, digital Joystick D9 and DualShock Gamepad connection.<br>
