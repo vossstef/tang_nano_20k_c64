@@ -69,6 +69,10 @@ project addfile "./../../tb/c64_tb.vhd"
 project addfile "./../../src/gowin_sp/gowin_sp_cram.vhd"
 project addfile "./../../src/misc/flash_dspi.v"
 project addfile "./../../src/reu.v"
+project addfile "./../../tb/prim_sim.v"
+project addfile "./../../tb/prim_sim.vhd"
+project addfile "./../../tb/prim_syn.vhd"
+# project addfile "./../../tb/prim_tsim.v"
 
  if [file exists work] {
     vdel -lib work -all
@@ -80,6 +84,10 @@ project addfile "./../../src/reu.v"
 
 vlib work
 vlib gw2a
+vlib gw_std_cell_lib
+
+# Compile the GOWIN Standard Cells to Library std_cell_lib
+vlog -incr -work gw_std_cell_lib "./../../tb/prim_sim.v" 
 
 vcom -work gw2a -2008 -autoorder -explicit \
 "./../../tb/prim_sim.vhd" \
@@ -109,17 +117,19 @@ vlog -work work -sv -incr \
 "./../../src/mos6526.v" \
 "./../../src/sdram.v" \
 "./../../src/misc/flash_dspi.v" \
-"./../../src/reu.v"
-
-vlog -work work -incr \
-"./../../src/misc/sdcmd_ctrl.v" \
-"./../../src/misc/ws2812.v" \
-"./../../src/dualshock_controller.v" \
+"./../../src/reu.v" \
 "./../../src/gowin_clkdiv/gowin_clkdiv.v" \
 "./../../src/gowin_dpb/sector_dpram.v" \
 "./../../src/gowin_dpb/gowin_dpb_track_buffer_b.v" \
 "./../../src/gowin_dpb/gowin_dpb_trkbuf.v" \
-"./../../src/gowin_rpll/pll_160m.v"
+"./../../src/gowin_rpll/pll_160m.v" 
+#"./../../tb/prim_sim.v" 
+# "./../../tb/prim_tsim.v"
+
+vlog -work work -incr \
+"./../../src/misc/sdcmd_ctrl.v" \
+"./../../src/misc/ws2812.v" \
+"./../../src/dualshock_controller.v"
 
 vcom -work work -suppress 1583 -2008 -autoorder -explicit \
 "./../../tb/c64_tb.vhd" \
@@ -161,7 +171,8 @@ vcom -work work -suppress 1583 -2008 -autoorder -explicit \
  project compileoutofdate
 }
 
-vsim -voptargs=+acc -gui -L gw2a work.c64_tb
+#vsim -voptargs=+acc -gui -L gw2a work.c64_tb
+vsim -voptargs=+acc -gui -L gw_std_cell_lib work.c64_tb
 view wave
 
 add wave -divider "Input Signals"

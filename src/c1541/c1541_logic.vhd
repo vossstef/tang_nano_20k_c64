@@ -45,6 +45,7 @@ entity c1541_logic is
     tr00_sense_n    : in std_logic;                       -- track 0 sense (unused?)
     act             : out std_logic;                       -- activity LED
 
+    ext_en          : in std_logic;
     c1541rom_addr   : out std_logic_vector(14 downto 0);
     c1541rom_data   : in std_logic_vector(7 downto 0);
     c1541rom_cs     : out std_logic
@@ -188,17 +189,17 @@ architecture SYN of c1541_logic is
     end case;
   end process;
 
-  c1541rom_cs <= rom_cs and p2_h_r and cpu_rw_n;
+  c1541rom_cs <= cpu_a(15) and p2_h_r and cpu_rw_n;
   c1541rom_addr <= cpu_a(14 downto 0);
   rom_do <= c1541rom_data;
   
--- 8k extra sram extension for dolphindos
+-- 8k extra sram extension for dolphin dos
 ram_8kinst :  entity work.Gowin_SP_8k
 port map (
     dout => extram_do,
     clk => clk_32M,
     oce => '1',
-    ce => '1',
+    ce => ext_en,
     reset => reset,
     wre => extram_wr,
     ad => cpu_a(12 downto 0),
@@ -215,8 +216,8 @@ port map (
   -- PA
   par_stb_o  <= uc1_ca2_o or not uc1_ca2_oe;
   par_data_o <= uc1_pa_o or not uc1_pa_oe; 
-  cb1_i      <= par_stb_i;
-  uc1_pa_i   <= par_data_i;
+  cb1_i <= par_stb_i when ext_en = '1' else '1';
+  uc1_pa_i <= par_data_i when ext_en = '1' else  "1111111" & tr00_sense_n;
 
   -- PB
   uc1_pb_i(0) <=  not (sb_data_in and sb_data_oe);
@@ -328,7 +329,7 @@ port map (
       data_in         => cpu_do,
       data_out        => uc1_do,
 
-      port_a_i        => uc1_pa_i,
+      port_a_i        => (uc1_pa_o  or not uc1_pa_oe) and uc1_pa_i,
       port_a_t        => uc1_pa_oe,
       port_a_o        => uc1_pa_o,
 
@@ -344,7 +345,7 @@ port map (
       ca2_o           => uc1_ca2_o,
       ca2_t           => uc1_ca2_oe,
 
-      cb1_i           => cb1_i,
+      cb1_i           => (uc1_cb1_o or not uc1_cb1_oe) and cb1_i,
       cb1_o           => uc1_cb1_o,
       cb1_t           => uc1_cb1_oe, 
 

@@ -236,19 +236,7 @@ signal dos_sel        : std_logic_vector(1 downto 0);
 signal c1541rom_cs    : std_logic;
 signal c1541rom_addr  : std_logic_vector(14 downto 0);
 signal c1541rom_data  : std_logic_vector(7 downto 0);
-
-component CLKDIV
-    generic (
-        DIV_MODE : STRING := "2";
-        GSREN: in string := "false"
-    );
-    port (
-        CLKOUT: out std_logic;
-        HCLKIN: in std_logic;
-        RESETN: in std_logic;
-        CALIB: in std_logic
-    );
-end component;
+signal ext_en         : std_logic;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -405,12 +393,13 @@ port map
     sd_buff_din   => sd_wr_data,
     sd_buff_wr    => sd_rd_byte_strobe,
 
-    led           => led1541, -- LED floppy indicator
-
+    led           => led1541,
+    ext_en        => ext_en,
     c1541rom_cs   => c1541rom_cs,
     c1541rom_addr => c1541rom_addr,
     c1541rom_data => c1541rom_data
 );
+ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphin, speed
 
 sd_rd(3 downto 1) <= "000";
 sd_wr(3 downto 1) <= "000";

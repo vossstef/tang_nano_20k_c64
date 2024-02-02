@@ -56,15 +56,16 @@ port(
 
 	led            : out std_logic;
 
-	-- parallel bus
-	par_data_i : in std_logic_vector(7 downto 0);
-	par_stb_i  : in std_logic;
-	par_data_o : out std_logic_vector(7 downto 0);
-	par_stb_o  : out std_logic;
+    -- parallel bus
+    par_data_i     : in std_logic_vector(7 downto 0);
+    par_stb_i      : in std_logic;
+    par_data_o     : out std_logic_vector(7 downto 0);
+    par_stb_o      : out std_logic;
 
-   c1541rom_addr   : out std_logic_vector(14 downto 0);
-   c1541rom_data   : in std_logic_vector(7 downto 0);
-   c1541rom_cs     : out std_logic
+    ext_en          : in std_logic;
+    c1541rom_addr   : out std_logic_vector(14 downto 0);
+    c1541rom_data   : in std_logic_vector(7 downto 0);
+    c1541rom_cs     : out std_logic
 );
 end c1541_sd;
 
@@ -145,6 +146,7 @@ begin
     tr00_sense_n    => '1',      -- track 0 sense (unused?)
     act             => act,      -- activity LED
 
+    ext_en          => ext_en,
     c1541rom_addr   => c1541rom_addr,
     c1541rom_data   => c1541rom_data,
     c1541rom_cs     => c1541rom_cs
