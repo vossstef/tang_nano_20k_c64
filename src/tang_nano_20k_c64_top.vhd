@@ -123,8 +123,8 @@ signal pot2        : std_logic_vector(7 downto 0);
 signal mouse_x_pos : signed(10 downto 0);
 signal mouse_y_pos : signed(10 downto 0);
 
-signal ram_ce       :  std_logic;
-signal ram_we       :  std_logic;
+signal ram_ce      :  std_logic;
+signal ram_we      :  std_logic;
 signal romCE       :  std_logic;
 
 signal ntscMode    :  std_logic := '0';
@@ -205,7 +205,7 @@ signal dma_req        : std_logic;
 signal dma_cycle      : std_logic;
 signal dma_addr       : std_logic_vector(15 downto 0);
 signal dma_dout       : std_logic_vector(7 downto 0);
-signal dma_din        : std_logic_vector(7 downto 0);
+signal dma_din        : unsigned(7 downto 0);
 signal dma_we         : std_logic;
 signal io_cycle       : std_logic;
 signal ext_cycle      : std_logic;
@@ -223,19 +223,7 @@ signal db9_joy        : std_logic_vector(5 downto 0);
 signal sid_filter     : std_logic_vector(1 downto 0) := "11";
 signal turbo_mode     : std_logic_vector(1 downto 0) := (others => '0');
 signal turbo_speed    : std_logic_vector(1 downto 0) := (others => '0');
-
-component CLKDIV
-    generic (
-        DIV_MODE : STRING := "2";
-        GSREN: in string := "false"
-    );
-    port (
-        CLKOUT: out std_logic;
-        HCLKIN: in std_logic;
-        RESETN: in std_logic;
-        CALIB: in std_logic
-    );
-end component;
+signal ext_en         : std_logic;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -393,7 +381,7 @@ port map
     sd_buff_wr    => sd_rd_byte_strobe,
 
     led           => led1541, -- LED floppy indicator
-
+    ext_en        => '1',
     c1541rom_clk  => '0',
     c1541rom_wr   => '0',
     c1541rom_addr => (others =>'0'),
@@ -406,7 +394,7 @@ sdc_iack <= int_ack(3);
 
 sd_card_inst: entity work.sd_card
 generic map (
-    CLK_DIV  => 1  -- for 32 Mhz clock
+    CLK_DIV  => 1
   )
     port map (
     rstn            => pll_locked, 
@@ -778,7 +766,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   dma_cycle    => dma_cycle,
   dma_addr     => unsigned(dma_addr),
   dma_dout     => unsigned(dma_dout),
-  unsigned(dma_din) => dma_din,
+  dma_din      => dma_din,
   dma_we       => dma_we,
   irq_ext_n    => not reu_irq,
 
