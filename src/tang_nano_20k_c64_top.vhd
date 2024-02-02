@@ -174,7 +174,7 @@ signal old_sync       : std_logic;
 signal osd_status     : std_logic;
 signal ws2812_color   : std_logic_vector(23 downto 0);
 signal system_reset   : std_logic_vector(1 downto 0);
-signal disk_reset   : std_logic;
+signal disk_reset     : std_logic;
 signal disk_chg_trg   : std_logic;
 signal disk_chg_trg_d : std_logic;
 signal sd_img_size    : std_logic_vector(31 downto 0);

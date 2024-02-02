@@ -27,38 +27,19 @@ Features:
 Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS.<br>
 Copy a D64 Disk image to your sdcard and rename it to **disk8.d64** as default boot image.<br>
 Add further D64 or G64 images as you like and insert card in TN slot. Power Cycle TN. LED 0 acts as Drive activity indicator.<br> 
-For those who forgot after all those years...<br>
 Disk directory listing: (or F7 keypress)<br> 
 LOAD"$",8<br>
 LIST<br> 
-Load first program from Disk:<br>
+Load first program from Disk: (or just LOAD)<br> 
 LOAD"*",8<br>
 RUN<br>
 c1541 DOS ROM to be selected from OSD (default Dolphin, factory or other)<br>
 
 ## emulated RAM Expansion Unit REU 1750
-For those programs that require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated via OSD on demand.<br>
-Playing [Sonic the Hedgehog](https://csdb.dk/release/?id=212190).<br>
-Enable REU.<br>
-Select first Disk Image and load the PRG.<br>
-**Important**: Disable Dolphin Dos 2 Speedloader by typing:<br> 
-[@XF- (RETURN)](https://project64.c64.org/hw/dolphindos.txt) <br>	
-Then type RUN (RETURN)<br>	
-When asked select the 'compatibility mode' for loading the full game as Dolphin DOS isn't compatible with Sonic's build in speedloader.<br>	
-
-## Flash program
-M0 Dock Bl616 Firmware: Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.<br>
-For proper operation program .fs bitsteam to 'external Flash' and power cycle the board. Just SRAM load will not be sufficient.<br>
-
-Memory Layout SPI Flash:<br>
-0x000000 reserved for FPGA bitstream<br>
-0x100000 c1541 Dolphin Dos 2<br>
-0x108000 c1541 factory default CBM DOS 2.6<br>
-0x110000 c1541 SpeedDOS<br>
-0x118000 c1541 other<br>
-
-Use Gowin Programmer GUI or OpenFpgaLoader(Linux) to program at least **Dolphin DOS and factory CBM DOS** to 'external Flash' at mentioned offsets.<br>
-The FPGA bitstream (.fs) does not contain the ROM for c1541. ROM DOS will be executed from SPI FLASH and therefore have to be programmed first.<br>
+For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.<br>
+<br>
+Playing [Sonic the Hedgehog V1.2](https://csdb.dk/release/?id=212523)<br>
+Enable REU, do via OSD a cold c64 core reset and load the PRG.<br>
 
 ## Push Button utilization
 * S2 Reset (for Flasher)<br>
@@ -72,7 +53,7 @@ invoke by F12 keypress<br>
 * Scanlines<br>
 * c1541 Disk write protetcion<br>
 * HID device selection for Joystick Port 1 and Port 2<br>
-* REU configuration
+* REU activation
 * Audio Filter
 * Disk Reset
 * c1541 DOS selection
