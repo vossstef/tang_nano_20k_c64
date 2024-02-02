@@ -91,6 +91,8 @@ architecture SYN of c1541_logic is
   signal uc1_pb_i       : std_logic_vector(7 downto 0);
   signal uc1_pb_o       : std_logic_vector(7 downto 0);
   signal uc1_pb_oe_n    : std_logic_vector(7 downto 0);
+  signal uc1_cb2_o      : std_logic;
+  signal uc1_cb2_oe     : std_logic;
     
   -- UC3 (VIA6522) signals
   signal uc3_do         : std_logic_vector(7 downto 0);
@@ -109,6 +111,8 @@ architecture SYN of c1541_logic is
   signal uc3_pb_i       : std_logic_vector(7 downto 0);
   signal uc3_pb_o       : std_logic_vector(7 downto 0);
   signal uc3_pb_oe_n    : std_logic_vector(7 downto 0);
+  signal uc3_cb1_o      : std_logic;
+  signal uc3_cb1_oe     : std_logic;
 
   -- internal signals
   signal atna           : std_logic; -- ATN ACK - input gate array
@@ -349,7 +353,9 @@ port map (
       cb1_o           => uc1_cb1_o,
       cb1_t           => uc1_cb1_oe, 
 
-      cb2_i           => '1',
+      cb2_i           => (uc1_cb2_o or not uc1_cb2_oe),
+      cb2_t           => uc1_cb2_oe,
+      cb2_o           => uc1_cb2_o,
 
       irq             => uc1_irq
     );
@@ -385,13 +391,15 @@ port map (
       ca1_i           => uc3_ca1_i,
 
       ca2_o           => uc3_ca2_o,
-      ca2_i           => '1',
+      ca2_i           => (uc3_ca2_o or not uc3_ca2_oe),
       ca2_t           => uc3_ca2_oe,
 
-      cb1_i           => '1',
+      cb1_i           => (uc3_cb1_o or not uc3_cb1_oe),
+      cb1_o           => uc3_cb1_o,
+      cb1_t           => uc3_cb1_oe,
 
       cb2_o           => uc3_cb2_o,
-      cb2_i           => '1',
+      cb2_i           => (uc3_cb2_o or not uc3_cb2_oe),
       cb2_t           => uc3_cb2_oe,
 
       irq             => uc3_irq
