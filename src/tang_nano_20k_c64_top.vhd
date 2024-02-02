@@ -222,10 +222,22 @@ signal reu_ram_addr   : std_logic_vector(24 downto 0);
 signal reu_ram_dout   : std_logic_vector(7 downto 0);
 signal reu_ram_we     : std_logic;
 signal reu_irq        : std_logic;
+signal IOE            : std_logic;
 signal IOF            : std_logic;
 signal reu_dout       : std_logic_vector(7 downto 0);
 signal reu_oe         : std_logic;
 signal reu_ram_ce     : std_logic;
+signal cart_ce        : std_logic;
+signal cart_we        : std_logic;
+signal cart_data      : std_logic_vector(7 downto 0);
+signal cart_addr      : std_logic_vector(24 downto 0);
+signal exrom          : std_logic;
+signal game           : std_logic;
+signal romL           : std_logic;
+signal romH           : std_logic;
+signal UMAXromH       : std_logic;
+signal io_rom         : std_logic;
+signal cart_oe        : std_logic;
 signal io_data        : unsigned(7 downto 0);
 signal db9_joy        : std_logic_vector(5 downto 0);
 signal sid_filter     : std_logic_vector(1 downto 0) := "11";
@@ -551,6 +563,7 @@ mainclock: entity work.Gowin_rPLL
     port map (
         clkout  => clk64,
         lock    => pll_locked,
+        clkoutp => open, -- mspi_clk, -- shifted 63Mhz clock
         clkoutd => clk32,
         clkin   => clk_27mhz
     );
@@ -723,6 +736,8 @@ module_inst: entity work.sysctrl
   color             => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
 
+io_data <=  unsigned(cart_data) when cart_oe  = '1' else unsigned(reu_dout);
+
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
@@ -751,6 +766,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   turbo_mode   => turbo_mode,
   turbo_speed  => turbo_speed,
 
+  vic_variant  => "00",
   ntscMode     => ntscMode,
   hsync        => hsync,
   vsync        => vsync,
@@ -758,18 +774,18 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   g            => g,
   b            => b,
 
-  game         => '1',
-  exrom        => '1', -- set to 0 for cartridge demo
-  io_rom       => '0',
-  io_ext       => reu_oe,
-  io_data      => unsigned(reu_dout),
+  game         => game,
+  exrom        => exrom,
+  io_rom       => io_rom,
+  io_ext       => (reu_oe or cart_oe),
+  io_data      => io_data,
   irq_n        => '1',
   nmi_n        => '1',
   nmi_ack      => open,
-  romL         => open,
-  romH         => open,
-  UMAXromH     => open,
-  IOE          => open,
+  romL         => romL,
+  romH         => romH,
+  UMAXromH     => UMAXromH,
+  IOE          => IOE,
   IOF          => IOF,
   freeze_key   => open,
   mod_key      => open,
@@ -880,7 +896,7 @@ port map(
 -- c1541 ROM's SPI Flash, offset in spi flash $100000
 flash_inst: entity work.flash 
 port map(
-    clk       => clk_pixel_x5,
+    clk       => clk_pixel_x5,  -- clk64 + shifted clk64
     resetn    => pll2_locked,
     ready     => flash_ready,
     busy      => open,
@@ -894,4 +910,46 @@ port map(
     mspi_do   => mspi_do
 );
 
+-- work in progress....
+cartridge_inst: entity work.cartridge
+port map
+  (
+    clk32       => clk32,
+    reset_n     => not system_reset(0),
+  
+    cart_loading    => '0',
+    cart_id         => (others => '0'),
+    cart_exrom      => (others => '0'),
+    cart_game       => (others => '0'),
+    cart_bank_laddr => (others => '0'),
+    cart_bank_size  => (others => '0'),
+    cart_bank_num   => (others => '0'),
+    cart_bank_type  => (others => '0'),
+    cart_bank_raddr => (others => '0'),
+    cart_bank_wr    => '0',
+  
+    exrom       => exrom,
+    game        => game,
+  
+    romL        => romL,
+    romH        => romH,
+    UMAXromH    => UMAXromH,
+    IOE         => IOE,
+    IOF         => IOF,
+    mem_write   => ram_we,
+    mem_ce      => ram_ce,
+    mem_ce_out  => cart_ce,
+    mem_write_out => cart_we,
+    IO_rom      => io_rom,
+    IO_rd       => cart_oe,
+    IO_data     => cart_data,
+    addr_in     => c64_addr,
+    data_in     => c64_data_out(7 downto 0),
+    addr_out    => cart_addr,
+  
+    freeze_key  => '0', -- freeze_key,
+    mod_key     => '0', -- mod_key,
+    nmi         => open,
+    nmi_ack     => '0'
+  );
 end Behavioral_top;

@@ -5,7 +5,7 @@
 --Part Number: GW2AR-LV18QN88C8/I7
 --Device: GW2AR-18
 --Device Version: C
---Created Time: Wed Jan 31 20:07:17 2024
+--Created Time: Fri Feb 02 21:35:40 2024
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -14,6 +14,7 @@ entity Gowin_rPLL is
     port (
         clkout: out std_logic;
         lock: out std_logic;
+        clkoutp: out std_logic;
         clkoutd: out std_logic;
         clkin: in std_logic
     );
@@ -21,8 +22,8 @@ end Gowin_rPLL;
 
 architecture Behavioral of Gowin_rPLL is
 
-    signal clkoutp_o: std_logic;
     signal clkoutd3_o: std_logic;
+    signal gw_vcc: std_logic;
     signal gw_gnd: std_logic;
     signal FBDSEL_i: std_logic_vector(5 downto 0);
     signal IDSEL_i: std_logic_vector(5 downto 0);
@@ -77,6 +78,7 @@ architecture Behavioral of Gowin_rPLL is
     end component;
 
 begin
+    gw_vcc <= '1';
     gw_gnd <= '0';
 
     FBDSEL_i <= gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd;
@@ -84,7 +86,7 @@ begin
     ODSEL_i <= gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd;
     PSDA_i <= gw_gnd & gw_gnd & gw_gnd & gw_gnd;
     DUTYDA_i <= gw_gnd & gw_gnd & gw_gnd & gw_gnd;
-    FDLY_i <= gw_gnd & gw_gnd & gw_gnd & gw_gnd;
+    FDLY_i <= gw_vcc & gw_vcc & gw_vcc & gw_vcc;
 
     rpll_inst: rPLL
         generic map (
@@ -96,8 +98,8 @@ begin
             FBDIV_SEL => 6,
             DYN_ODIV_SEL => "false",
             ODIV_SEL => 8,
-            PSDA_SEL => "0000",
-            DYN_DA_EN => "true",
+            PSDA_SEL => "1111",
+            DYN_DA_EN => "false",
             DUTYDA_SEL => "1000",
             CLKOUT_FT_DIR => '1',
             CLKOUTP_FT_DIR => '1',
@@ -114,7 +116,7 @@ begin
         port map (
             CLKOUT => clkout,
             LOCK => lock,
-            CLKOUTP => clkoutp_o,
+            CLKOUTP => clkoutp,
             CLKOUTD => clkoutd,
             CLKOUTD3 => clkoutd3_o,
             RESET => gw_gnd,
