@@ -96,6 +96,21 @@ or Keyboard **Numpad** Keys:<br>
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
+## Flash program
+*M0 Dock Bl616 Firmware:*<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.<br>
+*FPGA bitstream:*<br>
+For proper operation program .fs bitsteam to 'external Flash' and power cycle the board. Just SRAM load will not be sufficient.<br>
+*c1541 DOS ROM:*<br>
+Memory Layout SPI Flash:<br>
+0x000000 reserved for FPGA bitstream<br>
+0x100000 reserved for Atari ST/STE<br>
+0x200000 c1541 Dolphin Dos 2<br>
+0x208000 c1541 factory CBM DOS 2.6<br>
+0x210000 c1541 SpeedDOS<br>
+0x218000 c1541 other<br>
+
+Use Gowin Programmer GUI or OpenFpgaLoader(Linux) to program at least **Dolphin DOS and factory CBM DOS** to 'external Flash' at mentioned offsets. DOS roms you will find in the roms folder.<br>
+Note: The FPGA bitstream (.fs) does not contain anymore the ROM for c1541. DOS will be executed from SPI FLASH and therefore have to be programmed first.<br>
 ## Pin mapping 
 see pin configuration in .cst configuration file
 ## HW circuit considerations
@@ -120,7 +135,7 @@ see pin configuration in .cst configuration file
 | 9 | - | - | POT X | - |
 
 **Pinmap Dualshock 2 Controller Interface** <br>
-![pinmap](\.assets/controller-pinout.jpg)
+<img src="./.assets/controller-pinout.jpg" alt="image" width="30%" height="auto">
 | DS pin | Tang Nano pin | FPGA pin | DS Function |
 | ----------- | ---   | --------  | ----- |
 | 1 | J5 18 | 71 MISO | JOYDAT  |
