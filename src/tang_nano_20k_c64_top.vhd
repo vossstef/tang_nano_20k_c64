@@ -22,7 +22,7 @@ entity tang_nano_20k_c64_top is
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
     leds_n      : out std_logic_vector(5 downto 0);
-    btn         : in std_logic_vector(4 downto 0);
+    io          : in std_logic_vector(7 downto 0);
 
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(5 downto 0);
@@ -41,7 +41,6 @@ entity tang_nano_20k_c64_top is
     sd_clk      : out std_logic;
     sd_cmd      : inout std_logic;
     sd_dat      : inout std_logic_vector(3 downto 0);
-    --  debug       : out std_logic_vector(4 downto 0);
     ws2812      : out std_logic;
     -- "Magic" port names that the gowin compiler connects to the on-chip SDRAM
     O_sdram_clk  : out std_logic;
@@ -77,7 +76,6 @@ attribute syn_keep : integer;
 attribute syn_keep of clk64 : signal is 1;
 attribute syn_keep of clk32 : signal is 1;
 
-signal R_btn_joy     : std_logic_vector(4 downto 0);
 signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
 
@@ -121,8 +119,6 @@ signal dsc_joy_rx1  : std_logic_vector(7 downto 0);
 -- joystick interface
 signal joyA        : std_logic_vector(6 downto 0) := (others => '1');
 signal joyB        : std_logic_vector(6 downto 0) := (others => '1');
-signal btn_debounce: std_logic_vector(6 downto 0);
-signal user_deb    : std_logic;
 signal port_1_sel  : std_logic_vector(2 downto 0);
 signal port_2_sel  : std_logic_vector(2 downto 0);
 -- mouse / paddle
@@ -622,13 +618,6 @@ leds(2 downto 1) <= "00";
 leds(3) <= spi_ext;
 leds(5 downto 4) <= system_leds;
 
-process(clk32)
-begin
-  if rising_edge(clk32) then
-     R_btn_joy(4 downto 0) <= btn(4 downto 0);
-  end if;
-end process;
-
 -- 4 3 2 1 0 digital
 -- F R L D U position
 --    triangle (4)
@@ -636,13 +625,13 @@ end process;
 --       X (6)
 -- fire Left 1
 joyDS2     <= not("11" & dsc_joy_rx1(2) & dsc_joy_rx1(5) & dsc_joy_rx1(7) & dsc_joy_rx1(6) & dsc_joy_rx1(4));
-joyDigital <= not("11" &   R_btn_joy(4) &   R_btn_joy(0) &   R_btn_joy(1) & R_btn_joy(2)   & (R_btn_joy(3)));
+joyDigital <= not("11" & io(0) & io(4) & io(3) & io(2) & io(1));
 joyUsb     <=    ("00" & joystick(4) & joystick(0) & joystick(1) & joystick(2) & joystick(3));
 joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
 
 -- send external DB9 joystick port to µC
-db9_joy <= "000000";
+db9_joy <= not('1' & io(0), io(2), io(1), io(4), io(3));
 
 process(clk32)
 begin
