@@ -4,10 +4,7 @@ module video (
           input	   clk,
           input	   clk32_i,
           input    hdmi_pll_reset,
-      
           output   pll_lock,
-          output   clk_pixel_x5,
-          output   mspi_clk,
 
 	      input	   vs_in_n,
 	      input	   hs_in_n,
@@ -44,7 +41,6 @@ wire clk_pixel /* synthesis syn_keep=1 */;
 `define PIXEL_CLOCK 27000000
 pll_160m pll_hdmi (
                .clkout(clk_pixel_x5),
-               .clkoutp(mspi_clk), // phase shift
                .lock(pll_lock),
                .reset(hdmi_pll_reset),
                .clkin(clk)

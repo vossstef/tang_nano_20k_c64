@@ -71,10 +71,9 @@ end;
 
 architecture Behavioral_top of tang_nano_20k_c64_top is
 
-signal clk_pixel_x5, clk64, clk32, pll_locked, pll2_locked : std_logic;
+signal clk64, clk32, pll_locked, pll2_locked : std_logic;
 
 attribute syn_keep : integer;
-attribute syn_keep of clk_pixel_x5 : signal is 1;
 attribute syn_keep of clk64 : signal is 1;
 attribute syn_keep of clk32 : signal is 1;
 
@@ -474,8 +473,6 @@ port map(
       clk       => clk_27mhz, -- XO
       clk32_i   => clk32, -- core clock for sync purposes
       hdmi_pll_reset  => not pll_locked,
-      clk_pixel_x5  => clk_pixel_x5,
-      mspi_clk  => mspi_clk,
       pll_lock  => pll2_locked, -- hdmi pll lock
 
       hs_in_n   => hsync,
@@ -563,7 +560,7 @@ mainclock: entity work.Gowin_rPLL
     port map (
         clkout  => clk64,
         lock    => pll_locked,
-        clkoutp => open, -- mspi_clk, -- shifted 63Mhz clock
+        clkoutp => mspi_clk, -- shifted 63Mhz clock
         clkoutd => clk32,
         clkin   => clk_27mhz
     );
@@ -774,11 +771,11 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   g            => g,
   b            => b,
 
-  game         => game,
-  exrom        => exrom,
-  io_rom       => io_rom,
-  io_ext       => (reu_oe or cart_oe),
-  io_data      => io_data,
+  game         => '1',
+  exrom        => '1',
+  io_rom       => '0', -- io_rom,
+  io_ext       => reu_oe, --  (reu_oe or cart_oe),
+  io_data      => unsigned(reu_dout), -- io_data,
   irq_n        => '1',
   nmi_n        => '1',
   nmi_ack      => open,
@@ -896,8 +893,8 @@ port map(
 -- c1541 ROM's SPI Flash, offset in spi flash $100000
 flash_inst: entity work.flash 
 port map(
-    clk       => clk_pixel_x5,  -- clk64 + shifted clk64
-    resetn    => pll2_locked,
+    clk       => clk64,
+    resetn    => pll_locked,
     ready     => flash_ready,
     busy      => open,
     address   => ("0001" & "000" & dos_sel & c1541rom_addr),
@@ -928,8 +925,8 @@ port map
     cart_bank_raddr => (others => '0'),
     cart_bank_wr    => '0',
   
-    exrom       => exrom,
-    game        => game,
+    exrom       => open, -- exrom,
+    game        => open, -- game,
   
     romL        => romL,
     romH        => romH,
