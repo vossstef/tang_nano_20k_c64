@@ -69,9 +69,13 @@ project addfile "./../../tb/c64_tb.vhd"
 project addfile "./../../src/gowin_sp/gowin_sp_cram.vhd"
 project addfile "./../../src/misc/flash_dspi.v"
 project addfile "./../../src/reu.v"
+project addfile "./../../src/cartridge.v"
+project addfile "./../../src/video_freezer.sv"
+project addfile "./../../src/video_sync.vhd"
+
 project addfile "./../../tb/prim_sim.v"
 project addfile "./../../tb/prim_sim.vhd"
-project addfile "./../../tb/prim_syn.vhd"
+#project addfile "./../../tb/prim_syn.vhd"
 # project addfile "./../../tb/prim_tsim.v"
 
  if [file exists work] {
@@ -84,10 +88,10 @@ project addfile "./../../tb/prim_syn.vhd"
 
 vlib work
 vlib gw2a
-vlib gw_std_cell_lib
+#vlib gw_std_cell_lib
 
 # Compile the GOWIN Standard Cells to Library std_cell_lib
-vlog -incr -work gw_std_cell_lib "./../../tb/prim_sim.v" 
+#vlog -incr -work gw_std_cell_lib "./../../tb/prim_sim.v" 
 
 vcom -work gw2a -2008 -autoorder -explicit \
 "./../../tb/prim_sim.vhd" \
@@ -122,7 +126,9 @@ vlog -work work -sv -incr \
 "./../../src/gowin_dpb/sector_dpram.v" \
 "./../../src/gowin_dpb/gowin_dpb_track_buffer_b.v" \
 "./../../src/gowin_dpb/gowin_dpb_trkbuf.v" \
-"./../../src/gowin_rpll/pll_160m.v" 
+"./../../src/gowin_rpll/pll_160m.v" \
+"./../../src/cartridge.v" \
+"./../../src/video_freezer.sv" 
 #"./../../tb/prim_sim.v" 
 # "./../../tb/prim_tsim.v"
 
@@ -165,14 +171,15 @@ vcom -work work -suppress 1583 -2008 -autoorder -explicit \
 "./../../src/t65/T65_MCode.vhd" \
 "./../../src/t65/T65_Pack.vhd" \
 "./../../src/tang_nano_20k_c64_top.vhd" \
-"./../../src/video_vicII_656x.vhd"
+"./../../src/video_vicII_656x.vhd" \
+"./../../src/video_sync.vhd"
 } else {
  project open "./sim"
  project compileoutofdate
 }
 
-#vsim -voptargs=+acc -gui -L gw2a work.c64_tb
-vsim -voptargs=+acc -gui -L gw_std_cell_lib work.c64_tb
+vsim -voptargs=+acc -gui -L gw2a work.c64_tb
+#vsim -voptargs=+acc -gui -L gw_std_cell_lib work.c64_tb
 view wave
 
 add wave -divider "Input Signals"

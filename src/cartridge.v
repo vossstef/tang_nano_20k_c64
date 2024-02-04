@@ -57,11 +57,11 @@ reg        IOF_wr_ena;
 
 reg        exrom_overide;
 reg        game_overide;
-assign     exrom = exrom_overide |  force_ultimax;
-assign     game  = game_overide  & ~force_ultimax;
 
-(* ramstyle = "logic" *) reg [6:0] lobanks[0:63];
-(* ramstyle = "logic" *) reg [6:0] hibanks[0:63];
+//(* ramstyle = "logic" *) reg [6:0] lobanks[0:63];
+//(* ramstyle = "logic" *) reg [6:0] hibanks[0:63];
+reg [6:0] lobanks[0:63]; /* synthesis syn_ramstyle = "registers" */  // distributed_ram, registers,
+reg [6:0] hibanks[0:63]; /* synthesis syn_ramstyle = "registers" */
 
 reg  [7:0] bank_cnt;
 always @(posedge clk32) begin
@@ -119,14 +119,17 @@ reg  reu_map;
 reg  clock_port;
 reg  rom_kbb;
 reg  force_ultimax;
+assign     exrom = exrom_overide |  force_ultimax;
+assign     game  = game_overide  & ~force_ultimax;
 
 // 0018 - EXROM line status
 // 0019 - GAME line status
 
+reg        init_n = 0;
+reg        allow_freeze = 0;
+reg        saved_d6 = 0;
+
 always @(posedge clk32) begin
-	reg        init_n = 0;
-	reg        allow_freeze = 0;
-	reg        saved_d6 = 0;
 	reg [15:0] count;
 	reg        count_ena;
 	reg [15:0] old_id;
@@ -702,14 +705,14 @@ always @(posedge clk32) begin
 
 
 		// GeoRAM
-		99: begin
-				IOE_ena    <= 1;
-				IOE_wr_ena <= 1;
-				if(iof_wr && &addr_in[7:1]) begin
-					if(addr_in[0]) geo_bank[13:6] <= data_in;
-					else           geo_bank[5:0]  <= data_in[5:0];
-				end
-			end
+	//	99: begin
+	//			IOE_ena    <= 1;
+	//			IOE_wr_ena <= 1;
+	//			if(iof_wr && &addr_in[7:1]) begin
+	//				if(addr_in[0]) geo_bank[13:6] <= data_in;
+	//				else           geo_bank[5:0]  <= data_in[5:0];
+	//			end
+	//		end
 	endcase
 end
 
@@ -761,9 +764,9 @@ always begin
 					force_ultimax = 1;
 					addr_out[24:13] = get_bank(2, 0);
 				end
-			99: if(IOE) begin
-					addr_out[24:8] <= {3'b011, geo_bank};
-				end
+	//		99: if(IOE) begin
+	//				addr_out[24:8] <= {3'b011, geo_bank};
+	//			end
 		default:;
 		endcase
 	end

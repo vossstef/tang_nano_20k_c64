@@ -85,6 +85,7 @@ signal audio_data_r  : std_logic_vector(17 downto 0);
 signal c64_addr     : unsigned(15 downto 0);
 signal c64_data_out : unsigned(7 downto 0);
 signal sdram_data   : unsigned(7 downto 0);
+signal reu_sdram_data : unsigned(7 downto 0);
 signal dout         : std_logic_vector(15 downto 0);
 signal idle         : std_logic;
 signal dram_addr    : std_logic_vector(21 downto 0);
@@ -207,7 +208,7 @@ signal system_floppy_wprot : std_logic_vector(1 downto 0);
 signal leds           : std_logic_vector(5 downto 0);
 signal system_leds    : std_logic_vector(1 downto 0);
 signal led1541        : std_logic;
-signal reu_cfg        : std_logic:= '1'; 
+signal reu_cfg        : std_logic; 
 signal dma_req        : std_logic;
 signal dma_cycle      : std_logic;
 signal dma_addr       : std_logic_vector(15 downto 0);
@@ -248,6 +249,20 @@ signal c1541rom_cs    : std_logic;
 signal c1541rom_addr  : std_logic_vector(14 downto 0);
 signal c1541rom_data  : std_logic_vector(7 downto 0);
 signal ext_en         : std_logic;
+signal nmi            : std_logic;
+signal nmi_ack        : std_logic;
+signal freeze_key     : std_logic;
+signal disk_access    : std_logic;
+signal c64_iec_clk_old : std_logic;
+signal drive_iec_clk_old : std_logic;
+signal drive_stb_i_old : std_logic;
+signal drive_stb_o_old : std_logic;
+signal hsync_out       : std_logic;
+signal vsync_out       : std_logic;
+signal hblank          : std_logic;
+signal vblank          : std_logic;
+signal frz_hs          : std_logic;
+signal frz_vs          : std_logic;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -333,7 +348,7 @@ led_ws2812: entity work.ws2812
   end if;
 end process;
 
-disk_reset <= system_reset(0) or not pll_locked or c1541_reset;
+disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset;
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
@@ -462,11 +477,42 @@ process(clk32)
 begin
   if rising_edge(clk32) then
     old_sync <= freeze_sync;
-      if old_sync xor freeze_sync then
-        freeze <= osd_status;
-      end if;
+--      if (old_sync xor freeze_sync) then
+      if not old_sync and freeze_sync then
+--        freeze <= osd_status;
+        freeze <= '0';
+        end if;
   end if;
 end process;
+
+video_sync_inst: entity work.video_sync
+port map(
+	clk32   => clk32,
+	pause   => c64_pause,
+	hsync   => hsync,
+	vsync   => vsync,
+	ntsc    => ntscMode,
+	wide    => '0',
+	hsync_out => hsync_out,
+	vsync_out => vsync_out,
+	hblank  => hblank,
+	vblank  => vblank
+);
+
+video_freezer_inst: entity work.video_freezer
+port map(
+	clk     => clk32,
+	freeze  => freeze,
+	hs_in   => hsync_out,
+	vs_in   => vsync_out,
+	hbl_in  => hblank,
+	vbl_in  => vblank,
+	sync    => freeze_sync,
+	hs_out  => frz_hs,
+	vs_out  => frz_vs,
+	hbl_out => open,
+	vbl_out => open
+);
 
 video_inst: entity work.video 
 port map(
@@ -475,8 +521,8 @@ port map(
       hdmi_pll_reset  => not pll_locked,
       pll_lock  => pll2_locked, -- hdmi pll lock
 
-      hs_in_n   => hsync,
-      vs_in_n   => vsync,
+      hs_in_n   => hsync, -- frz_hs,
+      vs_in_n   => vsync, -- frz_vs,
       de_in     => '0',
 
       r_in      => std_logic_vector(r(7 downto 4)),
@@ -502,35 +548,40 @@ port map(
       tmds_d_p   => tmds_d_p
       );
 
-  dram_addr(21 downto 0) <= B"000000" & std_logic_vector(c64_addr);
-  c64_data_out <= unsigned(dout(7 downto 0));
-
--- system_reset[0] indicates whether a reset is requested. This
+-- system_reset[1] indicates whether a reset is requested. This
 -- can either be triggered implicitely by the user changing hardware
 -- specs or explicitely via an OSD menu entry.
 -- A cold boot means that the ram contents becomes invalid. We achieve this
 -- by scrambling the RAM address space a little bit on every rising edge
--- of system_reset[0] 
+-- of system_reset[1] 
 process(clk32)
 begin
   if rising_edge(clk32) then
-    cb_D <= system_reset(0);
-      if system_reset(0) = '1' and cb_D = '0' then  --rising edge of reset trigger
+    cb_D <= system_reset(1);
+      if system_reset(1) = '1' and cb_D = '0' then  --rising edge of reset trigger
         ram_scramble <= ram_scramble + 1;
       end if;
     end if;
 end process;
 
+--dram_addr(21 downto 0) <= B"000000" & std_logic_vector(c64_addr);
 -- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
-dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
+--dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
+dram_addr_s <= cart_addr(21 downto 4) & (cart_addr(3 downto 2) xor ram_scramble) & cart_addr(1 downto 0);
+--cs <= reu_ram_ce when ext_cycle = '1' else ram_ce;
+--we <= reu_ram_we when ext_cycle = '1' else ram_we;
 
 -- A(0) workaround till sdram ctrl properly adjusted
-addr <= ((B"100000_00000000_0000000" or reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s(20 downto 0) & '0';
-cs <= reu_ram_ce when ext_cycle = '1' else ram_ce;
-we <= reu_ram_we when ext_cycle = '1' else ram_we;
-din <= ("00000000" & reu_ram_dout) when ext_cycle = '1' else ("00000000" & std_logic_vector(sdram_data));
+addr <= ((reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s(20 downto 0) & '0';
+cs <= reu_ram_ce when ext_cycle = '1' else cart_ce;
+we <= reu_ram_we when ext_cycle = '1' else cart_we;
 
-  dram_inst: entity work.sdram
+din(7 downto 0) <= std_logic_vector(c64_data_out);
+din(15 downto 8) <= std_logic_vector(reu_ram_dout);
+sdram_data <= unsigned(dout(7 downto 0));
+reu_sdram_data <= unsigned(dout(15 downto 8));
+
+dram_inst: entity work.sdram
    port map(
     -- SDRAM side interface
     sd_clk    => O_sdram_clk,   -- sd clock
@@ -689,7 +740,7 @@ hid_inst: entity work.hid
   numpad          => numpad,
   keyboard_matrix_out => keyboard_matrix_out,
   keyboard_matrix_in  => keyboard_matrix_in,
-  key_restore     => open,
+  key_restore     => freeze_key,
   mouse_btns      => mouse_btns,
   mouse_x         => mouse_x,
   mouse_y         => mouse_y,
@@ -733,6 +784,25 @@ module_inst: entity work.sysctrl
   color             => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
 
+process(clk32)
+variable toX:	integer;
+begin
+  if rising_edge(clk32) then
+    c64_iec_clk_old   <= iec_clk_i;
+    drive_iec_clk_old <= iec_clk_o;
+    drive_stb_i_old   <= pc2_n;
+    drive_stb_o_old   <= flag2_n;
+    if ( c64_iec_clk_old /= iec_clk_i or drive_iec_clk_old /= iec_clk_o or ((drive_stb_i_old /= pc2_n or drive_stb_o_old /= flag2_n) and ext_en = '1') ) then
+        disk_access <= '1';
+        toX := 16000000; -- 0.5s
+    elsif (toX /= 0) then
+      toX := toX - 1;
+    else  
+      disk_access <= '0';
+    end if;
+  end if;
+end process;
+
 io_data <=  unsigned(cart_data) when cart_oe  = '1' else unsigned(reu_dout);
 
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
@@ -751,8 +821,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
 
   -- external memory
   ramAddr      => c64_addr,
-  ramDin       => c64_data_out,
-  ramDout      => sdram_data,
+  ramDin       => sdram_data,
+  ramDout      => c64_data_out,
   ramCE        => ram_ce,
   ramWE        => ram_we,
   io_cycle     => io_cycle,
@@ -760,7 +830,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   refresh      => idle,
 
   cia_mode     => '0',
-  turbo_mode   => turbo_mode,
+  turbo_mode   => ((turbo_mode(1) and not disk_access) & turbo_mode(0)),
   turbo_speed  => turbo_speed,
 
   vic_variant  => "00",
@@ -771,14 +841,14 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   g            => g,
   b            => b,
 
-  game         => '1',
-  exrom        => '1',
-  io_rom       => '0', -- io_rom,
-  io_ext       => reu_oe, --  (reu_oe or cart_oe),
-  io_data      => unsigned(reu_dout), -- io_data,
+  game         => game,
+  exrom        => exrom,
+  io_rom       => io_rom,
+  io_ext       => (reu_oe or cart_oe),
+  io_data      => io_data,
   irq_n        => '1',
-  nmi_n        => '1',
-  nmi_ack      => open,
+  nmi_n        => not nmi,
+  nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,
   UMAXromH     => UMAXromH,
@@ -866,7 +936,7 @@ reu_inst: entity work.reu
 port map(
     clk       => clk32,
     reset     => system_reset(0),
-    cfg       => std_logic_vector(unsigned'( '0' & reu_cfg) ), -- limit to 512k REU 1750 
+    cfg       => std_logic_vector(unsigned'( '0' & reu_cfg) ),
   
     dma_req   => dma_req,
     dma_cycle => dma_cycle,
@@ -878,11 +948,11 @@ port map(
     ram_cycle => ext_cycle,
     ram_addr  => reu_ram_addr,
     ram_dout  => reu_ram_dout,
-    ram_din   => c64_data_out,
+    ram_din   => reu_sdram_data,
     ram_we    => reu_ram_we,
     
     cpu_addr  => c64_addr, 
-    cpu_dout  => sdram_data,
+    cpu_dout  => c64_data_out,
     cpu_din   => reu_dout,
     cpu_we    => ram_we,
     cpu_cs    => IOF,
@@ -890,14 +960,14 @@ port map(
     irq       => reu_irq
   ); 
 
--- c1541 ROM's SPI Flash, offset in spi flash $100000
+-- c1541 ROM's SPI Flash, offset in spi flash $200000
 flash_inst: entity work.flash 
 port map(
     clk       => clk64,
     resetn    => pll_locked,
     ready     => flash_ready,
     busy      => open,
-    address   => ("0001" & "000" & dos_sel & c1541rom_addr),
+    address   => ("0010" & "000" & dos_sel & c1541rom_addr),
     cs        => c1541rom_cs,
     dout      => c1541rom_data,
     mspi_cs   => mspi_cs,
@@ -915,8 +985,8 @@ port map
     reset_n     => not system_reset(0),
   
     cart_loading    => '0',
-    cart_id         => (others => '0'),
-    cart_exrom      => (others => '0'),
+    cart_id         => (others => '1'),  -- CARTRIDGE_NONE
+    cart_exrom      => (others => '0'),  -- https://sourceforge.net/p/vice-emu/code/HEAD/tree/trunk/vice/src/cartridge.h
     cart_game       => (others => '0'),
     cart_bank_laddr => (others => '0'),
     cart_bank_size  => (others => '0'),
@@ -925,8 +995,8 @@ port map
     cart_bank_raddr => (others => '0'),
     cart_bank_wr    => '0',
   
-    exrom       => open, -- exrom,
-    game        => open, -- game,
+    exrom       => exrom,
+    game        => game,
   
     romL        => romL,
     romH        => romH,
@@ -941,12 +1011,12 @@ port map
     IO_rd       => cart_oe,
     IO_data     => cart_data,
     addr_in     => c64_addr,
-    data_in     => c64_data_out(7 downto 0),
+    data_in     => c64_data_out,
     addr_out    => cart_addr,
   
-    freeze_key  => '0', -- freeze_key,
-    mod_key     => '0', -- mod_key,
-    nmi         => open,
-    nmi_ack     => '0'
+    freeze_key  => freeze_key,
+    mod_key     => '0',
+    nmi         => nmi,
+    nmi_ack     => nmi_ack
   );
 end Behavioral_top;
