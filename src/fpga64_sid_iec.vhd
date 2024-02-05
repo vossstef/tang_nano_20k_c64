@@ -42,7 +42,6 @@ use IEEE.numeric_std.all;
 
 entity fpga64_sid_iec is
 port(
-	epix        : out std_logic; 
 	clk32       : in  std_logic;
 	reset_n     : in  std_logic;
 	bios        : in  std_logic_vector(1 downto 0);
@@ -620,7 +619,6 @@ begin
 	end if;
 end process;
 
-epix <= enablePixel;
 -- -----------------------------------------------------------------------
 -- SID
 -- -----------------------------------------------------------------------

@@ -259,6 +259,7 @@ signal hblank          : std_logic;
 signal vblank          : std_logic;
 signal frz_hs          : std_logic;
 signal frz_vs          : std_logic;
+signal hbl_out, vbl_out : std_logic;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -473,10 +474,8 @@ process(clk32)
 begin
   if rising_edge(clk32) then
     old_sync <= freeze_sync;
---      if (old_sync xor freeze_sync) then
       if not old_sync and freeze_sync then
---        freeze <= osd_status;
-        freeze <= '0';
+        freeze <= osd_status;
         end if;
   end if;
 end process;
@@ -499,15 +498,15 @@ video_freezer_inst: entity work.video_freezer
 port map(
 	clk     => clk32,
 	freeze  => freeze,
-	hs_in   => hsync_out,
-	vs_in   => vsync_out,
+	hs_in   => hsync,
+	vs_in   => vsync,
 	hbl_in  => hblank,
 	vbl_in  => vblank,
 	sync    => freeze_sync,
 	hs_out  => frz_hs,
 	vs_out  => frz_vs,
-	hbl_out => open,
-	vbl_out => open
+	hbl_out => hbl_out,
+	vbl_out => vbl_out
 );
 
 video_inst: entity work.video 
@@ -517,9 +516,9 @@ port map(
       hdmi_pll_reset  => not pll_locked,
       pll_lock  => pll2_locked, -- hdmi pll lock
 
-      hs_in_n   => hsync, -- frz_hs,
-      vs_in_n   => vsync, -- frz_vs,
-      de_in     => '0',
+      hs_in_n   => frz_hs,
+      vs_in_n   => frz_vs,
+      de_in     => not (hbl_out or vbl_out),
 
       r_in      => std_logic_vector(r(7 downto 4)),
       g_in      => std_logic_vector(g(7 downto 4)),
@@ -562,13 +561,11 @@ end process;
 
 --dram_addr(21 downto 0) <= B"000000" & std_logic_vector(c64_addr);
 -- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
---dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
 dram_addr_s <= cart_addr(21 downto 4) & (cart_addr(3 downto 2) xor ram_scramble) & cart_addr(1 downto 0);
---cs <= reu_ram_ce when ext_cycle = '1' else ram_ce;
---we <= reu_ram_we when ext_cycle = '1' else ram_we;
-
 -- A(0) workaround till sdram ctrl properly adjusted
-addr <= ((reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s(20 downto 0) & '0';
+-- B"100000 workaround
+--addr <= ((reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s(20 downto 0) & '0';
+addr <= ((B"100000_00000000_0000000" or reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s(20 downto 0) & '0';
 cs <= reu_ram_ce when ext_cycle = '1' else cart_ce;
 we <= reu_ram_we when ext_cycle = '1' else cart_we;
 
@@ -925,7 +922,7 @@ reu_inst: entity work.reu
 port map(
     clk       => clk32,
     reset     => system_reset(0),
-    cfg       => std_logic_vector(unsigned'( '0' & reu_cfg) ),
+    cfg       => std_logic_vector(unsigned'( '0' & (pll_locked and not system_reset(0) and reu_cfg)) ),
   
     dma_req   => dma_req,
     dma_cycle => dma_cycle,
