@@ -95,6 +95,7 @@ signal addr         : std_logic_vector(21 downto 0);
 signal cs           : std_logic;
 signal we           : std_logic;
 signal din          : std_logic_vector(15 downto 0);
+signal ds           : std_logic_vector(1 downto 0);
 
 -- IEC
 signal iec_data_o  : std_logic;
@@ -260,6 +261,7 @@ signal vblank          : std_logic;
 signal frz_hs          : std_logic;
 signal frz_vs          : std_logic;
 signal hbl_out, vbl_out : std_logic;
+signal reu_chg         : std_logic;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -475,7 +477,7 @@ begin
   if rising_edge(clk32) then
     old_sync <= freeze_sync;
       if not old_sync and freeze_sync then
-        freeze <= osd_status;
+          freeze <= osd_status;
         end if;
   end if;
 end process;
@@ -498,8 +500,8 @@ video_freezer_inst: entity work.video_freezer
 port map(
 	clk     => clk32,
 	freeze  => freeze,
-	hs_in   => hsync,
-	vs_in   => vsync,
+	hs_in   => hsync_out,
+	vs_in   => vsync_out,
 	hbl_in  => hblank,
 	vbl_in  => vblank,
 	sync    => freeze_sync,
@@ -516,8 +518,8 @@ port map(
       hdmi_pll_reset  => not pll_locked,
       pll_lock  => pll2_locked, -- hdmi pll lock
 
-      hs_in_n   => frz_hs,
-      vs_in_n   => frz_vs,
+      hs_in_n   => hsync,
+      vs_in_n   => vsync,
       de_in     => not (hbl_out or vbl_out),
 
       r_in      => std_logic_vector(r(7 downto 4)),
@@ -568,6 +570,9 @@ dram_addr_s <= cart_addr(21 downto 4) & (cart_addr(3 downto 2) xor ram_scramble)
 addr <= ((B"100000_00000000_0000000" or reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s(20 downto 0) & '0';
 cs <= reu_ram_ce when ext_cycle = '1' else cart_ce;
 we <= reu_ram_we when ext_cycle = '1' else cart_we;
+--ds <= "01" when ext_cycle = '1' else "10";
+--ds <= "10" when ext_cycle = '1' else "01";
+ds <= "00";
 
 din(7 downto 0) <= std_logic_vector(c64_data_out);
 din(15 downto 8) <= std_logic_vector(reu_ram_dout);
@@ -595,7 +600,7 @@ dram_inst: entity work.sdram
     din       => din,           -- data input from chipset/cpu
     dout      => dout,
     addr      => addr,          -- 22 bit word address
-    ds        => (others => '0'),-- upper/lower data strobe R = low and W = low
+    ds        => ds,            -- upper/lower data strobe R = low and W = low
     cs        => cs,            -- cpu/chipset requests read/wrie
     we        => we             -- cpu/chipset requests write
   );
@@ -918,11 +923,31 @@ end process;
 reu_oe  <= IOF and reu_cfg;
 reu_ram_ce <= not ext_cycle_d and ext_cycle and dma_req;
 
+
+process(clk32, reu_cfg)
+  variable reset_cnt_r : integer range 0 to 2147483647;
+  begin
+  if reu_cfg = '1' then
+    reu_chg <= '0';
+    reset_cnt_r := 1000000;
+    elsif rising_edge(clk32) then
+    if reset_cnt_r /= 0 then
+      reset_cnt_r := reset_cnt_r - 1;
+    end if;
+  end if;
+
+  if reset_cnt_r = 0 then
+   reu_chg <= reu_cfg; -- activate reu delayed in case osd instructed
+  else 
+   reu_chg <= '0';
+  end if;
+end process;
+
 reu_inst: entity work.reu
 port map(
     clk       => clk32,
-    reset     => system_reset(0),
-    cfg       => std_logic_vector(unsigned'( '0' & (pll_locked and not system_reset(0) and reu_cfg)) ),
+    reset     => system_reset(0) or not pll_locked,
+    cfg       => "01", -- std_logic_vector(unsigned'( '0' & reu_chg) ),
   
     dma_req   => dma_req,
     dma_cycle => dma_cycle,
@@ -968,7 +993,7 @@ cartridge_inst: entity work.cartridge
 port map
   (
     clk32       => clk32,
-    reset_n     => not system_reset(0),
+    reset_n     => not system_reset(0) and pll_locked,
   
     cart_loading    => '0',
     cart_id         => (others => '1'),  -- CARTRIDGE_NONE
