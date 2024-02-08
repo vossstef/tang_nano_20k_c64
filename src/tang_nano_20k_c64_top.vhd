@@ -260,8 +260,8 @@ signal hblank          : std_logic;
 signal vblank          : std_logic;
 signal frz_hs          : std_logic;
 signal frz_vs          : std_logic;
-signal hbl_out, vbl_out : std_logic;
-signal reu_chg         : std_logic;
+signal hbl_out         : std_logic; 
+signal vbl_out         : std_logic;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -299,7 +299,7 @@ generic map (
 )
 port map (
  clk         => clk32,     -- Any main clock faster than 1Mhz 
- I_RSTn      => not system_reset(0),   -- MAIN RESET
+ I_RSTn      => not system_reset(0) and pll_locked,
 
  O_psCLK => joystick_clk,  --  psCLK CLK OUT
  O_psSEL => joystick_cs,   --  psSEL OUT
@@ -518,8 +518,8 @@ port map(
       hdmi_pll_reset  => not pll_locked,
       pll_lock  => pll2_locked, -- hdmi pll lock
 
-      hs_in_n   => hsync,
-      vs_in_n   => vsync,
+      hs_in_n   => frz_hs,
+      vs_in_n   => frz_vs,
       de_in     => not (hbl_out or vbl_out),
 
       r_in      => std_logic_vector(r(7 downto 4)),
@@ -561,19 +561,16 @@ begin
     end if;
 end process;
 
---dram_addr(21 downto 0) <= B"000000" & std_logic_vector(c64_addr);
+
+-- offset A(0) is a workaround till sdram properly adjusted !
+-- cart_addr intentionally not used as workaround !
+dram_addr(21 downto 0) <= B"000000" & std_logic_vector(c64_addr);
 -- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
-dram_addr_s <= cart_addr(21 downto 4) & (cart_addr(3 downto 2) xor ram_scramble) & cart_addr(1 downto 0);
--- A(0) workaround till sdram ctrl properly adjusted
--- B"100000 workaround
---addr <= ((reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s(20 downto 0) & '0';
-addr <= ((B"100000_00000000_0000000" or reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s(20 downto 0) & '0';
+dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
+addr <= ((B"10000_00000000_00000000" or reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s(20 downto 0) & '0';
 cs <= reu_ram_ce when ext_cycle = '1' else cart_ce;
 we <= reu_ram_we when ext_cycle = '1' else cart_we;
---ds <= "01" when ext_cycle = '1' else "10";
---ds <= "10" when ext_cycle = '1' else "01";
-ds <= "00";
-
+ds <= "01" when ext_cycle = '1' else "10";
 din(7 downto 0) <= std_logic_vector(c64_data_out);
 din(15 downto 8) <= std_logic_vector(reu_ram_dout);
 sdram_data <= unsigned(dout(7 downto 0));
@@ -669,11 +666,11 @@ end process;
 pot1 <= '0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0';
 pot2 <= '0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0';
 
-process(clk32, pll_locked)
+process(clk32, system_reset(0))
  variable mov_x: signed(6 downto 0);
  variable mov_y: signed(6 downto 0);
 begin
-  if pll_locked = '0' then
+  if  system_reset(0) = '1' then
     mouse_x_pos <= (others => '0');
     mouse_y_pos <= (others => '0');
   elsif rising_edge(clk32) then
@@ -732,6 +729,8 @@ hid_inst: entity work.hid
   keyboard_matrix_out => keyboard_matrix_out,
   keyboard_matrix_in  => keyboard_matrix_in,
   key_restore     => freeze_key,
+  tape_play       => open,
+  mod_key         => open,
   mouse_btns      => mouse_btns,
   mouse_x         => mouse_x,
   mouse_y         => mouse_y,
@@ -741,38 +740,40 @@ hid_inst: entity work.hid
 module_inst: entity work.sysctrl 
  port map 
  (
-  clk               => clk32,
-  reset             => not pll_locked,
+  clk                 => clk32,
+  reset               => not pll_locked,
 --
-  data_in_strobe    => mcu_sys_strobe,
-  data_in_start     => mcu_start,
-  data_in           => mcu_data_out,
-  data_out          => sys_data_out,
+  data_in_strobe      => mcu_sys_strobe,
+  data_in_start       => mcu_start,
+  data_in             => mcu_data_out,
+  data_out            => sys_data_out,
 
   -- values that can be configured by the user
-  system_chipset    => open,
-  system_memory     => open,
-  system_reu_cfg    => reu_cfg,
-  system_reset      => system_reset,
-  system_scanlines  => system_scanlines,
-  system_volume     => system_volume,
+  system_chipset      => open,
+  system_memory       => open,
+  system_reu_cfg      => reu_cfg,
+  system_reset        => system_reset,
+  system_scanlines    => system_scanlines,
+  system_volume       => system_volume,
   system_wide_screen  => system_wide_screen,
   system_floppy_wprot => system_floppy_wprot,
-  system_port_1     => port_1_sel,  -- Joystick port 1 input device selection 
-  system_port_2     => port_2_sel,  -- Joystick port 2 input device selection 
-  system_dos_sel    => dos_sel,
-  system_1541_reset => c1541_osd_reset,
+  system_port_1       => port_1_sel,  -- Joystick port 1 input device selection 
+  system_port_2       => port_2_sel,  -- Joystick port 2 input device selection 
+  system_dos_sel      => dos_sel,
+  system_1541_reset   => c1541_osd_reset,
   system_audio_filter => sid_filter(0),
   system_turbo_mode   => turbo_mode,
   system_turbo_speed  => turbo_speed,
+  system_pot_1_2      => open,
+  system_midi         => open,
 
-  int_out_n         => m0s(4),
-  int_in            => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
-  int_ack           => int_ack,
+  int_out_n           => m0s(4),
+  int_in              => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
+  int_ack             => int_ack,
 
-  buttons           => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
-  leds              => system_leds,         -- two leds can be controlled from the MCU
-  color             => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
+  buttons             => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
+  leds                => system_leds,         -- two leds can be controlled from the MCU
+  color               => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
 
 process(clk32)
@@ -923,31 +924,11 @@ end process;
 reu_oe  <= IOF and reu_cfg;
 reu_ram_ce <= not ext_cycle_d and ext_cycle and dma_req;
 
-
-process(clk32, reu_cfg)
-  variable reset_cnt_r : integer range 0 to 2147483647;
-  begin
-  if reu_cfg = '1' then
-    reu_chg <= '0';
-    reset_cnt_r := 1000000;
-    elsif rising_edge(clk32) then
-    if reset_cnt_r /= 0 then
-      reset_cnt_r := reset_cnt_r - 1;
-    end if;
-  end if;
-
-  if reset_cnt_r = 0 then
-   reu_chg <= reu_cfg; -- activate reu delayed in case osd instructed
-  else 
-   reu_chg <= '0';
-  end if;
-end process;
-
 reu_inst: entity work.reu
 port map(
     clk       => clk32,
     reset     => system_reset(0) or not pll_locked,
-    cfg       => "01", -- std_logic_vector(unsigned'( '0' & reu_chg) ),
+    cfg       => std_logic_vector(unsigned'( '0' & reu_cfg) ),
   
     dma_req   => dma_req,
     dma_cycle => dma_cycle,
@@ -996,8 +977,8 @@ port map
     reset_n     => not system_reset(0) and pll_locked,
   
     cart_loading    => '0',
-    cart_id         => (others => '1'),  -- CARTRIDGE_NONE
-    cart_exrom      => (others => '0'),  -- https://sourceforge.net/p/vice-emu/code/HEAD/tree/trunk/vice/src/cartridge.h
+    cart_id         => (others => '1'), -- CARTRIDGE_NONE
+    cart_exrom      => (others => '0'),
     cart_game       => (others => '0'),
     cart_bank_laddr => (others => '0'),
     cart_bank_size  => (others => '0'),

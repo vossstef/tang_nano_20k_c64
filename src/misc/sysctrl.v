@@ -41,8 +41,9 @@ module sysctrl (
   output reg        system_1541_reset,
   output reg        system_audio_filter,
   output reg [1:0]  system_turbo_mode,
-  output reg [1:0]  system_turbo_speed
-
+  output reg [1:0]  system_turbo_speed,
+  output reg        system_pot_1_2,
+  output reg [2:0]  system_midi
 );
 
 reg [3:0] state;
@@ -53,6 +54,8 @@ reg [7:0] id;
 wire [7:0] data_in_rev = { data_in[0], data_in[1], data_in[2], data_in[3], 
                            data_in[4], data_in[5], data_in[6], data_in[7] };
 
+reg coldboot = 1'b1;
+// assign int_out_n = (int_in != 8'h00 || coldboot)?1'b0:1'b1;
 assign int_out_n = (int_in != 8'h00)?1'b0:1'b1;
 
 // process mouse events
@@ -63,6 +66,7 @@ always @(posedge clk) begin
       color <= 24'h000000;  // color black -> rgb led off
 
       int_ack <= 8'h00;
+      coldboot = 1'b1;      // reset is actually the power-on-reset
 
       // OSD value defaults. These should be sane defaults, but the MCU
       // will very likely override these early
@@ -81,10 +85,15 @@ always @(posedge clk) begin
       system_audio_filter <= 1'b1;
       system_turbo_mode <= 2'b00;
       system_turbo_speed <= 2'b00;
+      system_pot_1_2 <= 1'b0;
+      system_midi <= 2'b000;
 
    end else begin
       int_ack <= 8'h00;
 
+      // iack bit 0 acknowledges the coldboot notification
+   //   if(int_ack[0]) coldboot <= 1'b0;      
+        int_ack <= 8'h00;
       if(data_in_strobe) begin      
         if(data_in_start) begin
             state <= 4'd1;
@@ -122,6 +131,7 @@ always @(posedge clk) begin
             if(command == 8'd4) begin
                 // second byte can be any character which identifies the variable to set 
                 if(state == 4'd1) id <= data_in;
+
                 if(state == 4'd2) begin
                     // Value "C":
                     if(id == "C") system_chipset <= data_in[1:0];      // unused presently
@@ -153,6 +163,10 @@ always @(posedge clk) begin
                     if(id == "X") system_turbo_mode <= data_in[1:0];
                     // turbo speed
                     if(id == "Y") system_turbo_speed <= data_in[1:0];
+                    // sid pot 1 / 2
+                    if(id == "E") system_pot_1_2 <= data_in[0];
+                    // midi
+                    if(id == "N") system_midi <= data_in[2:0];
                 end
             end
 
@@ -160,9 +174,12 @@ always @(posedge clk) begin
             if(command == 8'd5) begin
                 // second byte acknowleges the interrupts
                 if(state == 4'd1) int_ack <= data_in;
+
+            // interrupt[0] notifies the MCU of a FPGA cold boot e.g. if
+            // the FPGA has been loaded via USB
+            // data_out <= { int_in[7:1], coldboot };
                 data_out <= int_in;
             end
-
          end
       end
    end

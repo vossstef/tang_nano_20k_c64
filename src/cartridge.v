@@ -58,9 +58,7 @@ reg        IOF_wr_ena;
 reg        exrom_overide;
 reg        game_overide;
 
-//(* ramstyle = "logic" *) reg [6:0] lobanks[0:63];
-//(* ramstyle = "logic" *) reg [6:0] hibanks[0:63];
-reg [6:0] lobanks[0:63]; /* synthesis syn_ramstyle = "registers" */  // distributed_ram, registers,
+reg [6:0] lobanks[0:63]; /* synthesis syn_ramstyle = "registers" */
 reg [6:0] hibanks[0:63]; /* synthesis syn_ramstyle = "registers" */
 
 reg  [7:0] bank_cnt;
