@@ -309,7 +309,7 @@ led_ws2812: entity work.ws2812
   end if;
 end process;
 
-disk_reset <= system_reset(0) or not pll_locked or c1541_reset;
+disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset;
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
@@ -348,7 +348,7 @@ c1541_sd_inst : entity work.c1541_sd
 port map
  (
     clk32         => clk32,
-    reset         => c1541_osd_reset,
+    reset         => disk_reset,
 
     disk_num      => (others =>'0'),
     disk_change   => sd_change, 
