@@ -705,14 +705,14 @@ always @(posedge clk32) begin
 
 
 		// GeoRAM
-	//	99: begin
-	//			IOE_ena    <= 1;
-	//			IOE_wr_ena <= 1;
-	//			if(iof_wr && &addr_in[7:1]) begin
-	//				if(addr_in[0]) geo_bank[13:6] <= data_in;
-	//				else           geo_bank[5:0]  <= data_in[5:0];
-	//			end
-	//		end
+		99: begin
+				IOE_ena    <= 1;
+				IOE_wr_ena <= 1;
+				if(iof_wr && &addr_in[7:1]) begin
+					if(addr_in[0]) geo_bank[13:6] <= data_in;
+					else           geo_bank[5:0]  <= data_in[5:0];
+				end
+			end
 	endcase
 end
 
@@ -764,9 +764,9 @@ always begin
 					force_ultimax = 1;
 					addr_out[24:13] = get_bank(2, 0);
 				end
-	//		99: if(IOE) begin
-	//				addr_out[24:8] <= {3'b011, geo_bank};
-	//			end
+			99: if(IOE) begin
+					addr_out[24:8] <= {3'b011, geo_bank};
+				end
 		default:;
 		endcase
 	end

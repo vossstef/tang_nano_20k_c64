@@ -82,7 +82,7 @@ or Keyboard **Numpad** Keys:<br>
 
 ## Keyboard 
  ![Layout](\.assets/keymap.gif)
- Restore and Tape Play not implemented.
+ Tape Play not implemented.
 
 ## LED UI
 0 c1541 Drive activity<br>
@@ -106,10 +106,10 @@ Memory Layout SPI Flash:<br>
 0x100000 reserved for Atari ST/STE<br>
 0x200000 c1541 Dolphin Dos 2<br>
 0x208000 c1541 factory CBM DOS 2.6<br>
-0x210000 c1541 SpeedDOS<br>
-0x218000 c1541 other<br>
+0x210000 c1541 Speed DOS<br>
+0x218000 c1541 Jiffy DOS<br>
 
-Use Gowin Programmer GUI or OpenFpgaLoader(Linux) to program at least **Dolphin DOS and factory CBM DOS** to 'external Flash' at mentioned offsets. DOS roms you will find in the roms folder.<br>
+Use Gowin Programmer GUI or OpenFpgaLoader(Linux) to program at least **Dolphin DOS and factory CBM DOS** to 'external Flash' at mentioned offsets. DOS roms you will find on the internet.<br>
 Note: The FPGA bitstream (.fs) does not contain anymore the ROM for c1541. DOS will be executed from SPI FLASH and therefore have to be programmed first.<br>
 ## Pin mapping 
 see pin configuration in .cst configuration file

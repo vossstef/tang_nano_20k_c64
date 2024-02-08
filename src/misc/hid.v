@@ -26,6 +26,8 @@ module hid (
   input  [7:0] keyboard_matrix_out,
   output [7:0] keyboard_matrix_in,
   output reg   key_restore,
+  output reg   tape_play,
+  output reg   mod_key,
   reg [1:0]    mouse_btns,
   reg [7:0]    mouse_x,
   reg [7:0]    mouse_y,
@@ -59,6 +61,8 @@ always @(posedge clk) begin
       irq <= 1'b0;
       irq_enable <= 1'b0;
       key_restore <= 1'b0;
+      tape_play  <= 1'b0;
+      mod_key  <= 1'b0;
 
       // reset entire keyboard to 1's
       keyboard[ 0] <= 8'hff; keyboard[ 1] <= 8'hff; keyboard[ 2] <= 8'hff;
@@ -115,8 +119,10 @@ always @(posedge clk) begin
                     if(device == 8'd0) joystick0 <= data_in;
                     if(device == 8'd1) joystick1 <= data_in;
                     if(device == 8'h80) begin 
-                             numpad <= data_in; 
+                             numpad <= data_in;
+                             mod_key <= data_in[5];
                              key_restore <= data_in[6]; 
+                             tape_play <= data_in[7];
                           end // 0, 0, KP * button2, KP0 trigger, KP 8 up, KP 2 down, KP 4 left, KP 6 right
                 end
             end
