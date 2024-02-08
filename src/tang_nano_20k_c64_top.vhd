@@ -262,6 +262,14 @@ signal frz_hs          : std_logic;
 signal frz_vs          : std_logic;
 signal hbl_out         : std_logic; 
 signal vbl_out         : std_logic;
+-- midi signals
+signal midi_data       : std_logic_vector(7 downto 0);
+signal midi_oe         : std_logic;
+signal midi_irq_n      : std_logic;
+signal midi_nmi_n      : std_logic;
+signal midi_rx         : std_logic;
+signal midi_tx         : std_logic;
+signal st_midi         : std_logic_vector(2 downto 0);
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -765,7 +773,7 @@ module_inst: entity work.sysctrl
   system_turbo_mode   => turbo_mode,
   system_turbo_speed  => turbo_speed,
   system_pot_1_2      => open,
-  system_midi         => open,
+  system_midi         => st_midi,
 
   int_out_n           => m0s(4),
   int_in              => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
@@ -1011,4 +1019,25 @@ port map
     nmi         => nmi,
     nmi_ack     => nmi_ack
   );
+
+  -- MIDI interface is work in progress
+midi_inst : entity work.c64_midi
+port map (
+  clk32   => clk32,
+  reset   => system_reset(0) and not pll_locked,
+  Mode    => st_midi,
+  E       => '0', -- phi,
+  IOE     => IOE,
+  A       => std_logic_vector(c64_addr),
+  Din     => std_logic_vector(c64_data_out),
+  Dout    => midi_data,
+  OE      => midi_oe,
+  RnW     => '0', -- c64_rnw,
+  nIRQ    => midi_irq_n,
+  nNMI    => midi_nmi_n,
+
+  RX      => midi_rx,
+  TX      => midi_tx
+);
+
 end Behavioral_top;
