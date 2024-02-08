@@ -386,7 +386,7 @@ c1541_sd_inst : entity work.c1541_sd
 port map
  (
     clk32         => clk32,
-    reset         => (not flash_ready) or c1541_osd_reset,
+    reset         => (not flash_ready) or disk_reset,
 
     disk_num      => (others =>'0'),
     disk_change   => sd_change, 

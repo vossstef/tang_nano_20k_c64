@@ -1,7 +1,7 @@
 # Installation using a Windows PC
 
 This document explains how to install all the necessary files on the
-Tang Nano 20K and the M0S Dock in order to use it as a MiSTeryNano
+Tang Nano 20K and the M0S Dock in order to use it as a C64 Nano
 device.
 
 This has been tested on Windows 11. It should work on older versions too.
@@ -71,12 +71,23 @@ These DOS for the c1541 emulation can later be selected from the on-screen-displ
 ![](https://github.com/vossstef/tang_nano_20k_c64/tree/main/.assets/flash_tos_104.png)
 
   - For the FS file please choose the ```tang_nano_20k_c64.fs``` you just downloaded
-  - The DOS files you will find in the roms folder as xyz.bin (32K size)
   - User Code and IDCODE can be ignored
   - Mark each of your configs and press the little icon with the green play
     button. You should see a progress bar and then:
 
 ![](https://github.com/vossstef/tang_nano_20k_c64/tree/main/.assets/flash_success.png)
+
+**Production of c1541 DOS ROM binaries** <br>
+The DOS files you will find on the Internet. e.g.
+https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-c000.325302-01.bin
+https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-e000.901229-05.bin
+
+Open a command prompt and enter the directory where you downloaded the file from the Internet and type 
+
+COPY /B 1541-c000.325302-01.bin + 1541-e000.901229-05.bin + 1541-c000.325302-01.bin + 1541-e000.901229-05.bin  **c1541_cbm.bin**<br>
+If will create the required 32K size DOS image (factory CBM DOS) named c1541_cbm.bin.
+Contiune with all other ROM images
+
 
 **That´s it for the Tang Nano 20k**
 

@@ -18,13 +18,18 @@ Features:
 * c1541 DOS ROM selection
 * On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
 <br>
-<img src="./.assets/c64_core.png" alt="image" width="30%" height="auto">
+<img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
 
 <font color="red">HID interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.
 
 **Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS</b>
 <br>
+## Installation
+
+The installation of C64 Nano on the Tang Nano 20k using can be done
+using a Linux PC or a
+[Windows PC](INSTALLATION_WINDOWS.md).
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS.<br>
@@ -99,7 +104,8 @@ Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or 
 ## Flash program
 *M0 Dock Bl616 Firmware:*<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.<br>
 *FPGA bitstream:*<br>
-For proper operation program .fs bitsteam to 'external Flash' and power cycle the board. Just SRAM load will not be sufficient.<br>
+For proper operation program .fs bitsteam to 'external Flash' and power cycle the board.<br>
+Just SRAM load will not be sufficient.<br>
 *c1541 DOS ROM:*<br>
 Memory Layout SPI Flash:<br>
 0x000000 reserved for FPGA bitstream<br>
