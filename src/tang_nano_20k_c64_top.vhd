@@ -56,8 +56,8 @@ entity tang_nano_20k_c64_top is
     -- Gamepad
     joystick_clk  : out std_logic;
     joystick_mosi : out std_logic;
-    joystick_miso : in std_logic;
-    joystick_cs   : out std_logic;
+    joystick_miso : inout std_logic; -- midi_out
+    joystick_cs   : inout std_logic; -- midi_in
     -- spi flash interface
     mspi_cs       : out std_logic;
     mspi_clk      : out std_logic;
@@ -270,6 +270,9 @@ signal midi_nmi_n      : std_logic;
 signal midi_rx         : std_logic;
 signal midi_tx         : std_logic;
 signal st_midi         : std_logic_vector(2 downto 0);
+signal phi             : std_logic;
+signal joystick_cs_i   : std_logic;
+signal joystick_miso_i : std_logic;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -310,9 +313,9 @@ port map (
  I_RSTn      => not system_reset(0) and pll_locked,
 
  O_psCLK => joystick_clk,  --  psCLK CLK OUT
- O_psSEL => joystick_cs,   --  psSEL OUT
+ O_psSEL => joystick_cs_i,   --  psSEL OUT
  O_psTXD => joystick_mosi, --  psTXD OUT
- I_psRXD => joystick_miso, --  psRXD IN
+ I_psRXD => joystick_miso_i, --  psRXD IN
 
  O_RXD_1 => dsc_joy_rx0,  --  RX DATA 1 (8bit)
  O_RXD_2 => dsc_joy_rx1,  --  RX DATA 2 (8bit)
@@ -327,6 +330,7 @@ port map (
  I_VIB_SW  => (others =>'0') --  Vibration SW  VIB_SW[0] Small Moter OFF 0, ON 1
                           --  VIB_SW[1] Bic Moter   OFF 0, ON 1 (Dualshook Only)
  );
+
 
 led_ws2812: entity work.ws2812
   port map
@@ -803,7 +807,7 @@ begin
   end if;
 end process;
 
-io_data <=  unsigned(cart_data) when cart_oe  = '1' else unsigned(reu_dout);
+io_data <=  unsigned(cart_data) when cart_oe  = '1' else unsigned(midi_data) when midi_oe  = '1' else unsigned(reu_dout);
 
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
@@ -840,14 +844,16 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   r            => r,
   g            => g,
   b            => b,
+ 
+  phi          => phi,
 
   game         => game,
   exrom        => exrom,
   io_rom       => io_rom,
-  io_ext       => (reu_oe or cart_oe),
+  io_ext       => (reu_oe or cart_oe or midi_oe),
   io_data      => io_data,
-  irq_n        => '1',
-  nmi_n        => not nmi,
+  irq_n        => midi_irq_n,
+  nmi_n        => (not nmi and midi_nmi_n),
   nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,
@@ -1020,24 +1026,27 @@ port map
     nmi_ack     => nmi_ack
   );
 
-  -- MIDI interface is work in progress
 midi_inst : entity work.c64_midi
 port map (
   clk32   => clk32,
-  reset   => system_reset(0) and not pll_locked,
+  reset   => system_reset(0) or not pll_locked or not (st_midi(2) or st_midi(1) or st_midi(0)),
   Mode    => st_midi,
-  E       => '0', -- phi,
+  E       => phi,
   IOE     => IOE,
   A       => std_logic_vector(c64_addr),
   Din     => std_logic_vector(c64_data_out),
   Dout    => midi_data,
   OE      => midi_oe,
-  RnW     => '0', -- c64_rnw,
+  RnW     => not (ram_we and IOE),
   nIRQ    => midi_irq_n,
   nNMI    => midi_nmi_n,
 
   RX      => midi_rx,
   TX      => midi_tx
 );
+
+-- mux overlapping DS2 and MIDI signals to IO pin
+joystick_cs    <= midi_rx when st_midi /= "000" else joystick_cs_i;
+joystick_miso  <= midi_tx when st_midi /= "000" else joystick_miso_i;
 
 end Behavioral_top;

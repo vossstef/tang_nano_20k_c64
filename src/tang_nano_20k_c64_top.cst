@@ -110,15 +110,15 @@ IO_PORT "spi_dir" PULL_MODE=UP IO_TYPE=LVCMOS33;
 IO_LOC "ws2812" 79;
 IO_PORT "ws2812" PULL_MODE=DOWN IO_TYPE=LVCMOS33;
 
-// Joystick
+// Joystick and MIDI
 IO_LOC "joystick_clk" 52;
 IO_PORT "joystick_clk" PULL_MODE=UP IO_TYPE=LVCMOS33;
 IO_LOC "joystick_mosi" 53;
 IO_PORT "joystick_mosi" PULL_MODE=UP IO_TYPE=LVCMOS33;
 IO_LOC "joystick_miso" 71;
-IO_PORT "joystick_miso" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_PORT "joystick_miso" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33; // "midi_out"
 IO_LOC "joystick_cs"  72;
-IO_PORT "joystick_cs" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_PORT "joystick_cs" PULL_MODE=DOWN DRIVE=8 IO_TYPE=LVCMOS33;   // "midi_in"
 
 // re-used JTAG pins as spi_dat (above) is not really
 // usable as there are resistors and capacistors that

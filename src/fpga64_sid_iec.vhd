@@ -79,6 +79,8 @@ port(
 	g           : out unsigned(7 downto 0);
 	b           : out unsigned(7 downto 0);
 
+    phi         : out std_logic;
+
 	-- cartridge port
 	game        : in  std_logic;
 	exrom       : in  std_logic;
@@ -383,6 +385,8 @@ begin
 		end if;
 	end if;
 end process;
+
+	phi <= phi0_cpu;
 
 process(clk32)
 begin
