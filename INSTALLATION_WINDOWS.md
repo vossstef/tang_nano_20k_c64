@@ -58,13 +58,13 @@ should see following screen:**
   - ```tang_nano_20k_c64.fs``` is written to address 0x000000
   - ```reserved for Atari ST !``` address 0x100000
   - ```c1541 DOS Dolphin``` is written to address 0x200000
-  - ```c1541 DOS Factory CBM``` is written to address 0x208000
+  - ```c1541 DOS CBM factory``` is written to address 0x208000
 
 Optionally two additional DOS ROMs may be flashed to the alternate
 addresses:
 
   - ```c1541 DOS Speeddos``` is written to address 0x210000
-  - ```c1541 DOS other``` is written to address 0x218000
+  - ```c1541 DOS Jiffy``` is written to address 0x218000
 
 These DOS for the c1541 emulation can later be selected from the on-screen-display (OSD).
 
@@ -77,17 +77,41 @@ These DOS for the c1541 emulation can later be selected from the on-screen-displ
 
 ![](https://github.com/vossstef/tang_nano_20k_c64/tree/main/.assets/flash_success.png)
 
-**Production of c1541 DOS ROM binaries** <br>
+**Production of c1541 DOS 32k ROM binaries** <br>
 The DOS files you will find on the Internet. e.g.
-https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-c000.325302-01.bin
-https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-e000.901229-05.bin
+[CBM 1541 8k low rom](https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-c000.325302-01.bin) 
+and 
+[CBM 1541 8k high rom](https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-e000.901229-05.bin)
 
-Open a command prompt and enter the directory where you downloaded the file from the Internet and type 
 
-COPY /B 1541-c000.325302-01.bin + 1541-e000.901229-05.bin + 1541-c000.325302-01.bin + 1541-e000.901229-05.bin  **c1541_cbm.bin**<br>
-If will create the required 32K size DOS image (factory CBM DOS) named c1541_cbm.bin.
-Contiune with all other ROM images
+```Dolphin DOS 2```<br>
+Typically you will find a 32K Byte file e.g. 2dosa_c.bin that can right away be flashed.<br>
+Program at offset 0x200000<br>
 
+```CBM DOS (factory)```<br>
+Open a command prompt and enter the directory where you downloaded the file from the Internet and type: <br>
+> COPY /B 1541-c000.325302-01.bin + 1541-e000.901229-05.bin + 1541-c000.325302-01.bin + 1541-e000.901229-05.bin  c1541_cbm.bin
+ 
+alternatively you will find e.g. from [VICE Emulator Drives](https://vice-emu.sourceforge.io/windows.html) folder<br>
+> COPY /B dos1541-325302-01+901229-05.bin + dos1541-325302-01+901229-05.bin  c1541_cbm.bin
+ 
+If will create the required 32K size DOS image named c1541_cbm.bin <br>
+Program at offset 0x208000<br>
+
+```Speed DOS Plus```<br>
+Open a command prompt and enter the directory where you downloaded the file from the Internet and type: <br>
+Assumed here you found a 16k Byte file.<br>
+>COPY /B C1541.ROM + C1541.ROM  c1541_speed.bin
+
+If will create the required 32K size DOS image named c1541_speed.bin <br>
+Program at offset 0x210000<br>
+
+```Jiffy DOS```<br>
+Open a command prompt and enter the directory where you downloaded the file from the Internet and type: <br>
+> COPY /B 1541-c000.325302-01.bin + JiffyDOS_1541.bin + 1541-c000.325302-01.bin + JiffyDOS_1541.bin  c1541_jiffy.bin
+
+If will create the required 32K size DOS image named c1541_jiffy.bin <br>
+Program at offset 0x218000<br>
 
 **That´s it for the Tang Nano 20k**
 

@@ -318,10 +318,10 @@ port map (
  clk         => clk32,     -- Any main clock faster than 1Mhz 
  I_RSTn      => not system_reset(0) and pll_locked,
 
- O_psCLK => joystick_clk,  --  psCLK CLK OUT
- O_psSEL => joystick_cs_i,   --  psSEL OUT
- O_psTXD => joystick_mosi, --  psTXD OUT
- I_psRXD => joystick_miso_i, --  psRXD IN
+ O_psCLK => joystick_clk,   --  psCLK CLK OUT
+ O_psSEL => joystick_cs_i,  --  psSEL OUT
+ O_psTXD => joystick_mosi,  --  psTXD OUT
+ I_psRXD => joystick_miso_i,--  psRXD IN
 
  O_RXD_1 => dsc_joy_rx0,  --  RX DATA 1 (8bit)
  O_RXD_2 => dsc_joy_rx1,  --  RX DATA 2 (8bit)
@@ -507,7 +507,7 @@ port map(
 	hsync   => hsync,
 	vsync   => vsync,
 	ntsc    => ntscMode,
-	wide    => '0',
+	wide    => system_wide_screen,
 	hsync_out => hsync_out,
 	vsync_out => vsync_out,
 	hblank  => hblank,
@@ -581,7 +581,9 @@ end process;
 
 
 -- offset A(0) is a workaround till sdram properly adjusted !
+
 -- cart_addr intentionally not used as workaround !
+
 dram_addr(21 downto 0) <= B"000000" & std_logic_vector(c64_addr);
 -- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
 dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);

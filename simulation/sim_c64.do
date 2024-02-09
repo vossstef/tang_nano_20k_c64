@@ -72,7 +72,8 @@ project addfile "./../../src/reu.v"
 project addfile "./../../src/cartridge.v"
 project addfile "./../../src/video_freezer.sv"
 project addfile "./../../src/video_sync.vhd"
-
+project addfile "./../../src/acia.v"
+project addfile "./../../src/c64_midi.vhd"
 project addfile "./../../tb/prim_sim.v"
 project addfile "./../../tb/prim_sim.vhd"
 #project addfile "./../../tb/prim_syn.vhd"
@@ -128,7 +129,8 @@ vlog -work work -sv -incr \
 "./../../src/gowin_dpb/gowin_dpb_trkbuf.v" \
 "./../../src/gowin_rpll/pll_160m.v" \
 "./../../src/cartridge.v" \
-"./../../src/video_freezer.sv" 
+"./../../src/video_freezer.sv" \
+"./../../src/acia.v"
 #"./../../tb/prim_sim.v" 
 # "./../../tb/prim_tsim.v"
 
@@ -172,7 +174,8 @@ vcom -work work -suppress 1583 -2008 -autoorder -explicit \
 "./../../src/t65/T65_Pack.vhd" \
 "./../../src/tang_nano_20k_c64_top.vhd" \
 "./../../src/video_vicII_656x.vhd" \
-"./../../src/video_sync.vhd"
+"./../../src/video_sync.vhd" \
+"./../../src/c64_midi.vhd"
 } else {
  project open "./sim"
  project compileoutofdate
