@@ -6,9 +6,11 @@ module video (
           input    hdmi_pll_reset,
           output   pll_lock,
 
+          input    vb_in,
+          input    hb_in,
 	      input	   vs_in_n,
 	      input	   hs_in_n,
-	      input	   de_in,
+
 	      input [3:0]  r_in,
 	      input [3:0]  g_in,
 	      input [3:0]  b_in,
@@ -74,7 +76,7 @@ video_analyzer video_analyzer (
    .clk(clk32_i),
    .vs(vs_in_n),
    .hs(hs_in_n),
-   .de(de_in),
+   .de(~vb_in || ~hb_in),
 
    .mode(vmode),
    .vreset(vreset)  // reset signal
@@ -96,6 +98,8 @@ scandoubler #(10) scandoubler (
         .scanlines(system_scanlines),
 
         // shifter video interface
+         .hb_in(hb_in),
+	     .vb_in(vb_in),
         .hs_in(hs_in_n),
         .vs_in(vs_in_n),
         .r_in( r_in ),
@@ -103,6 +107,8 @@ scandoubler #(10) scandoubler (
         .b_in( b_in ),
 
         // output interface
+        .hb_out(),
+        .vb_out(),
         .hs_out(sd_hs_n),
         .vs_out(sd_vs_n),
         .r_out(sd_r),

@@ -273,6 +273,8 @@ signal st_midi         : std_logic_vector(2 downto 0);
 signal phi             : std_logic;
 signal joystick_cs_i   : std_logic;
 signal joystick_miso_i : std_logic;
+signal frz_hbl         : std_logic;
+signal frz_vbl         : std_logic;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -525,8 +527,8 @@ port map(
 	sync    => freeze_sync,
 	hs_out  => frz_hs,
 	vs_out  => frz_vs,
-	hbl_out => hbl_out,
-	vbl_out => vbl_out
+	hbl_out => frz_hbl,
+	vbl_out => frz_vbl
 );
 
 video_inst: entity work.video 
@@ -535,10 +537,10 @@ port map(
       clk32_i   => clk32, -- core clock for sync purposes
       hdmi_pll_reset  => not pll_locked,
       pll_lock  => pll2_locked, -- hdmi pll lock
-
+      vb_in     => frz_vbl,
+      hb_in     => frz_hbl,
       hs_in_n   => frz_hs,
       vs_in_n   => frz_vs,
-      de_in     => not (hbl_out or vbl_out),
 
       r_in      => std_logic_vector(r(7 downto 4)),
       g_in      => std_logic_vector(g(7 downto 4)),
