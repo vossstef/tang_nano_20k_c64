@@ -300,6 +300,12 @@ begin
   end if;
 end process;
 
+-- mux overlapping DS2 and MIDI signals to IO pin
+joystick_cs     <= joystick_cs_i when st_midi = "000" else 'Z';
+midi_rx         <= joystick_cs when st_midi /= "000" else '1';
+joystick_miso   <= midi_tx when st_midi /= "000" else 'Z';
+joystick_miso_i <= joystick_miso when st_midi = "000" else '1';
+
 -- https://store.curiousinventor.com/guides/PS2/
 --  Digital Button State Mapping (which bits of bytes 4 & 5 goes to which button):
 --              dualshock buttons: 0:(Left Down Right Up Start Right3 Left3 Select)  
@@ -1044,9 +1050,5 @@ port map (
   RX      => midi_rx,
   TX      => midi_tx
 );
-
--- mux overlapping DS2 and MIDI signals to IO pin
-joystick_cs    <= midi_rx when st_midi /= "000" else joystick_cs_i;
-joystick_miso  <= midi_tx when st_midi /= "000" else joystick_miso_i;
 
 end Behavioral_top;
