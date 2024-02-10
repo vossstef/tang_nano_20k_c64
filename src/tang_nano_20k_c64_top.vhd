@@ -276,6 +276,9 @@ signal joystick_miso_i : std_logic;
 signal frz_hbl         : std_logic;
 signal frz_vbl         : std_logic;
 signal system_pause    : std_logic;
+signal paddle_1        : std_logic_vector(7 downto 0);
+signal paddle_2        : std_logic_vector(7 downto 0);
+signal system_pot_1_2  : std_logic;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -310,6 +313,7 @@ joystick_miso   <= midi_tx when st_midi /= "000" else 'Z';
 joystick_miso_i <= joystick_miso when st_midi = "000" else '1';
 
 -- https://store.curiousinventor.com/guides/PS2/
+-- https://hackaday.io/project/170365-blueretro/log/186471-playstation-playstation-2-spi-interface
 --  Digital Button State Mapping (which bits of bytes 4 & 5 goes to which button):
 --              dualshock buttons: 0:(Left Down Right Up Start Right3 Left3 Select)  
 --                                 1:(Square X O Triangle Right1 Left1 Right2 Left2)
@@ -326,20 +330,19 @@ port map (
  O_psTXD => joystick_mosi,  --  psTXD OUT
  I_psRXD => joystick_miso_i,--  psRXD IN
 
- O_RXD_1 => dsc_joy_rx0,  --  RX DATA 1 (8bit)
- O_RXD_2 => dsc_joy_rx1,  --  RX DATA 2 (8bit)
- O_RXD_3 => open,         --  RX DATA 3 (8bit)
- O_RXD_4 => open,         --  RX DATA 4 (8bit)
- O_RXD_5 => open,         --  RX DATA 5 (8bit)
- O_RXD_6 => open,         --  RX DATA 6 (8bit) 
+ O_RXD_1 => dsc_joy_rx0,  --  RX DATA 1 (8bit)  Buttons
+ O_RXD_2 => dsc_joy_rx1,  --  RX DATA 2 (8bit)  Buttons
+ O_RXD_3 => paddle_1,     --  RX DATA 3 (8bit)  Axis RX
+ O_RXD_4 => paddle_2,     --  RX DATA 4 (8bit)  Axis RY
+ O_RXD_5 => open,         --  RX DATA 5 (8bit)  Axis LX
+ O_RXD_6 => open,         --  RX DATA 6 (8bit)  Axis LY
 
  I_CONF_SW => '0',        --  Dualshook Config  ACTIVE-HI
- I_MODE_SW => '1',        --  Dualshook Mode Set DIGITAL PAD 0, ANALOG PAD 1
+ I_MODE_SW => system_pot_1_2,        --  Dualshook Mode Set DIGITAL PAD 0, ANALOG PAD 1
  I_MODE_EN => '0',        --  Dualshook Mode Control  OFF 0, ON 1
  I_VIB_SW  => (others =>'0') --  Vibration SW  VIB_SW[0] Small Moter OFF 0, ON 1
                           --  VIB_SW[1] Bic Moter   OFF 0, ON 1 (Dualshook Only)
  );
-
 
 led_ws2812: entity work.ws2812
   port map
@@ -686,8 +689,8 @@ begin
 end process;
 
 -- paddle pins - mouse 
-pot1 <= '0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0';
-pot2 <= '0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0';
+pot1 <= paddle_1 when system_pot_1_2 = '1' else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
+pot2 <= paddle_2 when system_pot_1_2 = '1' else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
 
 process(clk32, system_reset(0))
  variable mov_x: signed(6 downto 0);
@@ -787,7 +790,7 @@ module_inst: entity work.sysctrl
   system_audio_filter => sid_filter(0),
   system_turbo_mode   => turbo_mode,
   system_turbo_speed  => turbo_speed,
-  system_pot_1_2      => open,
+  system_pot_1_2      => system_pot_1_2,
   system_midi         => st_midi,
   system_pause        => system_pause,
 
