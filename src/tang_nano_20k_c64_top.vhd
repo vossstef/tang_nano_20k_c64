@@ -275,6 +275,7 @@ signal joystick_cs_i   : std_logic;
 signal joystick_miso_i : std_logic;
 signal frz_hbl         : std_logic;
 signal frz_vbl         : std_logic;
+signal system_pause    : std_logic;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -497,7 +498,7 @@ begin
   if rising_edge(clk32) then
     old_sync <= freeze_sync;
       if not old_sync and freeze_sync then
-          freeze <= osd_status;
+          freeze <= osd_status and not system_pause;
         end if;
   end if;
 end process;
@@ -788,6 +789,7 @@ module_inst: entity work.sysctrl
   system_turbo_speed  => turbo_speed,
   system_pot_1_2      => open,
   system_midi         => st_midi,
+  system_pause        => system_pause,
 
   int_out_n           => m0s(4),
   int_in              => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),

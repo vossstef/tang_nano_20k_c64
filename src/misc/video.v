@@ -91,15 +91,15 @@ scandoubler #(10) scandoubler (
         // system interface
         .clk_sys(clk32_i),
         .bypass(vmode == 2'd2),      // bypass in ST high/mono
-        .ce_divider(1'b1),
+        .ce_divider(3'd1),
         .pixel_ena(),
 
         // scanlines (00-none 01-25% 10-50% 11-75%)
         .scanlines(system_scanlines),
 
         // shifter video interface
-         .hb_in(hb_in),
-	     .vb_in(vb_in),
+        .hb_in(hb_in),
+	    .vb_in(vb_in),
         .hs_in(hs_in_n),
         .vs_in(vs_in_n),
         .r_in( r_in ),

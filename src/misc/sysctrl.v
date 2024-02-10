@@ -43,7 +43,8 @@ module sysctrl (
   output reg [1:0]  system_turbo_mode,
   output reg [1:0]  system_turbo_speed,
   output reg        system_pot_1_2,
-  output reg [2:0]  system_midi
+  output reg [2:0]  system_midi,
+  output reg        system_pause
 );
 
 reg [3:0] state;
@@ -87,6 +88,7 @@ always @(posedge clk) begin
       system_turbo_speed <= 2'b00;
       system_pot_1_2 <= 1'b0;
       system_midi <= 2'b000;
+      system_pause <= 1'b1;
 
    end else begin
       int_ack <= 8'h00;
@@ -167,6 +169,8 @@ always @(posedge clk) begin
                     if(id == "E") system_pot_1_2 <= data_in[0];
                     // midi
                     if(id == "N") system_midi <= data_in[2:0];
+                    // Pause when OSD is open
+                    if(id == "G") system_pause <= data_in[0];
                 end
             end
 
