@@ -17,11 +17,13 @@ Features:
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * c1541 DOS ROM selection
 * On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
+* MIDI Interface [MIDI shield](https://github.com/harbaum/MiSTeryNano/tree/main/board)<br>
 <br>
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
 
-<font color="red">HID interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.
+<font color="red">HID interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.<br>
+Note: The FPGA bitstream (.fs) does not contain the DOS ROM for c1541. DOS will be executed from SPI FLASH and therefore have to be programmed first.<br>
 
 **Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS</b>
 <br>
@@ -55,16 +57,20 @@ Enable REU, do via OSD a cold c64 core reset and load the PRG.<br>
 
 ## OSD
 invoke by F12 keypress<br>
-* Image selection for c1541 Drive<br>
-* Reset + memory scrubbing<br>
-* Audio Volume<br>
-* Scanlines<br>
-* c1541 Disk write protetcion<br>
+* Reset<br>
+* Cold Reset + memory scrubbing<br>
+* Audio Volume + / -<br>
+* Scanlines effect %<br>
+* Widescreen activation<br>
 * HID device selection for Joystick Port 1 and Port 2<br>
-* REU activation
-* Audio Filter
-* Disk Reset
-* c1541 DOS selection
+* REU activation<br>
+* Audio Filter<br>
+* Image selection for c1541 Drive<br>
+* c1541 Disk write protetcion<br>
+* c1541 Reset<br>
+* c1541 DOS ROM selection<br>
+* MIDI mode<br>
+* Pause when OSD open activation<br>
 
 ## Gamecontrol Joystick support
 legacy D9 Digital Joystick<br>
@@ -116,7 +122,7 @@ Memory Layout SPI Flash:<br>
 0x218000 c1541 Jiffy DOS<br>
 
 Use Gowin Programmer GUI or OpenFpgaLoader(Linux) to program at least **Dolphin DOS and factory CBM DOS** to 'external Flash' at mentioned offsets. DOS roms you will find on the internet.<br>
-Note: The FPGA bitstream (.fs) does not contain anymore the ROM for c1541. DOS will be executed from SPI FLASH and therefore have to be programmed first.<br>
+
 ## Pin mapping 
 see pin configuration in .cst configuration file
 ## HW circuit considerations

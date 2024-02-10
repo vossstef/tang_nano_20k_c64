@@ -19,9 +19,9 @@ module osd_u8g2 (
   input [5:0]  g_in,
   input [5:0]  b_in,
 
-  output [5:0] r_out,
-  output [5:0] g_out,
-  output [5:0] b_out,
+  reg [5:0] r_out,
+  reg [5:0] g_out,
+  reg [5:0] b_out,
 
   reg enabled
 
@@ -50,10 +50,11 @@ wire [5:0] osd_b = (tactive && osd_pix)?osd_pix_col:sactive?{4'b0000, b_in[5:4]}
 
 // draw active osd, add some shadow to those parts outside osd
 // that are covered by shadow
-assign r_out = !enabled?r_in:active?osd_r:sactive?{1'b0, r_in[5:1]}:r_in;
-assign g_out = !enabled?g_in:active?osd_g:sactive?{1'b0, g_in[5:1]}:g_in;
-assign b_out = !enabled?b_in:active?osd_b:sactive?{1'b0, b_in[5:1]}:b_in;
-   
+always @(posedge clk) begin
+      r_out = !enabled?r_in:active?osd_r:sactive?{1'b0, r_in[5:1]}:r_in;
+      g_out = !enabled?g_in:active?osd_g:sactive?{1'b0, g_in[5:1]}:g_in;
+      b_out = !enabled?b_in:active?osd_b:sactive?{1'b0, b_in[5:1]}:b_in;
+  end
 `define BORDER 2
 `define SHADOW 4
 `define SCALE  2
@@ -79,7 +80,7 @@ wire	    svactive = vcnt >= vstart-`SCALE*`BORDER+`SCALE*`SHADOW && vcnt < vstar
 assign	    sactive = shactive && svactive;  
 
 // 1024 bytes = 8192 pixels = 128 x 64 pixels
-reg [7:0] buffer [1024];  
+reg [7:0] buffer [1024]; /* synthesis syn_ramstyle = "distributed_ram" */
 
 // external data interface to write to buffer
 reg [9:0] data_cnt;
