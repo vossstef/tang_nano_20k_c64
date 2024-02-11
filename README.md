@@ -158,7 +158,7 @@ see pin configuration in .cst configuration file
 | 6 | J5 17 | 72 CS | JOYn|
 | 7 | J5 20 | 52 MCLK | JOYCLK |
 | 8 | n.c. | - | IRQ |
-| 9 | n.c. | - | ACK |
+| 9 | J6 5 | 77 ACK | JOYACK |
 
 
 ## Getting started
