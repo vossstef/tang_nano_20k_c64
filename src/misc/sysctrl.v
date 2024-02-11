@@ -71,7 +71,8 @@ always @(posedge clk) begin
 
       // OSD value defaults. These should be sane defaults, but the MCU
       // will very likely override these early
-  //    system_reset <= 2'b00;
+     // system_reset <= 2'b00;
+     // system_1541_reset <= 1'b0;
       system_chipset <= 2'b0;
       system_memory <= 1'b0;
       system_reu_cfg <= 1'b1;
@@ -79,16 +80,15 @@ always @(posedge clk) begin
       system_volume <= 2'b10;
       system_wide_screen <= 1'b0;
       system_floppy_wprot <= 2'b00;
-      system_port_1 <= 3'b011;
-      system_port_2 <= 3'b000;
+      system_port_1 <= 3'b111;  // Off
+      system_port_2 <= 3'b000;  // DB_9
       system_dos_sel <= 2'b00;
-  //    system_1541_reset <= 1'b0;
       system_audio_filter <= 1'b1;
       system_turbo_mode <= 2'b00;
       system_turbo_speed <= 2'b00;
       system_pot_1_2 <= 1'b0;
       system_midi <= 2'b000;
-      system_pause <= 1'b1;
+      system_pause <= 1'b0;
 
    end else begin
       int_ack <= 8'h00;

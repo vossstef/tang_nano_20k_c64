@@ -182,7 +182,12 @@ hdmi #(
   .audio_sample_word( { audio_vol_l, audio_vol_r } ),
   .tmds(tmds),
   .tmds_clock(tmds_clock),
-
+  .cx(),
+  .cy(),
+  .frame_width(),
+  .frame_height(),
+  .screen_width(),
+  .screen_height(),
   // video input
   .stmode(vmode),    // current video mode PAL/NTSC/MONO
   .wide(system_wide_screen),       // adopt to wide screen video

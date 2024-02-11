@@ -160,18 +160,13 @@ module dualshock2(
 
     reg clk_spi;
 
-    reg[7:0] counter=8'd0;
-    parameter DIVISOR = 8'd252;
-    // The frequency of the output clk_out
-    //  = The frequency of the input clk_in divided by DIVISOR
-    // For example: Fclk_in = 50Mhz, if you want to get 1Hz signal to blink LEDs
-    // You will modify the DIVISOR parameter value to 28'd50.000.000
-    // Then the frequency of the output clk_out = 50Mhz/50.000.000 = 1Hz
+    reg[27:0] counter = 28'd0;
+    parameter DIVISOR = 28'd125000;
     always @(posedge clk)
     begin
-        counter <= counter + 8'd1;
+        counter <= counter + 28'd1;
         if(counter>=(DIVISOR-1))
-        counter <= 8'd0;
+        counter <= 28'd0;
         clk_spi <= (counter<DIVISOR/2)?1'b1:1'b0;
     end
 
@@ -189,8 +184,10 @@ module dualshock2(
             S_EOB:
                 if (bytes_count == LENGTH) next_state = S_END; else next_state = S_ACK_L;
             S_ACK_L:
-                if (ds2_ack == 1'b0) next_state = S_ACK_H; else
-                if (state_counter == T_TIMEOUT) next_state = S_ERR;
+                if (ds2_ack == 1'b0) 
+                   next_state = S_ACK_H; 
+                else if (state_counter == T_TIMEOUT) 
+                    next_state = S_ERR;
             S_ACK_H:
                 if ((ds2_ack == 1'b1)&&(state_counter == T_CD)) next_state = S_TX;
             S_END:

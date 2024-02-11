@@ -22,7 +22,7 @@ entity tang_nano_20k_c64_top is
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
     leds_n      : out std_logic_vector(5 downto 0);
-    io          : in std_logic_vector(7 downto 0);
+    io          : in std_logic_vector(4 downto 0);
 
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(5 downto 0);
@@ -58,6 +58,7 @@ entity tang_nano_20k_c64_top is
     joystick_mosi : out std_logic;
     joystick_miso : inout std_logic; -- midi_out
     joystick_cs   : inout std_logic; -- midi_in
+    joystick_ack  : in std_logic;
     -- spi flash interface
     mspi_cs       : out std_logic;
     mspi_clk      : out std_logic;
@@ -117,11 +118,10 @@ signal joyPaddle    : std_logic_vector(6 downto 0);
 signal numpad       : std_logic_vector(7 downto 0);
 -- CONTROLLER DUALSHOCK
 signal joyDS2       : std_logic_vector(6 downto 0);
-signal dsc_joy_rx0  : std_logic_vector(7 downto 0);
 signal dsc_joy_rx1  : std_logic_vector(7 downto 0);
 -- joystick interface
-signal joyA        : std_logic_vector(6 downto 0) := (others => '1');
-signal joyB        : std_logic_vector(6 downto 0) := (others => '1');
+signal joyA        : std_logic_vector(6 downto 0);
+signal joyB        : std_logic_vector(6 downto 0);
 signal port_1_sel  : std_logic_vector(2 downto 0);
 signal port_2_sel  : std_logic_vector(2 downto 0);
 -- mouse / paddle
@@ -240,9 +240,9 @@ signal io_rom         : std_logic;
 signal cart_oe        : std_logic;
 signal io_data        : unsigned(7 downto 0);
 signal db9_joy        : std_logic_vector(5 downto 0);
-signal sid_filter     : std_logic_vector(1 downto 0) := "11";
-signal turbo_mode     : std_logic_vector(1 downto 0) := (others => '0');
-signal turbo_speed    : std_logic_vector(1 downto 0) := (others => '0');
+signal sid_filter     : std_logic;
+signal turbo_mode     : std_logic_vector(1 downto 0);
+signal turbo_speed    : std_logic_vector(1 downto 0);
 signal flash_ready    : std_logic;
 signal dos_sel        : std_logic_vector(1 downto 0);
 signal c1541rom_cs    : std_logic;
@@ -282,6 +282,7 @@ signal system_pause    : std_logic;
 signal paddle_1        : std_logic_vector(7 downto 0);
 signal paddle_2        : std_logic_vector(7 downto 0);
 signal system_pot_1_2  : std_logic;
+signal ds2_key_r1      : std_logic;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -317,35 +318,6 @@ joystick_miso_i <= joystick_miso when st_midi = "000" else '1';
 
 -- https://store.curiousinventor.com/guides/PS2/
 -- https://hackaday.io/project/170365-blueretro/log/186471-playstation-playstation-2-spi-interface
---  Digital Button State Mapping (which bits of bytes 4 & 5 goes to which button):
---              dualshock buttons: 0:(Left Down Right Up Start Right3 Left3 Select)  
---                                 1:(Square X O Triangle Right1 Left1 Right2 Left2)
---gamepad: entity work.dualshock_controller
---generic map (
--- FREQ => 31500000
---)
---port map (
--- clk         => clk32,     -- Any main clock faster than 1Mhz 
--- I_RSTn      => not system_reset(0) and pll_locked,
-
--- O_psCLK => joystick_clk,   --  psCLK CLK OUT
--- O_psSEL => joystick_cs_i,  --  psSEL OUT
--- O_psTXD => joystick_mosi,  --  psTXD OUT
--- I_psRXD => joystick_miso_i,--  psRXD IN
-
--- O_RXD_1 => dsc_joy_rx0,  --  RX DATA 1 (8bit)  Buttons
--- O_RXD_2 => dsc_joy_rx1,  --  RX DATA 2 (8bit)  Buttons
--- O_RXD_3 => paddle_1,     --  RX DATA 3 (8bit)  Axis RX
--- O_RXD_4 => paddle_2,     --  RX DATA 4 (8bit)  Axis RY
--- O_RXD_5 => open,         --  RX DATA 5 (8bit)  Axis LX
--- O_RXD_6 => open,         --  RX DATA 6 (8bit)  Axis LY
-
--- I_CONF_SW => '0',        --  Dualshook Config  ACTIVE-HI
--- I_MODE_SW => system_pot_1_2,        --  Dualshook Mode Set DIGITAL PAD 0, ANALOG PAD 1
--- I_MODE_EN => '0',        --  Dualshook Mode Control  OFF 0, ON 1
--- I_VIB_SW  => (others =>'0') --  Vibration SW  VIB_SW[0] Small Moter OFF 0, ON 1
-                          --  VIB_SW[1] Bic Moter   OFF 0, ON 1 (Dualshook Only)
--- );
 
 gamepad: entity work.dualshock2
     port map (
@@ -356,7 +328,7 @@ gamepad: entity work.dualshock2
     ds2_cmd       => joystick_mosi,
     ds2_att       => joystick_cs_i,
     ds2_clk       => joystick_clk,
-    ds2_ack       => '1',
+    ds2_ack       => joystick_ack,
     stick_lx      => paddle_1,
     stick_ly      => paddle_2,
     stick_rx      => open,
@@ -365,9 +337,9 @@ gamepad: entity work.dualshock2
     key_down      => open,
     key_left      => open,
     key_right     => open,
-    key_l1        => dsc_joy_rx1(1),
+    key_l1        => dsc_joy_rx1(2),
     key_l2        => open,
-    key_r1        => open,
+    key_r1        => ds2_key_r1,
     key_r2        => open,
     key_triangle  => dsc_joy_rx1(4),
     key_square    => dsc_joy_rx1(7),
@@ -692,7 +664,7 @@ joyUsb1    <=    ("00" & joystick1(4) & joystick1(0) & joystick1(1) & joystick1(
 joyUsb2    <=    ("00" & joystick2(4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3));
 joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
-joyPaddle  <= (others => '0');
+joyPaddle  <= not "11" & ds2_key_r1 & "1111";
 
 -- send external DB9 joystick port to µC
 db9_joy <= not('1' & io(0), io(2), io(1), io(4), io(3));
@@ -830,7 +802,7 @@ module_inst: entity work.sysctrl
   system_port_2       => port_2_sel,  -- Joystick port 2 input device selection 
   system_dos_sel      => dos_sel,
   system_1541_reset   => c1541_osd_reset,
-  system_audio_filter => sid_filter(0),
+  system_audio_filter => sid_filter,
   system_turbo_mode   => turbo_mode,
   system_turbo_speed  => turbo_speed,
   system_pot_1_2      => system_pot_1_2,
@@ -942,7 +914,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   --SID
   audio_l      => audio_data_l,
   audio_r      => audio_data_r,
-  sid_filter   => sid_filter,
+  sid_filter   => '1' & sid_filter,
   sid_ver      => (others => '0'),
   sid_mode     => (others => '0'),
   sid_cfg      => (others => '0'),

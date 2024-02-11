@@ -43,7 +43,9 @@ sync_lock #(33) vs_lock
 	.sync_out(vs_out),
 	.de_in(vbl_in),
 	.de_out(vbl_out),
-	.freeze(freeze)
+	.freeze(freeze),
+    .sync_pt(),
+    .valid()
 );
 
 wire sync_pt;
@@ -55,7 +57,8 @@ sync_lock #(21) hs_lock
 	.de_in(hbl_in),
 	.de_out(hbl_out),
 	.freeze(freeze),
-	.sync_pt(sync_pt)
+	.sync_pt(sync_pt),
+    .valid()
 );
 
 reg sync_o;
