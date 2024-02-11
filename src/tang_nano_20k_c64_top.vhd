@@ -108,10 +108,12 @@ signal iec_atn_i   : std_logic;
   -- keyboard
 signal keyboard_matrix_out : std_logic_vector(7 downto 0);
 signal keyboard_matrix_in  : std_logic_vector(7 downto 0);
-signal joyUsb       : std_logic_vector(6 downto 0);
+signal joyUsb1      : std_logic_vector(6 downto 0);
+signal joyUsb2      : std_logic_vector(6 downto 0);
 signal joyDigital   : std_logic_vector(6 downto 0);
 signal joyNumpad    : std_logic_vector(6 downto 0);
 signal joyMouse     : std_logic_vector(6 downto 0);
+signal joyPaddle    : std_logic_vector(6 downto 0); 
 signal numpad       : std_logic_vector(7 downto 0);
 -- CONTROLLER DUALSHOCK
 signal joyDS2       : std_logic_vector(6 downto 0);
@@ -159,7 +161,8 @@ signal sdc_data_out   : std_logic_vector(7 downto 0);
 signal hid_int        : std_logic;
 signal system_scanlines : std_logic_vector(1 downto 0);
 signal system_volume  : std_logic_vector(1 downto 0);
-signal joystick       : std_logic_vector(7 downto 0);
+signal joystick1       : std_logic_vector(7 downto 0);
+signal joystick2       : std_logic_vector(7 downto 0);
 signal mouse_btns     : std_logic_vector(1 downto 0);
 signal mouse_x        : signed(7 downto 0);
 signal mouse_y        : signed(7 downto 0);
@@ -535,7 +538,7 @@ begin
   if rising_edge(clk32) then
     old_sync <= freeze_sync;
       if not old_sync and freeze_sync then
-          freeze <= osd_status and not system_pause;
+          freeze <= osd_status and system_pause;
         end if;
   end if;
 end process;
@@ -685,9 +688,11 @@ leds(5 downto 4) <= system_leds;
 -- fire Left 1
 joyDS2     <= not("11" & dsc_joy_rx1(2) & dsc_joy_rx1(5) & dsc_joy_rx1(7) & dsc_joy_rx1(6) & dsc_joy_rx1(4));
 joyDigital <= not("11" & io(0) & io(4) & io(3) & io(2) & io(1));
-joyUsb     <=    ("00" & joystick(4) & joystick(0) & joystick(1) & joystick(2) & joystick(3));
+joyUsb1    <=    ("00" & joystick1(4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3));
+joyUsb2    <=    ("00" & joystick2(4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3));
 joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
+joyPaddle  <= (others => '0');
 
 -- send external DB9 joystick port to µC
 db9_joy <= not('1' & io(0), io(2), io(1), io(4), io(3));
@@ -697,11 +702,13 @@ begin
 	if rising_edge(clk32) then
     case port_1_sel is
       when "000"  => joyA <= joyDigital;
-      when "001"  => joyA <= joyUsb;
-      when "010"  => joyA <= joyNumpad;
-      when "011"  => joyA <= joyDS2;
-      when "100"  => joyA <= joyMouse;
-      when "101"  => joyA <= (others => '0');
+      when "001"  => joyA <= joyUsb1;
+      when "010"  => joyA <= joyUsb2;
+      when "011"  => joyA <= joyNumpad;
+      when "100"  => joyA <= joyDS2;
+      when "101"  => joyA <= joyMouse;
+      when "110"  => joyA <= joyPaddle;
+      when "111"  => joyA <= (others => '0');
       when others => null;
     end case;
   end if;
@@ -712,11 +719,13 @@ begin
 	if rising_edge(clk32) then
     case port_2_sel is
       when "000"  => joyB <= joyDigital;
-      when "001"  => joyB <= joyUsb;
-      when "010"  => joyB <= joyNumpad;
-      when "011"  => joyB <= joyDS2;
-      when "100"  => joyB <= joyMouse;
-      when "101"  => joyB <= (others => '0');
+      when "001"  => joyB <= joyUsb1;
+      when "010"  => joyB <= joyUsb2;
+      when "011"  => joyB <= joyNumpad;
+      when "100"  => joyB <= joyDS2;
+      when "101"  => joyB <= joyMouse;
+      when "110"  => joyB <= joyPaddle;
+      when "111"  => joyB <= (others => '0');
       when others => null;
       end case;
   end if;
@@ -783,8 +792,8 @@ hid_inst: entity work.hid
   irq             => hid_int,
   iack            => int_ack(1),
   -- output HID data received from USB
-  joystick0       => joystick,
-  joystick1       => open,
+  joystick0       => joystick1,
+  joystick1       => joystick2,
   numpad          => numpad,
   keyboard_matrix_out => keyboard_matrix_out,
   keyboard_matrix_in  => keyboard_matrix_in,
