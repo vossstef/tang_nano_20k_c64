@@ -80,8 +80,8 @@ always @(posedge clk) begin
        (hcnt == 68 && vcnt == 39 && changed && mode == 2'd1)  // c64 core 720x576
 //       (hcnt == 152 && vcnt == 28 && changed)  //Atari ST core 832x576
          begin
-      vreset <= deD;
-      changed <= ~deD;
+            vreset <= 1'b1;
+            changed <= 1'b0;
    end
 end
 

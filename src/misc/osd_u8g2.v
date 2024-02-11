@@ -19,16 +19,20 @@ module osd_u8g2 (
   input [5:0]  g_in,
   input [5:0]  b_in,
 
-  reg [5:0] r_out,
-  reg [5:0] g_out,
-  reg [5:0] b_out,
+  output [5:0] r_out,
+  output [5:0] g_out,
+  output [5:0] b_out,
 
-  reg enabled
+  output osd_status
 
 );
 
 // OSD is enabled and visible
-//reg enabled;
+reg enabled;
+
+reg [5:0] r_out_i;
+reg [5:0] g_out_i;
+reg [5:0] b_out_i;
 
 // -------------------------- OSD painting -------------------------------
 
@@ -48,13 +52,11 @@ wire [5:0] osd_r = (tactive && osd_pix)?osd_pix_col:sactive?{4'b0000, r_in[5:4]}
 wire [5:0] osd_g = (tactive && osd_pix)?osd_pix_col:sactive?{4'b0100, g_in[5:4]}:{3'b010, g_in[5:3]};
 wire [5:0] osd_b = (tactive && osd_pix)?osd_pix_col:sactive?{4'b0000, b_in[5:4]}:{3'b000, b_in[5:3]};  
 
-// draw active osd, add some shadow to those parts outside osd
-// that are covered by shadow
-always @(posedge clk) begin
-      r_out = !enabled?r_in:active?osd_r:sactive?{1'b0, r_in[5:1]}:r_in;
-      g_out = !enabled?g_in:active?osd_g:sactive?{1'b0, g_in[5:1]}:g_in;
-      b_out = !enabled?b_in:active?osd_b:sactive?{1'b0, b_in[5:1]}:b_in;
-  end
+assign osd_status = enabled;
+assign r_out = r_out_i;
+assign g_out = g_out_i;
+assign b_out = b_out_i;
+
 `define BORDER 2
 `define SHADOW 4
 `define SCALE  2
@@ -90,8 +92,15 @@ reg data_addr_state;
 always @(posedge clk) begin
     if(reset) begin
         enabled <= 1'b0;
-
+        r_out_i <=  6'd0;
+        g_out_i <=  6'd0;
+        b_out_i <=  6'd0;
     end else begin
+      // draw active osd, add some shadow to those parts outside osd
+      // that are covered by shadow
+      r_out_i <= !enabled?r_in:active?osd_r:sactive?{1'b0, r_in[5:1]}:r_in;
+      g_out_i <= !enabled?g_in:active?osd_g:sactive?{1'b0, g_in[5:1]}:g_in;
+      b_out_i <= !enabled?b_in:active?osd_b:sactive?{1'b0, b_in[5:1]}:b_in; 
 
       if(data_in_strobe) begin
         if(data_in_start) begin

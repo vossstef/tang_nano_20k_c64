@@ -317,32 +317,66 @@ joystick_miso_i <= joystick_miso when st_midi = "000" else '1';
 --  Digital Button State Mapping (which bits of bytes 4 & 5 goes to which button):
 --              dualshock buttons: 0:(Left Down Right Up Start Right3 Left3 Select)  
 --                                 1:(Square X O Triangle Right1 Left1 Right2 Left2)
-gamepad: entity work.dualshock_controller
-generic map (
- FREQ => 31500000
-)
-port map (
- clk         => clk32,     -- Any main clock faster than 1Mhz 
- I_RSTn      => not system_reset(0) and pll_locked,
+--gamepad: entity work.dualshock_controller
+--generic map (
+-- FREQ => 31500000
+--)
+--port map (
+-- clk         => clk32,     -- Any main clock faster than 1Mhz 
+-- I_RSTn      => not system_reset(0) and pll_locked,
 
- O_psCLK => joystick_clk,   --  psCLK CLK OUT
- O_psSEL => joystick_cs_i,  --  psSEL OUT
- O_psTXD => joystick_mosi,  --  psTXD OUT
- I_psRXD => joystick_miso_i,--  psRXD IN
+-- O_psCLK => joystick_clk,   --  psCLK CLK OUT
+-- O_psSEL => joystick_cs_i,  --  psSEL OUT
+-- O_psTXD => joystick_mosi,  --  psTXD OUT
+-- I_psRXD => joystick_miso_i,--  psRXD IN
 
- O_RXD_1 => dsc_joy_rx0,  --  RX DATA 1 (8bit)  Buttons
- O_RXD_2 => dsc_joy_rx1,  --  RX DATA 2 (8bit)  Buttons
- O_RXD_3 => paddle_1,     --  RX DATA 3 (8bit)  Axis RX
- O_RXD_4 => paddle_2,     --  RX DATA 4 (8bit)  Axis RY
- O_RXD_5 => open,         --  RX DATA 5 (8bit)  Axis LX
- O_RXD_6 => open,         --  RX DATA 6 (8bit)  Axis LY
+-- O_RXD_1 => dsc_joy_rx0,  --  RX DATA 1 (8bit)  Buttons
+-- O_RXD_2 => dsc_joy_rx1,  --  RX DATA 2 (8bit)  Buttons
+-- O_RXD_3 => paddle_1,     --  RX DATA 3 (8bit)  Axis RX
+-- O_RXD_4 => paddle_2,     --  RX DATA 4 (8bit)  Axis RY
+-- O_RXD_5 => open,         --  RX DATA 5 (8bit)  Axis LX
+-- O_RXD_6 => open,         --  RX DATA 6 (8bit)  Axis LY
 
- I_CONF_SW => '0',        --  Dualshook Config  ACTIVE-HI
- I_MODE_SW => system_pot_1_2,        --  Dualshook Mode Set DIGITAL PAD 0, ANALOG PAD 1
- I_MODE_EN => '0',        --  Dualshook Mode Control  OFF 0, ON 1
- I_VIB_SW  => (others =>'0') --  Vibration SW  VIB_SW[0] Small Moter OFF 0, ON 1
+-- I_CONF_SW => '0',        --  Dualshook Config  ACTIVE-HI
+-- I_MODE_SW => system_pot_1_2,        --  Dualshook Mode Set DIGITAL PAD 0, ANALOG PAD 1
+-- I_MODE_EN => '0',        --  Dualshook Mode Control  OFF 0, ON 1
+-- I_VIB_SW  => (others =>'0') --  Vibration SW  VIB_SW[0] Small Moter OFF 0, ON 1
                           --  VIB_SW[1] Bic Moter   OFF 0, ON 1 (Dualshook Only)
- );
+-- );
+
+gamepad: entity work.dualshock2
+    port map (
+    clk           => clk32,
+    rst           => system_reset(0) and not pll_locked,
+    vsync         => vsync,
+    ds2_dat       => joystick_miso_i,
+    ds2_cmd       => joystick_mosi,
+    ds2_att       => joystick_cs_i,
+    ds2_clk       => joystick_clk,
+    ds2_ack       => '1',
+    stick_lx      => paddle_1,
+    stick_ly      => paddle_2,
+    stick_rx      => open,
+    stick_ry      => open,
+    key_up        => open,
+    key_down      => open,
+    key_left      => open,
+    key_right     => open,
+    key_l1        => dsc_joy_rx1(1),
+    key_l2        => open,
+    key_r1        => open,
+    key_r2        => open,
+    key_triangle  => dsc_joy_rx1(4),
+    key_square    => dsc_joy_rx1(7),
+    key_circle    => dsc_joy_rx1(5),
+    key_cross     => dsc_joy_rx1(6),
+    key_start     => open,
+    key_select    => open,
+    key_lstick    => open,
+    key_rstick    => open,
+    debug1        => open,
+    debug2        => open
+    );
 
 led_ws2812: entity work.ws2812
   port map
@@ -552,7 +586,7 @@ port map(
 
       audio_l => audio_data_l,  -- interface C64 core specific
       audio_r => audio_data_r,
-      enabled => osd_status,
+      osd_status => osd_status,
 
       mcu_start => mcu_start,
       mcu_osd_strobe => mcu_osd_strobe,

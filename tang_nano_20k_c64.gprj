@@ -8,7 +8,8 @@
         <File path="src/acia.v" type="file.verilog" enable="1"/>
         <File path="src/c1541/mist_sd_card.sv" type="file.verilog" enable="1"/>
         <File path="src/cartridge.v" type="file.verilog" enable="1"/>
-        <File path="src/dualshock_controller.v" type="file.verilog" enable="1"/>
+        <File path="src/dualshock2.v" type="file.verilog" enable="1"/>
+        <File path="src/dualshock_controller.v" type="file.verilog" enable="0"/>
         <File path="src/gowin_clkdiv/gowin_clkdiv.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/gowin_dpb_track_buffer_b.v" type="file.verilog" enable="1"/>
         <File path="src/gowin_dpb/gowin_dpb_trkbuf.v" type="file.verilog" enable="1"/>

@@ -18,7 +18,7 @@ module video (
           input [17:0] audio_l,
           input [17:0] audio_r,
 
-          output enabled,
+          output osd_status,
 
           // (spi) interface from MCU
               input	   mcu_start,
@@ -138,7 +138,7 @@ osd_u8g2 osd_u8g2 (
         .r_out(osd_r),
         .g_out(osd_g),
         .b_out(osd_b),
-        .enabled(enabled)
+        .osd_status(osd_status)
 );   
 
 wire [2:0] tmds;
