@@ -29,6 +29,20 @@ IO_PORT "leds_n[1]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
 IO_LOC "leds_n[0]" 15;
 IO_PORT "leds_n[0]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
 
+// SPI flash
+IO_LOC "mspi_wp" 57;
+IO_PORT "mspi_wp" PULL_MODE=DOWN IO_TYPE=LVCMOS33;
+IO_LOC "mspi_clk" 59;
+IO_PORT "mspi_clk" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
+IO_LOC "mspi_cs" 60;
+IO_PORT "mspi_cs" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "mspi_di" 61;
+IO_PORT "mspi_di" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
+IO_LOC "mspi_do" 62;
+IO_PORT "mspi_do" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
+IO_LOC "mspi_hold" 63;
+IO_PORT "mspi_hold" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
 // connection to the external BL616/M0S
 IO_LOC "m0s[0]" 42; // MISO / ps2_clk
 IO_PORT "m0s[0]" PULL_MODE=UP IO_TYPE=LVCMOS33;
@@ -43,17 +57,23 @@ IO_PORT "m0s[4]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 IO_LOC "m0s[5]" 48; //
 IO_PORT "m0s[5]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 
-// digital D9 Joystick
-IO_LOC "btn[4]" 27;
-IO_PORT "btn[4]" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
-IO_LOC "btn[3]" 28;
-IO_PORT "btn[3]" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
-IO_LOC "btn[2]" 25;
-IO_PORT "btn[2]" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
-IO_LOC "btn[1]" 26;
-IO_PORT "btn[1]" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
-IO_LOC "btn[0]" 29;
-IO_PORT "btn[0]" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+// generic IO pins to use for e.g. db9 joystick
+IO_LOC "io[0]" 27;
+IO_PORT "io[0]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "io[1]" 28;
+IO_PORT "io[1]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "io[2]" 25;
+IO_PORT "io[2]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "io[3]" 26;
+IO_PORT "io[3]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "io[4]" 29;
+IO_PORT "io[4]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+//IO_LOC "io[5]" 30;
+//IO_PORT "io[5]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+//IO_LOC "io[6]" 31;
+//IO_PORT "io[6]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+//IO_LOC "io[7]" 77;
+//IO_PORT "io[7]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 
 IO_LOC "reset" 87;
 IO_PORT "reset" IO_TYPE=LVCMOS33 PULL_MODE=DOWN BANK_VCCIO=3.3;
@@ -77,18 +97,6 @@ IO_PORT "sd_dat[2]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 IO_LOC "sd_dat[3]" 81;
 IO_PORT "sd_dat[3]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
-// Debug
-//IO_LOC "debug[0]" 42;
-//IO_PORT "debug[0]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "debug[1]" 41;
-//IO_PORT "debug[1]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "debug[2]" 56;
-//IO_PORT "debug[2]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "debug[3]" 54;
-//IO_PORT "debug[3]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "debug[4]" 51;
-//IO_PORT "debug[4]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-
 // Tang Nano onboard BL616 controller
 IO_LOC "spi_csn" 86;
 IO_PORT "spi_csn" PULL_MODE=UP IO_TYPE=LVCMOS33;
@@ -102,15 +110,15 @@ IO_PORT "spi_dir" PULL_MODE=UP IO_TYPE=LVCMOS33;
 IO_LOC "ws2812" 79;
 IO_PORT "ws2812" PULL_MODE=DOWN IO_TYPE=LVCMOS33;
 
-// Joystick
+// Joystick and MIDI
 IO_LOC "joystick_clk" 52;
 IO_PORT "joystick_clk" PULL_MODE=UP IO_TYPE=LVCMOS33;
 IO_LOC "joystick_mosi" 53;
 IO_PORT "joystick_mosi" PULL_MODE=UP IO_TYPE=LVCMOS33;
 IO_LOC "joystick_miso" 71;
-IO_PORT "joystick_miso" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_PORT "joystick_miso" PULL_MODE=UP DRIVE=8 IO_TYPE=LVCMOS33; // "midi_out"
 IO_LOC "joystick_cs"  72;
-IO_PORT "joystick_cs" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_PORT "joystick_cs" PULL_MODE=UP DRIVE=8 IO_TYPE=LVCMOS33;   // "midi_in"
 
 // re-used JTAG pins as spi_dat (above) is not really
 // usable as there are resistors and capacistors that

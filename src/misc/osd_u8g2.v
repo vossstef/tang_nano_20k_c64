@@ -23,12 +23,16 @@ module osd_u8g2 (
   output [5:0] g_out,
   output [5:0] b_out,
 
-  reg enabled
+  output osd_status
 
 );
 
 // OSD is enabled and visible
-//reg enabled;
+reg enabled;
+
+reg [5:0] r_out_i;
+reg [5:0] g_out_i;
+reg [5:0] b_out_i;
 
 // -------------------------- OSD painting -------------------------------
 
@@ -40,13 +44,6 @@ reg [9:0] vcntL;
 
 // OSD is active on current pixel, the shadow is active or the text area is active
 wire active, sactive, tactive;
-   
-// draw active osd, add some shadow to those parts outside osd
-// that are covered by shadow
-assign r_out = !enabled?r_in:active?osd_r:sactive?{1'b0, r_in[5:1]}:r_in;
-assign g_out = !enabled?g_in:active?osd_g:sactive?{1'b0, g_in[5:1]}:g_in;
-assign b_out = !enabled?b_in:active?osd_b:sactive?{1'b0, b_in[5:1]}:b_in;   
-
 wire	   osd_pix;  
 wire [5:0] osd_pix_col;
 
@@ -54,7 +51,12 @@ wire [5:0] osd_pix_col;
 wire [5:0] osd_r = (tactive && osd_pix)?osd_pix_col:sactive?{4'b0000, r_in[5:4]}:{3'b000, r_in[5:3]};
 wire [5:0] osd_g = (tactive && osd_pix)?osd_pix_col:sactive?{4'b0100, g_in[5:4]}:{3'b010, g_in[5:3]};
 wire [5:0] osd_b = (tactive && osd_pix)?osd_pix_col:sactive?{4'b0000, b_in[5:4]}:{3'b000, b_in[5:3]};  
-   
+
+assign osd_status = enabled;
+assign r_out = r_out_i;
+assign g_out = g_out_i;
+assign b_out = b_out_i;
+
 `define BORDER 2
 `define SHADOW 4
 `define SCALE  2
@@ -80,7 +82,7 @@ wire	    svactive = vcnt >= vstart-`SCALE*`BORDER+`SCALE*`SHADOW && vcnt < vstar
 assign	    sactive = shactive && svactive;  
 
 // 1024 bytes = 8192 pixels = 128 x 64 pixels
-reg [7:0] buffer [1024];  
+reg [7:0] buffer [1024]; /* synthesis syn_ramstyle = "distributed_ram" */
 
 // external data interface to write to buffer
 reg [9:0] data_cnt;
@@ -90,8 +92,15 @@ reg data_addr_state;
 always @(posedge clk) begin
     if(reset) begin
         enabled <= 1'b0;
-
+        r_out_i <=  6'd0;
+        g_out_i <=  6'd0;
+        b_out_i <=  6'd0;
     end else begin
+      // draw active osd, add some shadow to those parts outside osd
+      // that are covered by shadow
+      r_out_i <= !enabled?r_in:active?osd_r:sactive?{1'b0, r_in[5:1]}:r_in;
+      g_out_i <= !enabled?g_in:active?osd_g:sactive?{1'b0, g_in[5:1]}:g_in;
+      b_out_i <= !enabled?b_in:active?osd_b:sactive?{1'b0, b_in[5:1]}:b_in; 
 
       if(data_in_strobe) begin
         if(data_in_start) begin
@@ -123,9 +132,9 @@ wire [7:0] hpix  = hcnt-hstart;  // horizontal pixel position inside OSD
 wire [7:0] hpixD = hpix+1;       // latch byte one pixel in advance
 wire [6:0] vpix  = vcnt-vstart;  // vertical pixel position inside OSD   
 
+reg [7:0] buffer_byte;
 assign osd_pix = buffer_byte[vpix[3:1]];
 
-reg [7:0] buffer_byte;
 always @(posedge clk)
    buffer_byte <= buffer[{ vpix[6:4], hpixD[7:1] }];
    

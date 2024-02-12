@@ -170,21 +170,22 @@ kernel_c64std: entity work.Gowin_pROM_basic_kernal
 --16K Cartridge, $8000-$9FFF / $A000-$BFFF (ROML / ROMH).
 --GAME = 0, EXROM = 0
 --ROML/ROMH are read only, Basic ROM is overwritten by ROMH.
-cart: entity work.Gowin_pROM_cart
-    port map (
-        dout  => cartData,
-        clk   => clk,
-        oce   => '1',
-        ce    => '1',
-        reset => '0',
-        ad    => std_logic_vector(cpuAddr(12 downto 0))
-    );
+--cart: entity work.Gowin_pROM_cart
+--    port map (
+--        dout  => cartData,
+--        clk   => clk,
+--        oce   => '1',
+--        ce    => '1',
+--        reset => '0',
+--        ad    => std_logic_vector(cpuAddr(12 downto 0))
+--    );
 
 	--
 	--begin
 	process(ramData, vicData, sidData, colorData,
-           cia1Data, cia2Data, charData, romData, cartData,
-			  cs_romHLoc, cs_romLLoc, cs_romLoc, cs_CharLoc,
+--           cia1Data, cia2Data, charData, romData, cartData,
+              cia1Data, cia2Data, charData, romData,
+		      cs_romHLoc, cs_romLLoc, cs_romLoc, cs_CharLoc,
 			  cs_ramLoc, cs_vicLoc, cs_sidLoc, cs_colorLoc,
 			  cs_cia1Loc, cs_cia2Loc, lastVicData,
 			  cs_ioELoc, cs_ioFLoc,

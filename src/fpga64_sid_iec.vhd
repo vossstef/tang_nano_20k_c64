@@ -42,7 +42,6 @@ use IEEE.numeric_std.all;
 
 entity fpga64_sid_iec is
 port(
-	epix        : out std_logic; 
 	clk32       : in  std_logic;
 	reset_n     : in  std_logic;
 	bios        : in  std_logic_vector(1 downto 0);
@@ -72,12 +71,15 @@ port(
 	turbo_speed : in  std_logic_vector(1 downto 0);
 
 	-- VGA/SCART interface
+	vic_variant : in std_logic_vector(1 downto 0);
 	ntscMode    : in  std_logic;
 	hsync       : out std_logic;
 	vsync       : out std_logic;
 	r           : out unsigned(7 downto 0);
 	g           : out unsigned(7 downto 0);
 	b           : out unsigned(7 downto 0);
+
+    phi         : out std_logic;
 
 	-- cartridge port
 	game        : in  std_logic;
@@ -201,6 +203,9 @@ constant CYCLE_CPUF : unsigned(4 downto 0) := to_unsigned(31, 5);
 
 signal sysCycle     : unsigned(4 downto 0) := (others => '0');
 signal preCycle     : unsigned(4 downto 0) := (others => '0');
+attribute syn_preserve : integer;
+attribute syn_preserve of sysCycle : signal is 1;
+attribute syn_preserve of preCycle : signal is 1;
 signal sysEnable    : std_logic;
 signal rfsh_cycle   : unsigned(1 downto 0);
 
@@ -384,6 +389,8 @@ begin
 	end if;
 end process;
 
+	phi <= phi0_cpu;
+
 process(clk32)
 begin
 	if rising_edge(clk32) then
@@ -542,7 +549,7 @@ port map (
 	
 	turbo_en => turbo_en,
 	turbo_state => turbo_state,
-	variant => "00",  -- 00 - NMOS, 01 - HMOS, 10 - old HMOS
+	variant => vic_variant,  -- 00 - NMOS, 01 - HMOS, 10 - old HMOS
 
 	cs => cs_vic,
 	we => cpuWe,
@@ -619,7 +626,6 @@ begin
 	end if;
 end process;
 
-epix <= enablePixel;
 -- -----------------------------------------------------------------------
 -- SID
 -- -----------------------------------------------------------------------
@@ -660,8 +666,8 @@ port map (
   wdata => std_logic_vector(cpuDo),
   unsigned(rdata) => sid_do,
 
-  potx => pot_x1,
-  poty => pot_y1,
+  potx => pot_x1 and pot_x2,
+  poty => pot_y1 and pot_y2,
 
   comb_wave_l => '0',
   comb_wave_r => '0',

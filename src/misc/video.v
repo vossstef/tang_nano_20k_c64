@@ -1,16 +1,16 @@
 // video.v
 
 module video (
-	      input	   clk,
+          input	   clk,
           input	   clk32_i,
           input    hdmi_pll_reset,
-	      
-	      output	   clk_32,
-	      output	   pll_lock,
+          output   pll_lock,
 
+          input    vb_in,
+          input    hb_in,
 	      input	   vs_in_n,
 	      input	   hs_in_n,
-	      input	   de_in,
+
 	      input [3:0]  r_in,
 	      input [3:0]  g_in,
 	      input [3:0]  b_in,
@@ -18,7 +18,7 @@ module video (
           input [17:0] audio_l,
           input [17:0] audio_r,
 
-          output enabled,
+          output osd_status,
 
           // (spi) interface from MCU
               input	   mcu_start,
@@ -37,10 +37,8 @@ module video (
 	      output [2:0] tmds_d_p  
 	      );
    
-wire clk_pixel_x5 /* synthesis syn_keep=1 */;
 wire clk_pixel /* synthesis syn_keep=1 */;
 
-assign clk_32 = clk_pixel;
     
 `define PIXEL_CLOCK 27000000
 pll_160m pll_hdmi (
@@ -78,7 +76,7 @@ video_analyzer video_analyzer (
    .clk(clk32_i),
    .vs(vs_in_n),
    .hs(hs_in_n),
-   .de(de_in),
+   .de(~vb_in || ~hb_in),
 
    .mode(vmode),
    .vreset(vreset)  // reset signal
@@ -93,13 +91,15 @@ scandoubler #(10) scandoubler (
         // system interface
         .clk_sys(clk32_i),
         .bypass(vmode == 2'd2),      // bypass in ST high/mono
-        .ce_divider(1'b1),
+        .ce_divider(3'd1),
         .pixel_ena(),
 
         // scanlines (00-none 01-25% 10-50% 11-75%)
         .scanlines(system_scanlines),
 
         // shifter video interface
+        .hb_in(hb_in),
+	    .vb_in(vb_in),
         .hs_in(hs_in_n),
         .vs_in(vs_in_n),
         .r_in( r_in ),
@@ -107,6 +107,8 @@ scandoubler #(10) scandoubler (
         .b_in( b_in ),
 
         // output interface
+        .hb_out(),
+        .vb_out(),
         .hs_out(sd_hs_n),
         .vs_out(sd_vs_n),
         .r_out(sd_r),
@@ -136,7 +138,7 @@ osd_u8g2 osd_u8g2 (
         .r_out(osd_r),
         .g_out(osd_g),
         .b_out(osd_b),
-        .enabled(enabled)
+        .osd_status(osd_status)
 );   
 
 wire [2:0] tmds;
@@ -171,7 +173,7 @@ hdmi #(
     .AUDIO_BIT_WIDTH(16),
     .VENDOR_NAME( { "MiSTle", 16'd0} ),
     .PRODUCT_DESCRIPTION( {"C64", 64'd0} ),
-    .START_X(80)
+    .START_X(0) // 90
 //  .START_Y(30)
 ) hdmi(
   .clk_pixel_x5(clk_pixel_x5),
@@ -180,7 +182,12 @@ hdmi #(
   .audio_sample_word( { audio_vol_l, audio_vol_r } ),
   .tmds(tmds),
   .tmds_clock(tmds_clock),
-
+  .cx(),
+  .cy(),
+  .frame_width(),
+  .frame_height(),
+  .screen_width(),
+  .screen_height(),
   // video input
   .stmode(vmode),    // current video mode PAL/NTSC/MONO
   .wide(system_wide_screen),       // adopt to wide screen video

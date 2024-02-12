@@ -19,7 +19,7 @@ module video_analyzer
 
 // generate a reset signal in the upper left corner of active video used
 // to synchonize the HDMI video generation to the Atari ST
-reg vsD, hsD;
+reg vsD, hsD, deD;
 reg [12:0] hcnt;    // signal ranges 0..2047
 reg [12:0] hcntL;
 reg [9:0] vcnt;    // signal ranges 0..313
@@ -29,6 +29,7 @@ reg changed;
 always @(posedge clk) begin
     // ---- hsync processing -----
     hsD <= hs;
+    deD <= de;
     mode <= 2'd1;
 
     // begin of hsync, falling edge
@@ -79,8 +80,8 @@ always @(posedge clk) begin
        (hcnt == 68 && vcnt == 39 && changed && mode == 2'd1)  // c64 core 720x576
 //       (hcnt == 152 && vcnt == 28 && changed)  //Atari ST core 832x576
          begin
-      vreset <= 1'b1;
-      changed <= 1'b0;
+            vreset <= 1'b1;
+            changed <= 1'b0;
    end
 end
 
