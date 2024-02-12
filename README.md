@@ -14,7 +14,7 @@ Features:
 * Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys & Stick as Joystick<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation (analog mode)<br>
-* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with parallel bus [Speedloader Dolphin DOS 2](https://rr.pokefinder.org/wiki/Dolphin_DOS). [GER manual](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
+* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with parallel bus [Speedloader Dolphin DOS 2](https://rr.pokefinder.org/wiki/Dolphin_DOS). [GER](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * c1541 DOS ROM selection
 * On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
@@ -104,7 +104,7 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
  Tape Play not implemented.
 
 ## LED UI
-0 c1541 Drive activity. Solid 'red' after power indicates a problem missing DOS in Flash<br>
+0 c1541 Drive activity. Solid 'red' after power-up indicates a missing DOS in Flash<br>
 1 unused<br>
 2 unused<br>
 3 M0S Dock detect<br>
@@ -169,7 +169,7 @@ see pin configuration in .cst configuration file
 | 6 | J5 17 | 72 CS | JOYn|
 | 7 | J5 20 | 52 MCLK | JOYCLK |
 | 8 | n.c. | - | IRQ |
-| 9 | J6 5 | 77 ACK | JOYACK |
+| 9 | n.c. | - | JOYACK |
 
 
 ## Getting started
