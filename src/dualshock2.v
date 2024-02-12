@@ -168,18 +168,6 @@ module dualshock2(
         end
     end
 
-//    localparam CLK_DELAY = 31500000 / 125_000 / 2;
-//    reg [8:0] clk_cnt;
-
-
-//    always @(posedge clk) begin
-//        clk_cnt <= clk_cnt + 9'd1;
-//        if (clk_cnt == CLK_DELAY-1) begin
-//            clk_spi <= ~clk_spi;
-//            clk_cnt <= 9'd0;
-//        end
-//    end
-
     always @(*) begin
         next_state = state;
         case (state)
@@ -271,7 +259,7 @@ module dualshock2(
                     ds2_att <= 1'b1;
                 end
                 S_ERR: begin
-                    // Error happens, restart from 0x44
+                    // Error happens, restart from 0x42
                     bytes_count <= 4'd0;
                     bits_count <= 4'd0;
                     status <= STATUS_ERR;

@@ -116,9 +116,7 @@ signal joyMouse     : std_logic_vector(6 downto 0);
 signal joyPaddle    : std_logic_vector(6 downto 0); 
 signal joyPaddle2   : std_logic_vector(6 downto 0); 
 signal numpad       : std_logic_vector(7 downto 0);
--- CONTROLLER DUALSHOCK
 signal joyDS2       : std_logic_vector(6 downto 0);
-signal dsc_joy_rx1  : std_logic_vector(7 downto 0);
 -- joystick interface
 signal joyA        : std_logic_vector(6 downto 0);
 signal joyB        : std_logic_vector(6 downto 0);
@@ -294,6 +292,50 @@ signal key_triangle    : std_logic;
 signal key_square      : std_logic;
 signal key_circle      : std_logic;
 signal key_cross       : std_logic;
+
+    component rPLL
+        generic (
+            FCLKIN: in string := "100.0";
+            DEVICE: in string := "GW2A-18";
+            DYN_IDIV_SEL: in string := "false";
+            IDIV_SEL: in integer := 0;
+            DYN_FBDIV_SEL: in string := "false";
+            FBDIV_SEL: in integer := 0;
+            DYN_ODIV_SEL: in string := "false";
+            ODIV_SEL: in integer := 8;
+            PSDA_SEL: in string := "0000";
+            DYN_DA_EN: in string := "false";
+            DUTYDA_SEL: in string := "1000";
+            CLKOUT_FT_DIR: in bit := '1';
+            CLKOUTP_FT_DIR: in bit := '1';
+            CLKOUT_DLY_STEP: in integer := 0;
+            CLKOUTP_DLY_STEP: in integer := 0;
+            CLKOUTD3_SRC: in string := "CLKOUT";
+            CLKFB_SEL: in string := "internal";
+            CLKOUT_BYPASS: in string := "false";
+            CLKOUTP_BYPASS: in string := "false";
+            CLKOUTD_BYPASS: in string := "false";
+            CLKOUTD_SRC: in string := "CLKOUT";
+            DYN_SDIV_SEL: in integer := 2
+        );
+        port (
+            CLKOUT: out std_logic;
+            LOCK: out std_logic;
+            CLKOUTP: out std_logic;
+            CLKOUTD: out std_logic;
+            CLKOUTD3: out std_logic;
+            RESET: in std_logic;
+            RESET_P: in std_logic;
+            CLKIN: in std_logic;
+            CLKFB: in std_logic;
+            FBDSEL: in std_logic_vector(5 downto 0);
+            IDSEL: in std_logic_vector(5 downto 0);
+            ODSEL: in std_logic_vector(5 downto 0);
+            PSDA: in std_logic_vector(3 downto 0);
+            DUTYDA: in std_logic_vector(3 downto 0);
+            FDLY: in std_logic_vector(3 downto 0)
+        );
+    end component;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -648,14 +690,49 @@ dram_inst: entity work.sdram
     we        => we             -- cpu/chipset requests write
   );
 
-mainclock: entity work.Gowin_rPLL
-    port map (
-        clkout  => clk64,
-        lock    => pll_locked,
-        clkoutp => mspi_clk, -- shifted 63Mhz clock
-        clkoutd => clk32,
-        clkin   => clk_27mhz
-    );
+-- hook for future PAL / NTSC mode switch
+mainclock: rPLL
+        generic map (
+            FCLKIN => "27",
+            DEVICE => "GW2AR-18C",
+            DYN_IDIV_SEL => "false",
+            IDIV_SEL => 2,
+            DYN_FBDIV_SEL => "false",
+            FBDIV_SEL => 6,
+            DYN_ODIV_SEL => "false",
+            ODIV_SEL => 8,
+            PSDA_SEL => "0110",   -- phase shift  0110 135° 0111 157.5°
+            DYN_DA_EN => "false", 
+            DUTYDA_SEL => "1000",
+            CLKOUT_FT_DIR => '1',
+            CLKOUTP_FT_DIR => '1',
+            CLKOUT_DLY_STEP => 0,
+            CLKOUTP_DLY_STEP => 0,
+            CLKFB_SEL => "internal",
+            CLKOUT_BYPASS => "false",
+            CLKOUTP_BYPASS => "false",
+            CLKOUTD_BYPASS => "false",
+            DYN_SDIV_SEL => 2,
+            CLKOUTD_SRC => "CLKOUT",
+            CLKOUTD3_SRC => "CLKOUT"
+        )
+        port map (
+            CLKOUT   => clk64,    -- actual 63Mhz
+            LOCK     => pll_locked,
+            CLKOUTP  => mspi_clk, -- shifted 63Mhz SPI Flash
+            CLKOUTD  => clk32, --    actual 31.5Mhz
+            CLKOUTD3 => open,
+            RESET    => '0',
+            RESET_P  => '0',
+            CLKIN    => clk_27mhz,
+            CLKFB    => '0',
+            FBDSEL   => (others => '0'),
+            IDSEL    => (others => '0'),
+            ODSEL    => (others => '0'),
+            PSDA     => (others => '0'),
+            DUTYDA   => (others => '0'),
+            FDLY     => (others => '1')
+        );
 
 leds_n <=  not leds;
 leds(0) <= led1541;
@@ -663,20 +740,15 @@ leds(2 downto 1) <= "00";
 leds(3) <= spi_ext;
 leds(5 downto 4) <= system_leds;
 
--- 4 3 2 1 0 digital
--- F R L D U position
---    triangle (4)
--- square(7) circle (5)
---       X (6)
--- fire Left 1
+-- 4 3 2 1 0 digital c64
 joyDS2     <=    ("00" & (key_l1 or key_r1) & key_circle & key_square & key_cross & key_triangle);
 joyDigital <= not("11" & io(0) & io(4) & io(3) & io(2) & io(1));
 joyUsb1    <=    ("00" & joystick1(4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3));
 joyUsb2    <=    ("00" & joystick2(4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3));
 joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
-joyPaddle  <=    ("00" & '0' & key_r1 & key_l1 & "00");
-joyPaddle2 <=    ("00" & '0' & key_r2 & key_l2 & "00");
+joyPaddle  <=    ("00" & '0' & key_l1 & key_l2 & "00"); -- bound to physical paddle position DS2
+joyPaddle2 <=    ("00" & '0' & key_r1 & key_r2 & "00");
 
 -- send external DB9 joystick port to µC
 db9_joy <= not('1' & io(0), io(2), io(1), io(4), io(3));
@@ -716,10 +788,10 @@ begin
 end process;
 
 -- paddle pins - mouse
-pot1 <= paddle_1 when port_1_sel = "110" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
-pot2 <= paddle_2 when port_1_sel = "110" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
-pot3 <= paddle_3 when port_2_sel = "110" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
-pot4 <= paddle_4 when port_2_sel = "110" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
+pot1 <= not paddle_1 when port_1_sel = "110" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
+pot2 <= not paddle_2 when port_1_sel = "110" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
+pot3 <= not paddle_3 when port_2_sel = "110" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
+pot4 <= not paddle_4 when port_2_sel = "110" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
 
 process(clk32, system_reset(0))
  variable mov_x: signed(6 downto 0);
@@ -812,15 +884,15 @@ module_inst: entity work.sysctrl
   system_volume       => system_volume,
   system_wide_screen  => system_wide_screen,
   system_floppy_wprot => system_floppy_wprot,
-  system_port_1       => port_1_sel,  -- Joystick port 1 input device selection 
-  system_port_2       => port_2_sel,  -- Joystick port 2 input device selection 
+  system_port_1       => port_1_sel,
+  system_port_2       => port_2_sel,
   system_dos_sel      => dos_sel,
   system_1541_reset   => c1541_osd_reset,
   system_audio_filter => sid_filter,
   system_turbo_mode   => turbo_mode,
   system_turbo_speed  => turbo_speed,
-  system_pot_1_2      => system_pot_1_2,
-  system_pot_3_4      => system_pot_3_4, 
+  system_pot_1_2      => system_pot_1_2, -- unused
+  system_pot_3_4      => system_pot_3_4, -- unused
   system_midi         => st_midi,
   system_pause        => system_pause,
 

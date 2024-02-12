@@ -12,9 +12,9 @@ Features:
 * USB Mouse via µC as c1351 Mouse emulation
 * [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)<br>
 * Joystick emulation on Keyboard Numpad<br>
-* [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys as Joystick<br>
-* [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as Paddles vc-1312 Emulation<br>
-* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader Dolphin DOS](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
+* [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys & Stick as Joystick<br>
+* [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation (analog mode)<br>
+* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader Dolphin DOS](https://rr.pokefinder.org/wiki/Dolphin_DOS). [GER manual](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * c1541 DOS ROM selection
 * On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
@@ -23,16 +23,14 @@ Features:
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
 
-<font color="red">HID interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.<br>
-Note: The FPGA bitstream (.fs) does not contain the DOS ROM for c1541. DOS will be executed from SPI FLASH and therefore have to be programmed first.<br>
+<font color="red">HID interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
 
-**Note** ENTIRE PROJECT IS STILL WORK IN PROGRESS</b>
+**Note** PROJECT IS STILL WORK IN PROGRESS</b>
 <br>
 ## Installation
 
-The installation of C64 Nano on the Tang Nano 20k using can be done
-using a Linux PC or a
-[Windows PC](INSTALLATION_WINDOWS.md).
+The installation of C64 Nano on the Tang Nano 20k can be done using a Linux PC or a
+[Windows PC instructions](INSTALLATION_WINDOWS.md).
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS.<br>
@@ -73,31 +71,40 @@ invoke by F12 keypress<br>
 * MIDI mode<br>
 * Pause when OSD open activation<br>
 
-## Gamecontrol Joystick support
-legacy D9 Digital Joystick<br>
+## Gamecontrol support
+legacy single D9 Digital Joystick. OSD: D9<br>
 or<br>
-USB Joystick<br>
+USB Joystick(s). OSD: UJ1 or UJ2 <br>
 or<br>
-Gamepad Right **stick** for Move and Left **L1** shoulder Button for Fire or following **Pad** controls:<br>
+Gamepad. OSD: DS2
+<br>**stick digital** for Move and Left **L1** or Right **R1** shoulder Button for Fire or following **Pad** controls:<br>
 | Buttons | - | - |
 | - | - | -  |
-| Left L1<br>Fire | triangle button<br>Up  | .  |
+| Left L1/R1<br>Fire | triangle button<br>Up  | .  |
 | square button<br>Left | - | circle button<br>Right |
 | - | cross button<br>Down | - |<br>
 
-or Keyboard **Numpad** Keys:<br>
+or Keyboard **Numpad**. OSD: NP<br>
 | | | |
 |-|-|-|
 |0<br>Fire|8<br>Up|-|
 |4<br>Left|-|6<br>Right|
 |-|2<br>Down|-|
 
+or Mouse. OSD: Mou<br>
+USB Mouse as c1351 Mouse emulation.
+
+or Paddle. OSD: Pad<br>
+Dualshock 2 Sticks in analog mode as VC-1312 Paddle emulation.<br>
+Left **L1 / L2**  and Right **R1 / R2** shoulder Button as Trigger<br>
+You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the Joystick mode agin. OSD: DS2<br>
+
 ## Keyboard 
  ![Layout](\.assets/keymap.gif)
  Tape Play not implemented.
 
 ## LED UI
-0 c1541 Drive activity<br>
+0 c1541 Drive activity. Solid 'red' after power indicates a problem missing DOS in Flash<br>
 1 unused<br>
 2 unused<br>
 3 M0S Dock detect<br>
@@ -110,10 +117,13 @@ Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC o
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
 ## Flash program
 *M0 Dock Bl616 Firmware:*<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.<br>
+
 *FPGA bitstream:*<br>
 For proper operation program .fs bitsteam to 'external Flash' and power cycle the board.<br>
 Just SRAM load will not be sufficient.<br>
+
 *c1541 DOS ROM:*<br>
+Image has be to 32k Byte in size !<br>
 Memory Layout SPI Flash:<br>
 0x000000 reserved for FPGA bitstream<br>
 0x100000 reserved for Atari ST/STE<br>

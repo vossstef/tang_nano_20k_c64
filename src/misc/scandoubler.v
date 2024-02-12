@@ -150,8 +150,8 @@ reg [COLOR_DEPTH*3-1:0] sd_out;
 // ==================================================================
 
 // 2 lines of 2**HCNT_WIDTH pixels 3*COLOR_DEPTH bit RGB
-//(* ramstyle = "no_rw_check" *) reg [COLOR_DEPTH*3-1:0] sd_buffer[2*2**HCNT_WIDTH];
-reg [COLOR_DEPTH*3-1:0] sd_buffer[2*2**HCNT_WIDTH]; /* synthesis syn_ramstyle = "distributed_ram" */
+(* ramstyle = "no_rw_check" *) reg [COLOR_DEPTH*3-1:0] sd_buffer[2*2**HCNT_WIDTH]; /* synthesis syn_ramstyle = "no_rw_check" */
+//reg [COLOR_DEPTH*3-1:0] sd_buffer[2*2**HCNT_WIDTH]; /* synthesis syn_ramstyle = "no_rw_check" */
 
 // use alternating sd_buffers when storing/reading data   
 reg        line_toggle;

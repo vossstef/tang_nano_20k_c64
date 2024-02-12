@@ -57,8 +57,8 @@ should see following screen:**
 
   - ```tang_nano_20k_c64.fs``` is written to address 0x000000
   - ```reserved for Atari ST !``` address 0x100000
-  - ```c1541 DOS Dolphin``` is written to address 0x200000
-  - ```c1541 DOS CBM factory``` is written to address 0x208000
+  - ```c1541 DOS Dolphin 2``` is written to address 0x200000
+  - ```c1541 DOS CBM``` is written to address 0x208000
 
 Optionally two additional DOS ROMs may be flashed to the alternate
 addresses:
@@ -88,7 +88,7 @@ and
 Typically you will find a 32K Byte file e.g. 2dosa_c.bin that can right away be flashed.<br>
 Program at offset 0x200000<br>
 
-```CBM DOS (factory)```<br>
+```CBM DOS```<br>
 Open a command prompt and enter the directory where you downloaded the file from the Internet and type: <br>
 > COPY /B 1541-c000.325302-01.bin + 1541-e000.901229-05.bin + 1541-c000.325302-01.bin + 1541-e000.901229-05.bin  c1541_cbm.bin
  
