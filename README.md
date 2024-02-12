@@ -12,7 +12,8 @@ Features:
 * USB Mouse via µC as c1351 Mouse emulation
 * [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)<br>
 * Joystick emulation on Keyboard Numpad<br>
-* [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) as Joystick<br>
+* [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys as Joystick<br>
+* [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as Paddles vc-1312 Emulation<br>
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with [Userport](https://www.c64-wiki.com/wiki/User_Port) parallel bus [Speedloader Dolphin DOS](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * c1541 DOS ROM selection
