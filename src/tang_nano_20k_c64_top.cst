@@ -119,8 +119,6 @@ IO_LOC "joystick_miso" 71;
 IO_PORT "joystick_miso" PULL_MODE=UP DRIVE=8 IO_TYPE=LVCMOS33; // "midi_out"
 IO_LOC "joystick_cs"  72;
 IO_PORT "joystick_cs" PULL_MODE=UP DRIVE=8 IO_TYPE=LVCMOS33;   // "midi_in"
-IO_LOC "joystick_ack" 77;
-IO_PORT "joystick_ack" PULL_MODE=UP IO_TYPE=LVCMOS33;
 
 // re-used JTAG pins as spi_dat (above) is not really
 // usable as there are resistors and capacistors that

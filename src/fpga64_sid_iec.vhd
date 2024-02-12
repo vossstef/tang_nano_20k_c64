@@ -203,6 +203,9 @@ constant CYCLE_CPUF : unsigned(4 downto 0) := to_unsigned(31, 5);
 
 signal sysCycle     : unsigned(4 downto 0) := (others => '0');
 signal preCycle     : unsigned(4 downto 0) := (others => '0');
+attribute syn_preserve : integer;
+attribute syn_preserve of sysCycle : signal is 1;
+attribute syn_preserve of preCycle : signal is 1;
 signal sysEnable    : std_logic;
 signal rfsh_cycle   : unsigned(1 downto 0);
 
@@ -663,8 +666,8 @@ port map (
   wdata => std_logic_vector(cpuDo),
   unsigned(rdata) => sid_do,
 
-  potx => pot_x1,
-  poty => pot_y1,
+  potx => pot_x1 and pot_x2,
+  poty => pot_y1 and pot_y2,
 
   comb_wave_l => '0',
   comb_wave_r => '0',

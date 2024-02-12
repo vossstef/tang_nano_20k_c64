@@ -89,8 +89,6 @@ module dualshock2(
     output [7:0] debug2
     );
     
- //   wire clk_spi; //125kHz SPI Clock
-    
     localparam S_IDLE      = 5'd0;
     localparam S_ATT       = 5'd1;
     localparam S_TX        = 5'd2;
@@ -158,17 +156,29 @@ module dualshock2(
     
     reg last_vsync = 0;
 
+    `define SYSTEM_CLOCK 31500000
+    reg [8:0] clk_cnt;
     reg clk_spi;
-
-    reg[27:0] counter = 28'd0;
-    parameter DIVISOR = 28'd125000;
-    always @(posedge clk)
-    begin
-        counter <= counter + 28'd1;
-        if(counter>=(DIVISOR-1))
-        counter <= 28'd0;
-        clk_spi <= (counter<DIVISOR/2)?1'b1:1'b0;
+    always @(posedge clk) begin
+        if(clk_cnt < `SYSTEM_CLOCK / 125000 / 2 -1)
+            clk_cnt <= clk_cnt + 9'd1;
+        else begin
+            clk_cnt <= 9'd0;
+            clk_spi <= ~clk_spi;
+        end
     end
+
+//    localparam CLK_DELAY = 31500000 / 125_000 / 2;
+//    reg [8:0] clk_cnt;
+
+
+//    always @(posedge clk) begin
+//        clk_cnt <= clk_cnt + 9'd1;
+//        if (clk_cnt == CLK_DELAY-1) begin
+//            clk_spi <= ~clk_spi;
+//            clk_cnt <= 9'd0;
+//        end
+//    end
 
     always @(*) begin
         next_state = state;
@@ -189,7 +199,8 @@ module dualshock2(
                 else if (state_counter == T_TIMEOUT) 
                     next_state = S_ERR;
             S_ACK_H:
-                if ((ds2_ack == 1'b1)&&(state_counter == T_CD)) next_state = S_TX;
+             // if ((ds2_ack == 1'b1)&&(state_counter == T_CD)) next_state = S_TX;
+                if (state_counter == T_CD) next_state = S_TX;
             S_END:
                 next_state = S_IDLE;
             S_ERR:
@@ -215,18 +226,18 @@ module dualshock2(
     
     always @(posedge clk_spi) begin
         if (rst) begin
-            // When reset, we want the first command to be 0x44
+            // When reset, we want the first command to be 0x42
             bytes_count <= 4'd0;
             bits_count <= 4'd0;
-            tx_buffer[0] <= 8'h01;
-            tx_buffer[1] <= 8'h42;
-            tx_buffer[2] <= 8'hff;
-            tx_buffer[3] <= 8'hff;
-            tx_buffer[4] <= 8'hff;
-            tx_buffer[5] <= 8'hff;
-            tx_buffer[6] <= 8'hff;
-            tx_buffer[7] <= 8'hff;
-            tx_buffer[8] <= 8'hff;
+            tx_buffer[0] <= 8'h01; 
+            tx_buffer[1] <= 8'h42; // Polling cmd 01 42 00 00 00 00 00 00 00
+            tx_buffer[2] <= 8'h00; // Buttons(L D R U St R3 L3 Se □ X O △ R1 L1 R2 L2)
+            tx_buffer[3] <= 8'h00; // Axes(RX RY LX LY)
+            tx_buffer[4] <= 8'h00; // Buttons are active low
+            tx_buffer[5] <= 8'h00;
+            tx_buffer[6] <= 8'h00;
+            tx_buffer[7] <= 8'h00;
+            tx_buffer[8] <= 8'h00;
             rx_byte <= 8'hff;
             status <= STATUS_OK;
             ready <= 1;

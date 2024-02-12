@@ -15,3 +15,4 @@ create_clock -name clk_audio -period 20833.332 -waveform {0 5} [get_nets {video_
 create_clock -name mspi_clk -period 15.873 -waveform {0 5} [get_ports {mspi_clk}] -add
 report_timing -hold -from_clock [get_clocks {clk*}] -to_clock [get_clocks {clk*}] -max_paths 25 -max_common_paths 1
 report_timing -setup -from_clock [get_clocks {clk*}] -to_clock [get_clocks {clk*}] -max_paths 25 -max_common_paths 1
+set_clock_groups -asynchronous -group [get_clocks {clk_pixel_x5}] -group [get_clocks {clk32}]

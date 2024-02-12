@@ -58,7 +58,6 @@ entity tang_nano_20k_c64_top is
     joystick_mosi : out std_logic;
     joystick_miso : inout std_logic; -- midi_out
     joystick_cs   : inout std_logic; -- midi_in
-    joystick_ack  : in std_logic;
     -- spi flash interface
     mspi_cs       : out std_logic;
     mspi_clk      : out std_logic;
@@ -115,6 +114,7 @@ signal joyDigital   : std_logic_vector(6 downto 0);
 signal joyNumpad    : std_logic_vector(6 downto 0);
 signal joyMouse     : std_logic_vector(6 downto 0);
 signal joyPaddle    : std_logic_vector(6 downto 0); 
+signal joyPaddle2   : std_logic_vector(6 downto 0); 
 signal numpad       : std_logic_vector(7 downto 0);
 -- CONTROLLER DUALSHOCK
 signal joyDS2       : std_logic_vector(6 downto 0);
@@ -127,6 +127,8 @@ signal port_2_sel  : std_logic_vector(2 downto 0);
 -- mouse / paddle
 signal pot1        : std_logic_vector(7 downto 0);
 signal pot2        : std_logic_vector(7 downto 0);
+signal pot3        : std_logic_vector(7 downto 0);
+signal pot4        : std_logic_vector(7 downto 0);
 signal mouse_x_pos : signed(10 downto 0);
 signal mouse_y_pos : signed(10 downto 0);
 
@@ -265,7 +267,6 @@ signal frz_hs          : std_logic;
 signal frz_vs          : std_logic;
 signal hbl_out         : std_logic; 
 signal vbl_out         : std_logic;
--- midi signals
 signal midi_data       : std_logic_vector(7 downto 0);
 signal midi_oe         : std_logic;
 signal midi_irq_n      : std_logic;
@@ -281,8 +282,18 @@ signal frz_vbl         : std_logic;
 signal system_pause    : std_logic;
 signal paddle_1        : std_logic_vector(7 downto 0);
 signal paddle_2        : std_logic_vector(7 downto 0);
+signal paddle_3        : std_logic_vector(7 downto 0);
+signal paddle_4        : std_logic_vector(7 downto 0);
 signal system_pot_1_2  : std_logic;
-signal ds2_key_r1      : std_logic;
+signal system_pot_3_4  : std_logic;
+signal key_r1          : std_logic;
+signal key_r2          : std_logic;
+signal key_l1          : std_logic;
+signal key_l2          : std_logic;
+signal key_triangle    : std_logic;
+signal key_square      : std_logic;
+signal key_circle      : std_logic;
+signal key_cross       : std_logic;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -328,23 +339,23 @@ gamepad: entity work.dualshock2
     ds2_cmd       => joystick_mosi,
     ds2_att       => joystick_cs_i,
     ds2_clk       => joystick_clk,
-    ds2_ack       => joystick_ack,
+    ds2_ack       => '0',
     stick_lx      => paddle_1,
     stick_ly      => paddle_2,
-    stick_rx      => open,
-    stick_ry      => open,
+    stick_rx      => paddle_3,
+    stick_ry      => paddle_4,
     key_up        => open,
     key_down      => open,
     key_left      => open,
     key_right     => open,
-    key_l1        => dsc_joy_rx1(2),
-    key_l2        => open,
-    key_r1        => ds2_key_r1,
-    key_r2        => open,
-    key_triangle  => dsc_joy_rx1(4),
-    key_square    => dsc_joy_rx1(7),
-    key_circle    => dsc_joy_rx1(5),
-    key_cross     => dsc_joy_rx1(6),
+    key_l1        => key_l1,
+    key_l2        => key_l2,
+    key_r1        => key_r1,
+    key_r2        => key_r2,
+    key_triangle  => key_triangle,
+    key_square    => key_square,
+    key_circle    => key_circle,
+    key_cross     => key_cross,
     key_start     => open,
     key_select    => open,
     key_lstick    => open,
@@ -658,13 +669,14 @@ leds(5 downto 4) <= system_leds;
 -- square(7) circle (5)
 --       X (6)
 -- fire Left 1
-joyDS2     <= not("11" & dsc_joy_rx1(2) & dsc_joy_rx1(5) & dsc_joy_rx1(7) & dsc_joy_rx1(6) & dsc_joy_rx1(4));
+joyDS2     <=    ("00" & (key_l1 or key_r1) & key_circle & key_square & key_cross & key_triangle);
 joyDigital <= not("11" & io(0) & io(4) & io(3) & io(2) & io(1));
 joyUsb1    <=    ("00" & joystick1(4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3));
 joyUsb2    <=    ("00" & joystick2(4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3));
 joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
-joyPaddle  <= not "11" & ds2_key_r1 & "1111";
+joyPaddle  <=    ("00" & '0' & key_r1 & key_l1 & "00");
+joyPaddle2 <=    ("00" & '0' & key_r2 & key_l2 & "00");
 
 -- send external DB9 joystick port to µC
 db9_joy <= not('1' & io(0), io(2), io(1), io(4), io(3));
@@ -696,16 +708,18 @@ begin
       when "011"  => joyB <= joyNumpad;
       when "100"  => joyB <= joyDS2;
       when "101"  => joyB <= joyMouse;
-      when "110"  => joyB <= joyPaddle;
+      when "110"  => joyB <= joyPaddle2;
       when "111"  => joyB <= (others => '0');
       when others => null;
       end case;
   end if;
 end process;
 
--- paddle pins - mouse 
-pot1 <= paddle_1 when system_pot_1_2 = '1' else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
-pot2 <= paddle_2 when system_pot_1_2 = '1' else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
+-- paddle pins - mouse
+pot1 <= paddle_1 when port_1_sel = "110" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
+pot2 <= paddle_2 when port_1_sel = "110" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
+pot3 <= paddle_3 when port_2_sel = "110" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
+pot4 <= paddle_4 when port_2_sel = "110" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
 
 process(clk32, system_reset(0))
  variable mov_x: signed(6 downto 0);
@@ -806,6 +820,7 @@ module_inst: entity work.sysctrl
   system_turbo_mode   => turbo_mode,
   system_turbo_speed  => turbo_speed,
   system_pot_1_2      => system_pot_1_2,
+  system_pot_3_4      => system_pot_3_4, 
   system_midi         => st_midi,
   system_pause        => system_pause,
 
@@ -904,12 +919,12 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   irq_ext_n    => not reu_irq,
 
   -- joystick interface
-  joyA         => JoyA,
+  joyA         => joyA,
   joyB         => joyB,
   pot1         => pot1,
   pot2         => pot2,
-  pot3         => (others => '0'),
-  pot4         => (others => '0'),
+  pot3         => pot3,
+  pot4         => pot4,
 
   --SID
   audio_l      => audio_data_l,
