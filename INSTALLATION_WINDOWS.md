@@ -67,15 +67,12 @@ addresses:
   - ```c1541 DOS Jiffy``` is written to address 0x218000
 
 These DOS for the c1541 emulation can later be selected from the on-screen-display (OSD).
-
-![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/flash_tos_104.png)
-
   - For the FS file please choose the ```tang_nano_20k_c64.fs``` you just downloaded
   - User Code and IDCODE can be ignored
   - Mark each of your configs and press the little icon with the green play
     button. You should see a progress bar and then:
 
-![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/flash_success.png)
+![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/c64_flash.png)
 
 **Production of c1541 DOS 32k ROM binaries** <br>
 The DOS files you will find on the Internet. e.g.
@@ -87,17 +84,17 @@ and
 ```Dolphin DOS 2```<br>
 Typically you will find a 32K Byte file e.g. 2dosa_c.bin that can right away be flashed.<br>
 Program at offset 0x200000<br>
+![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/dolphin.png)
 
 ```CBM DOS```<br>
 Open a command prompt and enter the directory where you downloaded the file from the Internet and type: <br>
 > COPY /B 1541-c000.325302-01.bin + 1541-e000.901229-05.bin + 1541-c000.325302-01.bin + 1541-e000.901229-05.bin  c1541_cbm.bin
- 
 alternatively you will find e.g. from [VICE Emulator Drives](https://vice-emu.sourceforge.io/windows.html) folder<br>
 > COPY /B dos1541-325302-01+901229-05.bin + dos1541-325302-01+901229-05.bin  c1541_cbm.bin
  
 If will create the required 32K size DOS image named c1541_cbm.bin <br>
 Program at offset 0x208000<br>
-
+![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/cbm.png)
 ```Speed DOS Plus```<br>
 Open a command prompt and enter the directory where you downloaded the file from the Internet and type: <br>
 Assumed here you found a 16k Byte file.<br>
@@ -105,6 +102,7 @@ Assumed here you found a 16k Byte file.<br>
 
 If will create the required 32K size DOS image named c1541_speed.bin <br>
 Program at offset 0x210000<br>
+![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/speed.png)
 
 ```Jiffy DOS```<br>
 Open a command prompt and enter the directory where you downloaded the file from the Internet and type: <br>
@@ -112,6 +110,7 @@ Open a command prompt and enter the directory where you downloaded the file from
 
 If will create the required 32K size DOS image named c1541_jiffy.bin <br>
 Program at offset 0x218000<br>
+![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/jiffy.png)
 
 **That´s it for the Tang Nano 20k**
 

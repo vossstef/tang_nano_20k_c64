@@ -68,8 +68,8 @@ invoke by F12 keypress<br>
 * c1541 Disk write protetcion<br>
 * c1541 Reset<br>
 * c1541 DOS ROM selection<br>
-* MIDI mode<br>
-* Pause when OSD open activation<br>
+* MIDI configuration<br>
+* Pause when OSD open<br>
 
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: D9<br>
@@ -124,12 +124,12 @@ Just SRAM load will not be sufficient.<br>
 
 *c1541 DOS ROM:*<br>
 Image has be to 32k Byte in size !<br>
-Memory Layout SPI Flash:<br>
+In a nutshell memory layout of the SPI Flash:<br>
 0x000000 reserved for FPGA bitstream<br>
 0x100000 reserved for Atari ST/STE<br>
 0x200000 c1541 Dolphin Dos 2<br>
-0x208000 c1541 factory CBM DOS 2.6<br>
-0x210000 c1541 Speed DOS<br>
+0x208000 c1541 CBM DOS 2.6<br>
+0x210000 c1541 Speed DOS Plus<br>
 0x218000 c1541 Jiffy DOS<br>
 
 Use Gowin Programmer GUI or OpenFpgaLoader(Linux) to program at least **Dolphin DOS and factory CBM DOS** to 'external Flash' at mentioned offsets. DOS roms you will find on the internet.<br>
@@ -166,9 +166,9 @@ see pin configuration in .cst configuration file
 | 3 | n.c. | - | 7V5 |
 | 4 | J5 15 | - | GND |
 | 5 | J5 16| - | 3V3 |
-| 6 | J5 17 | 72 CS | JOYn|
+| 6 | J5 17 | 72 CS | JOYATN|
 | 7 | J5 20 | 52 MCLK | JOYCLK |
-| 8 | n.c. | - | IRQ |
+| 8 | n.c. | - | JOYIRQ |
 | 9 | n.c. | - | JOYACK |
 
 
