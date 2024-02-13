@@ -37,12 +37,12 @@ flash process. Pressing the ```S2``` during power up will prevent the
 Tang Nano 20k from booting into the C64Nano core and will make sure
 the flash ROM can be updated.
 
-![](https://github.com/vossstef/tang_nano_20k_c64/tree/main/.assets/gowin1.jpg)
+![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/gowin1.jpg)
 
 Now press on the “programmer” marked red on the picture above. **You
 should see following screen:**
 
-![](https://github.com/vossstef/tang_nano_20k_c64/tree/main/.assets/device.png)
+![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/device.png)
 
 -   Press save on the dialog
 -   From there you can add a device for programming by pressing on the little
@@ -68,14 +68,14 @@ addresses:
 
 These DOS for the c1541 emulation can later be selected from the on-screen-display (OSD).
 
-![](https://github.com/vossstef/tang_nano_20k_c64/tree/main/.assets/flash_tos_104.png)
+![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/flash_tos_104.png)
 
   - For the FS file please choose the ```tang_nano_20k_c64.fs``` you just downloaded
   - User Code and IDCODE can be ignored
   - Mark each of your configs and press the little icon with the green play
     button. You should see a progress bar and then:
 
-![](https://github.com/vossstef/tang_nano_20k_c64/tree/main/.assets/flash_success.png)
+![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/flash_success.png)
 
 **Production of c1541 DOS 32k ROM binaries** <br>
 The DOS files you will find on the Internet. e.g.
@@ -133,7 +133,7 @@ the Tang Nano 20K. Using an external M0S is nevertheless recommended.
 -   Start the BuffaloLabDevCube from the directory where you decompressed it it
     ask you what chip should be used. Select BL616/BL618 and press “finish”
 
-![](https://github.com/vossstef/tang_nano_20k_c64/tree/main/.assets/buffstart.png)
+![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/buffstart.png)
 
 - You'll now see the program screen. On the right it should auto detect your
   device with a COM port. If not take a look in the device manager to check for
@@ -143,7 +143,7 @@ the Tang Nano 20K. Using an external M0S is nevertheless recommended.
 - Choose “Open Uart” and than press “Create & Download”. The firmware should now be
   flashed
 
-![](https://github.com/vossstef/tang_nano_20k_c64/tree/main/.assets/bufffinish.png)
+![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/bufffinish.png)
 
 ## Prepare the SD card
 
