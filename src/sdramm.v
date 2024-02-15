@@ -26,7 +26,7 @@ module sdramm (
 	// new TN20k internal 64mbit sdram
 	output		  		sd_clk, // sd clock
 	output		  		sd_cke, // clock enable
-    inout  reg [31:0]	sd_data,    // 31:0
+    inout reg [31:0]	sd_data,    // 31:0
 	output reg [10:0]	sd_addr,    // 12:0 / 13 bit multiplexed address bus (10:0)  11 bit mux
 	output 		[3:0]	sd_dqm,
 	output reg [ 1:0]	sd_ba,      // two banks
@@ -45,7 +45,7 @@ module sdramm (
 	output     [ 7:0]	dout,
 	input      [22:0] 	addr,       // 24:0 / 25 bit byte address  (new 21:0 in 16 bit) 22:0 in 8 
 	input      [1:0]	ds, 		// unused
-	input 		 		ce,         // cpu/chipset access
+	input 		 		cs,         // cpu/chipset access
 	input 		 		we          // cpu/chipset requests write
 );
 
@@ -72,11 +72,11 @@ localparam STATE_LAST      = 3'd7;   // last state in cycle
 reg [2:0] q /* synthesis noprune */;
 reg last_ce, last_refresh;
 always @(posedge clk) begin
-	last_ce <= ce;
+	last_ce <= cs;
 	last_refresh <= refresh;
 
 	// start a new cycle in rising edge of ce
-	if(ce && !last_ce) q <= 3'd1;
+	if(cs && !last_ce) q <= 3'd1;
 	if(q || reset) q <= q + 3'd1;
 end
 
@@ -88,16 +88,11 @@ end
 // into normal operation. Initialize the ram in the last 16 reset cycles (cycles 15-0)
 initial reset = 5'h1f;
 
-reg [4:0] reset;
+reg [4:0] reset; /* synthesis noprune=1 */;
 always @(posedge clk) begin
 	if(!reset_n)	reset <= 5'h1f;
 	else if((q == STATE_LAST) && (reset != 0)) reset <= reset - 5'd1;
 end
-
-// ---------------------------------------------------------------------
-// ------------------ generate ram control signals ---------------------
-// ---------------------------------------------------------------------
-
 // all possible commands
 localparam CMD_NOP             = 3'b111;
 localparam CMD_ACTIVE          = 3'b011;
@@ -109,27 +104,31 @@ localparam CMD_AUTO_REFRESH    = 3'b001;
 localparam CMD_LOAD_MODE       = 3'b000;
 
 reg [2:0] sd_cmd;   // current command sent to sd ram
-
 // drive control signals according to current command
 assign sd_cs  = 0;
 assign sd_ras = sd_cmd[2];
 assign sd_cas = sd_cmd[1];
 assign sd_we  = sd_cmd[0];
-assign sd_dqm[1:0] = sd_addr[10:9];
-assign sd_dqm[3:2] = 2'b00;          // to be fixed
 
-reg bt;
-reg [15:0] dout_r;
+assign sd_data = (we) ? {din, din, din, din } : 32'bzzzz_zzzz_zzzz_zzzz_zzzz_zzzz_zzzz_zzzz;
+assign          sd_dqm = {bt2,bt} == 2'd0 ? 4'b1110 :
+                         {bt2,bt} == 2'd1 ? 4'b1101 :
+                         {bt2,bt} == 2'd2 ? 4'b1011 :
+                                            4'b0111;
+assign dout = {bt2,bt} == 2'd0 ? dout_r[7:0] :
+              {bt2,bt} == 2'd1 ? dout_r[15:8] :
+              {bt2,bt} == 2'd2 ? dout_r[23:16]:
+			                     dout_r[31:24];
 
-assign dout = bt ? dout_r[15:8] : dout_r[7:0];
+reg bt2, bt;
+reg [31:0] dout_r;
+assign ready = 1'b1; // workaround
 
 always @(posedge clk) begin
 	reg [8:0] caddr;
-
 	sd_cmd  <= CMD_NOP;
-	sd_data <= 32'bZ;
 
-	if(q == STATE_READ) dout_r <= sd_data[15:0];
+	if(q == STATE_READ) dout_r <= sd_data[31:0];
 
 	if(reset) begin
 		sd_ba <= 0;
@@ -147,17 +146,16 @@ always @(posedge clk) begin
 	else begin
 		if(refresh && !last_refresh) sd_cmd <= CMD_AUTO_REFRESH;
 
-		if(ce && !last_ce) begin
+		if(cs && !last_ce) begin
 			sd_cmd  <= CMD_ACTIVE;
-			sd_ba   <= addr[20:19];
 			sd_addr <= addr[18:8];
-			caddr   <= {addr[21], addr[7:0]};
-			bt      <= addr[22];
+			sd_ba   <= addr[20:19];
+			bt       <= addr[21];
+			bt2      <= addr[22];
 		end
 		if(q == STATE_CMD_CONT) begin
-			if(we) sd_data <= {din, din, din, din};
 			sd_cmd  <= we ? CMD_WRITE : CMD_READ;
-			sd_addr <= {~bt & we, bt & we, 2'b10, caddr};
+			sd_addr <={3'b100, addr[7:0] };
 		end
 	end
 end
