@@ -2,6 +2,7 @@
 	CRT cartridge handling for C64 L.C.Ashmore 2017
 
 	Improvements by Sorgelig
+	modified for TN20k use 2024 Stefan Voss 
 */
 
 module cartridge
@@ -17,7 +18,7 @@ module cartridge
 	input      [15:0] cart_bank_size,		// length of each bank
 	input      [15:0] cart_bank_num,
 	input       [7:0] cart_bank_type,
-	input      [24:0] cart_bank_raddr,		// chip packet address
+	input      [22:0] cart_bank_raddr,		// chip packet address
 	input             cart_bank_wr,
 
 	output            exrom,					// exrom line
@@ -37,7 +38,7 @@ module cartridge
 	output reg  [7:0] IO_data,
 	input      [15:0] addr_in,             // address from cpu
 	input       [7:0] data_in,  			   // data from cpu going to sdram
-	output reg [24:0] addr_out, 	         // translated address output
+	output reg [22:0] addr_out, 	         // translated address output
 
 	input             freeze_key,
 	input             mod_key,
@@ -703,14 +704,14 @@ always @(posedge clk32) begin
 
 
 		// GeoRAM
-		99: begin
-				IOE_ena    <= 1;
-				IOE_wr_ena <= 1;
-				if(iof_wr && &addr_in[7:1]) begin
-					if(addr_in[0]) geo_bank[13:6] <= data_in;
-					else           geo_bank[5:0]  <= data_in[5:0];
-				end
-			end
+	//	99: begin
+	//			IOE_ena    <= 1;
+	//			IOE_wr_ena <= 1;
+	//			if(iof_wr && &addr_in[7:1]) begin
+	//				if(addr_in[0]) geo_bank[13:6] <= data_in;
+	//				else           geo_bank[5:0]  <= data_in[5:0];
+	//			end
+	//		end
 	endcase
 end
 
@@ -744,13 +745,13 @@ always begin
 	addr_out = addr_in;
 
 	if(reset_n) begin
-		if(romH & (romH_we | ~mem_write)) addr_out[24:13] =  get_bank(bank_hi, romH_we);
+		if(romH & (romH_we | ~mem_write)) addr_out[22:13] =  get_bank(bank_hi, romH_we);
 		if(romL & (romL_we | ~mem_write)) addr_out        = {get_bank(bank_lo, romL_we), addr_in[12:0] & mask_lo};
 
-		if(cs_ioe) addr_out[24:13] = get_bank(IOE_bank, IOE_wr_ena); // read/write to DExx
-		if(cs_iof) addr_out[24:13] = get_bank(IOF_bank, IOF_wr_ena); // read/write to DFxx
+		if(cs_ioe) addr_out[22:13] = get_bank(IOE_bank, IOE_wr_ena); // read/write to DExx
+		if(cs_iof) addr_out[22:13] = get_bank(IOF_bank, IOF_wr_ena); // read/write to DFxx
 
-		if(UMAXromH) addr_out[24:12] = {get_bank(bank_hi, 0), 1'b1}; // ULTIMAX CharROM
+		if(UMAXromH) addr_out[22:12] = {get_bank(bank_hi, 0), 1'b1}; // ULTIMAX CharROM
 
 		case(cart_id)
 			36: if(IOE && !(addr_in[7:0] & (clock_port ? 8'hF0 : 8'hFE)) && ~cart_disable) begin
@@ -760,11 +761,11 @@ always begin
 				end
 			54: if(rom_kbb && addr_in[15:13] == 3'b111 && !mem_write) begin
 					force_ultimax = 1;
-					addr_out[24:13] = get_bank(2, 0);
+					addr_out[22:13] = get_bank(2, 0);
 				end
-			99: if(IOE) begin
-					addr_out[24:8] <= {3'b011, geo_bank};
-				end
+	//		99: if(IOE) begin
+	//				addr_out[22:8] <= {3'b1, geo_bank};
+	//			end
 		default:;
 		endcase
 	end

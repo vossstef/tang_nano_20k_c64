@@ -13,9 +13,6 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.numeric_std.ALL;
 
 entity tang_nano_20k_c64_top is
-  generic (
-    sysclk_frequency : integer := 315 -- Sysclk frequency * 10 (31.5Mhz)
-    );
   port
   (
     clk_27mhz   : in std_logic;
@@ -83,18 +80,17 @@ signal audio_data_r  : std_logic_vector(17 downto 0);
 signal c64_addr     : unsigned(15 downto 0);
 signal c64_data_out : unsigned(7 downto 0);
 signal sdram_data   : unsigned(7 downto 0);
-signal reu_sdram_data : unsigned(7 downto 0);
-signal dout         : std_logic_vector(15 downto 0);
+signal dout         : std_logic_vector(7 downto 0);
 signal idle         : std_logic;
-signal dram_addr    : std_logic_vector(21 downto 0);
-signal dram_addr_s  : std_logic_vector(21 downto 0);
+signal dram_addr    : std_logic_vector(22 downto 0);
+signal dram_addr_s  : std_logic_vector(22 downto 0);
 signal ram_scramble : std_logic_vector(1 downto 0);
 signal ram_ready    : std_logic;
 signal cb_D         : std_logic;
-signal addr         : std_logic_vector(21 downto 0);
+signal addr         : std_logic_vector(22 downto 0);
 signal cs           : std_logic;
 signal we           : std_logic;
-signal din          : std_logic_vector(15 downto 0);
+signal din          : std_logic_vector(7 downto 0);
 signal ds           : std_logic_vector(1 downto 0);
 
 -- IEC
@@ -230,7 +226,7 @@ signal reu_ram_ce     : std_logic;
 signal cart_ce        : std_logic;
 signal cart_we        : std_logic;
 signal cart_data      : std_logic_vector(7 downto 0);
-signal cart_addr      : std_logic_vector(24 downto 0);
+signal cart_addr      : std_logic_vector(22 downto 0);
 signal exrom          : std_logic;
 signal game           : std_logic;
 signal romL           : std_logic;
@@ -648,24 +644,16 @@ begin
     end if;
 end process;
 
-
--- offset A(0) is a workaround till sdram properly adjusted !
-
--- cart_addr intentionally not used as workaround !
-
-dram_addr(21 downto 0) <= B"000000" & std_logic_vector(c64_addr);
 -- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
-dram_addr_s <= dram_addr(21 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
-addr <= ((B"10000_00000000_00000000" or reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s(20 downto 0) & '0';
+dram_addr_s <= cart_addr(22 downto 4) & (cart_addr(3 downto 2) xor ram_scramble) & cart_addr(1 downto 0);
+
+addr <= reu_ram_addr(22 downto 0) when ext_cycle = '1' else dram_addr_s;
 cs <= reu_ram_ce when ext_cycle = '1' else cart_ce;
 we <= reu_ram_we when ext_cycle = '1' else cart_we;
-ds <= "01" when ext_cycle = '1' else "10";
-din(7 downto 0) <= std_logic_vector(c64_data_out);
-din(15 downto 8) <= std_logic_vector(reu_ram_dout);
-sdram_data <= unsigned(dout(7 downto 0));
-reu_sdram_data <= unsigned(dout(15 downto 8));
+din <= std_logic_vector(reu_ram_dout) when ext_cycle = '1' else std_logic_vector(c64_data_out);
+sdram_data <= unsigned(dout);
 
-dram_inst: entity work.sdram
+dram_inst: entity work.sdram8
    port map(
     -- SDRAM side interface
     sd_clk    => O_sdram_clk,   -- sd clock
@@ -686,23 +674,37 @@ dram_inst: entity work.sdram
     din       => din,           -- data input from chipset/cpu
     dout      => dout,
     addr      => addr,          -- 22 bit word address
-    ds        => ds,            -- upper/lower data strobe R = low and W = low
+    ds        => "00",
     cs        => cs,            -- cpu/chipset requests read/wrie
     we        => we             -- cpu/chipset requests write
   );
 
--- hook for future PAL / NTSC mode switch
+-- Clock              PAL  / NTSC 
+-- dram /flash  63.000 Mhz / 65.5714 Mhz
+-- core         31.500 Mhz / 32.7857 Mhz
+-- c1541        15.570 Mhz / 16.393 Mhz uncorrected
+-- IDIV_SEL              2 / 6
+-- FBDIV_SEL             6 / 16
+
+
+-- IDIV_SEL  <= conv_integer("000010") when ntscMode = '0' else conv_integer("000110");
+-- FBDIV_SEL <= conv_integer("000110") when ntscMode = '0' else conv_integer("010000");
+
+-- hdmi video
+-- 720 	480 	60 Hz 	31.4685 kHz 	
+-- ModeLine "720x480" 27.00 720 736 798 858 480 489 495 525 -HSync -VSync 
+
 mainclock: rPLL
         generic map (
             FCLKIN => "27",
             DEVICE => "GW2AR-18C",
             DYN_IDIV_SEL => "false",
-            IDIV_SEL => 2,
+            IDIV_SEL => 2, -- 6 NTSC
             DYN_FBDIV_SEL => "false",
-            FBDIV_SEL => 6,
+            FBDIV_SEL => 6, -- 16 NTSC
             DYN_ODIV_SEL => "false",
             ODIV_SEL => 8,
-            PSDA_SEL => "0110",   -- phase shift  0110 135° 0111 157.5°
+            PSDA_SEL => "0110",   -- phase shift  0110 135°
             DYN_DA_EN => "false", 
             DUTYDA_SEL => "1000",
             CLKOUT_FT_DIR => '1',
@@ -892,8 +894,8 @@ module_inst: entity work.sysctrl
   system_audio_filter => sid_filter,
   system_turbo_mode   => turbo_mode,
   system_turbo_speed  => turbo_speed,
-  system_pot_1_2      => system_pot_1_2, -- unused
-  system_pot_3_4      => system_pot_3_4, -- unused
+  system_video_std    => ntscMode,
+  system_pot_3_4      => open,
   system_midi         => st_midi,
   system_pause        => system_pause,
 
@@ -1072,7 +1074,7 @@ port map(
     ram_cycle => ext_cycle,
     ram_addr  => reu_ram_addr,
     ram_dout  => reu_ram_dout,
-    ram_din   => reu_sdram_data,
+    ram_din   => dout,
     ram_we    => reu_ram_we,
     
     cpu_addr  => c64_addr, 

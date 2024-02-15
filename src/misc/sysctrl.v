@@ -42,7 +42,7 @@ module sysctrl (
   output reg        system_audio_filter,
   output reg [1:0]  system_turbo_mode,
   output reg [1:0]  system_turbo_speed,
-  output reg        system_pot_1_2,
+  output reg        system_video_std,
   output reg        system_pot_3_4,
   output reg [2:0]  system_midi,
   output reg        system_pause
@@ -87,7 +87,7 @@ always @(posedge clk) begin
       system_audio_filter <= 1'b1;
       system_turbo_mode <= 2'b00;
       system_turbo_speed <= 2'b00;
-      system_pot_1_2 <= 1'b0;
+      system_video_std <= 1'b0;
       system_pot_3_4 <= 1'b0;
       system_midi <= 2'b000;
       system_pause <= 1'b0;
@@ -168,7 +168,7 @@ always @(posedge clk) begin
                     // turbo speed
                     if(id == "Y") system_turbo_speed <= data_in[1:0];
                     // sid pot 1 / 2
-                    if(id == "E") system_pot_1_2 <= data_in[0];
+                    if(id == "E") system_video_std <= data_in[0];
                     // midi
                     if(id == "N") system_midi <= data_in[2:0];
                     // Pause when OSD is open
