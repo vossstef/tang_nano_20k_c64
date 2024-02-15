@@ -11,8 +11,9 @@ module video_analyzer
  input		  hs,
  input		  vs,
  input		  de,
+ input		  ntscmode,
 
- output reg [1:0] mode, // 0=ntsc, 1=pal, 2=mono
+ output reg[1:0] mode, // 0=ntsc, 1=pal, 2=mono
  output reg	  vreset
 );
    
@@ -30,7 +31,7 @@ always @(posedge clk) begin
     // ---- hsync processing -----
     hsD <= hs;
     deD <= de;
-    mode <= 2'd1;
+    mode <= {1'b0 , ~ntscmode}; // 0=ntsc, 1=pal, 2=mono
 
     // begin of hsync, falling edge
     if(!hs && hsD) begin
@@ -77,16 +78,22 @@ always @(posedge clk) begin
 //       (hcnt == 152 && vcnt == 28 && changed && mode == 2'd1) ||
 //       (hcnt == 152 && vcnt == 18 && changed && mode == 2'd0) ) begin
    if
-       (hcnt == 68 && vcnt == 39 && changed && mode == 2'd1)  // c64 core 720x576
-//       (hcnt == 152 && vcnt == 28 && changed)  //Atari ST core 832x576
+      ((hcnt == 68 && vcnt == 39 && changed && ntscmode == 1'd0) || // c64 core PAL  720x576
+       (hcnt == 60 && vcnt == 30 && changed && ntscmode == 1'd1))   // c64 core NTSC 720x480
          begin
             vreset <= 1'b1;
             changed <= 1'b0;
    end
 end
+//assign  mode = {1'b0 , ~ntscmode}; // 0=ntsc, 1=pal, 2=mono
 
 endmodule
 
 // Modeline "720x576 @ 50hz"  27    720   732   796   864   576   581   586   625 31.25khz
 // Hcnt is set to 0 on the trailing edge of hsync from core so the H constants below need to be offset by 864-796=68
 // Vcnt is set to 0 on the trailing edge of vsync from the core so the V constants below need to be offset by 625-586=39
+
+// NTSC 720 480 60 Hz 31.4685 kHz
+// ModeLine "720x480" 27.00 720 736 798 858 480 489 495 525 -HSync -VSync 
+// Hcnt 858 - 798 = 60
+// Vcnt 525 - 495 = 30

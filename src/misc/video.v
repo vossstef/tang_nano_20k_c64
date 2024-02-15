@@ -6,6 +6,7 @@ module video (
           input    hdmi_pll_reset,
           output   pll_lock,
 
+          input    ntscmode,
           input    vb_in,
           input    hb_in,
 	      input	   vs_in_n,
@@ -77,6 +78,7 @@ video_analyzer video_analyzer (
    .vs(vs_in_n),
    .hs(hs_in_n),
    .de(~vb_in || ~hb_in),
+   .ntscmode(ntscmode),
 
    .mode(vmode),
    .vreset(vreset)  // reset signal

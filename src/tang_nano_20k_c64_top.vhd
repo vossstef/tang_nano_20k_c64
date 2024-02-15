@@ -130,7 +130,7 @@ signal ram_ce      :  std_logic;
 signal ram_we      :  std_logic;
 signal romCE       :  std_logic;
 
-signal ntscMode    :  std_logic := '0';
+signal ntscMode    :  std_logic;
 signal hsync       :  std_logic;
 signal vsync       :  std_logic;
 signal r           :  unsigned(7 downto 0);
@@ -288,6 +288,8 @@ signal key_triangle    : std_logic;
 signal key_square      : std_logic;
 signal key_circle      : std_logic;
 signal key_cross       : std_logic;
+signal IDSEL           : std_logic_vector(5 downto 0);
+signal FBDSEL          : std_logic_vector(5 downto 0);
 
     component rPLL
         generic (
@@ -600,6 +602,7 @@ port map(
       clk32_i   => clk32, -- core clock for sync purposes
       hdmi_pll_reset  => not pll_locked,
       pll_lock  => pll2_locked, -- hdmi pll lock
+      ntscmode  => ntscMode,
       vb_in     => frz_vbl,
       hb_in     => frz_hbl,
       hs_in_n   => frz_hs,
@@ -681,28 +684,22 @@ dram_inst: entity work.sdram8
 
 -- Clock              PAL  / NTSC 
 -- dram /flash  63.000 Mhz / 65.5714 Mhz
--- core         31.500 Mhz / 32.7857 Mhz
--- c1541        15.570 Mhz / 16.393 Mhz uncorrected
+-- core         31.500 Mhz / 32.7857 Mhz ; c1541 15.570 Mhz / 16.393 Mhz uncorrected
 -- IDIV_SEL              2 / 6
 -- FBDIV_SEL             6 / 16
 
-
--- IDIV_SEL  <= conv_integer("000010") when ntscMode = '0' else conv_integer("000110");
--- FBDIV_SEL <= conv_integer("000110") when ntscMode = '0' else conv_integer("010000");
-
--- hdmi video
--- 720 	480 	60 Hz 	31.4685 kHz 	
--- ModeLine "720x480" 27.00 720 736 798 858 480 489 495 525 -HSync -VSync 
+IDSEL  <= "111101" when ntscMode = '0' else "111001";
+FBDSEL <= "111001" when ntscMode = '0' else "101111";
 
 mainclock: rPLL
         generic map (
             FCLKIN => "27",
             DEVICE => "GW2AR-18C",
-            DYN_IDIV_SEL => "false",
-            IDIV_SEL => 2, -- 6 NTSC
-            DYN_FBDIV_SEL => "false",
-            FBDIV_SEL => 6, -- 16 NTSC
-            DYN_ODIV_SEL => "false",
+            DYN_IDIV_SEL => "true",
+            IDIV_SEL => 2,
+            DYN_FBDIV_SEL => "true",
+            FBDIV_SEL => 6,
+            DYN_ODIV_SEL => "true",
             ODIV_SEL => 8,
             PSDA_SEL => "0110",   -- phase shift  0110 135°
             DYN_DA_EN => "false", 
@@ -720,20 +717,20 @@ mainclock: rPLL
             CLKOUTD3_SRC => "CLKOUT"
         )
         port map (
-            CLKOUT   => clk64,    -- actual 63Mhz
+            CLKOUT   => clk64,
             LOCK     => pll_locked,
             CLKOUTP  => mspi_clk, -- shifted 63Mhz SPI Flash
-            CLKOUTD  => clk32, --    actual 31.5Mhz
+            CLKOUTD  => clk32,
             CLKOUTD3 => open,
             RESET    => '0',
             RESET_P  => '0',
             CLKIN    => clk_27mhz,
             CLKFB    => '0',
-            FBDSEL   => (others => '0'),
-            IDSEL    => (others => '0'),
-            ODSEL    => (others => '0'),
-            PSDA     => (others => '0'),
-            DUTYDA   => (others => '0'),
+            FBDSEL   => FBDSEL,
+            IDSEL    => IDSEL,
+            ODSEL    => "111100",
+            PSDA     => "0110", -- 135°
+            DUTYDA   => "1000", -- static mode
             FDLY     => (others => '1')
         );
 
