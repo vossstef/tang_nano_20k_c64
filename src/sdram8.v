@@ -1,5 +1,5 @@
 //
-// sdram.v
+// sdram8.v
 //
 // sdram controller implementation for the MiST board
 // http://code.google.com/p/mist-board/
@@ -20,33 +20,35 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 //
 
-module sdramm (
+// adapted for TN20k internal 64mbit sdram 32 bit wide
+// 2024 Stefan Voss
 
-	// old interface to the MT48LC16M16 chip
-	// new TN20k internal 64mbit sdram
-	output		  		sd_clk, // sd clock
-	output		  		sd_cke, // clock enable
-    inout reg [31:0]	sd_data,    // 31:0
-	output reg [10:0]	sd_addr,    // 12:0 / 13 bit multiplexed address bus (10:0)  11 bit mux
-	output 		[3:0]	sd_dqm,
-	output reg [ 1:0]	sd_ba,      // two banks
-	output 				sd_cs,      // a single chip select
-	output 				sd_we,      // write enable
-	output 				sd_ras,     // row address select
-	output 				sd_cas,     // columns address select
+module sdram8 (
+
+
+    output              sd_clk, // sd clock
+    output              sd_cke, // clock enable
+    inout reg [31:0]    sd_data,// 32 bit bidirectional data bus
+    output reg [10:0]   sd_addr,// 11 bit multiplexed address bus
+    output 		[3:0]   sd_dqm, // two byte masks
+    output reg [ 1:0]   sd_ba,  // two banks
+    output              sd_cs,  // a single chip select
+    output              sd_we,  // write enable
+    output              sd_ras, // row address select
+    output              sd_cas, // columns address select
 
 	// cpu/chipset interface
-	input 		 		clk,			// sdram is accessed at up to 128MHz
-    input               reset_n, 
+    input               clk,    // sdram is accessed up to 65MHz
+    input               reset_n,// init signal after FPGA config to initialize RAM
 	
-	output		  		ready, // ram is ready and has been initialized
-	input 		 		refresh,    // refresh cycle
-	input      [ 7:0] 	din,
-	output     [ 7:0]	dout,
-	input      [22:0] 	addr,       // 24:0 / 25 bit byte address  (new 21:0 in 16 bit) 22:0 in 8 
-	input      [1:0]	ds, 		// unused
-	input 		 		cs,         // cpu/chipset access
-	input 		 		we          // cpu/chipset requests write
+    output              ready,  // ram is ready and has been initialized
+    input               refresh,// refresh cycle
+    input      [ 7:0]   din,
+    output     [ 7:0]   dout,
+    input      [22:0]   addr,   // 23 bit word address
+    input      [1:0]    ds,     // unused
+    input               cs,     // cpu/chipset requests read/write
+    input               we      // cpu/chipset requests write
 );
 
 assign sd_clk = clk;
@@ -63,7 +65,6 @@ localparam MODE = { 3'b000, NO_WRITE_BURST, OP_MODE, CAS_LATENCY, ACCESS_TYPE, B
 // ---------------------------------------------------------------------
 // ------------------------ cycle state machine ------------------------
 // ---------------------------------------------------------------------
-
 localparam STATE_CMD_START = 3'd0;   // state in which a new command can be started
 localparam STATE_CMD_CONT  = STATE_CMD_START  + RASCAS_DELAY; // command can be continued
 localparam STATE_READ      = STATE_CMD_CONT + CAS_LATENCY + 1'd1;
@@ -90,9 +91,12 @@ initial reset = 5'h1f;
 
 reg [4:0] reset; /* synthesis noprune=1 */;
 always @(posedge clk) begin
-	if(!reset_n)	reset <= 5'h1f;
+	if(!reset_n) reset <= 5'h1f;
 	else if((q == STATE_LAST) && (reset != 0)) reset <= reset - 5'd1;
 end
+
+assign ready = !(|reset);
+
 // all possible commands
 localparam CMD_NOP             = 3'b111;
 localparam CMD_ACTIVE          = 3'b011;
@@ -104,25 +108,25 @@ localparam CMD_AUTO_REFRESH    = 3'b001;
 localparam CMD_LOAD_MODE       = 3'b000;
 
 reg [2:0] sd_cmd;   // current command sent to sd ram
+reg [1:0] bt;
+
 // drive control signals according to current command
 assign sd_cs  = 0;
 assign sd_ras = sd_cmd[2];
 assign sd_cas = sd_cmd[1];
 assign sd_we  = sd_cmd[0];
 
-assign sd_data = (we) ? {din, din, din, din } : 32'bzzzz_zzzz_zzzz_zzzz_zzzz_zzzz_zzzz_zzzz;
-assign          sd_dqm = {bt2,bt} == 2'd0 ? 4'b1110 :
-                         {bt2,bt} == 2'd1 ? 4'b1101 :
-                         {bt2,bt} == 2'd2 ? 4'b1011 :
-                                            4'b0111;
-assign dout = {bt2,bt} == 2'd0 ? dout_r[7:0] :
-              {bt2,bt} == 2'd1 ? dout_r[15:8] :
-              {bt2,bt} == 2'd2 ? dout_r[23:16]:
-			                     dout_r[31:24];
+assign sd_data = (cs && we) ? {din, din, din, din } : 32'bzzzz_zzzz_zzzz_zzzz_zzzz_zzzz_zzzz_zzzz;
+assign sd_dqm = (!we)?4'b0000: {bt} == 2'd0 ? 4'b0111: 
+                               {bt} == 2'd1 ? 4'b1011: 
+                               {bt} == 2'd2 ? 4'b1101:
+                                              4'b1110;
+assign dout = {bt} == 2'd0 ? dout_r[31:24]: 
+              {bt} == 2'd1 ? dout_r[23:16]:
+              {bt} == 2'd2 ? dout_r[15:8] :
+                             dout_r[7:0];
 
-reg bt2, bt;
 reg [31:0] dout_r;
-assign ready = 1'b1; // workaround
 
 always @(posedge clk) begin
 	reg [8:0] caddr;
@@ -150,9 +154,9 @@ always @(posedge clk) begin
 			sd_cmd  <= CMD_ACTIVE;
 			sd_addr <= addr[18:8];
 			sd_ba   <= addr[20:19];
-			bt       <= addr[21];
-			bt2      <= addr[22];
+			bt      <= addr[22:21];
 		end
+        // CAS phase 
 		if(q == STATE_CMD_CONT) begin
 			sd_cmd  <= we ? CMD_WRITE : CMD_READ;
 			sd_addr <={3'b100, addr[7:0] };

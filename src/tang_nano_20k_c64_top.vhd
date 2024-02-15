@@ -13,9 +13,6 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.numeric_std.ALL;
 
 entity tang_nano_20k_c64_top is
-  generic (
-    sysclk_frequency : integer := 315 -- Sysclk frequency * 10 (31.5Mhz)
-    );
   port
   (
     clk_27mhz   : in std_logic;
@@ -229,7 +226,7 @@ signal reu_ram_ce     : std_logic;
 signal cart_ce        : std_logic;
 signal cart_we        : std_logic;
 signal cart_data      : std_logic_vector(7 downto 0);
-signal cart_addr      : std_logic_vector(24 downto 0);
+signal cart_addr      : std_logic_vector(22 downto 0);
 signal exrom          : std_logic;
 signal game           : std_logic;
 signal romL           : std_logic;
@@ -647,23 +644,16 @@ begin
     end if;
 end process;
 
-
--- offset A(0) is a workaround till sdram properly adjusted !
-
--- cart_addr intentionally not used as workaround !
-
-dram_addr(22 downto 0) <= B"0000000" & std_logic_vector(c64_addr);
 -- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
 dram_addr_s <= cart_addr(22 downto 4) & (cart_addr(3 downto 2) xor ram_scramble) & cart_addr(1 downto 0);
---dram_addr_s <= dram_addr(22 downto 4) & (dram_addr(3 downto 2) xor ram_scramble) & dram_addr(1 downto 0);
---addr <= ((B"10000_00000000_00000000" or reu_ram_addr(20 downto 0)) & '0') when ext_cycle = '1' else dram_addr_s(20 downto 0) & '0';
-addr <= dram_addr_s(22 downto 0);
+
+addr <= reu_ram_addr(22 downto 0) when ext_cycle = '1' else dram_addr_s;
 cs <= reu_ram_ce when ext_cycle = '1' else cart_ce;
 we <= reu_ram_we when ext_cycle = '1' else cart_we;
 din <= std_logic_vector(reu_ram_dout) when ext_cycle = '1' else std_logic_vector(c64_data_out);
 sdram_data <= unsigned(dout);
 
-dram_inst: entity work.sdramm
+dram_inst: entity work.sdram8
    port map(
     -- SDRAM side interface
     sd_clk    => O_sdram_clk,   -- sd clock
@@ -692,7 +682,7 @@ dram_inst: entity work.sdramm
 -- Clock              PAL  / NTSC 
 -- dram /flash  63.000 Mhz / 65.5714 Mhz
 -- core         31.500 Mhz / 32.7857 Mhz
--- c1541        15.570 Mhz / 16.393 Mhz
+-- c1541        15.570 Mhz / 16.393 Mhz uncorrected
 -- IDIV_SEL              2 / 6
 -- FBDIV_SEL             6 / 16
 
