@@ -99,23 +99,11 @@ logic [BIT_WIDTH-1:0] hsync_pulse_start, hsync_pulse_size;
 logic [BIT_HEIGHT-1:0] vsync_pulse_start, vsync_pulse_size;
 logic [1:0] invert;
 
-// 720x576@50Hz 31.25Khz CEA-861 27Mhz
-// H front porch 12
-// H sync 64
-// H back porch 68
-// V front porch 5
-// V sync 5
-// V back porch 39
-// Modeline "720x576 @ 50hz"  27    720   732   796   864   576   581   586   625 31.25khz
-//NTSC
-// ModeLine "720x480"@ 60Hz   27    720   736   798   858   480   489   495   525          -HSync -VSync 
-assign frame_width = (stmode==2'd0)?858:(stmode==2'd1)?864:896;
-// is usually 800, but Atari ST in PAL outputs 840 pixels per line
+assign frame_width = (stmode==2'd0)?848:(stmode==2'd1)?864:896;
 // and (our) HDMI implementation expects the width to be a multiple of 16
-// Also demos openeing the screen can only address 832 pixels properly
 assign screen_width = (stmode==2'd0)?720:(stmode==2'd1)?720:640;   //0 NTSC, 1 PAL 2 = ST MONO 
-assign hsync_pulse_start = (stmode==2'd0)?16:24;
-assign hsync_pulse_size = (stmode==2'd0)?62:72;
+assign hsync_pulse_start = (stmode==2'd0)?16:12;
+assign hsync_pulse_size = (stmode==2'd0)?62:64;
 // should be 625/525, has to be 626/526 for Atari ST in PAL/NTSC mode
 // need to be 624 for c64 core
 assign frame_height = (stmode==2'd0)?526:(stmode==2'd1)?624:501;
@@ -124,6 +112,8 @@ assign vsync_pulse_start = (stmode==2'd0)?9:5;
 assign vsync_pulse_size = (stmode==2'd0)?6:5;
 assign invert = 2'b11;
 
+// ModeLine "720x576" 27.00 720 732 796 864 576 581 586 625 -HSync -VSync 
+// ModeLine "720x480" 27.00 720 736 798 858 480 489 495 525 -HSync -VSync 
 always_comb begin
     hsync <= invert[0] ^ (cx >= screen_width + hsync_pulse_start && cx < screen_width + hsync_pulse_start + hsync_pulse_size);
     // vsync pulses should begin and end at the start of hsync, so special

@@ -59,8 +59,10 @@ Gowin_CLKDIV clk_div_5 (
 
 // generate 48khz audio clock
 reg clk_audio /* synthesis syn_keep=1 */;
+reg vresetD;
 reg [8:0] aclk_cnt;
 always @(posedge clk_pixel) begin
+    vresetD <= vreset;           // synchronize hdmi reset
     // divisor = pixel clock / 48000 / 2 - 1
     if(aclk_cnt < `PIXEL_CLOCK / 48000 / 2 -1)
         aclk_cnt <= aclk_cnt + 9'd1;
@@ -92,7 +94,7 @@ wire [5:0] sd_b;
 scandoubler #(10) scandoubler (
         // system interface
         .clk_sys(clk32_i),
-        .bypass(vmode == 2'd2),      // bypass in ST high/mono
+        .bypass(1'b0),      // bypass in ST high/mono
         .ce_divider(3'd1),
         .pixel_ena(),
 
@@ -175,8 +177,8 @@ hdmi #(
     .AUDIO_BIT_WIDTH(16),
     .VENDOR_NAME( { "MiSTle", 16'd0} ),
     .PRODUCT_DESCRIPTION( {"C64", 64'd0} ),
-    .START_X(0) // 90
-//  .START_Y(30)
+   .START_X(),
+   .START_Y()
 ) hdmi(
   .clk_pixel_x5(clk_pixel_x5),
   .clk_pixel(clk_pixel),
@@ -193,7 +195,7 @@ hdmi #(
   // video input
   .stmode(vmode),    // current video mode PAL/NTSC/MONO
   .wide(system_wide_screen),       // adopt to wide screen video
-  .reset(vreset),    // signal to synchronize HDMI
+  .reset(vresetD),    // signal to synchronize HDMI
 
   // Atari STE outputs 4 bits per color. Scandoubler outputs 6 bits (to be
   // able to implement dark scanlines) and HDMI expects 8 bits per color

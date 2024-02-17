@@ -20,7 +20,7 @@ module video_analyzer
 
 // generate a reset signal in the upper left corner of active video used
 // to synchonize the HDMI video generation to the Atari ST
-reg vsD, hsD, deD;
+reg vsD, hsD;
 reg [12:0] hcnt;    // signal ranges 0..2047
 reg [12:0] hcntL;
 reg [9:0] vcnt;    // signal ranges 0..313
@@ -30,7 +30,6 @@ reg changed;
 always @(posedge clk) begin
     // ---- hsync processing -----
     hsD <= hs;
-    deD <= de;
     mode <= {1'b0 , ~ntscmode}; // 0=ntsc, 1=pal, 2=mono
 
     // begin of hsync, falling edge
@@ -54,15 +53,10 @@ always @(posedge clk) begin
           if(vcntL != vcnt)
              changed <= 1'b1;
 
-          vcnt <= 0;
+          vcnt <= 0;  
 	  // check for PAL/NTSC values
-//	  if(vcnt == 10'd312 && hcntL == 13'd2047) mode <= 2'd2;  // PAL @ hozizontal width 1024 (832x576)
-//	  if(vcnt == 10'd312 && hcntL == 13'd1727) mode <= 2'd1;  // PAL @ hozizontal width 864  (720x576)
-//	  if(vcnt == 10'd262 && hcntL == 13'd2031) mode <= 2'd0;  // NTSC
-
-	  // check for MONO
-//	  if(vcnt == 10'd500 && hcntL == 13'd895)  mode <= 2'd2;  // MONO
-	  
+//	  if(vcnt == 10'd312 && hcntL == 13'd1727) mode <= 2'd1;  // PAL
+//	  if(vcnt == 10'd263 && hcntL == 13'd1695) mode <= 2'd0;  // NTSC
        end else
          vcnt <= vcnt + 10'd1;
     end
@@ -72,20 +66,13 @@ always @(posedge clk) begin
    // area
    
    vreset <= 1'b0;
-   // account for back porches to adjust image position within the
-   // HDMI frame
-//   if( (hcnt == 244 && vcnt == 36 && changed && mode == 2'd2) ||
-//       (hcnt == 152 && vcnt == 28 && changed && mode == 2'd1) ||
-//       (hcnt == 152 && vcnt == 18 && changed && mode == 2'd0) ) begin
-   if
-      ((hcnt == 68 && vcnt == 39 && changed && ntscmode == 1'd0) || // c64 core PAL  720x576
-       (hcnt == 60 && vcnt == 30 && changed && ntscmode == 1'd1))   // c64 core NTSC 720x480
-         begin
+   if( 
+       (hcnt == 68 && vcnt == 39 && changed && mode == 2'd1) ||
+       (hcnt == 60 && vcnt == 30 && changed && mode == 2'd0) ) begin
             vreset <= 1'b1;
             changed <= 1'b0;
    end
 end
-//assign  mode = {1'b0 , ~ntscmode}; // 0=ntsc, 1=pal, 2=mono
 
 endmodule
 

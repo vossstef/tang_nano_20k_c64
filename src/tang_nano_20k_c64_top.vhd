@@ -688,8 +688,8 @@ dram_inst: entity work.sdram8
 -- IDIV_SEL              2 / 6
 -- FBDIV_SEL             6 / 16
 
-IDSEL  <= "111101" when ntscMode = '0' else "111001";
-FBDSEL <= "111001" when ntscMode = '0' else "101111";
+   IDSEL  <= "111101" when ntscMode = '0' else "111001";
+   FBDSEL <= "111001" when ntscMode = '0' else "101111";
 
 mainclock: rPLL
         generic map (
