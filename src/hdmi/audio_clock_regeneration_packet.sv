@@ -10,7 +10,7 @@ module audio_clock_regeneration_packet
 (
     input logic clk_pixel,
     input logic clk_audio,
-    output logic clk_audio_counter_wrap = 0,
+    output logic clk_audio_counter_wrap,
     output logic [23:0] header,
     output logic [55:0] sub [3:0]
 );

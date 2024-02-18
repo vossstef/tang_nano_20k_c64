@@ -59,6 +59,7 @@ module hdmi
     parameter int START_Y = 0
 )
 (
+    input logic	[11:0] debug,
     input logic clk_pixel_x5,
     input logic clk_pixel,
     input logic clk_audio,
@@ -99,21 +100,23 @@ logic [BIT_WIDTH-1:0] hsync_pulse_start, hsync_pulse_size;
 logic [BIT_HEIGHT-1:0] vsync_pulse_start, vsync_pulse_size;
 logic [1:0] invert;
 
-assign frame_width = (stmode==2'd0)?848:(stmode==2'd1)?864:896;
+
+// ModeLine "720x576" 27.00 720 732 796 864 576 581 586 625 -HSync -VSync 
+// ModeLine "720x480" 27.00 720 736 798 858 480 489 495 525 -HSync -VSync 
+// https://www.epanorama.net/faq/vga2rgb/calc.html
+assign frame_width = (stmode==2'd0)?856:(stmode==2'd1)?864:896;
 // and (our) HDMI implementation expects the width to be a multiple of 16
 assign screen_width = (stmode==2'd0)?720:(stmode==2'd1)?720:640;   //0 NTSC, 1 PAL 2 = ST MONO 
 assign hsync_pulse_start = (stmode==2'd0)?16:12;
 assign hsync_pulse_size = (stmode==2'd0)?62:64;
 // should be 625/525, has to be 626/526 for Atari ST in PAL/NTSC mode
-// need to be 624 for c64 core
-assign frame_height = (stmode==2'd0)?526:(stmode==2'd1)?624:501;
+// need to be 624 PAL for c64 core and x in NTSC mode
+assign frame_height = (stmode==2'd0)?524:(stmode==2'd1)?624:501;
 assign screen_height = (stmode==2'd0)?480:(stmode==2'd1)?576:400;
 assign vsync_pulse_start = (stmode==2'd0)?9:5;
 assign vsync_pulse_size = (stmode==2'd0)?6:5;
 assign invert = 2'b11;
 
-// ModeLine "720x576" 27.00 720 732 796 864 576 581 586 625 -HSync -VSync 
-// ModeLine "720x480" 27.00 720 736 798 858 480 489 495 525 -HSync -VSync 
 always_comb begin
     hsync <= invert[0] ^ (cx >= screen_width + hsync_pulse_start && cx < screen_width + hsync_pulse_start + hsync_pulse_size);
     // vsync pulses should begin and end at the start of hsync, so special

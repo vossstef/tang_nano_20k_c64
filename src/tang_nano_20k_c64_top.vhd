@@ -290,6 +290,11 @@ signal key_circle      : std_logic;
 signal key_cross       : std_logic;
 signal IDSEL           : std_logic_vector(5 downto 0);
 signal FBDSEL          : std_logic_vector(5 downto 0);
+signal ntscModeD       : std_logic;
+
+signal debug           : unsigned(11 downto 0) := to_unsigned(856,12);
+signal user_debounce   : std_logic;
+signal reset_debounce  : std_logic;
 
     component rPLL
         generic (
@@ -607,6 +612,7 @@ port map(
       hb_in     => frz_hbl,
       hs_in_n   => frz_hs,
       vs_in_n   => frz_vs,
+      debug     => debug,
 
       r_in      => std_logic_vector(r(7 downto 4)),
       g_in      => std_logic_vector(g(7 downto 4)),
@@ -682,14 +688,36 @@ dram_inst: entity work.sdram8
     we        => we             -- cpu/chipset requests write
   );
 
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    if vsync = '1' then
+      user_debounce <= user;
+      reset_debounce <= reset;
+      if user ='1' and user_debounce = '0' then
+        debug <= debug + 1;
+      end if;
+      if reset ='1' and reset_debounce = '0' then
+        if debug > 0 then debug <= debug - 1; end if;
+      end if;
+    end if;
+  end if;
+end process;
+
 -- Clock              PAL  / NTSC 
 -- dram /flash  63.000 Mhz / 65.5714 Mhz
 -- core         31.500 Mhz / 32.7857 Mhz ; c1541 15.570 Mhz / 16.393 Mhz uncorrected
 -- IDIV_SEL              2 / 6
 -- FBDIV_SEL             6 / 16
 
-   IDSEL  <= "111101" when ntscMode = '0' else "111001";
-   FBDSEL <= "111001" when ntscMode = '0' else "101111";
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    ntscModeD <= ntscMode;
+    IDSEL  <= "111101" when ntscModeD = '0' else "111001";
+    FBDSEL <= "111001" when ntscModeD = '0' else "101111";
+  end if;
+end process;
 
 mainclock: rPLL
         generic map (
@@ -699,7 +727,7 @@ mainclock: rPLL
             IDIV_SEL => 2,
             DYN_FBDIV_SEL => "true",
             FBDIV_SEL => 6,
-            DYN_ODIV_SEL => "true",
+            DYN_ODIV_SEL => "false",
             ODIV_SEL => 8,
             PSDA_SEL => "0110",   -- phase shift  0110 135°
             DYN_DA_EN => "false", 
@@ -728,9 +756,9 @@ mainclock: rPLL
             CLKFB    => '0',
             FBDSEL   => FBDSEL,
             IDSEL    => IDSEL,
-            ODSEL    => "111100",
-            PSDA     => "0110", -- 135°
-            DUTYDA   => "1000", -- static mode
+            ODSEL    => (others => '0'),
+            PSDA     => (others => '0'),
+            DUTYDA   => (others => '0'),
             FDLY     => (others => '1')
         );
 
@@ -1100,7 +1128,6 @@ port map(
     mspi_do   => mspi_do
 );
 
--- work in progress....
 cartridge_inst: entity work.cartridge
 port map
   (

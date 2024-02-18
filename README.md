@@ -6,7 +6,7 @@ Dram controller and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&
 c1541 by https://github.com/darfpga<br>
 
 Features:
-* HDMI 720x576p @50Hz Video and Audio Output
+* PAL 720x576p@50Hz or NTSC 720x480p@60Hz HDMI Video and Audio Output
 * USB Keyboard via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) (future plan Tang onboard BL616 µC)
 * USB Joystick via µC
 * USB Mouse via µC as c1351 Mouse emulation
@@ -18,7 +18,7 @@ Features:
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * c1541 DOS ROM selection
 * On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
-* MIDI Interface [MIDI shield](https://github.com/harbaum/MiSTeryNano/tree/main/board)<br>
+* Physical MIDI-IN and OUT [MIDI shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/README.md)<br>
 <br>
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
@@ -70,6 +70,7 @@ invoke by F12 keypress<br>
 * c1541 DOS ROM selection<br>
 * MIDI configuration<br>
 * Pause when OSD open<br>
+* PAL / NTSC Video mode<br>
 
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: D9<br>
@@ -125,7 +126,7 @@ Just SRAM load will not be sufficient.<br>
 *c1541 DOS ROM:*<br>
 Image has be to 32k Byte in size !<br>
 In a nutshell memory layout of the SPI Flash:<br>
-0x000000 reserved for FPGA bitstream<br>
+0x000000 FPGA bitstream<br>
 0x100000 reserved for Atari ST/STE<br>
 0x200000 c1541 Dolphin Dos 2<br>
 0x208000 c1541 CBM DOS 2.6<br>

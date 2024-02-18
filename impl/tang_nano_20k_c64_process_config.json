@@ -21,7 +21,7 @@
  "EXTERNAL_MASTER_CONFIG_CLOCK" : false,
  "Enable_DSRM" : false,
  "FORMAT" : "binary",
- "FREQUENCY_DIVIDER" : "1",
+ "FREQUENCY_DIVIDER" : "",
  "FSM Compiler" : true,
  "Fanout_Guide" : 10000,
  "Frequency" : "Auto",

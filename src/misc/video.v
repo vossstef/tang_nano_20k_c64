@@ -29,8 +29,8 @@ module video (
           // values that can be configure by the user via osd          
               input [1:0]  system_scanlines,
               input [1:0]  system_volume,
-	      input	   system_wide_screen, 	      
-		 
+	      input	   system_wide_screen,
+		  input [11:0] debug,
 	      // hdmi/tdms
 	      output	   tmds_clk_n,
 	      output	   tmds_clk_p,
@@ -76,7 +76,7 @@ wire vreset;
 wire [1:0] vmode;
 
 video_analyzer video_analyzer (
-   .clk(clk32_i),
+   .clk(clk_pixel),
    .vs(vs_in_n),
    .hs(hs_in_n),
    .de(~vb_in || ~hb_in),
@@ -173,10 +173,10 @@ wire [15:0] audio_vol_r =
     aro;
 
 hdmi #(
-    .AUDIO_RATE(48000), 
-    .AUDIO_BIT_WIDTH(16),
-    .VENDOR_NAME( { "MiSTle", 16'd0} ),
-    .PRODUCT_DESCRIPTION( {"C64", 64'd0} ),
+   .AUDIO_RATE(48000), 
+   .AUDIO_BIT_WIDTH(16),
+   .VENDOR_NAME( { "MiSTle", 16'd0} ),
+   .PRODUCT_DESCRIPTION( {"C64", 64'd0} ),
    .START_X(),
    .START_Y()
 ) hdmi(
@@ -196,7 +196,7 @@ hdmi #(
   .stmode(vmode),    // current video mode PAL/NTSC/MONO
   .wide(system_wide_screen),       // adopt to wide screen video
   .reset(vresetD),    // signal to synchronize HDMI
-
+  .debug(debug),
   // Atari STE outputs 4 bits per color. Scandoubler outputs 6 bits (to be
   // able to implement dark scanlines) and HDMI expects 8 bits per color
   .rgb( { osd_r, 2'b00, osd_g, 2'b00, osd_b, 2'b00 } )

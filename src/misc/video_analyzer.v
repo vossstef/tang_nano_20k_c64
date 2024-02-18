@@ -21,6 +21,7 @@ module video_analyzer
 // generate a reset signal in the upper left corner of active video used
 // to synchonize the HDMI video generation to the Atari ST
 reg vsD, hsD;
+reg vsD2, hsD2;
 reg [12:0] hcnt;    // signal ranges 0..2047
 reg [12:0] hcntL;
 reg [9:0] vcnt;    // signal ranges 0..313
@@ -30,10 +31,11 @@ reg changed;
 always @(posedge clk) begin
     // ---- hsync processing -----
     hsD <= hs;
+    hsD2 <= hsD;
     mode <= {1'b0 , ~ntscmode}; // 0=ntsc, 1=pal, 2=mono
 
     // begin of hsync, falling edge
-    if(!hs && hsD) begin
+    if(!hsD && hsD2) begin
         // check if line length has changed during last cycle
         hcntL <= hcnt;
         if(hcntL != hcnt)
@@ -43,11 +45,12 @@ always @(posedge clk) begin
     end else
         hcnt <= hcnt + 13'd1;
 
-    if(!hs && hsD) begin
+    if(!hsD && hsD2) begin
        // ---- vsync processing -----
        vsD <= vs;
+       vsD2 <= vsD;
        // begin of vsync, falling edge
-       if(!vs && vsD) begin
+       if(!vsD && vsD2) begin
           // check if image height has changed during last cycle
           vcntL <= vcnt;
           if(vcntL != vcnt)
@@ -62,25 +65,15 @@ always @(posedge clk) begin
     end
 
    // the reset signal is sent to the HDMI generator. On reset the
-   // HDMI re-adjusts its counters to the start of the visible screen
-   // area
+   // HDMI re-adjusts its counters to the start of the visible screen area
    
    vreset <= 1'b0;
    if( 
-       (hcnt == 68 && vcnt == 39 && changed && mode == 2'd1) ||
-       (hcnt == 60 && vcnt == 30 && changed && mode == 2'd0) ) begin
-            vreset <= 1'b1;
-            changed <= 1'b0;
+       (hcnt == 0 && vcnt == 18 && changed && mode == 2'd1) ||
+       (hcnt == 0 && vcnt == 18 && changed && mode == 2'd0) ) begin
+        vreset <= 1'b1;
+        changed <= 1'b0;
    end
 end
 
 endmodule
-
-// Modeline "720x576 @ 50hz"  27    720   732   796   864   576   581   586   625 31.25khz
-// Hcnt is set to 0 on the trailing edge of hsync from core so the H constants below need to be offset by 864-796=68
-// Vcnt is set to 0 on the trailing edge of vsync from the core so the V constants below need to be offset by 625-586=39
-
-// NTSC 720 480 60 Hz 31.4685 kHz
-// ModeLine "720x480" 27.00 720 736 798 858 480 489 495 525 -HSync -VSync 
-// Hcnt 858 - 798 = 60
-// Vcnt 525 - 495 = 30

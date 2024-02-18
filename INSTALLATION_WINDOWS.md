@@ -63,7 +63,7 @@ should see following screen:**
 Optionally two additional DOS ROMs may be flashed to the alternate
 addresses:
 
-  - ```c1541 DOS Speeddos``` is written to address 0x210000
+  - ```c1541 DOS Speeddos Plus``` is written to address 0x210000
   - ```c1541 DOS Jiffy``` is written to address 0x218000
 
 These DOS for the c1541 emulation can later be selected from the on-screen-display (OSD).
