@@ -32,7 +32,7 @@ always @(posedge clk) begin
     // ---- hsync processing -----
     hsD <= hs;
     hsD2 <= hsD;
-    mode <= {1'b0 , ~ntscmode}; // 0=ntsc, 1=pal, 2=mono
+//    mode <= {1'b0 , ~ntscmode}; // 0=ntsc, 1=pal, 2=mono
 
     // begin of hsync, falling edge
     if(!hsD && hsD2) begin
@@ -57,9 +57,10 @@ always @(posedge clk) begin
              changed <= 1'b1;
 
           vcnt <= 0;  
-	  // check for PAL/NTSC values
-//	  if(vcnt == 10'd312 && hcntL == 13'd1727) mode <= 2'd1;  // PAL
-//	  if(vcnt == 10'd263 && hcntL == 13'd1695) mode <= 2'd0;  // NTSC
+	  // check for PAL/NTSC values 
+	  if(vcnt == 10'd311 && hcntL == 13'd1727) mode <= 2'd1;  // PAL
+	  if(vcnt == 10'd262 && hcntL == 13'd1711) mode <= 2'd0;  // NTSC
+//	  if(vcnt == 10'd262 && hcntL == 13'd1715) mode <= 2'd0;  // NTSC acc. modeline
        end else
          vcnt <= vcnt + 10'd1;
     end
