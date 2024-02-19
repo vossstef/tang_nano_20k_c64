@@ -78,6 +78,8 @@ port(
 	r           : out unsigned(7 downto 0);
 	g           : out unsigned(7 downto 0);
 	b           : out unsigned(7 downto 0);
+	debugX      : out unsigned(9 downto 0);
+	debugY      : out unsigned(8 downto 0);
 
     phi         : out std_logic;
 
@@ -567,7 +569,8 @@ port map (
 	hsync => hSync,
 	vsync => vSync,
 	colorIndex => vicColorIndex,
-
+	debugX  => debugX,
+	debugY  => debugY,
 	irq_n => irq_vic
 );
 

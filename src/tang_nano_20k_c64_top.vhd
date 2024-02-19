@@ -291,6 +291,8 @@ signal key_cross       : std_logic;
 signal IDSEL           : std_logic_vector(5 downto 0);
 signal FBDSEL          : std_logic_vector(5 downto 0);
 signal ntscModeD       : std_logic;
+signal debugX          : unsigned(9 downto 0);
+signal debugY          : unsigned(8 downto 0);
 
 signal debug           : unsigned(11 downto 0) := to_unsigned(856,12);
 signal user_debounce   : std_logic;
@@ -612,7 +614,10 @@ port map(
       hb_in     => frz_hbl,
       hs_in_n   => frz_hs,
       vs_in_n   => frz_vs,
+
       debug     => debug,
+      debugX    => debugX,
+      debugY    => debugY,
 
       r_in      => std_logic_vector(r(7 downto 4)),
       g_in      => std_logic_vector(g(7 downto 4)),
@@ -989,7 +994,9 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   r            => r,
   g            => g,
   b            => b,
- 
+  debugX       => debugX,
+	debugY       => debugY,
+
   phi          => phi,
 
   game         => game,

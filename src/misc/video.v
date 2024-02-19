@@ -31,6 +31,10 @@ module video (
               input [1:0]  system_volume,
 	      input	   system_wide_screen,
 		  input [11:0] debug,
+
+          input [9:0] debugX,
+	      input [8:0] debugY,
+
 	      // hdmi/tdms
 	      output	   tmds_clk_n,
 	      output	   tmds_clk_p,
@@ -75,11 +79,14 @@ wire vreset;
 wire [1:0] vmode;
 
 video_analyzer video_analyzer (
-   .clk(clk_pixel),
+ //  .clk(clk_pixel),
+   .clk(clk32_i),
    .vs(vs_in_n),
    .hs(hs_in_n),
    .de(~vb_in || ~hb_in),
    .ntscmode(ntscmode),
+   .debugX(debugX),
+   .debugY(debugY),
 
    .mode(vmode),
    .vreset(vreset)  // reset signal
