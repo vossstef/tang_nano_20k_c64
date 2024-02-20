@@ -71,16 +71,18 @@ logic [1:0] invert;
 
 // Atari ST mode table:
 //                         start     frame   screen s_start   s_len
+// ModeLine "720x480" 27.00 720 736 798 858 480 489 495 525 -HSync -VSync 
 // NTSC    720x480@60Hz      
-wire [54:0] htiming0  = { 11'd0,  11'd856, 11'd720, 11'd16, 11'd62 };  
-wire [54:0] whtiming0 = { 11'd0,  11'd858, 11'd720, 11'd18, 11'd62 };  //dbg
-wire [39:0] vtiming0  = {         10'd526, 10'd480, 10'd9,  10'd6 };
+wire [54:0] htiming0  = { 11'd0,  11'd1023, 11'd720, 11'd16, 11'd62 };  // need 12'1040 !!
+wire [54:0] whtiming0 = { 11'd0,  11'd1023, 11'd720, 11'd16, 11'd62 }; 
+wire [39:0] vtiming0  = {         10'd525, 10'd480, 10'd9,  10'd6 };
 wire [7:0] cea0 = 8'd2; // CEA is HDMI mode in group 1
    
 // PAL     720x576@50hz  
-wire [54:0] htiming1  = { 11'd0,  11'd864, 11'd720, 11'd12, 11'd64 };  
-wire [54:0] whtiming1 = { 11'd0,  11'd864, 11'd720, 11'd12, 11'd64 };  
-wire [39:0] vtiming1  = {          10'd624, 10'd576,  10'd5,  10'd5 };
+// ModeLine "720x576" 27.00 720 732 796 864 576 581 586 625 -HSync -VSync 
+wire [54:0] htiming1  = { 11'd0,  11'd1010, 11'd720, 11'd12, 11'd64 };  
+wire [54:0] whtiming1 = { 11'd0,  11'd1010, 11'd720, 11'd12, 11'd64 };  
+wire [39:0] vtiming1  = {          10'd624, 10'd576,  10'd6,  10'd5 };
 wire [7:0] cea1 = 8'd17;
    
 // MONO    640x400@71hz  aspect 1.6    

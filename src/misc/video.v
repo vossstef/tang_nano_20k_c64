@@ -5,6 +5,8 @@ module video (
           input	   clk32_i,
           input    hdmi_pll_reset,
           output   pll_lock,
+          output   clk32,
+          output   clk64,
 
           input    ntscmode,
           input    vb_in,
@@ -59,13 +61,38 @@ Gowin_CLKDIV clk_div_5 (
         .clkout(clk_pixel)     // output clkout
     );
 
+
+CLKDIV clkdiv2_inst (
+    .CLKOUT(clk32),
+    .HCLKIN(clk64),
+    .RESETN(pll_lock),
+    .CALIB(gw_gnd)
+);
+defparam clkdiv2_inst.DIV_MODE = "2";
+defparam clkdiv2_inst.GSREN = "false";
+
+CLKDIV clkdiv3_inst (
+    .CLKOUT(clk64),
+    .HCLKIN(clk_pixel_x5),
+    .RESETN(pll_lock),
+    .CALIB(gw_gnd)
+);
+defparam clkdiv3_inst.DIV_MODE = "2";
+defparam clkdiv3_inst.GSREN = "false";
+
+
 /* -------------------- HDMI video and audio -------------------- */
 
 // generate 48khz audio clock
 reg clk_audio /* synthesis syn_keep=1 */;
 
 reg [8:0] aclk_cnt;
+reg vresetD;
+
 always @(posedge clk_pixel) begin
+
+  vresetD <= vreset;
+
     // divisor = pixel clock / 48000 / 2 - 1
     if(aclk_cnt < `PIXEL_CLOCK / 48000 / 2 -1)
         aclk_cnt <= aclk_cnt + 9'd1;
@@ -194,7 +221,7 @@ hdmi #(
   // video input
   .stmode(vmode),    // current video mode PAL/NTSC/MONO
   .wide(system_wide_screen),       // adopt to wide screen video
-  .reset(vreset),    // signal to synchronize HDMI
+  .reset(vresetD),    // signal to synchronize HDMI
   .debug(debug),
   // Atari STE outputs 4 bits per color. Scandoubler outputs 6 bits (to be
   // able to implement dark scanlines) and HDMI expects 8 bits per color

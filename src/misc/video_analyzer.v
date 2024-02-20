@@ -23,9 +23,8 @@ module video_analyzer
 // generate a reset signal in the upper left corner of active video used
 // to synchonize the HDMI video generation to the Atari ST
 reg vsD, hsD;
-reg vsD2, hsD2;
-reg [12:0] hcnt;    // signal ranges 0..2047
-reg [12:0] hcntL;
+reg [13:0] hcnt;    // signal ranges 0..2047
+reg [13:0] hcntL;
 reg [9:0] vcnt;    // signal ranges 0..313
 reg [9:0] vcntL;
 reg changed;
@@ -35,14 +34,13 @@ reg [8:0] debugYD;
 always @(posedge clk) begin
     // ---- hsync processing -----
     hsD <= hs;
-    hsD2 <= hsD;
     debugXD <=debugX;
     debugYD <=debugY;
 
     mode <= {1'b0 , ~ntscmode}; // 0=ntsc, 1=pal, 2=mono
 
     // begin of hsync, falling edge
-    if(!hsD && hsD2) begin
+    if(!hs && hsD) begin
         // check if line length has changed during last cycle
         hcntL <= hcnt;
         if(hcntL != hcnt)
@@ -50,14 +48,13 @@ always @(posedge clk) begin
 
         hcnt <= 0;
     end else
-        hcnt <= hcnt + 13'd1;
+        hcnt <= hcnt + 14'd1;
 
-    if(!hsD && hsD2) begin
+    if(!hs && hsD) begin
        // ---- vsync processing -----
        vsD <= vs;
-       vsD2 <= vsD;
        // begin of vsync, falling edge
-       if(!vsD && vsD2) begin
+       if(!vs && vsD) begin
           // check if image height has changed during last cycle
           vcntL <= vcnt;
           if(vcntL != vcnt)
@@ -76,9 +73,9 @@ always @(posedge clk) begin
    
    vreset <= 1'b0;
    if( 
-//       (hcnt == 0 && vcnt == 18 && changed && mode == 2'd1) ||
-//       (hcnt == 0 && vcnt == 18 && changed && mode == 2'd0) ) begin
-       (debugXD == 0 && debugYD == 0 ) ) begin
+       (hcnt == 100 && vcnt == 28 && changed && mode == 2'd1) ||
+       (hcnt == 100 && vcnt == 28 && changed && mode == 2'd0) ) begin
+//       (debugXD == 0 && debugYD == 0 && changed) ) begin
 
         vreset <= 1'b1;
         changed <= 1'b0;

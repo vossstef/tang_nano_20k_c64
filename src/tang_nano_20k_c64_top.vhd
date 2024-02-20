@@ -294,7 +294,7 @@ signal ntscModeD       : std_logic;
 signal debugX          : unsigned(9 downto 0);
 signal debugY          : unsigned(8 downto 0);
 
-signal debug           : unsigned(11 downto 0) := to_unsigned(856,12);
+signal debug           : unsigned(11 downto 0) := to_unsigned(720,12);
 signal user_debounce   : std_logic;
 signal reset_debounce  : std_logic;
 
@@ -609,6 +609,8 @@ port map(
       clk32_i   => clk32, -- core clock for sync purposes
       hdmi_pll_reset  => not pll_locked,
       pll_lock  => pll2_locked, -- hdmi pll lock
+      clk32     => clk32,
+      clk64     => clk64,
       ntscmode  => ntscMode,
       vb_in     => frz_vbl,
       hb_in     => frz_hbl,
@@ -750,10 +752,10 @@ mainclock: rPLL
             CLKOUTD3_SRC => "CLKOUT"
         )
         port map (
-            CLKOUT   => clk64,
+            CLKOUT   => open, -- clk64,
             LOCK     => pll_locked,
             CLKOUTP  => mspi_clk, -- shifted 63Mhz SPI Flash
-            CLKOUTD  => clk32,
+            CLKOUTD  => open, -- clk32,
             CLKOUTD3 => open,
             RESET    => '0',
             RESET_P  => '0',
