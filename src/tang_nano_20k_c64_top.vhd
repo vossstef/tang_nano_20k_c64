@@ -355,10 +355,10 @@ begin
 
 -- by default the internal SPI is being used. Once there is
 -- a select from the external spi (M0S Dock) , then the connection is being switched
-process (clk32, pll_locked)
+process (clk32, pll2_locked)
 begin
   if rising_edge(clk32) then
-    if pll_locked = '0' then
+    if pll2_locked = '0' then
         spi_ext <= '0';
     elsif m0s(2) = '0' then
         spi_ext <= '1';
@@ -380,7 +380,7 @@ joystick_miso_i <= joystick_miso when st_midi = "000" else '1';
 gamepad: entity work.dualshock2
     port map (
     clk           => clk32,
-    rst           => system_reset(0) and not pll_locked,
+    rst           => system_reset(0) and not pll2_locked,
     vsync         => vsync,
     ds2_dat       => joystick_miso_i,
     ds2_cmd       => joystick_mosi,
@@ -438,13 +438,12 @@ led_ws2812: entity work.ws2812
   end if;
 end process;
 
-disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset;
-disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset;
+disk_reset <= c1541_osd_reset or not pll2_locked or c1541_reset;
 
 -- rising edge sd_change triggers detection of new disk
-process(clk32, pll_locked)
+process(clk32, pll2_locked)
   begin
-  if pll_locked = '0' then
+  if pll2_locked = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
     disk_g64_d <= '0';
@@ -527,7 +526,7 @@ generic map (
     CLK_DIV  => 1
   )
     port map (
-    rstn            => pll_locked, 
+    rstn            => pll2_locked, 
     clk             => clk32,
   
     -- SD card signals
@@ -607,10 +606,11 @@ video_inst: entity work.video
 port map(
       clk       => clk_27mhz, -- XO
       clk32_i   => clk32, -- core clock for sync purposes
-      hdmi_pll_reset  => not pll_locked,
+      hdmi_pll_reset  => '0',
       pll_lock  => pll2_locked, -- hdmi pll lock
       clk32     => clk32,
       clk64     => clk64,
+      mspi_clk  => mspi_clk,
       ntscmode  => ntscMode,
       vb_in     => frz_vbl,
       hb_in     => frz_hbl,
@@ -684,7 +684,7 @@ dram_inst: entity work.sdram8
     sd_cas    => O_sdram_cas_n, -- columns address select
     -- cpu/chipset interface
     clk       => clk64,         -- sdram is accessed at 64MHz
-    reset_n   => pll_locked,    -- init signal after FPGA config to initialize RAM
+    reset_n   => pll2_locked,    -- init signal after FPGA config to initialize RAM
     ready     => ram_ready,     -- ram is ready and has been initialized
     refresh   => idle,          -- chipset requests a refresh cycle
     din       => din,           -- data input from chipset/cpu
@@ -753,8 +753,8 @@ mainclock: rPLL
         )
         port map (
             CLKOUT   => open, -- clk64,
-            LOCK     => pll_locked,
-            CLKOUTP  => mspi_clk, -- shifted 63Mhz SPI Flash
+            LOCK     => open,
+            CLKOUTP  => open, -- mspi_clk, -- shifted 63Mhz SPI Flash
             CLKOUTD  => open, -- clk32,
             CLKOUTD3 => open,
             RESET    => '0',
@@ -849,7 +849,7 @@ end process;
 mcu_spi_inst: entity work.mcu_spi 
 port map (
   clk            => clk32,
-  reset          => not pll_locked,
+  reset          => not pll2_locked,
   -- SPI interface to BL616 MCU
   spi_io_ss      => spi_io_ss,      -- SPI CSn
   spi_io_clk     => spi_io_clk,     -- SPI SCLK
@@ -873,7 +873,7 @@ hid_inst: entity work.hid
  port map 
  (
   clk             => clk32,
-  reset           => not pll_locked,
+  reset           => not pll2_locked,
   -- interface to receive user data from MCU (mouse, kbd, ...)
   data_in_strobe  => mcu_hid_strobe,
   data_in_start   => mcu_start,
@@ -903,7 +903,7 @@ module_inst: entity work.sysctrl
  port map 
  (
   clk                 => clk32,
-  reset               => not pll_locked,
+  reset               => not pll2_locked,
 --
   data_in_strobe      => mcu_sys_strobe,
   data_in_start       => mcu_start,
@@ -965,7 +965,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
   clk32        => clk32,
-  reset_n      => not system_reset(0) and pll_locked and ram_ready,
+  reset_n      => not system_reset(0) and pll2_locked and ram_ready,
   bios         => (others => '0'),
   pause        => freeze,
   pause_out    => c64_pause,
@@ -1095,7 +1095,7 @@ reu_ram_ce <= not ext_cycle_d and ext_cycle and dma_req;
 reu_inst: entity work.reu
 port map(
     clk       => clk32,
-    reset     => system_reset(0) or not pll_locked,
+    reset     => system_reset(0) or not pll2_locked,
     cfg       => std_logic_vector(unsigned'( '0' & reu_cfg) ),
   
     dma_req   => dma_req,
@@ -1124,7 +1124,7 @@ port map(
 flash_inst: entity work.flash 
 port map(
     clk       => clk64,
-    resetn    => pll_locked,
+    resetn    => pll2_locked,
     ready     => flash_ready,
     busy      => open,
     address   => ("0010" & "000" & dos_sel & c1541rom_addr),
@@ -1141,7 +1141,7 @@ cartridge_inst: entity work.cartridge
 port map
   (
     clk32       => clk32,
-    reset_n     => not system_reset(0) and pll_locked,
+    reset_n     => not system_reset(0) and pll2_locked,
   
     cart_loading    => '0',
     cart_id         => (others => '1'), -- CARTRIDGE_NONE
@@ -1182,7 +1182,7 @@ port map
 midi_inst : entity work.c64_midi
 port map (
   clk32   => clk32,
-  reset   => system_reset(0) or not pll_locked or not (st_midi(2) or st_midi(1) or st_midi(0)),
+  reset   => system_reset(0) or not pll2_locked or not (st_midi(2) or st_midi(1) or st_midi(0)),
   Mode    => st_midi,
   E       => phi,
   IOE     => IOE,

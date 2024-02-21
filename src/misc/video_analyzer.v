@@ -73,8 +73,8 @@ always @(posedge clk) begin
    
    vreset <= 1'b0;
    if( 
-       (hcnt == 100 && vcnt == 28 && changed && mode == 2'd1) ||
-       (hcnt == 100 && vcnt == 28 && changed && mode == 2'd0) ) begin
+       (hcnt == 150 && vcnt == 28 && changed && mode == 2'd1) ||
+       (hcnt == 150 && vcnt == 28 && changed && mode == 2'd0) ) begin
 //       (debugXD == 0 && debugYD == 0 && changed) ) begin
 
         vreset <= 1'b1;

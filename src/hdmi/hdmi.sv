@@ -80,9 +80,9 @@ wire [7:0] cea0 = 8'd2; // CEA is HDMI mode in group 1
    
 // PAL     720x576@50hz  
 // ModeLine "720x576" 27.00 720 732 796 864 576 581 586 625 -HSync -VSync 
-wire [54:0] htiming1  = { 11'd0,  11'd1010, 11'd720, 11'd12, 11'd64 };  
-wire [54:0] whtiming1 = { 11'd0,  11'd1010, 11'd720, 11'd12, 11'd64 };  
-wire [39:0] vtiming1  = {          10'd624, 10'd576,  10'd6,  10'd5 };
+wire [54:0] htiming1  = { 11'd0,  11'd1008, 11'd720, 11'd24, 11'd64 };  
+wire [54:0] whtiming1 = { 11'd0,  11'd1008, 11'd720, 11'd24, 11'd64 };  
+wire [39:0] vtiming1  = {          10'd624, 10'd576,  10'd5,  10'd5 };
 wire [7:0] cea1 = 8'd17;
    
 // MONO    640x400@71hz  aspect 1.6    

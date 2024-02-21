@@ -7,6 +7,7 @@ module video (
           output   pll_lock,
           output   clk32,
           output   clk64,
+          output   mspi_clk,
 
           input    ntscmode,
           input    vb_in,
@@ -44,42 +45,50 @@ module video (
 	      output [2:0] tmds_d_p  
 	      );
    
-wire clk_pixel /* synthesis syn_keep=1 */;
 
-    
-`define PIXEL_CLOCK 27000000
+wire clk_pixel_x10 /* synthesis syn_keep=1 */;
+wire clk_pixel_x5 /* synthesis syn_keep=1 */;
+wire mspi_clk_x5 /* synthesis syn_keep=1 */;
+
+`define PIXEL_CLOCK 31500000
 pll_160m pll_hdmi (
-               .clkout(clk_pixel_x5),
+               .clkout(clk_pixel_x10),  //315.27M 
+               .clkoutp(mspi_clk_x5),   // 315.27M phase shift
+               .clkoutd(clk_pixel_x5),  // 157M pixel x5 clock
                .lock(pll_lock),
-               .reset(hdmi_pll_reset),
+               .reset(1'b0),
                .clkin(clk)
 	       );
    
-Gowin_CLKDIV clk_div_5 (
-        .hclkin(clk_pixel_x5), // input hclkin
-        .resetn(pll_lock),     // input resetn
-        .clkout(clk_pixel)     // output clkout
-    );
+// 315/5 = 63Mhz dram clk
+CLKDIV clkdiv3_inst (
+    .CLKOUT(clk64),
+    .HCLKIN(clk_pixel_x10),
+    .RESETN(pll_lock),
+    .CALIB(1'b0)
+);
+defparam clkdiv3_inst.DIV_MODE = "5";
+defparam clkdiv3_inst.GSREN = "false";
 
+// 315/5 = 63Mhz phase shifted flash clk
+CLKDIV clkdiv1_inst (
+    .CLKOUT(mspi_clk),
+    .HCLKIN(mspi_clk_x5),
+    .RESETN(pll_lock),
+    .CALIB(1'b0)
+);
+defparam clkdiv1_inst.DIV_MODE = "5";
+defparam clkdiv1_inst.GSREN = "false";
 
+// 63M/5 = core and pixel clk
 CLKDIV clkdiv2_inst (
     .CLKOUT(clk32),
     .HCLKIN(clk64),
     .RESETN(pll_lock),
-    .CALIB(gw_gnd)
+    .CALIB(1'b0)
 );
 defparam clkdiv2_inst.DIV_MODE = "2";
 defparam clkdiv2_inst.GSREN = "false";
-
-CLKDIV clkdiv3_inst (
-    .CLKOUT(clk64),
-    .HCLKIN(clk_pixel_x5),
-    .RESETN(pll_lock),
-    .CALIB(gw_gnd)
-);
-defparam clkdiv3_inst.DIV_MODE = "2";
-defparam clkdiv3_inst.GSREN = "false";
-
 
 /* -------------------- HDMI video and audio -------------------- */
 
@@ -89,9 +98,7 @@ reg clk_audio /* synthesis syn_keep=1 */;
 reg [8:0] aclk_cnt;
 reg vresetD;
 
-always @(posedge clk_pixel) begin
-
-  vresetD <= vreset;
+always @(posedge clk32) begin
 
     // divisor = pixel clock / 48000 / 2 - 1
     if(aclk_cnt < `PIXEL_CLOCK / 48000 / 2 -1)
@@ -106,8 +113,7 @@ wire vreset;
 wire [1:0] vmode;
 
 video_analyzer video_analyzer (
- //  .clk(clk_pixel),
-   .clk(clk32_i),
+   .clk(clk32),
    .vs(vs_in_n),
    .hs(hs_in_n),
    .de(~vb_in || ~hb_in),
@@ -126,7 +132,7 @@ wire [5:0] sd_b;
   
 scandoubler #(10) scandoubler (
         // system interface
-        .clk_sys(clk32_i),
+        .clk_sys(clk32),
         .bypass(1'b0),      // bypass in ST high/mono
         .ce_divider(3'd1),
         .pixel_ena(),
@@ -158,7 +164,7 @@ wire [5:0] osd_g;
 wire [5:0] osd_b;  
 
 osd_u8g2 osd_u8g2 (
-        .clk(clk32_i),
+        .clk(clk32),
         .reset(!pll_lock),
 
         .data_in_strobe(mcu_osd_strobe),
@@ -183,7 +189,7 @@ wire tmds_clock;
 
 // Audio c64 core specific
 reg [15:0] alo,aro;
-always @(posedge clk32_i) begin
+always @(posedge clk32) begin
 	reg [16:0] alm,arm;
 
 	arm <= {audio_r[17],audio_r[17:2]};
@@ -212,7 +218,7 @@ hdmi #(
    .PRODUCT_DESCRIPTION( {"C64", 64'd0} )
 ) hdmi(
   .clk_pixel_x5(clk_pixel_x5),
-  .clk_pixel(clk_pixel),
+  .clk_pixel(clk32),
   .clk_audio(clk_audio),
   .audio_sample_word( { audio_vol_l, audio_vol_r } ),
   .tmds(tmds),
@@ -221,7 +227,7 @@ hdmi #(
   // video input
   .stmode(vmode),    // current video mode PAL/NTSC/MONO
   .wide(system_wide_screen),       // adopt to wide screen video
-  .reset(vresetD),    // signal to synchronize HDMI
+  .reset(vreset),    // signal to synchronize HDMI
   .debug(debug),
   // Atari STE outputs 4 bits per color. Scandoubler outputs 6 bits (to be
   // able to implement dark scanlines) and HDMI expects 8 bits per color
