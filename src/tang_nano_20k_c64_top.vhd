@@ -67,11 +67,19 @@ end;
 
 architecture Behavioral_top of tang_nano_20k_c64_top is
 
-signal clk64, clk32, pll_locked, pll2_locked : std_logic;
+signal clk64          : std_logic;
+signal clk32          : std_logic;
+signal pll_locked     : std_logic;
+signal clk_pixel_x10  : std_logic;
+signal clk_pixel_x5   : std_logic;
+signal mspi_clk_x5    : std_logic;
 
 attribute syn_keep : integer;
 attribute syn_keep of clk64 : signal is 1;
 attribute syn_keep of clk32 : signal is 1;
+attribute syn_keep of clk_pixel_x10 : signal is 1;
+attribute syn_keep of clk_pixel_x5 : signal is 1;
+attribute syn_keep of mspi_clk_x5 : signal is 1;
 
 signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
@@ -291,56 +299,69 @@ signal key_cross       : std_logic;
 signal IDSEL           : std_logic_vector(5 downto 0);
 signal FBDSEL          : std_logic_vector(5 downto 0);
 signal ntscModeD       : std_logic;
+
 signal debugX          : unsigned(9 downto 0);
 signal debugY          : unsigned(8 downto 0);
-
 signal debug           : unsigned(11 downto 0) := to_unsigned(720,12);
 signal user_debounce   : std_logic;
 signal reset_debounce  : std_logic;
 
-    component rPLL
-        generic (
-            FCLKIN: in string := "100.0";
-            DEVICE: in string := "GW2A-18";
-            DYN_IDIV_SEL: in string := "false";
-            IDIV_SEL: in integer := 0;
-            DYN_FBDIV_SEL: in string := "false";
-            FBDIV_SEL: in integer := 0;
-            DYN_ODIV_SEL: in string := "false";
-            ODIV_SEL: in integer := 8;
-            PSDA_SEL: in string := "0000";
-            DYN_DA_EN: in string := "false";
-            DUTYDA_SEL: in string := "1000";
-            CLKOUT_FT_DIR: in bit := '1';
-            CLKOUTP_FT_DIR: in bit := '1';
-            CLKOUT_DLY_STEP: in integer := 0;
-            CLKOUTP_DLY_STEP: in integer := 0;
-            CLKOUTD3_SRC: in string := "CLKOUT";
-            CLKFB_SEL: in string := "internal";
-            CLKOUT_BYPASS: in string := "false";
-            CLKOUTP_BYPASS: in string := "false";
-            CLKOUTD_BYPASS: in string := "false";
-            CLKOUTD_SRC: in string := "CLKOUT";
-            DYN_SDIV_SEL: in integer := 2
-        );
-        port (
-            CLKOUT: out std_logic;
-            LOCK: out std_logic;
-            CLKOUTP: out std_logic;
-            CLKOUTD: out std_logic;
-            CLKOUTD3: out std_logic;
-            RESET: in std_logic;
-            RESET_P: in std_logic;
-            CLKIN: in std_logic;
-            CLKFB: in std_logic;
-            FBDSEL: in std_logic_vector(5 downto 0);
-            IDSEL: in std_logic_vector(5 downto 0);
-            ODSEL: in std_logic_vector(5 downto 0);
-            PSDA: in std_logic_vector(3 downto 0);
-            DUTYDA: in std_logic_vector(3 downto 0);
-            FDLY: in std_logic_vector(3 downto 0)
-        );
-    end component;
+component CLKDIV
+    generic (
+        DIV_MODE : STRING := "2";
+        GSREN: in string := "false"
+    );
+    port (
+        CLKOUT: out std_logic;
+        HCLKIN: in std_logic;
+        RESETN: in std_logic;
+        CALIB: in std_logic
+    );
+end component;
+
+component rPLL
+    generic (
+        FCLKIN: in string := "100.0";
+        DEVICE: in string := "GW2A-18";
+        DYN_IDIV_SEL: in string := "false";
+        IDIV_SEL: in integer := 0;
+        DYN_FBDIV_SEL: in string := "false";
+        FBDIV_SEL: in integer := 0;
+        DYN_ODIV_SEL: in string := "false";
+        ODIV_SEL: in integer := 8;
+        PSDA_SEL: in string := "0000";
+        DYN_DA_EN: in string := "false";
+        DUTYDA_SEL: in string := "1000";
+        CLKOUT_FT_DIR: in bit := '1';
+        CLKOUTP_FT_DIR: in bit := '1';
+        CLKOUT_DLY_STEP: in integer := 0;
+        CLKOUTP_DLY_STEP: in integer := 0;
+        CLKOUTD3_SRC: in string := "CLKOUT";
+        CLKFB_SEL: in string := "internal";
+        CLKOUT_BYPASS: in string := "false";
+        CLKOUTP_BYPASS: in string := "false";
+        CLKOUTD_BYPASS: in string := "false";
+        CLKOUTD_SRC: in string := "CLKOUT";
+        DYN_SDIV_SEL: in integer := 2
+    );
+    port (
+        CLKOUT: out std_logic;
+        LOCK: out std_logic;
+        CLKOUTP: out std_logic;
+        CLKOUTD: out std_logic;
+        CLKOUTD3: out std_logic;
+        RESET: in std_logic;
+        RESET_P: in std_logic;
+        CLKIN: in std_logic;
+        CLKFB: in std_logic;
+        FBDSEL: in std_logic_vector(5 downto 0);
+        IDSEL: in std_logic_vector(5 downto 0);
+        ODSEL: in std_logic_vector(5 downto 0);
+        PSDA: in std_logic_vector(3 downto 0);
+        DUTYDA: in std_logic_vector(3 downto 0);
+        FDLY: in std_logic_vector(3 downto 0)
+    );
+end component;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -355,10 +376,10 @@ begin
 
 -- by default the internal SPI is being used. Once there is
 -- a select from the external spi (M0S Dock) , then the connection is being switched
-process (clk32, pll2_locked)
+process (clk32, pll_locked)
 begin
   if rising_edge(clk32) then
-    if pll2_locked = '0' then
+    if pll_locked = '0' then
         spi_ext <= '0';
     elsif m0s(2) = '0' then
         spi_ext <= '1';
@@ -380,7 +401,7 @@ joystick_miso_i <= joystick_miso when st_midi = "000" else '1';
 gamepad: entity work.dualshock2
     port map (
     clk           => clk32,
-    rst           => system_reset(0) and not pll2_locked,
+    rst           => system_reset(0) and not pll_locked,
     vsync         => vsync,
     ds2_dat       => joystick_miso_i,
     ds2_cmd       => joystick_mosi,
@@ -438,12 +459,12 @@ led_ws2812: entity work.ws2812
   end if;
 end process;
 
-disk_reset <= c1541_osd_reset or not pll2_locked or c1541_reset;
+disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset;
 
 -- rising edge sd_change triggers detection of new disk
-process(clk32, pll2_locked)
+process(clk32, pll_locked)
   begin
-  if pll2_locked = '0' then
+  if pll_locked = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
     disk_g64_d <= '0';
@@ -526,7 +547,7 @@ generic map (
     CLK_DIV  => 1
   )
     port map (
-    rstn            => pll2_locked, 
+    rstn            => pll_locked, 
     clk             => clk32,
   
     -- SD card signals
@@ -604,13 +625,9 @@ port map(
 
 video_inst: entity work.video 
 port map(
-      clk       => clk_27mhz, -- XO
-      clk32_i   => clk32, -- core clock for sync purposes
-      hdmi_pll_reset  => '0',
-      pll_lock  => pll2_locked, -- hdmi pll lock
-      clk32     => clk32,
-      clk64     => clk64,
-      mspi_clk  => mspi_clk,
+      pll_lock     => pll_locked, 
+      clk          => clk32,
+      clk_pixel_x5 => clk_pixel_x5,
       ntscmode  => ntscMode,
       vb_in     => frz_vbl,
       hb_in     => frz_hbl,
@@ -684,7 +701,7 @@ dram_inst: entity work.sdram8
     sd_cas    => O_sdram_cas_n, -- columns address select
     -- cpu/chipset interface
     clk       => clk64,         -- sdram is accessed at 64MHz
-    reset_n   => pll2_locked,    -- init signal after FPGA config to initialize RAM
+    reset_n   => pll_locked,    -- init signal after FPGA config to initialize RAM
     ready     => ram_ready,     -- ram is ready and has been initialized
     refresh   => idle,          -- chipset requests a refresh cycle
     din       => din,           -- data input from chipset/cpu
@@ -711,18 +728,18 @@ begin
   end if;
 end process;
 
--- Clock              PAL  / NTSC 
+-- Clock        PAL 315Mhz / NTSC 329,4 Mhz
 -- dram /flash  63.000 Mhz / 65.5714 Mhz
--- core         31.500 Mhz / 32.7857 Mhz ; c1541 15.570 Mhz / 16.393 Mhz uncorrected
--- IDIV_SEL              2 / 6
--- FBDIV_SEL             6 / 16
+-- core         31.500 Mhz / 32.7857 Mhz
+-- IDIV_SEL              2 / 4
+-- FBDIV_SEL            34 / 60
 
 process(clk32)
 begin
   if rising_edge(clk32) then
     ntscModeD <= ntscMode;
-    IDSEL  <= "111101" when ntscModeD = '0' else "111001";
-    FBDSEL <= "111001" when ntscModeD = '0' else "101111";
+    IDSEL  <= "111101" when ntscModeD = '0' else "111011";  -- pal 2  / ntsc 4
+    FBDSEL <= "101101" when ntscModeD = '0' else "000011";  -- pal 34 / ntsc 60
   end if;
 end process;
 
@@ -733,9 +750,9 @@ mainclock: rPLL
             DYN_IDIV_SEL => "true",
             IDIV_SEL => 2,
             DYN_FBDIV_SEL => "true",
-            FBDIV_SEL => 6,
+            FBDIV_SEL => 34,
             DYN_ODIV_SEL => "false",
-            ODIV_SEL => 8,
+            ODIV_SEL => 2,
             PSDA_SEL => "0110",   -- phase shift  0110 135°
             DYN_DA_EN => "false", 
             DUTYDA_SEL => "1000",
@@ -752,10 +769,10 @@ mainclock: rPLL
             CLKOUTD3_SRC => "CLKOUT"
         )
         port map (
-            CLKOUT   => open, -- clk64,
-            LOCK     => open,
-            CLKOUTP  => open, -- mspi_clk, -- shifted 63Mhz SPI Flash
-            CLKOUTD  => open, -- clk32,
+            CLKOUT   => clk_pixel_x10, -- 315M
+            LOCK     => pll_locked,
+            CLKOUTP  => mspi_clk_x5,  -- 315M shifted clock SPI Flash
+            CLKOUTD  => clk_pixel_x5, -- 159M
             CLKOUTD3 => open,
             RESET    => '0',
             RESET_P  => '0',
@@ -768,6 +785,43 @@ mainclock: rPLL
             DUTYDA   => (others => '0'),
             FDLY     => (others => '1')
         );
+
+
+div1_inst: CLKDIV
+generic map(
+    DIV_MODE => "5",
+    GSREN    => "false"
+)
+port map(
+    CLKOUT => clk64,
+    HCLKIN => clk_pixel_x10,
+    RESETN => pll_locked,
+    CALIB  => '0'
+);
+
+div2_inst: CLKDIV
+generic map(
+  DIV_MODE => "2",
+  GSREN    => "false"
+)
+port map(
+    CLKOUT => clk32,
+    HCLKIN => clk64,
+    RESETN => pll_locked,
+    CALIB  => '0'
+);
+
+div3_inst: CLKDIV
+generic map(
+  DIV_MODE => "5",
+  GSREN    => "false"
+)
+port map(
+    CLKOUT => mspi_clk,
+    HCLKIN => mspi_clk_x5,
+    RESETN => pll_locked,
+    CALIB  => '0'
+);
 
 leds_n <=  not leds;
 leds(0) <= led1541;
@@ -849,7 +903,7 @@ end process;
 mcu_spi_inst: entity work.mcu_spi 
 port map (
   clk            => clk32,
-  reset          => not pll2_locked,
+  reset          => not pll_locked,
   -- SPI interface to BL616 MCU
   spi_io_ss      => spi_io_ss,      -- SPI CSn
   spi_io_clk     => spi_io_clk,     -- SPI SCLK
@@ -873,7 +927,7 @@ hid_inst: entity work.hid
  port map 
  (
   clk             => clk32,
-  reset           => not pll2_locked,
+  reset           => not pll_locked,
   -- interface to receive user data from MCU (mouse, kbd, ...)
   data_in_strobe  => mcu_hid_strobe,
   data_in_start   => mcu_start,
@@ -903,7 +957,7 @@ module_inst: entity work.sysctrl
  port map 
  (
   clk                 => clk32,
-  reset               => not pll2_locked,
+  reset               => not pll_locked,
 --
   data_in_strobe      => mcu_sys_strobe,
   data_in_start       => mcu_start,
@@ -965,7 +1019,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
   clk32        => clk32,
-  reset_n      => not system_reset(0) and pll2_locked and ram_ready,
+  reset_n      => not system_reset(0) and pll_locked and ram_ready,
   bios         => (others => '0'),
   pause        => freeze,
   pause_out    => c64_pause,
@@ -1095,7 +1149,7 @@ reu_ram_ce <= not ext_cycle_d and ext_cycle and dma_req;
 reu_inst: entity work.reu
 port map(
     clk       => clk32,
-    reset     => system_reset(0) or not pll2_locked,
+    reset     => system_reset(0) or not pll_locked,
     cfg       => std_logic_vector(unsigned'( '0' & reu_cfg) ),
   
     dma_req   => dma_req,
@@ -1124,7 +1178,7 @@ port map(
 flash_inst: entity work.flash 
 port map(
     clk       => clk64,
-    resetn    => pll2_locked,
+    resetn    => pll_locked,
     ready     => flash_ready,
     busy      => open,
     address   => ("0010" & "000" & dos_sel & c1541rom_addr),
@@ -1141,7 +1195,7 @@ cartridge_inst: entity work.cartridge
 port map
   (
     clk32       => clk32,
-    reset_n     => not system_reset(0) and pll2_locked,
+    reset_n     => not system_reset(0) and pll_locked,
   
     cart_loading    => '0',
     cart_id         => (others => '1'), -- CARTRIDGE_NONE
@@ -1182,7 +1236,7 @@ port map
 midi_inst : entity work.c64_midi
 port map (
   clk32   => clk32,
-  reset   => system_reset(0) or not pll2_locked or not (st_midi(2) or st_midi(1) or st_midi(0)),
+  reset   => system_reset(0) or not pll_locked or not (st_midi(2) or st_midi(1) or st_midi(0)),
   Mode    => st_midi,
   E       => phi,
   IOE     => IOE,

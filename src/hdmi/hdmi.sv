@@ -73,33 +73,33 @@ logic [1:0] invert;
 //                         start     frame   screen s_start   s_len
 // ModeLine "720x480" 27.00 720 736 798 858 480 489 495 525 -HSync -VSync 
 // NTSC    720x480@60Hz      
-wire [54:0] htiming0  = { 11'd0,  11'd1023, 11'd720, 11'd16, 11'd62 };  // need 12'1040 !!
-wire [54:0] whtiming0 = { 11'd0,  11'd1023, 11'd720, 11'd16, 11'd62 }; 
+wire [55:0] htiming0  = { 11'd0,  12'd1040, 11'd720, 11'd16, 11'd62 };
+wire [55:0] whtiming0 = { 11'd60, 12'd1040, 11'd820, 11'd16, 11'd32 }; 
 wire [39:0] vtiming0  = {         10'd525, 10'd480, 10'd9,  10'd6 };
 wire [7:0] cea0 = 8'd2; // CEA is HDMI mode in group 1
    
 // PAL     720x576@50hz  
 // ModeLine "720x576" 27.00 720 732 796 864 576 581 586 625 -HSync -VSync 
-wire [54:0] htiming1  = { 11'd0,  11'd1008, 11'd720, 11'd24, 11'd64 };  
-wire [54:0] whtiming1 = { 11'd0,  11'd1008, 11'd720, 11'd24, 11'd64 };  
+wire [55:0] htiming1  = { 11'd0,  12'd1008, 11'd720, 11'd24, 11'd72 };  
+wire [55:0] whtiming1 = { 11'd60, 12'd1008, 11'd820, 11'd16, 11'd32 };  
 wire [39:0] vtiming1  = {          10'd624, 10'd576,  10'd5,  10'd5 };
 wire [7:0] cea1 = 8'd17;
    
 // MONO    640x400@71hz  aspect 1.6    
-wire [54:0] htiming2  = { 11'd0,   11'd896, 11'd640, 11'd24, 11'd72 };
-wire [54:0] whtiming2 = { 11'd40,  11'd896, 11'd720, 11'd24, 11'd72 };
+wire [55:0] htiming2  = { 11'd0,   12'd896, 11'd640, 11'd24, 11'd72 };
+wire [55:0] whtiming2 = { 11'd40,  12'd896, 11'd720, 11'd24, 11'd72 };
 wire [39:0] vtiming2  = {          10'd501, 10'd400,  10'd5,  10'd5 };  
 wire [7:0] cea2 = 8'd2;
    
-wire [102:0]  timing0 = {  htiming0, vtiming0, cea0 };
-wire [102:0] wtiming0 = { whtiming0, vtiming0, cea0 };
-wire [102:0]  timing1 = {  htiming1, vtiming1, cea1 };
-wire [102:0] wtiming1 = { whtiming1, vtiming1, cea1 };
-wire [102:0]  timing2 = {  htiming2, vtiming2, cea2 };
-wire [102:0] wtiming2 = { whtiming2, vtiming2, cea2 };
+wire [103:0]  timing0 = {  htiming0, vtiming0, cea0 };
+wire [103:0] wtiming0 = { whtiming0, vtiming0, cea0 };
+wire [103:0]  timing1 = {  htiming1, vtiming1, cea1 };
+wire [103:0] wtiming1 = { whtiming1, vtiming1, cea1 };
+wire [103:0]  timing2 = {  htiming2, vtiming2, cea2 };
+wire [103:0] wtiming2 = { whtiming2, vtiming2, cea2 };
 
 // select timing as indicated by control signals coming for Atari ST core
-wire [102:0] timing = 
+wire [103:0] timing = 
          !wide?( (stmode == 2'd0)?timing0:
                  (stmode == 2'd1)?timing1:
                   timing2):
@@ -108,9 +108,9 @@ wire [102:0] timing =
                   wtiming2);
 
 // demux timing parameters   
-wire [10:0] start_x           = timing[102:92];
+wire [10:0] start_x           = timing[103:93];
 
-wire [10:0] frame_width       = timing[91:81];
+wire [11:0] frame_width       = timing[92:81];
 wire [10:0] screen_width      = timing[80:70];
 wire [10:0] hsync_pulse_start = timing[69:59];
 wire [10:0] hsync_pulse_size  = timing[58:48];
