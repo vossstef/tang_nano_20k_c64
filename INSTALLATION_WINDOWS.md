@@ -75,36 +75,30 @@ These DOS for the c1541 emulation can later be selected from the on-screen-displ
 ![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/c64_flash.png)
 
 **Production of c1541 DOS 32k ROM binaries** <br>
-The DOS files you will find on the Internet. e.g.
-[CBM 1541 8k low rom](https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-c000.325302-01.bin) 
-and 
-[CBM 1541 8k high rom](https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-e000.901229-05.bin)
-
-
+The needed DOS files you will find on the Internet.<br>
 ```Dolphin DOS 2```<br>
-Typically you will find a 32K Byte file e.g. 2dosa_c.bin that can right away be flashed.<br>
+Typically you will [find](https://e4aws.silverdr.com/projects/dolphindos2/) a 32K Byte file e.g. 2dosa_c.bin that can right away be flashed.<br>
 Program at offset 0x200000<br>
 ![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/dolphin.png)
 
-```CBM DOS```<br>
+```CBM DOS```<br>You find [CBM 1541 8k low rom](https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-c000.325302-01.bin) 
+and 
+[CBM 1541 8k high rom](https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-e000.901229-05.bin)<br>
 Open a command prompt and enter the directory where you downloaded the file from the Internet and type: <br>
-> COPY /B 1541-c000.325302-01.bin + 1541-e000.901229-05.bin + 1541-c000.325302-01.bin + 1541-e000.901229-05.bin  c1541_cbm.bin
-alternatively you will find e.g. from [VICE Emulator Drives](https://vice-emu.sourceforge.io/windows.html) folder<br>
-> COPY /B dos1541-325302-01+901229-05.bin + dos1541-325302-01+901229-05.bin  c1541_cbm.bin
- 
+> COPY /B 1541-c000.325302-01.bin + 1541-e000.901229-05.bin + 1541-c000.325302-01.bin + 1541-e000.901229-05.bin  c1541_cbm.bin<br>
+
 If will create the required 32K size DOS image named c1541_cbm.bin <br>
 Program at offset 0x208000<br>
 ![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/cbm.png)
 ```Speed DOS Plus```<br>
-Open a command prompt and enter the directory where you downloaded the file from the Internet and type: <br>
-Assumed here you found a 16k Byte file.<br>
->COPY /B C1541.ROM + C1541.ROM  c1541_speed.bin
-
-If will create the required 32K size DOS image named c1541_speed.bin <br>
+You will [find](https://rr.pokefinder.org/wiki/Speed_DOS#Binaries) 
+a 32K Byte file e.g. c1541-20-8.rom that can right away be flashed.<br>
 Program at offset 0x210000<br>
 ![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/speed.png)
 
 ```Jiffy DOS```<br>
+You find [CBM 1541 8k low rom](https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-c000.325302-01.bin) 
+and get a 8k JiffyDos file (link).
 Open a command prompt and enter the directory where you downloaded the file from the Internet and type: <br>
 > COPY /B 1541-c000.325302-01.bin + JiffyDOS_1541.bin + 1541-c000.325302-01.bin + JiffyDOS_1541.bin  c1541_jiffy.bin
 

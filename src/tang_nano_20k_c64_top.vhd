@@ -73,13 +73,12 @@ signal pll_locked     : std_logic;
 signal clk_pixel_x10  : std_logic;
 signal clk_pixel_x5   : std_logic;
 signal mspi_clk_x5    : std_logic;
-
 attribute syn_keep : integer;
-attribute syn_keep of clk64 : signal is 1;
-attribute syn_keep of clk32 : signal is 1;
+attribute syn_keep of clk64         : signal is 1;
+attribute syn_keep of clk32         : signal is 1;
 attribute syn_keep of clk_pixel_x10 : signal is 1;
-attribute syn_keep of clk_pixel_x5 : signal is 1;
-attribute syn_keep of mspi_clk_x5 : signal is 1;
+attribute syn_keep of clk_pixel_x5  : signal is 1;
+attribute syn_keep of mspi_clk_x5   : signal is 1;
 
 signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
@@ -299,10 +298,7 @@ signal key_cross       : std_logic;
 signal IDSEL           : std_logic_vector(5 downto 0);
 signal FBDSEL          : std_logic_vector(5 downto 0);
 signal ntscModeD       : std_logic;
-
-signal debugX          : unsigned(9 downto 0);
-signal debugY          : unsigned(8 downto 0);
-signal debug           : unsigned(11 downto 0) := to_unsigned(720,12);
+signal debug           : unsigned(11 downto 0) := to_unsigned(1,12);
 signal user_debounce   : std_logic;
 signal reset_debounce  : std_logic;
 
@@ -634,10 +630,6 @@ port map(
       hs_in_n   => frz_hs,
       vs_in_n   => frz_vs,
 
-      debug     => debug,
-      debugX    => debugX,
-      debugY    => debugY,
-
       r_in      => std_logic_vector(r(7 downto 4)),
       g_in      => std_logic_vector(g(7 downto 4)),
       b_in      => std_logic_vector(b(7 downto 4)),
@@ -706,7 +698,7 @@ dram_inst: entity work.sdram8
     refresh   => idle,          -- chipset requests a refresh cycle
     din       => din,           -- data input from chipset/cpu
     dout      => dout,
-    addr      => addr,          -- 22 bit word address
+    addr      => addr,          -- 23 bit word address
     ds        => "00",
     cs        => cs,            -- cpu/chipset requests read/wrie
     we        => we             -- cpu/chipset requests write
@@ -728,9 +720,11 @@ begin
   end if;
 end process;
 
--- Clock        PAL 315Mhz / NTSC 329,4 Mhz
--- dram /flash  63.000 Mhz / 65.5714 Mhz
--- core         31.500 Mhz / 32.7857 Mhz
+-- Clock tree and all frequencies in Hz
+-- pll         315000000 / 329400000
+-- serdes      157500000 / 164700000
+-- dram /flash  63000000 /  65880000
+-- core /pixel  31500000 /  32940000
 -- IDIV_SEL              2 / 4
 -- FBDIV_SEL            34 / 60
 
@@ -738,8 +732,8 @@ process(clk32)
 begin
   if rising_edge(clk32) then
     ntscModeD <= ntscMode;
-    IDSEL  <= "111101" when ntscModeD = '0' else "111011";  -- pal 2  / ntsc 4
-    FBDSEL <= "101101" when ntscModeD = '0' else "000011";  -- pal 34 / ntsc 60
+    IDSEL  <= "111101" when ntscModeD = '0' else "111011";
+    FBDSEL <= "101101" when ntscModeD = '0' else "000011";
   end if;
 end process;
 
@@ -769,10 +763,10 @@ mainclock: rPLL
             CLKOUTD3_SRC => "CLKOUT"
         )
         port map (
-            CLKOUT   => clk_pixel_x10, -- 315M
+            CLKOUT   => clk_pixel_x10,
             LOCK     => pll_locked,
-            CLKOUTP  => mspi_clk_x5,  -- 315M shifted clock SPI Flash
-            CLKOUTD  => clk_pixel_x5, -- 159M
+            CLKOUTP  => mspi_clk_x5,  -- phase shifted clock SPI Flash
+            CLKOUTD  => clk_pixel_x5,
             CLKOUTD3 => open,
             RESET    => '0',
             RESET_P  => '0',
@@ -785,7 +779,6 @@ mainclock: rPLL
             DUTYDA   => (others => '0'),
             FDLY     => (others => '1')
         );
-
 
 div1_inst: CLKDIV
 generic map(
@@ -1050,8 +1043,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   r            => r,
   g            => g,
   b            => b,
-  debugX       => debugX,
-	debugY       => debugY,
+  debugX       => open,
+	debugY       => open,
 
   phi          => phi,
 

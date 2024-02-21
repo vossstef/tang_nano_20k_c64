@@ -35,7 +35,6 @@ module hdmi
 (
     input logic			      clk_pixel_x5,
     input logic			      clk_pixel,
-    input logic	[11:0] debug,
     input logic			      clk_audio,
     // synchronous reset back to 0,0
     input logic			      reset,
@@ -69,19 +68,17 @@ logic [1:0] invert;
 // actual data to be displayed, the start value indicated the number of
 // (black) pixels before the active area starts
 
-// Atari ST mode table:
+// c64 mode table
 //                         start     frame   screen s_start   s_len
-// ModeLine "720x480" 27.00 720 736 798 858 480 489 495 525 -HSync -VSync 
-// NTSC    720x480@60Hz      
-wire [55:0] htiming0  = { 11'd0,  12'd1040, 11'd720, 11'd16, 11'd62 };
-wire [55:0] whtiming0 = { 11'd60, 12'd1040, 11'd820, 11'd16, 11'd32 }; 
-wire [39:0] vtiming0  = {         10'd525, 10'd480, 10'd9,  10'd6 };
+// NTSC
+wire [55:0] htiming0  = { 11'd0,  12'd1040, 11'd832, 11'd16, 11'd62 }; 
+wire [55:0] whtiming0 = { 11'd40, 12'd1040, 11'd928, 11'd16, 11'd32 };  
+wire [39:0] vtiming0  = {         10'd526, 10'd480, 10'd9,  10'd6 };
 wire [7:0] cea0 = 8'd2; // CEA is HDMI mode in group 1
    
-// PAL     720x576@50hz  
-// ModeLine "720x576" 27.00 720 732 796 864 576 581 586 625 -HSync -VSync 
-wire [55:0] htiming1  = { 11'd0,  12'd1008, 11'd720, 11'd24, 11'd72 };  
-wire [55:0] whtiming1 = { 11'd60, 12'd1008, 11'd820, 11'd16, 11'd32 };  
+// PAL
+wire [55:0] htiming1  = { 11'd0,  12'd1008, 11'd800, 11'd24, 11'd72 }; 
+wire [55:0] whtiming1 = { 11'd64, 12'd1008, 11'd950, 11'd20, 11'd32 };  
 wire [39:0] vtiming1  = {          10'd624, 10'd576,  10'd5,  10'd5 };
 wire [7:0] cea1 = 8'd17;
    
