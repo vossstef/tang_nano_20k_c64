@@ -298,9 +298,7 @@ signal key_cross       : std_logic;
 signal IDSEL           : std_logic_vector(5 downto 0);
 signal FBDSEL          : std_logic_vector(5 downto 0);
 signal ntscModeD       : std_logic;
-signal drive_ce        : std_logic;
-signal sum             : unsigned(31 downto 0);
-signal msum            : unsigned(31 downto 0);
+signal audio_div       : unsigned(8 downto 0);
 
 component CLKDIV
     generic (
@@ -496,7 +494,7 @@ port map
     clk32         => clk32,
     reset         => (not flash_ready) or disk_reset,
     pause         => c64_pause,
-    ce            => drive_ce,
+    ce            => ntscMode,
 
     disk_num      => (others =>'0'),
     disk_change   => sd_change, 
@@ -621,11 +619,15 @@ port map(
 	vbl_out => frz_vbl
 );
 
+audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
+
 video_inst: entity work.video 
 port map(
       pll_lock     => pll_locked, 
       clk          => clk32,
       clk_pixel_x5 => clk_pixel_x5,
+      audio_div    => audio_div,
+
       ntscmode  => ntscMode,
       vb_in     => frz_vbl,
       hb_in     => frz_hbl,
@@ -802,19 +804,6 @@ port map(
     CALIB  => '0'
 );
 
-process(clk32)
-begin
-	if rising_edge(clk32) then
-    msum <= to_unsigned(32940000,msum'length) when ntscMode = '1' else to_unsigned(315000000,msum'length);
-    drive_ce <= '0';
-    sum <= sum + 16000000;
-  	if sum >= msum then 
-    		sum <= sum - msum;
-   	  	drive_ce <= '1';
-     end if;
-  end if;
-end process;
-
 leds_n <=  not leds;
 leds(0) <= led1541;
 leds(2 downto 1) <= "00";
@@ -973,7 +962,6 @@ module_inst: entity work.sysctrl
   system_turbo_mode   => turbo_mode,
   system_turbo_speed  => turbo_speed,
   system_video_std    => ntscMode,
-  system_pot_3_4      => open,
   system_midi         => st_midi,
   system_pause        => system_pause,
 

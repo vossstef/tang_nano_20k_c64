@@ -4,6 +4,7 @@ module video (
           input	   clk,
           input    clk_pixel_x5,
           input    pll_lock,
+          input [8:0] audio_div,
 
           input    ntscmode,
           input    vb_in,
@@ -50,9 +51,8 @@ reg [8:0] aclk_cnt;
 reg vresetD;
 
 always @(posedge clk) begin
-
     // divisor = pixel clock / 48000 / 2 - 1
-    if(aclk_cnt < `PIXEL_CLOCK / 48000 / 2 -1)
+    if(aclk_cnt < audio_div)
         aclk_cnt <= aclk_cnt + 9'd1;
     else begin
         aclk_cnt <= 9'd0;
@@ -67,7 +67,7 @@ video_analyzer video_analyzer (
    .clk(clk),
    .vs(vs_in_n),
    .hs(hs_in_n),
-   .de(),
+   .de(1'b1),
    .ntscmode(ntscmode),
    .mode(vmode),
    .vreset(vreset)
