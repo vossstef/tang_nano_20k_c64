@@ -298,9 +298,9 @@ signal key_cross       : std_logic;
 signal IDSEL           : std_logic_vector(5 downto 0);
 signal FBDSEL          : std_logic_vector(5 downto 0);
 signal ntscModeD       : std_logic;
-signal debug           : unsigned(11 downto 0) := to_unsigned(1,12);
-signal user_debounce   : std_logic;
-signal reset_debounce  : std_logic;
+signal drive_ce        : std_logic;
+signal sum             : unsigned(31 downto 0);
+signal msum            : unsigned(31 downto 0);
 
 component CLKDIV
     generic (
@@ -495,6 +495,8 @@ port map
  (
     clk32         => clk32,
     reset         => (not flash_ready) or disk_reset,
+    pause         => c64_pause,
+    ce            => drive_ce,
 
     disk_num      => (others =>'0'),
     disk_change   => sd_change, 
@@ -704,22 +706,6 @@ dram_inst: entity work.sdram8
     we        => we             -- cpu/chipset requests write
   );
 
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    if vsync = '1' then
-      user_debounce <= user;
-      reset_debounce <= reset;
-      if user ='1' and user_debounce = '0' then
-        debug <= debug + 1;
-      end if;
-      if reset ='1' and reset_debounce = '0' then
-        if debug > 0 then debug <= debug - 1; end if;
-      end if;
-    end if;
-  end if;
-end process;
-
 -- Clock tree and all frequencies in Hz
 -- pll         315000000 / 329400000
 -- serdes      157500000 / 164700000
@@ -815,6 +801,19 @@ port map(
     RESETN => pll_locked,
     CALIB  => '0'
 );
+
+process(clk32)
+begin
+	if rising_edge(clk32) then
+    msum <= to_unsigned(32940000,msum'length) when ntscMode = '1' else to_unsigned(315000000,msum'length);
+    drive_ce <= '0';
+    sum <= sum + 16000000;
+  	if sum >= msum then 
+    		sum <= sum - msum;
+   	  	drive_ce <= '1';
+     end if;
+  end if;
+end process;
 
 leds_n <=  not leds;
 leds(0) <= led1541;

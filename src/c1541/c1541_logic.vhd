@@ -16,6 +16,8 @@ entity c1541_logic is
   (
     clk_32M         : in std_logic;
     reset           : in std_logic;
+    pause           : in std_logic;
+    ce              : in std_logic;
 
     -- serial bus
     sb_data_oe      : buffer std_logic;
@@ -140,18 +142,25 @@ architecture SYN of c1541_logic is
   signal extram_cs      : std_logic;
   signal extram_do      : std_logic_vector(7 downto 0);
   signal extram_wr      : std_logic;
+  signal ena            : std_logic;
+  signal ena1           : std_logic;
 
   begin
 
   reset_n <= not reset;
   
+
   process (clk_32M)
     variable count  : std_logic_vector(4 downto 0) := (others => '0');
   begin
     if rising_edge(clk_32M) then
-        count := std_logic_vector(unsigned(count) + 1);
+      	ena1 <= not pause;
+      	if count(3 downto 0) = "1111" then ena <= ena1; end if;
+        if ce = '1' then count := std_logic_vector(unsigned(count) + 1); end if;
     end if;
-
+--    if count = "10000" and ena = '1' then clk_1M_pulse <= '1'; else clk_1M_pulse <='0' ; end if;
+--    if count = "00000" and ena = '1' then p2_h_r <= '1'; else p2_h_r <='0' ; end if;
+--    if count = "10000" and ena = '1' then p2_h_f <= '1'; else p2_h_f <='0' ; end if;
     if count = "10000" then clk_1M_pulse <= '1'; else clk_1M_pulse <='0' ; end if;
     if count = "00000" then p2_h_r <= '1'; else p2_h_r <='0' ; end if;
     if count = "10000" then p2_h_f <= '1'; else p2_h_f <='0' ; end if;

@@ -84,7 +84,7 @@ Program at offset 0x200000<br>
 ```CBM DOS```<br>You find [CBM 1541 8k low rom](https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-c000.325302-01.bin) 
 and 
 [CBM 1541 8k high rom](https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-e000.901229-05.bin)<br>
-Open a command prompt and enter the directory where you downloaded the file from the Internet and type: <br>
+Open a command prompt and enter the directory where you downloaded the files from the Internet and type: <br>
 > COPY /B 1541-c000.325302-01.bin + 1541-e000.901229-05.bin + 1541-c000.325302-01.bin + 1541-e000.901229-05.bin  c1541_cbm.bin<br>
 
 If will create the required 32K size DOS image named c1541_cbm.bin <br>
@@ -98,7 +98,7 @@ Program at offset 0x210000<br>
 
 ```Jiffy DOS```<br>
 You find [CBM 1541 8k low rom](https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-c000.325302-01.bin) 
-and get a 8k JiffyDos file (link).
+and get a 8k [JiffyDos](https://www.go4retro.com/products/jiffydos/) file.
 Open a command prompt and enter the directory where you downloaded the file from the Internet and type: <br>
 > COPY /B 1541-c000.325302-01.bin + JiffyDOS_1541.bin + 1541-c000.325302-01.bin + JiffyDOS_1541.bin  c1541_jiffy.bin
 
