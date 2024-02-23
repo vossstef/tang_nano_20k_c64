@@ -45,14 +45,15 @@ module video (
 /* -------------------- HDMI video and audio -------------------- */
 
 // generate 48khz audio clock
-reg clk_audio /* synthesis syn_keep=1 */;
+reg clk_audio;
 
 reg [8:0] aclk_cnt;
 reg vresetD;
 
 always @(posedge clk) begin
     // divisor = pixel clock / 48000 / 2 - 1
-    if(aclk_cnt < audio_div)
+//    if(aclk_cnt < audio_div)
+    if(aclk_cnt < `PIXEL_CLOCK / 48000 / 2 -1)
         aclk_cnt <= aclk_cnt + 9'd1;
     else begin
         aclk_cnt <= 9'd0;

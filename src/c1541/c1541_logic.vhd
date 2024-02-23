@@ -161,7 +161,7 @@ architecture SYN of c1541_logic is
     variable count  : std_logic_vector(4 downto 0) := (others => '0');
   begin
     if rising_edge(clk_32M) then
-        count := std_logic_vector(unsigned(count) + 1);
+        if pause = '0' then count := std_logic_vector(unsigned(count) + 1); end if;
     end if;
   if count = "10000" then clk_1M_pulse <= '1'; else clk_1M_pulse <='0' ; end if;
   if count = "00000" then p2_h_r <= '1'; else p2_h_r <='0' ; end if;

@@ -299,6 +299,8 @@ signal IDSEL           : std_logic_vector(5 downto 0);
 signal FBDSEL          : std_logic_vector(5 downto 0);
 signal ntscModeD       : std_logic;
 signal audio_div       : unsigned(8 downto 0);
+signal flash_clk       : std_logic;
+signal flash_lock      : std_logic;
 
 component CLKDIV
     generic (
@@ -453,7 +455,7 @@ led_ws2812: entity work.ws2812
   end if;
 end process;
 
-disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset;
+disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset or not flash_lock;
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
@@ -494,7 +496,7 @@ port map
     clk32         => clk32,
     reset         => (not flash_ready) or disk_reset,
     pause         => c64_pause,
-    ce            => ntscMode,
+    ce            => '0',
 
     disk_num      => (others =>'0'),
     disk_change   => sd_change, 
@@ -532,8 +534,7 @@ port map
     c1541rom_addr => c1541rom_addr,
     c1541rom_data => c1541rom_data
 );
-ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphin, speed
-
+ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphindos, speeddos
 sd_rd(3 downto 1) <= "000";
 sd_wr(3 downto 1) <= "000";
 sdc_iack <= int_ack(3);
@@ -711,7 +712,7 @@ dram_inst: entity work.sdram8
 -- Clock tree and all frequencies in Hz
 -- pll         315000000 / 329400000
 -- serdes      157500000 / 164700000
--- dram /flash  63000000 /  65880000
+-- dram         63000000 /  65880000
 -- core /pixel  31500000 /  32940000
 -- IDIV_SEL              2 / 4
 -- FBDIV_SEL            34 / 60
@@ -735,7 +736,7 @@ mainclock: rPLL
             FBDIV_SEL => 34,
             DYN_ODIV_SEL => "false",
             ODIV_SEL => 2,
-            PSDA_SEL => "0110",   -- phase shift  0110 135°
+            PSDA_SEL => "0110",   -- phase shift 135°
             DYN_DA_EN => "false", 
             DUTYDA_SEL => "1000",
             CLKOUT_FT_DIR => '1',
@@ -753,7 +754,7 @@ mainclock: rPLL
         port map (
             CLKOUT   => clk_pixel_x10,
             LOCK     => pll_locked,
-            CLKOUTP  => mspi_clk_x5,  -- phase shifted clock SPI Flash
+            CLKOUTP  => mspi_clk_x5,
             CLKOUTD  => clk_pixel_x5,
             CLKOUTD3 => open,
             RESET    => '0',
@@ -792,17 +793,61 @@ port map(
     CALIB  => '0'
 );
 
-div3_inst: CLKDIV
-generic map(
-  DIV_MODE => "5",
-  GSREN    => "false"
-)
-port map(
-    CLKOUT => mspi_clk,
-    HCLKIN => mspi_clk_x5,
-    RESETN => pll_locked,
-    CALIB  => '0'
-);
+--div3_inst: CLKDIV
+--generic map(
+--  DIV_MODE => "5",
+--  GSREN    => "false"
+--)
+--port map(
+--    CLKOUT => open, -- mspi_clk,
+--    HCLKIN => mspi_clk_x5,
+--    RESETN => pll_locked,
+--    CALIB  => '0'
+--);
+
+-- 64.125Mhz for flash controller c1541 ROM
+flashclock: rPLL
+        generic map (
+          FCLKIN => "27",
+          DEVICE => "GW2AR-18C",
+          DYN_IDIV_SEL => "false",
+          IDIV_SEL => 7,
+          DYN_FBDIV_SEL => "false",
+          FBDIV_SEL => 18,
+          DYN_ODIV_SEL => "false",
+          ODIV_SEL => 8,
+          PSDA_SEL => "0110",
+          DYN_DA_EN => "false",
+          DUTYDA_SEL => "1000",
+          CLKOUT_FT_DIR => '1',
+          CLKOUTP_FT_DIR => '1',
+          CLKOUT_DLY_STEP => 0,
+          CLKOUTP_DLY_STEP => 0,
+          CLKFB_SEL => "internal",
+          CLKOUT_BYPASS => "false",
+          CLKOUTP_BYPASS => "false",
+          CLKOUTD_BYPASS => "false",
+          DYN_SDIV_SEL => 2,
+          CLKOUTD_SRC => "CLKOUT",
+          CLKOUTD3_SRC => "CLKOUT"
+        )
+        port map (
+            CLKOUT   => flash_clk, -- clock Flash controller
+            LOCK     => flash_lock,
+            CLKOUTP  => mspi_clk, -- phase shifted clock SPI Flash
+            CLKOUTD  => open,
+            CLKOUTD3 => open,
+            RESET    => '0',
+            RESET_P  => '0',
+            CLKIN    => clk_27mhz,
+            CLKFB    => '0',
+            FBDSEL   => (others => '0'),
+            IDSEL    => (others => '0'),
+            ODSEL    => (others => '0'),
+            PSDA     => (others => '0'),
+            DUTYDA   => (others => '0'),
+            FDLY     => (others => '1')
+        );
 
 leds_n <=  not leds;
 leds(0) <= led1541;
@@ -1157,8 +1202,8 @@ port map(
 -- c1541 ROM's SPI Flash, offset in spi flash $200000
 flash_inst: entity work.flash 
 port map(
-    clk       => clk64,
-    resetn    => pll_locked,
+    clk       => flash_clk, -- clk64,
+    resetn    => flash_lock, -- pll_locked,
     ready     => flash_ready,
     busy      => open,
     address   => ("0010" & "000" & dos_sel & c1541rom_addr),
