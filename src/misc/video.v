@@ -2,10 +2,11 @@
 
 module video (
           input	   clk,
-          input	   clk32_i,
-          input    hdmi_pll_reset,
-          output   pll_lock,
+          input    clk_pixel_x5,
+          input    pll_lock,
+          input [8:0] audio_div,
 
+          input    ntscmode,
           input    vb_in,
           input    hb_in,
 	      input	   vs_in_n,
@@ -21,15 +22,15 @@ module video (
           output osd_status,
 
           // (spi) interface from MCU
-              input	   mcu_start,
-              input	   mcu_osd_strobe,
-              input [7:0]  mcu_data,
+          input	   mcu_start,
+          input	   mcu_osd_strobe,
+          input [7:0]  mcu_data,
 
           // values that can be configure by the user via osd          
-              input [1:0]  system_scanlines,
-              input [1:0]  system_volume,
-	      input	   system_wide_screen, 	      
-		 
+          input [1:0]  system_scanlines,
+          input [1:0]  system_volume,
+          input	       system_wide_screen,
+
 	      // hdmi/tdms
 	      output	   tmds_clk_n,
 	      output	   tmds_clk_p,
@@ -37,31 +38,20 @@ module video (
 	      output [2:0] tmds_d_p  
 	      );
    
-wire clk_pixel /* synthesis syn_keep=1 */;
 
-    
-`define PIXEL_CLOCK 27000000
-pll_160m pll_hdmi (
-               .clkout(clk_pixel_x5),
-               .lock(pll_lock),
-               .reset(hdmi_pll_reset),
-               .clkin(clk)
-	       );
-   
-Gowin_CLKDIV clk_div_5 (
-        .hclkin(clk_pixel_x5), // input hclkin
-        .resetn(pll_lock),     // input resetn
-        .clkout(clk_pixel)     // output clkout
-    );
+
 
 /* -------------------- HDMI video and audio -------------------- */
 
 // generate 48khz audio clock
-reg clk_audio /* synthesis syn_keep=1 */;
+reg clk_audio;
+
 reg [8:0] aclk_cnt;
-always @(posedge clk_pixel) begin
+reg vresetD;
+
+always @(posedge clk) begin
     // divisor = pixel clock / 48000 / 2 - 1
-    if(aclk_cnt < `PIXEL_CLOCK / 48000 / 2 -1)
+    if(aclk_cnt < audio_div)
         aclk_cnt <= aclk_cnt + 9'd1;
     else begin
         aclk_cnt <= 9'd0;
@@ -73,13 +63,13 @@ wire vreset;
 wire [1:0] vmode;
 
 video_analyzer video_analyzer (
-   .clk(clk32_i),
+   .clk(clk),
    .vs(vs_in_n),
    .hs(hs_in_n),
-   .de(~vb_in || ~hb_in),
-
+   .de(1'b1),
+   .ntscmode(ntscmode),
    .mode(vmode),
-   .vreset(vreset)  // reset signal
+   .vreset(vreset)
 );  
 
 wire sd_hs_n, sd_vs_n; 
@@ -89,8 +79,8 @@ wire [5:0] sd_b;
   
 scandoubler #(10) scandoubler (
         // system interface
-        .clk_sys(clk32_i),
-        .bypass(vmode == 2'd2),      // bypass in ST high/mono
+        .clk_sys(clk),
+        .bypass(1'b0),      // bypass in ST high/mono
         .ce_divider(3'd1),
         .pixel_ena(),
 
@@ -121,7 +111,7 @@ wire [5:0] osd_g;
 wire [5:0] osd_b;  
 
 osd_u8g2 osd_u8g2 (
-        .clk(clk32_i),
+        .clk(clk),
         .reset(!pll_lock),
 
         .data_in_strobe(mcu_osd_strobe),
@@ -146,7 +136,7 @@ wire tmds_clock;
 
 // Audio c64 core specific
 reg [15:0] alo,aro;
-always @(posedge clk32_i) begin
+always @(posedge clk) begin
 	reg [16:0] alm,arm;
 
 	arm <= {audio_r[17],audio_r[17:2]};
@@ -169,30 +159,22 @@ wire [15:0] audio_vol_r =
     aro;
 
 hdmi #(
-    .AUDIO_RATE(48000), 
-    .AUDIO_BIT_WIDTH(16),
-    .VENDOR_NAME( { "MiSTle", 16'd0} ),
-    .PRODUCT_DESCRIPTION( {"C64", 64'd0} ),
-    .START_X(0) // 90
-//  .START_Y(30)
+   .AUDIO_RATE(48000), 
+   .AUDIO_BIT_WIDTH(16),
+   .VENDOR_NAME( { "MiSTle", 16'd0} ),
+   .PRODUCT_DESCRIPTION( {"C64", 64'd0} )
 ) hdmi(
   .clk_pixel_x5(clk_pixel_x5),
-  .clk_pixel(clk_pixel),
+  .clk_pixel(clk),
   .clk_audio(clk_audio),
   .audio_sample_word( { audio_vol_l, audio_vol_r } ),
   .tmds(tmds),
   .tmds_clock(tmds_clock),
-  .cx(),
-  .cy(),
-  .frame_width(),
-  .frame_height(),
-  .screen_width(),
-  .screen_height(),
+
   // video input
   .stmode(vmode),    // current video mode PAL/NTSC/MONO
   .wide(system_wide_screen),       // adopt to wide screen video
   .reset(vreset),    // signal to synchronize HDMI
-
   // Atari STE outputs 4 bits per color. Scandoubler outputs 6 bits (to be
   // able to implement dark scanlines) and HDMI expects 8 bits per color
   .rgb( { osd_r, 2'b00, osd_g, 2'b00, osd_b, 2'b00 } )

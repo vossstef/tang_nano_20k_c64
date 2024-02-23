@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------
 --  C64 Top level for Tang Nano
---  2023 Stefan Voss
+--  2023 / 2024 Stefan Voss
 --  based on the work of many others
 --
 --  FPGA64 is Copyrighted 2005-2008 by Peter Wendrich (pwsoft@syntiac.com)
@@ -67,11 +67,18 @@ end;
 
 architecture Behavioral_top of tang_nano_20k_c64_top is
 
-signal clk64, clk32, pll_locked, pll2_locked : std_logic;
-
+signal clk64          : std_logic;
+signal clk32          : std_logic;
+signal pll_locked     : std_logic;
+signal clk_pixel_x10  : std_logic;
+signal clk_pixel_x5   : std_logic;
+signal mspi_clk_x5    : std_logic;
 attribute syn_keep : integer;
-attribute syn_keep of clk64 : signal is 1;
-attribute syn_keep of clk32 : signal is 1;
+attribute syn_keep of clk64         : signal is 1;
+attribute syn_keep of clk32         : signal is 1;
+attribute syn_keep of clk_pixel_x10 : signal is 1;
+attribute syn_keep of clk_pixel_x5  : signal is 1;
+attribute syn_keep of mspi_clk_x5   : signal is 1;
 
 signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
@@ -130,7 +137,7 @@ signal ram_ce      :  std_logic;
 signal ram_we      :  std_logic;
 signal romCE       :  std_logic;
 
-signal ntscMode    :  std_logic := '0';
+signal ntscMode    :  std_logic;
 signal hsync       :  std_logic;
 signal vsync       :  std_logic;
 signal r           :  unsigned(7 downto 0);
@@ -288,50 +295,69 @@ signal key_triangle    : std_logic;
 signal key_square      : std_logic;
 signal key_circle      : std_logic;
 signal key_cross       : std_logic;
+signal IDSEL           : std_logic_vector(5 downto 0);
+signal FBDSEL          : std_logic_vector(5 downto 0);
+signal ntscModeD       : std_logic;
+signal audio_div       : unsigned(8 downto 0);
+signal flash_clk       : std_logic;
+signal flash_lock      : std_logic;
 
-    component rPLL
-        generic (
-            FCLKIN: in string := "100.0";
-            DEVICE: in string := "GW2A-18";
-            DYN_IDIV_SEL: in string := "false";
-            IDIV_SEL: in integer := 0;
-            DYN_FBDIV_SEL: in string := "false";
-            FBDIV_SEL: in integer := 0;
-            DYN_ODIV_SEL: in string := "false";
-            ODIV_SEL: in integer := 8;
-            PSDA_SEL: in string := "0000";
-            DYN_DA_EN: in string := "false";
-            DUTYDA_SEL: in string := "1000";
-            CLKOUT_FT_DIR: in bit := '1';
-            CLKOUTP_FT_DIR: in bit := '1';
-            CLKOUT_DLY_STEP: in integer := 0;
-            CLKOUTP_DLY_STEP: in integer := 0;
-            CLKOUTD3_SRC: in string := "CLKOUT";
-            CLKFB_SEL: in string := "internal";
-            CLKOUT_BYPASS: in string := "false";
-            CLKOUTP_BYPASS: in string := "false";
-            CLKOUTD_BYPASS: in string := "false";
-            CLKOUTD_SRC: in string := "CLKOUT";
-            DYN_SDIV_SEL: in integer := 2
-        );
-        port (
-            CLKOUT: out std_logic;
-            LOCK: out std_logic;
-            CLKOUTP: out std_logic;
-            CLKOUTD: out std_logic;
-            CLKOUTD3: out std_logic;
-            RESET: in std_logic;
-            RESET_P: in std_logic;
-            CLKIN: in std_logic;
-            CLKFB: in std_logic;
-            FBDSEL: in std_logic_vector(5 downto 0);
-            IDSEL: in std_logic_vector(5 downto 0);
-            ODSEL: in std_logic_vector(5 downto 0);
-            PSDA: in std_logic_vector(3 downto 0);
-            DUTYDA: in std_logic_vector(3 downto 0);
-            FDLY: in std_logic_vector(3 downto 0)
-        );
-    end component;
+component CLKDIV
+    generic (
+        DIV_MODE : STRING := "2";
+        GSREN: in string := "false"
+    );
+    port (
+        CLKOUT: out std_logic;
+        HCLKIN: in std_logic;
+        RESETN: in std_logic;
+        CALIB: in std_logic
+    );
+end component;
+
+component rPLL
+    generic (
+        FCLKIN: in string := "100.0";
+        DEVICE: in string := "GW2A-18";
+        DYN_IDIV_SEL: in string := "false";
+        IDIV_SEL: in integer := 0;
+        DYN_FBDIV_SEL: in string := "false";
+        FBDIV_SEL: in integer := 0;
+        DYN_ODIV_SEL: in string := "false";
+        ODIV_SEL: in integer := 8;
+        PSDA_SEL: in string := "0000";
+        DYN_DA_EN: in string := "false";
+        DUTYDA_SEL: in string := "1000";
+        CLKOUT_FT_DIR: in bit := '1';
+        CLKOUTP_FT_DIR: in bit := '1';
+        CLKOUT_DLY_STEP: in integer := 0;
+        CLKOUTP_DLY_STEP: in integer := 0;
+        CLKOUTD3_SRC: in string := "CLKOUT";
+        CLKFB_SEL: in string := "internal";
+        CLKOUT_BYPASS: in string := "false";
+        CLKOUTP_BYPASS: in string := "false";
+        CLKOUTD_BYPASS: in string := "false";
+        CLKOUTD_SRC: in string := "CLKOUT";
+        DYN_SDIV_SEL: in integer := 2
+    );
+    port (
+        CLKOUT: out std_logic;
+        LOCK: out std_logic;
+        CLKOUTP: out std_logic;
+        CLKOUTD: out std_logic;
+        CLKOUTD3: out std_logic;
+        RESET: in std_logic;
+        RESET_P: in std_logic;
+        CLKIN: in std_logic;
+        CLKFB: in std_logic;
+        FBDSEL: in std_logic_vector(5 downto 0);
+        IDSEL: in std_logic_vector(5 downto 0);
+        ODSEL: in std_logic_vector(5 downto 0);
+        PSDA: in std_logic_vector(3 downto 0);
+        DUTYDA: in std_logic_vector(3 downto 0);
+        FDLY: in std_logic_vector(3 downto 0)
+    );
+end component;
 
 begin
 -- ----------------- SPI input parser ----------------------
@@ -429,8 +455,7 @@ led_ws2812: entity work.ws2812
   end if;
 end process;
 
-disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset;
-disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset;
+disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset or not flash_lock;
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
@@ -470,6 +495,8 @@ port map
  (
     clk32         => clk32,
     reset         => (not flash_ready) or disk_reset,
+    pause         => c64_pause,
+    ce            => '0',
 
     disk_num      => (others =>'0'),
     disk_change   => sd_change, 
@@ -507,8 +534,7 @@ port map
     c1541rom_addr => c1541rom_addr,
     c1541rom_data => c1541rom_data
 );
-ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphin, speed
-
+ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphindos, speeddos
 sd_rd(3 downto 1) <= "000";
 sd_wr(3 downto 1) <= "000";
 sdc_iack <= int_ack(3);
@@ -594,12 +620,16 @@ port map(
 	vbl_out => frz_vbl
 );
 
+audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
+
 video_inst: entity work.video 
 port map(
-      clk       => clk_27mhz, -- XO
-      clk32_i   => clk32, -- core clock for sync purposes
-      hdmi_pll_reset  => not pll_locked,
-      pll_lock  => pll2_locked, -- hdmi pll lock
+      pll_lock     => pll_locked, 
+      clk          => clk32,
+      clk_pixel_x5 => clk_pixel_x5,
+      audio_div    => audio_div,
+
+      ntscmode  => ntscMode,
       vb_in     => frz_vbl,
       hb_in     => frz_hbl,
       hs_in_n   => frz_hs,
@@ -673,38 +703,40 @@ dram_inst: entity work.sdram8
     refresh   => idle,          -- chipset requests a refresh cycle
     din       => din,           -- data input from chipset/cpu
     dout      => dout,
-    addr      => addr,          -- 22 bit word address
+    addr      => addr,          -- 23 bit word address
     ds        => "00",
     cs        => cs,            -- cpu/chipset requests read/wrie
     we        => we             -- cpu/chipset requests write
   );
 
--- Clock              PAL  / NTSC 
--- dram /flash  63.000 Mhz / 65.5714 Mhz
--- core         31.500 Mhz / 32.7857 Mhz
--- c1541        15.570 Mhz / 16.393 Mhz uncorrected
--- IDIV_SEL              2 / 6
--- FBDIV_SEL             6 / 16
+-- Clock tree and all frequencies in Hz
+-- pll         315000000 / 329400000
+-- serdes      157500000 / 164700000
+-- dram         63000000 /  65880000
+-- core /pixel  31500000 /  32940000
+-- IDIV_SEL              2 / 4
+-- FBDIV_SEL            34 / 60
 
-
--- IDIV_SEL  <= conv_integer("000010") when ntscMode = '0' else conv_integer("000110");
--- FBDIV_SEL <= conv_integer("000110") when ntscMode = '0' else conv_integer("010000");
-
--- hdmi video
--- 720 	480 	60 Hz 	31.4685 kHz 	
--- ModeLine "720x480" 27.00 720 736 798 858 480 489 495 525 -HSync -VSync 
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    ntscModeD <= ntscMode;
+    IDSEL  <= "111101" when ntscModeD = '0' else "111011";
+    FBDSEL <= "101101" when ntscModeD = '0' else "000011";
+  end if;
+end process;
 
 mainclock: rPLL
         generic map (
             FCLKIN => "27",
             DEVICE => "GW2AR-18C",
-            DYN_IDIV_SEL => "false",
-            IDIV_SEL => 2, -- 6 NTSC
-            DYN_FBDIV_SEL => "false",
-            FBDIV_SEL => 6, -- 16 NTSC
+            DYN_IDIV_SEL => "true",
+            IDIV_SEL => 2,
+            DYN_FBDIV_SEL => "true",
+            FBDIV_SEL => 34,
             DYN_ODIV_SEL => "false",
-            ODIV_SEL => 8,
-            PSDA_SEL => "0110",   -- phase shift  0110 135°
+            ODIV_SEL => 2,
+            PSDA_SEL => "0110",   
             DYN_DA_EN => "false", 
             DUTYDA_SEL => "1000",
             CLKOUT_FT_DIR => '1',
@@ -720,10 +752,78 @@ mainclock: rPLL
             CLKOUTD3_SRC => "CLKOUT"
         )
         port map (
-            CLKOUT   => clk64,    -- actual 63Mhz
+            CLKOUT   => clk_pixel_x10,
             LOCK     => pll_locked,
-            CLKOUTP  => mspi_clk, -- shifted 63Mhz SPI Flash
-            CLKOUTD  => clk32, --    actual 31.5Mhz
+            CLKOUTP  => mspi_clk_x5,
+            CLKOUTD  => clk_pixel_x5,
+            CLKOUTD3 => open,
+            RESET    => '0',
+            RESET_P  => '0',
+            CLKIN    => clk_27mhz,
+            CLKFB    => '0',
+            FBDSEL   => FBDSEL,
+            IDSEL    => IDSEL,
+            ODSEL    => (others => '0'),
+            PSDA     => (others => '0'),
+            DUTYDA   => (others => '0'),
+            FDLY     => (others => '1')
+        );
+
+div1_inst: CLKDIV
+generic map(
+    DIV_MODE => "5",
+    GSREN    => "false"
+)
+port map(
+    CLKOUT => clk64,
+    HCLKIN => clk_pixel_x10,
+    RESETN => pll_locked,
+    CALIB  => '0'
+);
+
+div2_inst: CLKDIV
+generic map(
+  DIV_MODE => "2",
+  GSREN    => "false"
+)
+port map(
+    CLKOUT => clk32,
+    HCLKIN => clk64,
+    RESETN => pll_locked,
+    CALIB  => '0'
+);
+
+-- 64.125Mhz for flash controller c1541 ROM
+flashclock: rPLL
+        generic map (
+          FCLKIN => "27",
+          DEVICE => "GW2AR-18C",
+          DYN_IDIV_SEL => "false",
+          IDIV_SEL => 7,
+          DYN_FBDIV_SEL => "false",
+          FBDIV_SEL => 18,
+          DYN_ODIV_SEL => "false",
+          ODIV_SEL => 8,
+          PSDA_SEL => "0110", -- phase shift 135°
+          DYN_DA_EN => "false",
+          DUTYDA_SEL => "1000",
+          CLKOUT_FT_DIR => '1',
+          CLKOUTP_FT_DIR => '1',
+          CLKOUT_DLY_STEP => 0,
+          CLKOUTP_DLY_STEP => 0,
+          CLKFB_SEL => "internal",
+          CLKOUT_BYPASS => "false",
+          CLKOUTP_BYPASS => "false",
+          CLKOUTD_BYPASS => "false",
+          DYN_SDIV_SEL => 2,
+          CLKOUTD_SRC => "CLKOUT",
+          CLKOUTD3_SRC => "CLKOUT"
+        )
+        port map (
+            CLKOUT   => flash_clk, -- clock Flash controller
+            LOCK     => flash_lock,
+            CLKOUTP  => mspi_clk, -- phase shifted clock SPI Flash
+            CLKOUTD  => open,
             CLKOUTD3 => open,
             RESET    => '0',
             RESET_P  => '0',
@@ -895,7 +995,6 @@ module_inst: entity work.sysctrl
   system_turbo_mode   => turbo_mode,
   system_turbo_speed  => turbo_speed,
   system_video_std    => ntscMode,
-  system_pot_3_4      => open,
   system_midi         => st_midi,
   system_pause        => system_pause,
 
@@ -964,7 +1063,9 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   r            => r,
   g            => g,
   b            => b,
- 
+  debugX       => open,
+	debugY       => open,
+
   phi          => phi,
 
   game         => game,
@@ -1089,8 +1190,8 @@ port map(
 -- c1541 ROM's SPI Flash, offset in spi flash $200000
 flash_inst: entity work.flash 
 port map(
-    clk       => clk64,
-    resetn    => pll_locked,
+    clk       => flash_clk,
+    resetn    => flash_lock,
     ready     => flash_ready,
     busy      => open,
     address   => ("0010" & "000" & dos_sel & c1541rom_addr),
@@ -1103,7 +1204,6 @@ port map(
     mspi_do   => mspi_do
 );
 
--- work in progress....
 cartridge_inst: entity work.cartridge
 port map
   (

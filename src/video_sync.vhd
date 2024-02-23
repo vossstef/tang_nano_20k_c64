@@ -50,6 +50,9 @@ process(clk32)
 	end if;
 
 	if rising_edge(clk32) then
+		hsync_out <= hsync;
+		vsync_out <= vsync;
+
 		if clk_cnt = "00" and pause = '0' then
 			vsync_r <= vsync;
 			hsync_r <= hsync;
@@ -71,11 +74,11 @@ process(clk32)
 			end if;
 			
 			if ntsc = '1' then
-				if dot_count     = 054 then hsync_out <= '0'; end if;
-				if dot_count     = 016 then hsync_out <= '1';
-					if line_count = 000 then vsync_out <= '1'; end if;
-					if line_count = 004 then vsync_out <= '0'; end if;
-				end if;
+		--		if dot_count     = 054 then hsync_out <= '0'; end if;
+		--		if dot_count     = 016 then hsync_out <= '1';
+		--		if line_count = 000 then vsync_out <= '1'; end if;
+		--		if line_count = 004 then vsync_out <= '0'; end if;
+		--		end if;
 
 				if line_count = 000 then vblank <= '1'; end if;
 				if line_count = 013 then vblank <= '0'; end if;
@@ -88,18 +91,18 @@ process(clk32)
 					if dot_count  = 132 then hblank <= '0'; end if;
 				end if;
 			else
-				if dot_count     = 048 then hsync_out <= '0'; end if;
-				if dot_count     = 010 then hsync_out <= '1';
-					if line_count = 307 then vsync_out <= '1'; end if;
-					if line_count = 311 then vsync_out <= '0'; end if;
-				end if;
+		--		if dot_count     = 048 then hsync_out <= '0'; end if;
+		--		if dot_count     = 010 then hsync_out <= '1';
+		--		if line_count = 307 then vsync_out <= '1'; end if;
+		--		if line_count = 311 then vsync_out <= '0'; end if;
+		--		end if;
 
 				if line_count = 298 then vblank <= '1'; end if;
 				if line_count = 028 then vblank <= '0'; end if;
 
 				if wide = '0' then
-					if dot_count  = 490 then hblank <= '1'; end if;
-					if dot_count  = 106 then hblank <= '0'; end if;
+					if dot_count  = 489 then hblank <= '1'; end if;
+					if dot_count  = 107 then hblank <= '0'; end if;
 				else
 					if dot_count  = 463 then hblank <= '1'; end if;
 					if dot_count  = 133 then hblank <= '0'; end if;

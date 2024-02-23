@@ -29,6 +29,9 @@ entity c1541_sd is
 port(
 	clk32 : in std_logic;
 	reset : in std_logic;
+    pause : in std_logic;
+    ce    : in std_logic;
+
 	
 	disk_num : in std_logic_vector(9 downto 0);
 	disk_change : in std_logic;
@@ -117,6 +120,8 @@ begin
   (
     clk_32M => clk32,
     reset => reset,
+    pause => pause,
+    ce    => ce,
 
     -- serial bus
     sb_data_oe => iec_data_o,

@@ -6,7 +6,7 @@ Dram controller and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&
 c1541 by https://github.com/darfpga<br>
 
 Features:
-* HDMI 720x576p @50Hz Video and Audio Output
+* PAL 576p@50Hz or NTSC 480p@60Hz HDMI Video and Audio Output
 * USB Keyboard via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) (future plan Tang onboard BL616 µC)
 * USB Joystick via µC
 * USB Mouse via µC as c1351 Mouse emulation
@@ -18,7 +18,7 @@ Features:
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * c1541 DOS ROM selection
 * On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
-* MIDI Interface [MIDI shield](https://github.com/harbaum/MiSTeryNano/tree/main/board)<br>
+* Physical MIDI-IN and OUT [MIDI shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/README.md)<br>
 <br>
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
@@ -48,7 +48,10 @@ c1541 DOS ROM to be selected from OSD (default Dolphin, factory or other)<br>
 For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.<br>
 <br>
 Playing [Sonic the Hedgehog V1.2](https://csdb.dk/release/?id=212523)<br>
-Enable REU, do via OSD a cold c64 core reset and load the PRG.<br>
+Enable REU, and load the PRG.<br>
+
+Playing around with [GEOS](https://en.wikipedia.org/wiki/GEOS_(8-bit_operating_system))<br>
+Enable REU, select c1541 CBM DOS ROM and load the PRG.<br>
 
 ## Push Button utilization
 * S2 Reset (for Flasher)<br>
@@ -64,37 +67,39 @@ invoke by F12 keypress<br>
 * HID device selection for Joystick Port 1 and Port 2<br>
 * REU activation<br>
 * Audio Filter<br>
-* Image selection for c1541 Drive<br>
+* c1541 Drive disk image selection<br>
 * c1541 Disk write protetcion<br>
 * c1541 Reset<br>
 * c1541 DOS ROM selection<br>
 * MIDI configuration<br>
 * Pause when OSD open<br>
+* PAL / NTSC Video mode<br>
+
 
 ## Gamecontrol support
-legacy single D9 Digital Joystick. OSD: D9<br>
+legacy single D9 Digital Joystick. OSD: Retro<br>
 or<br>
-USB Joystick(s). OSD: UJ1 or UJ2 <br>
+USB Joystick(s). OSD: USB #1 or USB #2 <br>
 or<br>
-Gamepad. OSD: DS2
-<br>**stick digital** for Move and Left **L1** or Right **R1** shoulder Button for Fire or following **Pad** controls:<br>
+Gamepad. OSD: DualShock
+<br>**stick digital** for Move and Left **L1** or Right **R1** shoulder Button for Trigger or following **Pad** controls:<br>
 | Buttons | - | - |
 | - | - | -  |
-| Left L1/R1<br>Fire | triangle button<br>Up  | .  |
+| Left L1/R1<br>Trigger | triangle button<br>Up  | .  |
 | square button<br>Left | - | circle button<br>Right |
 | - | cross button<br>Down | - |<br>
 
 or Keyboard **Numpad**. OSD: NP<br>
 | | | |
 |-|-|-|
-|0<br>Fire|8<br>Up|-|
+|0<br>Trigger|8<br>Up|-|
 |4<br>Left|-|6<br>Right|
 |-|2<br>Down|-|
 
-or Mouse. OSD: Mou<br>
+or Mouse. OSD: Mouse<br>
 USB Mouse as c1351 Mouse emulation.
 
-or Paddle. OSD: Pad<br>
+or Paddle. OSD: Paddle<br>
 Dualshock 2 Sticks in analog mode as VC-1312 Paddle emulation.<br>
 Left **L1 / L2**  and Right **R1 / R2** shoulder Button as Trigger<br>
 You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the Joystick mode agin. OSD: DS2<br>
@@ -125,14 +130,14 @@ Just SRAM load will not be sufficient.<br>
 *c1541 DOS ROM:*<br>
 Image has be to 32k Byte in size !<br>
 In a nutshell memory layout of the SPI Flash:<br>
-0x000000 reserved for FPGA bitstream<br>
+0x000000 FPGA bitstream<br>
 0x100000 reserved for Atari ST/STE<br>
 0x200000 c1541 Dolphin Dos 2<br>
 0x208000 c1541 CBM DOS 2.6<br>
 0x210000 c1541 Speed DOS Plus<br>
 0x218000 c1541 Jiffy DOS<br>
 
-Use Gowin Programmer GUI or OpenFpgaLoader(Linux) to program at least **Dolphin DOS and factory CBM DOS** to 'external Flash' at mentioned offsets. DOS roms you will find on the internet.<br>
+Use Gowin Programmer GUI or OpenFpgaLoader(Linux) to program at least **Dolphin DOS and factory CBM DOS** to 'external Flash' at mentioned offsets.<br> DOS roms you will find on the internet.<br>
 
 ## Pin mapping 
 see pin configuration in .cst configuration file

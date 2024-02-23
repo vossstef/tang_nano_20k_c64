@@ -18,18 +18,6 @@ module hdmi
     // range (0-255).
     parameter bit IT_CONTENT = 1'b1,
 
-    // Defaults to minimum bit lengths required to represent positions.
-    // Modify these parameters if you have alternate desired bit lengths.
-    parameter int BIT_WIDTH = 11,
-    parameter int BIT_HEIGHT = 10,
-
-    // A true HDMI signal sends auxiliary data (i.e. audio, preambles) which prevents it from being parsed by DVI signal sinks.
-    // HDMI signal sinks are fortunately backwards-compatible with DVI signals.
-    // Enable this flag if the output should be a DVI signal. You might want to do this to reduce resource usage or if you're only outputting video.
-    parameter bit DVI_OUTPUT = 1'b0,
-
-    // **All parameters below matter ONLY IF you plan on sending auxiliary data (DVI_OUTPUT == 1'b0)**
-
     // As specified in Section 7.3, the minimal audio requirements are met: 16-bit or more L-PCM audio at 32 kHz, 44.1 kHz, or 48 kHz.
     // See Table 7-4 or README.md for an enumeration of sampling frequencies supported by HDMI.
     // Note that sinks may not support rates above 48 kHz.
@@ -42,26 +30,12 @@ module hdmi
     // If you care about this, change it below.
     parameter bit [8*8-1:0] VENDOR_NAME = {"Unknown", 8'd0}, // Must be 8 bytes null-padded 7-bit ASCII
     parameter bit [8*16-1:0] PRODUCT_DESCRIPTION = {"FPGA", 96'd0}, // Must be 16 bytes null-padded 7-bit ASCII
-    parameter bit [7:0] SOURCE_DEVICE_INFORMATION = 8'h00, // See README.md or CTA-861-G for the list of valid codes
-
-    // Starting screen coordinate when module comes out of reset.
-    //
-    // Setting these to something other than (0, 0) is useful when positioning
-    // an external video signal within a larger overall frame (e.g.
-    // letterboxing an input video signal). This allows you to synchronize the
-    // negative edge of reset directly to the start of the external signal
-    // instead of to some number of clock cycles before.
-    //
-    // You probably don't need to change these parameters if you are
-    // generating a signal from scratch instead of processing an
-    // external signal.
-    parameter int START_X = 0,
-    parameter int START_Y = 0
+    parameter bit [7:0] SOURCE_DEVICE_INFORMATION = 8'h00 // See README.md or CTA-861-G for the list of valid codes
 )
 (
-    input logic clk_pixel_x5,
-    input logic clk_pixel,
-    input logic clk_audio,
+    input logic			      clk_pixel_x5,
+    input logic			      clk_pixel,
+    input logic			      clk_audio,
     // synchronous reset back to 0,0
     input logic			      reset,
     input logic [1:0]		      stmode, // atari st video mode, 0=60hz ntsc, 1=50hz pal, 2=mono
@@ -70,83 +44,112 @@ module hdmi
     input logic [AUDIO_BIT_WIDTH-1:0] audio_sample_word [1:0],
 
     // These outputs go to your HDMI port
-    output logic [2:0] tmds,
-    output logic tmds_clock,
-    
-    // All outputs below this line stay inside the FPGA
-    // They are used (by you) to pick the color each pixel should have
-    // i.e. always_ff @(posedge pixel_clk) rgb <= {8'd0, 8'(cx), 8'(cy)};
-    output logic [BIT_WIDTH-1:0] cx,
-    output logic [BIT_HEIGHT-1:0] cy,
-
-    // TODO: geometry should become input and be provided by the Atari video logic
-    // depending on the current of the three possible video modes
-
-    // The screen is at the upper left corner of the frame.
-    // 0,0 = 0,0 in video
-    // the frame includes extra space for sending auxiliary data
-    output logic [BIT_WIDTH-1:0] frame_width,
-    output logic [BIT_HEIGHT-1:0] frame_height,
-    output logic [BIT_WIDTH-1:0] screen_width,
-    output logic [BIT_HEIGHT-1:0] screen_height
+    output logic [2:0]		      tmds,
+    output logic		      tmds_clock
 );
 
 localparam int NUM_CHANNELS = 3;
 logic hsync;
 logic vsync;
 
-logic [BIT_WIDTH-1:0] hsync_pulse_start, hsync_pulse_size;
-logic [BIT_HEIGHT-1:0] vsync_pulse_start, vsync_pulse_size;
 logic [1:0] invert;
 
-// 720x576@50Hz 31.25Khz CEA-861 27Mhz
-// H front porch 12
-// H sync 64
-// H back porch 68
-// V front porch 5
-// V sync 5
-// V back porch 39
-assign frame_width = (stmode==2'd0)?1016:(stmode==2'd1)?864:896;
-// is usually 800, but Atari ST in PAL outputs 840 pixels per line
-// and (our) HDMI implementation expects the width to be a multiple of 16
-// Also demos openeing the screen can only address 832 pixels properly
-assign screen_width = (stmode==2'd0)?848:(stmode==2'd1)?720:640;   //0 NTSC, 1 PAL 2 = ST MONO 
-assign hsync_pulse_start = (stmode==2'd0)?16:24;
-assign hsync_pulse_size = (stmode==2'd0)?62:72;
-// should be 625/525, has to be 626/526 for Atari ST in PAL/NTSC mode
-// need to be 624 for c64 core
-assign frame_height = (stmode==2'd0)?526:(stmode==2'd1)?624:501;
-assign screen_height = (stmode==2'd0)?484:(stmode==2'd1)?576:400;
-assign vsync_pulse_start = (stmode==2'd0)?9:5;
-assign vsync_pulse_size = (stmode==2'd0)?6:5;
+// stmode: 0=NTSC, 1=PAL, 2=MONO
+
+// Atari ST in PAL outputs 840 pixels per line
+// but (our) HDMI implementation expects the width to be a multiple of 16
+// Also demos opening the screen can only address 832 pixels properly
+
+// Frame height should be 625/525, but has to be 626/526 for Atari ST
+// in PAL/NTSC mode
+
+// The w.... timing variants are using some modified timing and may look
+// on wide screens. Since the displayed area of these is wider than the
+// actual data to be displayed, the start value indicated the number of
+// (black) pixels before the active area starts
+
+// c64 mode table
+//                         start     frame   screen s_start   s_len
+// NTSC
+wire [55:0] htiming0  = { 11'd0,  12'd1040, 11'd800, 11'd16, 11'd62 }; 
+wire [55:0] whtiming0 = { 11'd40, 12'd1040, 11'd928, 11'd16, 11'd32 };  
+wire [39:0] vtiming0  = {         10'd526, 10'd480, 10'd9,  10'd6 };
+wire [7:0] cea0 = 8'd2; // CEA is HDMI mode in group 1
+   
+// PAL
+wire [55:0] htiming1  = { 11'd0,  12'd1008, 11'd800, 11'd24, 11'd72 }; 
+wire [55:0] whtiming1 = { 11'd64, 12'd1008, 11'd950, 11'd20, 11'd32 };  
+wire [39:0] vtiming1  = {          10'd624, 10'd576,  10'd5,  10'd5 };
+wire [7:0] cea1 = 8'd17;
+   
+// MONO    640x400@71hz  aspect 1.6    
+wire [55:0] htiming2  = { 11'd0,   12'd896, 11'd640, 11'd24, 11'd72 };
+wire [55:0] whtiming2 = { 11'd40,  12'd896, 11'd720, 11'd24, 11'd72 };
+wire [39:0] vtiming2  = {          10'd501, 10'd400,  10'd5,  10'd5 };  
+wire [7:0] cea2 = 8'd2;
+   
+wire [103:0]  timing0 = {  htiming0, vtiming0, cea0 };
+wire [103:0] wtiming0 = { whtiming0, vtiming0, cea0 };
+wire [103:0]  timing1 = {  htiming1, vtiming1, cea1 };
+wire [103:0] wtiming1 = { whtiming1, vtiming1, cea1 };
+wire [103:0]  timing2 = {  htiming2, vtiming2, cea2 };
+wire [103:0] wtiming2 = { whtiming2, vtiming2, cea2 };
+
+// select timing as indicated by control signals coming for Atari ST core
+wire [103:0] timing = 
+         !wide?( (stmode == 2'd0)?timing0:
+                 (stmode == 2'd1)?timing1:
+                  timing2):
+               ( (stmode == 2'd0)?wtiming0:
+                 (stmode == 2'd1)?wtiming1:
+                  wtiming2);
+
+// demux timing parameters   
+wire [10:0] start_x           = timing[103:93];
+
+wire [11:0] frame_width       = timing[92:81];
+wire [10:0] screen_width      = timing[80:70];
+wire [10:0] hsync_pulse_start = timing[69:59];
+wire [10:0] hsync_pulse_size  = timing[58:48];
+
+wire [9:0] frame_height       = timing[47:38];
+wire [9:0] screen_height      = timing[37:28];
+wire [9:0] vsync_pulse_start  = timing[27:18];
+wire [9:0] vsync_pulse_size   = timing[17: 8];
+
+wire [7:0] cea                = timing[7:0]; 
+   
 assign invert = 2'b11;
+
+reg [10:0] cx;
+reg [9:0] cy;
 
 always_comb begin
     hsync <= invert[0] ^ (cx >= screen_width + hsync_pulse_start && cx < screen_width + hsync_pulse_start + hsync_pulse_size);
     // vsync pulses should begin and end at the start of hsync, so special
     // handling is required for the lines on which vsync starts and ends
-    if (cy == screen_height + vsync_pulse_start)
+    if (cy == screen_height + vsync_pulse_start - 1)
         vsync <= invert[1] ^ (cx >= screen_width + hsync_pulse_start);
-    else if (cy == screen_height + vsync_pulse_start + vsync_pulse_size)
+    else if (cy == screen_height + vsync_pulse_start + vsync_pulse_size - 1)
         vsync <= invert[1] ^ (cx < screen_width + hsync_pulse_start);
     else
         vsync <= invert[1] ^ (cy >= screen_height + vsync_pulse_start && cy < screen_height + vsync_pulse_start + vsync_pulse_size);
 end
 
-localparam real VIDEO_RATE = 27E6;  // 32E6; // atari ST
+localparam real VIDEO_RATE = 32E6;
 
 // Wrap-around pixel position counters indicating the pixel to be generated by the user in THIS clock and sent out in the NEXT clock.
 always_ff @(posedge clk_pixel)
 begin
     if (reset)
     begin
-        cx <= BIT_WIDTH'(START_X);
-        cy <= BIT_HEIGHT'(START_Y);
+        cx <= start_x;
+        cy <= 10'd0;    // start_y
     end
     else
     begin
-        cx <= cx == frame_width-1'b1 ? BIT_WIDTH'(0) : cx + 1'b1;
-        cy <= cx == frame_width-1'b1 ? cy == frame_height-1'b1 ? BIT_HEIGHT'(0) : cy + 1'b1 : cy;
+        cx <= cx == frame_width-1'b1 ? 11'd0 : cx + 1'b1;
+        cy <= cx == frame_width-1'b1 ? cy == frame_height-1'b1 ? 10'd0 : cy + 1'b1 : cy;
     end
 end
 
@@ -166,7 +169,6 @@ logic [5:0] control_data = 6'd0;
 logic [11:0] data_island_data = 12'd0;
 
 generate
-if (!DVI_OUTPUT)
     begin: true_hdmi_output
         logic video_guard = 1;
         logic video_preamble = 0;
@@ -189,7 +191,7 @@ if (!DVI_OUTPUT)
         logic [4:0] num_packets_alongside;
         always_comb
         begin
-            max_num_packets_alongside = (frame_width - screen_width  /* VD period */ - 2 /* V guard */ - 8 /* V preamble */ - 4 /* Min V control period */ - 2 /* DI trailing guard */ - 2 /* DI leading guard */ - 8 /* DI premable */ - 4 /* Min DI control period */) / 32;
+	    max_num_packets_alongside = (frame_width - screen_width  /* VD period */ - 2 /* V guard */ - 8 /* V preamble */ - 4 /* Min V control period */ - 2 /* DI trailing guard */ - 2 /* DI leading guard */ - 8 /* DI premable */ - 4 /* Min DI control period */) / 32;
             if (max_num_packets_alongside > 18)
                 num_packets_alongside = 5'd18;
             else
@@ -214,7 +216,7 @@ if (!DVI_OUTPUT)
             end
             else
             begin
-                data_island_guard <= num_packets_alongside > 0 && (
+	        data_island_guard <= num_packets_alongside > 0 && (
                     (cx >= screen_width + 12 && cx < screen_width + 14) /* leading guard */ || 
                     (cx >= screen_width + 14 + num_packets_alongside * 32 && cx < screen_width + 14 + num_packets_alongside * 32 + 2) /* trailing guard */
                 );
@@ -237,7 +239,7 @@ if (!DVI_OUTPUT)
             .VENDOR_NAME(VENDOR_NAME),
             .PRODUCT_DESCRIPTION(PRODUCT_DESCRIPTION),
             .SOURCE_DEVICE_INFORMATION(SOURCE_DEVICE_INFORMATION)
-        ) packet_picker (.clk_pixel(clk_pixel), .clk_audio(clk_audio), .reset(reset), .stmode(stmode), .video_field_end(video_field_end), .packet_enable(packet_enable), .packet_pixel_counter(packet_pixel_counter), .audio_sample_word(audio_sample_word), .header(header), .sub(sub));
+        ) packet_picker (.clk_pixel(clk_pixel), .clk_audio(clk_audio), .reset(reset), .cea(cea), .stmode(stmode), .video_field_end(video_field_end), .packet_enable(packet_enable), .packet_pixel_counter(packet_pixel_counter), .audio_sample_word(audio_sample_word), .header(header), .sub(sub));
         logic [8:0] packet_data;
         packet_assembler packet_assembler (.clk_pixel(clk_pixel), .reset(reset), .data_island_period(data_island_period), .header(header), .sub(sub), .packet_data(packet_data), .counter(packet_pixel_counter));
 
@@ -260,24 +262,6 @@ if (!DVI_OUTPUT)
                 data_island_data[3] <= cx != 0;
                 data_island_data[2] <= packet_data[0];
                 data_island_data[1:0] <= {vsync, hsync};
-            end
-        end
-    end
-else // DVI_OUTPUT = 1
-    begin
-        always_ff @(posedge clk_pixel)
-        begin
-            if (reset)
-            begin
-                mode <= 3'd0;
-                video_data <= 24'd0;
-                control_data <= 6'd0;
-            end
-            else
-            begin
-                mode <= video_data_period ? 3'd1 : 3'd0;
-                video_data <= rgb;
-                control_data <= {4'b0000, {vsync, hsync}}; // ctrl3, ctrl2, ctrl1, ctrl0, vsync, hsync
             end
         end
     end

@@ -16,6 +16,8 @@ entity c1541_logic is
   (
     clk_32M         : in std_logic;
     reset           : in std_logic;
+    pause           : in std_logic;
+    ce              : in std_logic;
 
     -- serial bus
     sb_data_oe      : buffer std_logic;
@@ -145,16 +147,25 @@ architecture SYN of c1541_logic is
 
   reset_n <= not reset;
   
+--flux_comp_inst :  entity work.c1541_flux
+--port map (
+--  clk      => clk_32M,
+--  pause    => pause,
+--  ce       => ce,
+
+--  p2_h_r    => p2_h_r,
+--  p2_h_f    => p2_h_f,
+--  clk_1M_pulse => clk_1M_pulse
+--);
   process (clk_32M)
     variable count  : std_logic_vector(4 downto 0) := (others => '0');
   begin
     if rising_edge(clk_32M) then
-        count := std_logic_vector(unsigned(count) + 1);
+        if pause = '0' then count := std_logic_vector(unsigned(count) + 1); end if;
     end if;
-
-    if count = "10000" then clk_1M_pulse <= '1'; else clk_1M_pulse <='0' ; end if;
-    if count = "00000" then p2_h_r <= '1'; else p2_h_r <='0' ; end if;
-    if count = "10000" then p2_h_f <= '1'; else p2_h_f <='0' ; end if;
+  if count = "10000" then clk_1M_pulse <= '1'; else clk_1M_pulse <='0' ; end if;
+  if count = "00000" then p2_h_r <= '1'; else p2_h_r <='0' ; end if;
+  if count = "10000" then p2_h_f <= '1'; else p2_h_f <='0' ; end if;
   end process;
 
   -- decode logic
