@@ -776,14 +776,14 @@ begin
 			sum := 0;
 		elsif ntscMode = '1' then
 			sum := sum + 120;
-			if sum >= 32727266 then
-				sum := sum - 32727266;
+			if sum >= 32940000 then  -- adjusted to GW2A PLL capabilities
+				sum := sum - 32940000;
 				todclk <= not todclk;
 			end if;
 		else
 			sum := sum + 100;
-			if sum >= 31527954 then
-				sum := sum - 31527954;
+			if sum >= 31500000 then
+				sum := sum - 31500000;
 				todclk <= not todclk;
 			end if;
 		end if;

@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------
 --  C64 Top level for Tang Nano
---  2023 Stefan Voss
+--  2023 / 2024 Stefan Voss
 --  based on the work of many others
 --
 --  FPGA64 is Copyrighted 2005-2008 by Peter Wendrich (pwsoft@syntiac.com)
@@ -736,7 +736,7 @@ mainclock: rPLL
             FBDIV_SEL => 34,
             DYN_ODIV_SEL => "false",
             ODIV_SEL => 2,
-            PSDA_SEL => "0110",   -- phase shift 135°
+            PSDA_SEL => "0110",   
             DYN_DA_EN => "false", 
             DUTYDA_SEL => "1000",
             CLKOUT_FT_DIR => '1',
@@ -793,18 +793,6 @@ port map(
     CALIB  => '0'
 );
 
---div3_inst: CLKDIV
---generic map(
---  DIV_MODE => "5",
---  GSREN    => "false"
---)
---port map(
---    CLKOUT => open, -- mspi_clk,
---    HCLKIN => mspi_clk_x5,
---    RESETN => pll_locked,
---    CALIB  => '0'
---);
-
 -- 64.125Mhz for flash controller c1541 ROM
 flashclock: rPLL
         generic map (
@@ -816,7 +804,7 @@ flashclock: rPLL
           FBDIV_SEL => 18,
           DYN_ODIV_SEL => "false",
           ODIV_SEL => 8,
-          PSDA_SEL => "0110",
+          PSDA_SEL => "0110", -- phase shift 135°
           DYN_DA_EN => "false",
           DUTYDA_SEL => "1000",
           CLKOUT_FT_DIR => '1',
@@ -1202,8 +1190,8 @@ port map(
 -- c1541 ROM's SPI Flash, offset in spi flash $200000
 flash_inst: entity work.flash 
 port map(
-    clk       => flash_clk, -- clk64,
-    resetn    => flash_lock, -- pll_locked,
+    clk       => flash_clk,
+    resetn    => flash_lock,
     ready     => flash_ready,
     busy      => open,
     address   => ("0010" & "000" & dos_sel & c1541rom_addr),

@@ -39,7 +39,6 @@ module video (
 	      );
    
 
-`define PIXEL_CLOCK 31500000
 
 
 /* -------------------- HDMI video and audio -------------------- */
@@ -52,8 +51,7 @@ reg vresetD;
 
 always @(posedge clk) begin
     // divisor = pixel clock / 48000 / 2 - 1
-//    if(aclk_cnt < audio_div)
-    if(aclk_cnt < `PIXEL_CLOCK / 48000 / 2 -1)
+    if(aclk_cnt < audio_div)
         aclk_cnt <= aclk_cnt + 9'd1;
     else begin
         aclk_cnt <= 9'd0;
