@@ -10,27 +10,34 @@ Features:
 * USB Keyboard via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) (future plan Tang onboard BL616 µC)
 * USB Joystick via µC
 * USB Mouse via µC as c1351 Mouse emulation
-* [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)<br>
+* [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type) [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 * Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys & Stick as Joystick<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation (analog mode)<br>
-* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with parallel bus [Speedloader Dolphin DOS 2](https://rr.pokefinder.org/wiki/Dolphin_DOS). [GER](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
+* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with parallel bus [Speedloader Dolphin DOS 2](https://rr.pokefinder.org/wiki/Dolphin_DOS). [GER manual](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * c1541 DOS ROM selection
 * On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
-* Physical MIDI-IN and OUT [MIDI shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/README.md)<br>
+* Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 <br>
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
 
-<font color="red">HID interfaces aligned in pinmap and control to match</font> [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/bl616/misterynano_fw).<br> Basically BL616 µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
+HID interfaces aligned in pinmap and control to match [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/misterynano_fw).<br> Basically BL616 µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
 
 **Note** PROJECT IS STILL WORK IN PROGRESS</b>
 <br>
 ## Installation
 
-The installation of C64 Nano on the Tang Nano 20k can be done using a Linux PC or a
-[Windows PC instructions](INSTALLATION_WINDOWS.md).
+The installation of C64 Nano on the Tang Nano 20k board can be done using a Linux PC or a Windows PC
+[Instruction](INSTALLATION_WINDOWS.md).<br><br>
+In a nutshell memory layout of the SPI Flash:<br>
+0x000000 FPGA bitstream<br>
+0x100000 reserved for Atari ST/STE<br>
+0x200000 c1541 Dolphin DOS 2<br>
+0x208000 c1541 CBM DOS 2.6<br>
+0x210000 c1541 Speed DOS Plus<br>
+0x218000 c1541 Jiffy DOS<br>
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS.<br>
@@ -42,7 +49,8 @@ LIST<br>
 Load first program from Disk: (or just LOAD)<br> 
 LOAD"*",8<br>
 RUN<br>
-c1541 DOS ROM to be selected from OSD (default Dolphin, factory or other)<br>
+c1541 DOS ROM to be selected from OSD (default Dolphin DOS, CBM DOS or other)<br>
+In case a PRG don't load correctly select via OSD the factory default CBM DOS an give it a try.
 
 ## emulated RAM Expansion Unit REU 1750
 For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.<br>
@@ -116,29 +124,13 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
 4 System LED 0<br>
 5 System LED 1<br>
 
+## MIDI-IN and OUT
+Type of MIDI interface can be selected from OSD.<br> There is support for Sequential Inc., Passport/Sentech, DATEL/SIEL/JMS/C-LAB and Namesoft<br>
+You can use a [MiSTeryNano MIDI shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) to interface to a Keyboard.<br>
 ## Powering
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
-## Flash program
-*M0 Dock Bl616 Firmware:*<br>Have a look MiSTeryNano readme chapter 'Installation of the MCU firmware' to get an idea how to install the needed Firmware.<br>
-
-*FPGA bitstream:*<br>
-For proper operation program .fs bitsteam to 'external Flash' and power cycle the board.<br>
-Just SRAM load will not be sufficient.<br>
-
-*c1541 DOS ROM:*<br>
-Image has be to 32k Byte in size !<br>
-In a nutshell memory layout of the SPI Flash:<br>
-0x000000 FPGA bitstream<br>
-0x100000 reserved for Atari ST/STE<br>
-0x200000 c1541 Dolphin Dos 2<br>
-0x208000 c1541 CBM DOS 2.6<br>
-0x210000 c1541 Speed DOS Plus<br>
-0x218000 c1541 Jiffy DOS<br>
-
-Use Gowin Programmer GUI or OpenFpgaLoader(Linux) to program at least **Dolphin DOS and factory CBM DOS** to 'external Flash' at mentioned offsets.<br> DOS roms you will find on the internet.<br>
-
 ## Pin mapping 
 see pin configuration in .cst configuration file
 ## HW circuit considerations
@@ -183,16 +175,14 @@ In order to use this Design the following things are needed:
 
 [Sipeed Tang Nano 20k](https://wiki.sipeed.com/nano20k)<br>
 [Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
-USB-C to USB-A adapter to connect regular USB devices to the M0S Dock<br> &nbsp;&nbsp;or alternatively a 4 port [mini USB hub](https://a.aliexpress.com/_EIidgjH)<br>
 microSD or microSDHC card FAT/exFAT formatted<br>
-USB Keyboard<br>
-D-SUB 9 M connector<br> 
-Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible Joystick<br>
-a breadboard to wire everything up<br>
-some jumper wires<br>
-TFT Monitor with HDMI Input<br>
+TFT Monitor with HDMI Input and Speaker<br>
 <br>
-alternative Gamecontrol Hardware option:<br>
-Gamepad Adapter Board (Sipeed Joystick to DIP)<br>
-[Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock)<br>
-[USB Joystick](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)<br>
+| HID and Gamecontrol Hardware option | needs | alternative option |
+| ----------- | --- | ---  |
+| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH)  |
+| Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|
+| [USB Joystick](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | ---  |
+| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) | breadboard to wire everything up and some jumper wires |
+
+
