@@ -6,7 +6,7 @@ Dram controller and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&
 c1541 by https://github.com/darfpga<br>
 
 Features:
-* PAL 576p@50Hz or NTSC 480p@60Hz HDMI Video and Audio Output
+* PAL 800x576p@50Hz or NTSC 800x480p@60Hz HDMI Video and Audio Output
 * USB Keyboard via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) (future plan Tang onboard BL616 µC)
 * USB Joystick via µC
 * USB Mouse via µC as c1351 Mouse emulation

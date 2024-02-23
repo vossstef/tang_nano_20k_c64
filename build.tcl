@@ -4,11 +4,9 @@ add_file src/acia.v
 add_file src/c1541/mist_sd_card.sv
 add_file src/cartridge.v
 add_file src/dualshock2.v
-add_file src/gowin_clkdiv/gowin_clkdiv.v
 add_file src/gowin_dpb/gowin_dpb_track_buffer_b.v
 add_file src/gowin_dpb/gowin_dpb_trkbuf.v
 add_file src/gowin_dpb/sector_dpram.v
-add_file src/gowin_rpll/pll_160m.v
 add_file src/hdmi/audio_clock_regeneration_packet.sv
 add_file src/hdmi/audio_info_frame.sv
 add_file src/hdmi/audio_sample_packet.sv
@@ -74,13 +72,15 @@ add_file src/tang_nano_20k_c64_top.sdc
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name tang_nano_20k_c64
-set_option -verilog_language sysv2017
-set_option -vhdl_language vhdl-2008
+set_option -verilog_std sysv2017
+set_option -vhdl_std vhd2008
 set_option -top_module tang_nano_20k_c64_top
 set_option -use_mspi_as_gpio 1
 set_option -use_sspi_as_gpio 1
 set_option -loading_rate 10000000
 set_option -print_all_synthesis_warning 1
-set_option -ram_rw_check 1
+set_option -rw_check_on_ram 0
+set_option -gen_text_timing_rpt 1
+set_option -gen_posp 1
 
 run all

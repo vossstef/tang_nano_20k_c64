@@ -722,7 +722,7 @@ begin
   if rising_edge(clk32) then
     ntscModeD <= ntscMode;
     IDSEL  <= "111101" when ntscModeD = '0' else "111011";
-    FBDSEL <= "101101" when ntscModeD = '0' else "000011";
+    FBDSEL <= "011101" when ntscModeD = '0' else "000011";
   end if;
 end process;
 
