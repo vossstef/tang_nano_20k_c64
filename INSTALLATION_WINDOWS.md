@@ -90,6 +90,7 @@ Open a command prompt and enter the directory where you downloaded the files fro
 If will create the required 32K size DOS image named c1541_cbm.bin <br>
 Program at offset 0x208000<br>
 ![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/cbm.png)
+
 ```Speed DOS Plus```<br>
 You will [find](https://rr.pokefinder.org/wiki/Speed_DOS#Binaries) 
 a 32K Byte file e.g. c1541-20-8.rom that can right away be flashed.<br>
