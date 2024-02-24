@@ -80,12 +80,10 @@ port (
     osc3        : in  std_logic_vector(7 downto 0);
     env3        : in  std_logic_vector(7 downto 0) );
 
-	 attribute ramstyle : string;
 
 end sid_regs;
 
 architecture gideon of sid_regs is
-	 attribute ramstyle of gideon : architecture is "logic";
 
     type byte_array_t is array(natural range <>) of std_logic_vector(7 downto 0);
     type nibble_array_t is array(natural range <>) of std_logic_vector(3 downto 0);

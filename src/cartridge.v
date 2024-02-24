@@ -59,8 +59,8 @@ reg        IOF_wr_ena;
 reg        exrom_overide;
 reg        game_overide;
 
-reg [6:0] lobanks[0:63]; /* synthesis syn_ramstyle = "registers" */
-reg [6:0] hibanks[0:63]; /* synthesis syn_ramstyle = "registers" */
+reg [6:0] lobanks[0:63];
+reg [6:0] hibanks[0:63];
 
 reg  [7:0] bank_cnt;
 always @(posedge clk32) begin
