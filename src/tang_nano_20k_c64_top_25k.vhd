@@ -22,7 +22,7 @@ entity tang_nano_20k_c64_top_25k is
 
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(5 downto 0);
-    --
+
     tmds_clk_n  : out std_logic;
     tmds_clk_p  : out std_logic;
     tmds_d_n    : out std_logic_vector( 2 downto 0);
@@ -35,7 +35,6 @@ entity tang_nano_20k_c64_top_25k is
     O_sdram_clk     : out std_logic;
     O_sdram_cs_n    : out std_logic; -- chip select
     O_sdram_cas_n   : out std_logic;
-   -- columns address select
     O_sdram_ras_n   : out std_logic; -- row address select
     O_sdram_wen_n   : out std_logic; -- write enable
     IO_sdram_dq     : inout std_logic_vector(15 downto 0); -- 16 bit bidirectional data bus
@@ -124,7 +123,7 @@ signal ram_ce      :  std_logic;
 signal ram_we      :  std_logic;
 signal romCE       :  std_logic;
 
-signal ntscMode    :  std_logic;
+signal ntscMode    :  std_logic := '0';
 signal hsync       :  std_logic;
 signal vsync       :  std_logic;
 signal r           :  unsigned(7 downto 0);
@@ -194,7 +193,6 @@ signal c1541_reset    : std_logic;
 signal c1541_osd_reset : std_logic;
 signal system_wide_screen : std_logic;
 signal system_floppy_wprot : std_logic_vector(1 downto 0);
---signal leds           : std_logic_vector(5 downto 0);
 signal leds           : std_logic_vector(1 downto 0);
 signal system_leds    : std_logic_vector(1 downto 0);
 signal led1541        : std_logic;
@@ -570,21 +568,12 @@ port map(
   );
 
 -- Clock tree and all frequencies in Hz
--- pll         315000000 / 329400000
--- serdes      157500000 / 164700000
--- dram         63000000 /  65880000
--- core /pixel  31500000 /  32940000
--- IDIV_SEL              2 / 4
--- FBDIV_SEL            34 / 60
-
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    ntscModeD <= ntscMode;
-    IDSEL  <= "111101" when ntscModeD = '0' else "111011";
-    FBDSEL <= "011101" when ntscModeD = '0' else "000011";
-  end if;
-end process;
+-- TP25k
+-- pll         315000000
+-- serdes      157500000
+-- dram         63000000
+-- core /pixel  31500000
+-- no NTSC support
 
 mainclock: entity work.Gowin_PLL
 port map (
@@ -606,33 +595,25 @@ flashclock: entity work.Gowin_PLL_flash
         clkin => clk
     );
 
-leds_n <=  not leds;
+leds_n <=  leds;
 leds(0) <= led1541;
-leds(1) <= '1'; -- 23k specific
---leds(2 downto 1) <= "00";
---leds(3) <= spi_ext;
---leds(5 downto 4) <= system_leds;
+leds(1) <= system_leds(0); 
 
 -- 4 3 2 1 0 digital c64
---joyDS2     <=    ("00" & (key_l1 or key_r1) & key_circle & key_square & key_cross & key_triangle);
-joyDS2     <=     "0000000";
---joyDigital <= not("11" & io(0) & io(4) & io(3) & io(2) & io(1));
-joyDigital <=     "0000000";
+joyDS2     <=    (others => '0');
+joyDigital <=    (others => '0');
 joyUsb1    <=    ("00" & joystick1(4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3));
 joyUsb2    <=    ("00" & joystick2(4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3));
 joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
---joyPaddle  <=    ("00" & '0' & key_l1 & key_l2 & "00"); -- bound to physical paddle position DS2
---joyPaddle2 <=    ("00" & '0' & key_r1 & key_r2 & "00");
-joyPaddle  <= "0000000";
-joyPaddle2  <= "0000000";
+joyPaddle  <=    (others => '0');
+joyPaddle2 <=    (others => '0');
 paddle_1 <= (others => '0');
 paddle_2 <= (others => '0');
 paddle_3 <= (others => '0');
 paddle_4 <= (others => '0');
 
 -- send external DB9 joystick port to µC
---db9_joy <= not('1' & io(0), io(2), io(1), io(4), io(3));
 db9_joy <= "000000";
 
 process(clk32)
@@ -773,7 +754,7 @@ module_inst: entity work.sysctrl
   system_audio_filter => sid_filter,
   system_turbo_mode   => turbo_mode,
   system_turbo_speed  => turbo_speed,
-  system_video_std    => ntscMode,
+  system_video_std    => open, -- not supported
   system_midi         => st_midi,
   system_pause        => system_pause,
 
