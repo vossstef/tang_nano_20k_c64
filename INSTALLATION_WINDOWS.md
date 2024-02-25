@@ -144,5 +144,6 @@ the Tang Nano 20K. Using an external M0S is nevertheless recommended.
 Format the SD card in FAT32. Copy your D64 / G64 files files on
 it. You can organize your files in subdirectories. These files can later
 be selected using the on-screen-display (OSD).
+Copy a D64 Disk image to your sdcard and rename it to disk8.d64 as default boot image.
 
 That´s it for now. Have fun using the C64Nano
