@@ -66,7 +66,8 @@ add_file src/t65/T65_Pack.vhd
 add_file src/tang_nano_20k_c64_top_25k.vhd
 add_file src/video_sync.vhd
 add_file src/video_vicII_656x.vhd
-add_file src/gowin_pll/gowin_pll.vhd
+add_file src/gowin_pll/gowin_pll_pal.vhd
+add_file src/gowin_pll/gowin_pll_ntsc.vhd
 add_file src/gowin_pll/gowin_pll_flash.vhd
 add_file src/tang_nano_20k_c64_top_25k.cst
 add_file src/tang_nano_20k_c64_top_25k.sdc

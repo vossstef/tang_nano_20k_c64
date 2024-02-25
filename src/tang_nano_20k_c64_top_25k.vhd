@@ -56,15 +56,25 @@ architecture Behavioral_top of tang_nano_20k_c64_top_25k is
 signal clk64          : std_logic;
 signal clk32          : std_logic;
 signal pll_locked     : std_logic;
-signal clk_pixel_x10  : std_logic;
 signal clk_pixel_x5   : std_logic;
 signal mspi_clk_x5    : std_logic;
+signal clk64_ntsc     : std_logic;
+signal clk32_ntsc     : std_logic;
+signal pll_locked_ntsc: std_logic;
+signal clk_pixel_x5_ntsc  : std_logic;
+signal clk64_pal      : std_logic;
+signal clk32_pal      : std_logic;
+signal pll_locked_pal : std_logic;
+signal clk_pixel_x5_pal   : std_logic;
 attribute syn_keep : integer;
-attribute syn_keep of clk64         : signal is 1;
-attribute syn_keep of clk32         : signal is 1;
-attribute syn_keep of clk_pixel_x10 : signal is 1;
-attribute syn_keep of clk_pixel_x5  : signal is 1;
-attribute syn_keep of mspi_clk_x5   : signal is 1;
+attribute syn_keep of clk64             : signal is 1;
+attribute syn_keep of clk32             : signal is 1;
+attribute syn_keep of clk_pixel_x5      : signal is 1;
+attribute syn_keep of clk64_pal         : signal is 1;
+attribute syn_keep of clk32_ntsc        : signal is 1;
+attribute syn_keep of clk32_pal         : signal is 1;
+attribute syn_keep of clk_pixel_x5_pal  : signal is 1;
+attribute syn_keep of mspi_clk_x5       : signal is 1;
 
 signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
@@ -123,7 +133,7 @@ signal ram_ce      :  std_logic;
 signal ram_we      :  std_logic;
 signal romCE       :  std_logic;
 
-signal ntscMode    :  std_logic := '0';
+signal ntscMode    :  std_logic;
 signal hsync       :  std_logic;
 signal vsync       :  std_logic;
 signal r           :  unsigned(7 downto 0);
@@ -270,8 +280,6 @@ signal paddle_1        : std_logic_vector(7 downto 0);
 signal paddle_2        : std_logic_vector(7 downto 0);
 signal paddle_3        : std_logic_vector(7 downto 0);
 signal paddle_4        : std_logic_vector(7 downto 0);
-signal system_pot_1_2  : std_logic;
-signal system_pot_3_4  : std_logic;
 signal key_r1          : std_logic;
 signal key_r2          : std_logic;
 signal key_l1          : std_logic;
@@ -280,12 +288,27 @@ signal key_triangle    : std_logic;
 signal key_square      : std_logic;
 signal key_circle      : std_logic;
 signal key_cross       : std_logic;
-signal IDSEL           : std_logic_vector(5 downto 0);
-signal FBDSEL          : std_logic_vector(5 downto 0);
-signal ntscModeD       : std_logic;
 signal audio_div       : unsigned(8 downto 0);
 signal flash_clk       : std_logic;
 signal flash_lock      : std_logic;
+signal dcsclksel       : std_logic_vector(3 downto 0);
+signal ntscModeD       : std_logic;
+signal ntscModeD1      : std_logic;
+
+component DCS
+    generic (
+        DCS_MODE : STRING := "RISING"
+    );
+    port (
+        CLKOUT: out std_logic;
+        CLKSEL: in std_logic_vector(3 downto 0);
+        CLKIN0: in std_logic;
+        CLKIN1: in std_logic;
+        CLKIN2: in std_logic;
+        CLKIN3: in std_logic;
+        SELFORCE: in std_logic
+    );
+ end component;
 
 begin
   spi_io_din  <= m0s(1);
@@ -568,20 +591,70 @@ port map(
   );
 
 -- Clock tree and all frequencies in Hz
--- TP25k
--- pll         315000000
--- serdes      157500000
--- dram         63000000
--- core /pixel  31500000
--- no NTSC support
+-- TN 20k
+-- pal                   / ntsc
+-- pll         315000000 / 329400000
+-- serdes      157500000 / 164700000
+-- dram         63000000 /  65880000
+-- core /pixel  31500000 /  32940000
 
-mainclock: entity work.Gowin_PLL
+-- TP 25k
+-- pal                   / ntsc
+-- pll         315000000 / 325000000
+-- serdes      157500000 / 162500000
+-- dram         63000000 /  65000000
+-- core /pixel  31500000 /  32500000
+
+pll_locked <= pll_locked_pal and pll_locked_ntsc;
+dcsclksel <= "0001" when ntscMode = '0' else "0010";
+
+clk_switch_1: DCS
+generic map (
+    DCS_MODE => "RISING"
+)
 port map (
-    lock => pll_locked,
-    clkout0 => clk_pixel_x10,
-    clkout1 => clk_pixel_x5,
-    clkout2 => clk64,
-    clkout3 => clk32,
+    CLKOUT => clk_pixel_x5,
+    CLKSEL => dcsclksel,
+    CLKIN0 => clk_pixel_x5_pal,
+    CLKIN1 => clk_pixel_x5_ntsc,
+    CLKIN2 => '0',
+    CLKIN3 => '0',
+    SELFORCE => '1'
+);
+
+clk_switch_2: DCS
+generic map (
+    DCS_MODE => "RISING"
+)
+port map (
+    CLKOUT => clk64,
+    CLKSEL => dcsclksel,
+    CLKIN0 => clk64_pal,
+    CLKIN1 => clk64_ntsc,
+    CLKIN2 => '0',
+    CLKIN3 => '0',
+    SELFORCE => '1'
+);
+
+clk32 <= clk32_pal when ntscMode = '0' else clk32_ntsc;
+
+mainclock_pal: entity work.Gowin_PLL_pal
+port map (
+    lock => pll_locked_pal,
+    clkout0 => open,
+    clkout1 => clk_pixel_x5_pal,
+    clkout2 => clk64_pal,
+    clkout3 => clk32_pal,
+    clkin => clk
+);
+
+mainclock_ntsc: entity work.Gowin_PLL_ntsc
+port map (
+    lock => pll_locked_ntsc,
+    clkout0 => open,
+    clkout1 => clk_pixel_x5_ntsc,
+    clkout2 => clk64_ntsc,
+    clkout3 => clk32_ntsc,
     clkin => clk
 );
 
@@ -591,7 +664,7 @@ flashclock: entity work.Gowin_PLL_flash
         lock => flash_lock,
         clkout0 => flash_clk,
         clkout1 => mspi_clk,
-        clkout2 => open, -- 32,0625M
+        clkout2 => open, -- 32,0M
         clkin => clk
     );
 
@@ -754,7 +827,7 @@ module_inst: entity work.sysctrl
   system_audio_filter => sid_filter,
   system_turbo_mode   => turbo_mode,
   system_turbo_speed  => turbo_speed,
-  system_video_std    => open, -- not supported
+  system_video_std    => ntscMode,
   system_midi         => st_midi,
   system_pause        => system_pause,
 
