@@ -18,18 +18,10 @@ entity tang_nano_20k_c64_top_25k is
     clk         : in std_logic;
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
---    leds_n      : out std_logic_vector(5 downto 0);
---    io          : in std_logic_vector(4 downto 0);
     leds_n      : out std_logic_vector(1 downto 0);
 
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(5 downto 0);
-    -- SPI interface onboard BL616 uC
---    spi_csn     : in std_logic;
---    spi_sclk    : in std_logic;
---    spi_dat     : in std_logic;
---    spi_dir     : out std_logic; -- unusable due to hw bug / capacitor
---    jtag_tck    : out std_logic; -- replacement spi_dir
     --
     tmds_clk_n  : out std_logic;
     tmds_clk_p  : out std_logic;
@@ -39,18 +31,6 @@ entity tang_nano_20k_c64_top_25k is
     sd_clk      : out std_logic;
     sd_cmd      : inout std_logic;
     sd_dat      : inout std_logic_vector(3 downto 0);
---    ws2812      : out std_logic;
-    -- "Magic" port names that the gowin compiler connects to the on-chip SDRAM
---    O_sdram_clk  : out std_logic;
---    O_sdram_cke  : out std_logic;
---    O_sdram_cs_n : out std_logic;            -- chip select
---    O_sdram_cas_n : out std_logic;           -- columns address select
---    O_sdram_ras_n : out std_logic;           -- row address select
---    O_sdram_wen_n : out std_logic;           -- write enable
---    IO_sdram_dq  : inout std_logic_vector(31 downto 0); -- 32 bit bidirectional data bus
---    O_sdram_addr : out std_logic_vector(10 downto 0);  -- 11 bit multiplexed address bus
---    O_sdram_ba   : out std_logic_vector(1 downto 0);     -- two banks
---    O_sdram_dqm  : out std_logic_vector(3 downto 0);     -- 32/4
     -- MiSTer SDRAM module
     O_sdram_clk     : out std_logic;
     O_sdram_cs_n    : out std_logic; -- chip select
@@ -62,11 +42,6 @@ entity tang_nano_20k_c64_top_25k is
     O_sdram_addr    : out std_logic_vector(12 downto 0); -- 13 bit multiplexed address bus
     O_sdram_ba      : out std_logic_vector(1 downto 0); -- two banks
     O_sdram_dqm     : out std_logic_vector(1 downto 0); -- 16/2
-    -- Gamepad
---    joystick_clk  : out std_logic;
---    joystick_mosi : out std_logic;
---    joystick_miso : inout std_logic; -- midi_out
---    joystick_cs   : inout std_logic; -- midi_in
     -- spi flash interface
     mspi_cs       : out std_logic;
     mspi_clk      : out std_logic;
@@ -209,7 +184,6 @@ signal sd_change      : std_logic;
 signal sdc_int        : std_logic;
 signal sdc_iack       : std_logic;
 signal int_ack        : std_logic_vector(7 downto 0);
-signal spi_ext        : std_logic;
 signal spi_io_din     : std_logic;
 signal spi_io_ss      : std_logic;
 signal spi_io_clk     : std_logic;
@@ -315,96 +289,12 @@ signal audio_div       : unsigned(8 downto 0);
 signal flash_clk       : std_logic;
 signal flash_lock      : std_logic;
 
---component CLKDIV
---    generic (
---        DIV_MODE : STRING := "2"
---        DIV_MODE : STRING := "2";
---        GSREN: in string := "false"
---    );
---    port (
---        CLKOUT: out std_logic;
---        HCLKIN: in std_logic;
---       RESETN: in std_logic;
---        CALIB: in std_logic
---    );
---end component;
-
 begin
--- ----------------- SPI input parser ----------------------
--- map output data onto both spi outputs
-  spi_io_din  <= m0s(1) when spi_ext = '1' else '0';
-  spi_io_ss   <= m0s(2) when spi_ext = '1' else '0';
-  spi_io_clk  <= m0s(3) when spi_ext = '1' else '0';
---  jtag_tck    <= spi_io_dout; -- onboad bl616 back-up miso signal
-  m0s(0)      <= spi_io_dout; -- M0 Dock
---  spi_dir     <= spi_io_dout; -- unusable due to hw bug
+  spi_io_din  <= m0s(1);
+  spi_io_ss   <= m0s(2);
+  spi_io_clk  <= m0s(3);
+  m0s(0)      <= spi_io_dout;
   m0s(5)      <= 'Z';
-
--- by default the internal SPI is being used. Once there is
--- a select from the external spi (M0S Dock) , then the connection is being switched
-process (clk32, pll_locked)
-begin
-  if rising_edge(clk32) then
-    if pll_locked = '0' then
-        spi_ext <= '0';
-    elsif m0s(2) = '0' then
-        spi_ext <= '1';
-    else 
-        spi_ext <= spi_ext;
-    end if;
-  end if;
-end process;
-
--- mux overlapping DS2 and MIDI signals to IO pin
---joystick_cs     <= joystick_cs_i when st_midi = "000" else 'Z';
---midi_rx         <= joystick_cs when st_midi /= "000" else '1';
---joystick_miso   <= midi_tx when st_midi /= "000" else 'Z';
---joystick_miso_i <= joystick_miso when st_midi = "000" else '1';
-
--- https://store.curiousinventor.com/guides/PS2/
--- https://hackaday.io/project/170365-blueretro/log/186471-playstation-playstation-2-spi-interface
-
---gamepad: entity work.dualshock2
---    port map (
---    clk           => clk32,
---    rst           => system_reset(0) and not pll_locked,
---    vsync         => vsync,
---    ds2_dat       => joystick_miso_i,
---    ds2_cmd       => joystick_mosi,
---    ds2_att       => joystick_cs_i,
---    ds2_clk       => joystick_clk,
---    ds2_ack       => '0',
---    stick_lx      => paddle_1,
---    stick_ly      => paddle_2,
---    stick_rx      => paddle_3,
---    stick_ry      => paddle_4,
---    key_up        => open,
---    key_down      => open,
---    key_left      => open,
---    key_right     => open,
---    key_l1        => key_l1,
---    key_l2        => key_l2,
---    key_r1        => key_r1,
---    key_r2        => key_r2,
---    key_triangle  => key_triangle,
---    key_square    => key_square,
---    key_circle    => key_circle,
---    key_cross     => key_cross,
---    key_start     => open,
---    key_select    => open,
---    key_lstick    => open,
---    key_rstick    => open,
---    debug1        => open,
---    debug2        => open
---    );
-
---led_ws2812: entity work.ws2812
---  port map
---  (
---   clk    => clk32,
---   color  => ws2812_color,
---   data   => ws2812
---  );
 
 	process(clk32, disk_reset)
     variable reset_cnt : integer range 0 to 2147483647;
@@ -658,7 +548,6 @@ dram_inst: entity work.sdram
 port map(
     -- SDRAM side interface
     sd_clk    => O_sdram_clk,   -- sd clock
---    sd_cke    => O_sdram_cke,   -- clock enable
     sd_data   => IO_sdram_dq,   -- 32 bit bidirectional data bus
     sd_addr   => O_sdram_addr,  -- 11 bit multiplexed address bus
     sd_dqm    => O_sdram_dqm,   -- two byte masks
@@ -674,7 +563,7 @@ port map(
     refresh   => idle,          -- chipset requests a refresh cycle
     din       => din,           -- data input from chipset/cpu
     dout      => dout,
-    addr      => "00" & addr,          -- 23 bit word address
+    addr      => "00" & addr,   -- 25 bit word address
     ds        => "00",
     cs        => cs,            -- cpu/chipset requests read/wrie
     we        => we             -- cpu/chipset requests write
@@ -707,7 +596,7 @@ port map (
     clkin => clk
 );
 
--- 64.125Mhz for flash controller c1541 ROM
+-- 64.0Mhz for flash controller c1541 ROM
 flashclock: entity work.Gowin_PLL_flash
     port map (
         lock => flash_lock,
@@ -719,7 +608,7 @@ flashclock: entity work.Gowin_PLL_flash
 
 leds_n <=  not leds;
 leds(0) <= led1541;
-leds(1) <= spi_ext; -- 23k specific
+leds(1) <= '1'; -- 23k specific
 --leds(2 downto 1) <= "00";
 --leds(3) <= spi_ext;
 --leds(5 downto 4) <= system_leds;

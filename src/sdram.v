@@ -23,15 +23,15 @@
 module sdram (
 
 	// interface to the MT48LC16M16 chip
-	output reg [12:0]	sd_addr,    // 13 bit multiplexed address bus
+	output 				sd_clk,
 	inout  reg [15:0]	sd_data,
+	output reg [12:0]	sd_addr,    // 13 bit multiplexed address bus
+	output 		[1:0]	sd_dqm,
 	output reg [ 1:0]	sd_ba,      // two banks
 	output 				sd_cs,      // a single chip select
 	output 				sd_we,      // write enable
 	output 				sd_ras,     // row address select
 	output 				sd_cas,     // columns address select
-	output 				sd_clk,
-	output 		[1:0]	sd_dqm,
 
 	// cpu/chipset interface
 	input 		 		clk,		// sdram is accessed at up to 128MHz
@@ -47,7 +47,7 @@ module sdram (
 	input 		 		we          // cpu/chipset requests write
 );
 
-// no burst configured
+assign sd_clk = ~clk;
 localparam RASCAS_DELAY   = 3'd2;   // tRCD>=20ns -> 2 cycles@64MHz
 localparam BURST_LENGTH   = 3'b000; // 000=none, 001=2, 010=4, 011=8
 localparam ACCESS_TYPE    = 1'b0;   // 0=sequential, 1=interleaved
@@ -60,7 +60,6 @@ localparam MODE = { 3'b000, NO_WRITE_BURST, OP_MODE, CAS_LATENCY, ACCESS_TYPE, B
 // ---------------------------------------------------------------------
 // ------------------------ cycle state machine ------------------------
 // ---------------------------------------------------------------------
-
 localparam STATE_CMD_START = 3'd0;   // state in which a new command can be started
 localparam STATE_CMD_CONT  = STATE_CMD_START  + RASCAS_DELAY; // command can be continued
 localparam STATE_READ      = STATE_CMD_CONT + CAS_LATENCY + 1'd1;
@@ -85,7 +84,7 @@ end
 // into normal operation. Initialize the ram in the last 16 reset cycles (cycles 15-0)
 initial reset = 5'h1f;
 
-reg [4:0] reset;
+reg [4:0] reset; /* synthesis noprune=1 */;
 always @(posedge clk) begin
 	if(!reset_n) reset <= 5'h1f;
 	else if((q == STATE_LAST) && (reset != 0)) reset <= reset - 5'd1;
@@ -108,27 +107,22 @@ localparam CMD_AUTO_REFRESH    = 3'b001;
 localparam CMD_LOAD_MODE       = 3'b000;
 
 reg [2:0] sd_cmd;   // current command sent to sd ram
+reg bt;
 
 // drive control signals according to current command
 assign sd_cs  = 0;
 assign sd_ras = sd_cmd[2];
 assign sd_cas = sd_cmd[1];
 assign sd_we  = sd_cmd[0];
-assign sd_dqm = sd_addr[12:11];
 
-reg bt;
-reg [15:0] dout_r;
-
-assign dout = bt ? dout_r[15:8] : dout_r[7:0];
 assign sd_data = (cs && we) ? {din, din} : 16'bzzzz_zzzz_zzzz_zzzz;
-assign sd_clk = clk;
-
+assign sd_dqm = (!we)?2'b00:sd_addr[12:11];
+assign dout = bt ? dout_r[15:8] : dout_r[7:0];
+reg [15:0] dout_r;
 
 always @(posedge clk) begin
 	reg [8:0] caddr;
-
 	sd_cmd  <= CMD_NOP;
-
 
 	if(q == STATE_READ) dout_r <= sd_data;
 
@@ -155,8 +149,8 @@ always @(posedge clk) begin
 			caddr   <= {addr[23], addr[7:0]};
 			bt      <= addr[24];
 		end
+        // CAS phase 
 		if(q == STATE_CMD_CONT) begin
-		//	if(we) sd_data <= {din, din};
 			sd_cmd  <= we ? CMD_WRITE : CMD_READ;
 			sd_addr <= {~bt & we, bt & we, 2'b10, caddr};
 		end
