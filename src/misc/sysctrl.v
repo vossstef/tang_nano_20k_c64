@@ -71,8 +71,8 @@ always @(posedge clk) begin
 
       // OSD value defaults. These should be sane defaults, but the MCU
       // will very likely override these early
-      system_reset <= 2'b11;
-      system_1541_reset <= 1'b1;
+      system_reset <= 2'b00;
+      system_1541_reset <= 1'b0;
       system_chipset <= 2'b0;
       system_memory <= 1'b0;
       system_reu_cfg <= 1'b1;
