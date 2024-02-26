@@ -14,15 +14,16 @@ The whole setup will look like this:<br>
 ![m0s pmod on TP25K](./.assets/m0s_pmod_tp25k.jpg)
 
 
-If you don't have the m0s_pmod at hand then adhoc wiring is feasible needing a soldering iron.<br>
+If you don't have a **M0S PMOD adapter** at hand then adhoc wiring is feasible needing a soldering iron.<br>
 The needed +5V for the M0S Dock can be taken from Pin 1 of the USB-A connector by a short soldered wire<br> 8 single pins are needed to plug into the PMOD apart from the cable that comes along with the M0S Dock package.<br>
 
 
-|      | M0S Dock | Primer-25k FPGA / PMOD                  |                                      |
+|      | M0S Dock | Primer-25k / PMOD                  |                                      |
 |------|-------------------|-------------------|--------------------------------------|
 | GND  | GND        | GND -> 3       | GND               |
 | GND  | GND        | GND -> 4       | GND               |
-| +5V  | +5V        | USB-A pin 1 !!! | +5V Supply for M0S              |
+| PWR  | +5V        | USB-A pin 1 !!! | +5V Supply for M0S              |
+| - | +3V3        | n.c | don't connect !              |
 | CSN  | GPIO12      | E11 -> 9       | SPI select, active low               |
 | SCK  | GPIO13      | E10 -> 10       | SPI clock, idle low                  |
 | MOSI | GPIO11      | A11 -> 11       | SPI data from MCU to FPGA            |
@@ -34,6 +35,6 @@ The needed +5V for the M0S Dock can be taken from Pin 1 of the USB-A connector b
 On the software side the setup is very simuilar to the original Tang Nano 20K based solution. The core needs to be built specifically
 for the different FPGA of the Tang Primer using either the [TCL script with the GoWin command line interface](build_tp25k.tcl) or the
 [project file for the graphical GoWin IDE](tang_primer_25k_c64.gprj). The resulting bitstream is flashed to the TP25K as usual. So are the c1541 DOS ROMs which are flashed exactly like they are on the Tang Nano 20K. And also the firmware for the M0S Dock is the [same version as for
-the Tang Nano 20K](firmware/misterynano_fw/).
+the Tang Nano 20K](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/misterynano_fw/). Latest binary can be found in the [release](https://github.com/harbaum/MiSTeryNano/releases) section.
 
-The resulting setup has no spare connectors and thus no MIDI or DB9 retro joystick port is available.
+The resulting setup has no spare connectors and thus no MIDI, DB9 retro joystick port, DualShock, Paddle is available.

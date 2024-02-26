@@ -1,5 +1,5 @@
-# tang_nano_20k_c64
-[C64](https://en.wikipedia.org/wiki/Commodore_64) living in a [Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/) FPGA on a [Sipeed Tang Nano 20k](https://wiki.sipeed.com/hardware/en/tang/tang-nano-20k/nano-20k.html) with HDMI Video and Audio Output.<br><br>It has also been ported to the [Sipeed Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) <font color="red">(except retro D9 Joystick, Dualshock, Paddle and MIDI support).</font><br>
+# c64 Nano
+[C64](https://en.wikipedia.org/wiki/Commodore_64) living in a [Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/) FPGA on a Sipeed [Tang Nano 20k](https://wiki.sipeed.com/hardware/en/tang/tang-nano-20k/nano-20k.html) with HDMI Video and Audio Output.<br>It has also been ported to the Sipeed [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) too <font color="red">(except retro D9 Joystick, Dualshock, Paddle and MIDI support).</font><br>
 <br>
 Original C64 core by Peter Wendrich<br>
 Dram controller and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by Till Harbaum<br>
@@ -181,7 +181,11 @@ see pin configuration in .cst configuration file
 
 In order to use this Design the following things are needed:
 
-[Sipeed Tang Nano 20k](https://wiki.sipeed.com/nano20k)<br>
+[Sipeed Tang Nano 20k](https://wiki.sipeed.com/nano20k) <br>
+or [Sipeed Tang Primer 25k](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)<br>
+and [PMOD DVI](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DVI)<br>
+and [PMOD TF-CARD](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_TF-CARD)<br>
+and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md) or ad hoc wiring + soldering.<br>
 [Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
 microSD or microSDHC card FAT/exFAT formatted<br>
 TFT Monitor with HDMI Input and Speaker<br>
