@@ -1,5 +1,5 @@
 # c64 Nano
-[C64](https://en.wikipedia.org/wiki/Commodore_64) living in a [Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/) FPGA on a Sipeed [Tang Nano 20k](https://wiki.sipeed.com/hardware/en/tang/tang-nano-20k/nano-20k.html) with HDMI Video and Audio Output.<br>It has also been ported to the Sipeed [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) too <font color="red">(except retro D9 Joystick, Dualshock, Paddle and MIDI support).</font><br>
+[C64](https://en.wikipedia.org/wiki/Commodore_64) living in a [Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/) FPGA on a Sipeed [Tang Nano 20k](https://wiki.sipeed.com/hardware/en/tang/tang-nano-20k/nano-20k.html) with HDMI Video and Audio Output.<br> <br>It has also been ported to the [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) and [Tang Mega 138K](TANG_MEGA_138K.md) ([Gowin GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/)) too.<br>
 <br>
 Original C64 core by Peter Wendrich<br>
 Dram controller and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by Till Harbaum<br>
@@ -30,17 +30,23 @@ HID interfaces aligned in pinmap and control to match [MiSTeryNano project's bl6
 ## Installation
 
 The installation of C64 Nano on the Tang Nano 20k board can be done using a Linux PC or a Windows PC
-[Instruction](INSTALLATION_WINDOWS.md).<br><br>
-In a nutshell memory layout of the SPI Flash:<br>
-0x000000 FPGA bitstream<br>
-0x100000 reserved for Atari ST/STE<br>
-0x200000 c1541 Dolphin DOS 2<br>
-0x208000 c1541 CBM DOS 2.6<br>
-0x210000 c1541 Speed DOS Plus<br>
-0x218000 c1541 Jiffy DOS<br>
+[Instruction](INSTALLATION_WINDOWS.md).<br>
+At a glance the memory layout of the SPI Flash:
+| | | | |
+|-|-|-|-|
+| Type | TN20k | TP25k | TM138k |
+| FPGA bitstream            | 0x000000 | 0x000000 | 0x000000 |
+| reserved for Atari ST/STE | 0x100000 | 0x100000 | 0x900000 |
+| c1541 Dolphin DOS 2       | 0x200000 | 0x200000 | 0xA00000 |
+| c1541 CBM DOS 2.6         | 0x208000 | 0x208000 | 0xA08000 |
+| c1541 Speed DOS Plus | 0x210000 | 0x210000 | 0xA10000 |
+| c1541 Jiffy DOS           | 0x218000 | 0x218000 | 0xA18000 |
 
 ## c64 Nano on Tang Primer 25K
 See [Tang Primer 25K](TANG_PRIMER_25K.md)
+
+## c64 Nano on Tang Mega 138k
+See [Tang Mega 138K](TANG_MEGA_138K.md)
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS.<br>
@@ -87,7 +93,7 @@ invoke by F12 keypress<br>
 * PAL / NTSC Video mode<br>
 
 ## Gamecontrol support
-legacy single D9 Digital Joystick. OSD: Retro<br>
+legacy single D9 Digital Joystick. OSD: Retro D9<br>
 or<br>
 USB Joystick(s). OSD: USB #1 or USB #2 <br>
 or<br>
@@ -99,7 +105,7 @@ Gamepad. OSD: DualShock
 | square button<br>Left | - | circle button<br>Right |
 | - | cross button<br>Down | - |<br>
 
-or Keyboard **Numpad**. OSD: NP<br>
+or Keyboard **Numpad**. OSD: Numpad<br>
 | | | |
 |-|-|-|
 |0<br>Trigger|8<br>Up|-|
@@ -185,18 +191,18 @@ In order to use this Design the following things are needed:
 or [Sipeed Tang Primer 25k](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)<br>
 and [PMOD DVI](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DVI)<br>
 and [PMOD TF-CARD](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_TF-CARD)<br>
-and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md) or ad hoc wiring + soldering.<br>
+and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
+and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)
+ or ad hoc wiring + soldering.<br>
 [Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
 microSD or microSDHC card FAT/exFAT formatted<br>
 TFT Monitor with HDMI Input and Speaker<br>
 <br>
 
-| HID and Gamecontrol Hardware option | needs | alternative option |Primer 25k|
-| ----------- | --- | ---  | ---|
-| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH)  |x|
-| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | - |x|
-| USB Mouse | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | -  |x|
-| Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|
-| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) | breadboard to wire everything up and some jumper wires |-|
-
-
+| HID and Gamecontrol Hardware option | needs | alternative option |Primer 25K|Mega 138K|
+| ----------- | --- | ---  | ---| -|
+| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH)  |x|x|
+| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | - |x|x|
+| USB Mouse | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | -  |x|x|
+| Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|-|
+| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) | breadboard to wire everything up and some jumper wires |-|x|

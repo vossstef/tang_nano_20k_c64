@@ -1077,14 +1077,15 @@ port map(
     irq       => reu_irq
   ); 
 
--- c1541 ROM's SPI Flash, offset in spi flash $200000
+-- c1541 ROM's SPI Flash
+-- offset in spi flash TN20K, TP25K $200000, TM138K $A00000
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
     resetn    => flash_lock,
     ready     => flash_ready,
     busy      => open,
-    address   => ("0010" & "000" & dos_sel & c1541rom_addr),
+    address   => (X"A" & "000" & dos_sel & c1541rom_addr),
     cs        => c1541rom_cs,
     dout      => c1541rom_data,
     mspi_cs   => mspi_cs,
