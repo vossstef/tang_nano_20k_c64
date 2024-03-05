@@ -1,11 +1,13 @@
-//Copyright (C)2014-2023 Gowin Semiconductor Corporation.
-//All rights reserved. 
-//File Title: Physical Constraints file
-//GOWIN Version: 1.9.8.11 Education
-//Part Number: GW2AR-LV18QN88C8/I7
-//Device: GW2AR-18
-//Device Version: C
-//Created Time: Wed 10 25 23:26:16 2023
+IO_LOC "clk" P16;        // 50Mhz
+IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=OFF BANK_VCCIO=3.3;
+
+IO_LOC "reset" K16;        // actually S0 on the board
+IO_PORT "reset" IO_TYPE=LVCMOS33 PULL_MODE=DOWN DRIVE=OFF BANK_VCCIO=3.3;
+
+IO_LOC "user" F15;        // S1
+IO_PORT "user" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=OFF BANK_VCCIO=3.3;
+
+// S2 = G15, S3 = G16
 
 // HDMI
 IO_LOC "tmds_clk_p" Y22,Y23;
@@ -16,20 +18,6 @@ IO_LOC "tmds_d_p[1]" V24,W24;
 IO_PORT "tmds_d_p[1]" PULL_MODE=NONE IO_TYPE=LVCMOS33D;
 IO_LOC "tmds_d_p[2]" AA22,AA23;
 IO_PORT "tmds_d_p[2]" PULL_MODE=NONE IO_TYPE=LVCMOS33D;
-
-// 128Mbit NOR Flash (MSPI pins)
-IO_LOC "mspi_cs" P18;
-IO_PORT "mspi_cs" PULL_MODE=UP IO_TYPE=LVCMOS33;
-IO_LOC "mspi_clk" H13;
-IO_PORT "mspi_clk" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-IO_LOC "mspi_wp" P14;
-IO_PORT "mspi_wp" PULL_MODE=DOWN IO_TYPE=LVCMOS33;
-IO_LOC "mspi_hold" N14;
-IO_PORT "mspi_hold" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-IO_LOC "mspi_di" R14;
-IO_PORT "mspi_di" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-IO_LOC "mspi_do" R15;
-IO_PORT "mspi_do" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
 // PMODs (seen from front)
 // Left  C21/R21 B20/A20 B19/A19 A17/A18 GND/GND 3V3/3V3
@@ -46,13 +34,6 @@ IO_PORT "joystick_miso" PULL_MODE=UP DRIVE=8 IO_TYPE=LVCMOS33; // "midi_out"
 IO_LOC "joystick_cs"  C21;
 IO_PORT "joystick_cs" PULL_MODE=UP DRIVE=8 IO_TYPE=LVCMOS33;   // "midi_in"
 
-// generic IO pins to use for e.g. db9 joystick
-IO_PORT "io[0]" PULL_MODE=UP IO_TYPE=LVCMOS33;
-IO_PORT "io[1]" PULL_MODE=UP IO_TYPE=LVCMOS33;
-IO_PORT "io[2]" PULL_MODE=UP IO_TYPE=LVCMOS33;
-IO_PORT "io[3]" PULL_MODE=UP IO_TYPE=LVCMOS33;
-IO_PORT "io[4]" PULL_MODE=UP IO_TYPE=LVCMOS33;
-
 // M0S Dock PMOD on middle PMOD slot
 IO_LOC "m0s[0]" B24;
 IO_PORT "m0s[0]" PULL_MODE=UP IO_TYPE=LVCMOS33; 
@@ -67,17 +48,10 @@ IO_PORT "m0s[4]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 // m0s[7:5] is currently unused
 IO_LOC "m0s[5]" L17;
 IO_PORT "m0s[5]" PULL_MODE=UP IO_TYPE=LVCMOS33; 
-
-// generic IO pins
-
-IO_LOC "clk" P16;        // 50Mhz
-IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=OFF BANK_VCCIO=3.3;
-
-IO_LOC "reset" K16;        // actually S0 on the board
-IO_PORT "reset" IO_TYPE=LVCMOS33 PULL_MODE=DOWN DRIVE=OFF BANK_VCCIO=3.3;
-
-IO_LOC "user" F15;        // S1
-IO_PORT "user" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=OFF BANK_VCCIO=3.3;
+//IO_LOC "m0s[6]" H15;
+//IO_PORT "m0s[6]" PULL_MODE=UP IO_TYPE=LVCMOS33; 
+//IO_LOC "m0s[7]" H14;
+//IO_PORT "m0s[7]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 
 // SDCard
 IO_LOC "sd_clk" D23;
@@ -92,6 +66,20 @@ IO_LOC "sd_dat[2]" A25;
 IO_PORT "sd_dat[2]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 IO_LOC "sd_dat[3]" B25;
 IO_PORT "sd_dat[3]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+
+// 128Mbit NOR Flash (MSPI pins)
+IO_LOC "mspi_cs" P18;
+IO_PORT "mspi_cs" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "mspi_clk" H13;
+IO_PORT "mspi_clk" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "mspi_wp" P14;
+IO_PORT "mspi_wp" PULL_MODE=DOWN IO_TYPE=LVCMOS33;
+IO_LOC "mspi_hold" N14;
+IO_PORT "mspi_hold" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "mspi_di" R14;
+IO_PORT "mspi_di" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "mspi_do" R15;
+IO_PORT "mspi_do" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
 // Mister SDRAM v3.0 connected through 40-pin port
 IO_LOC "IO_sdram_dq[0]" U16;
@@ -192,3 +180,10 @@ IO_PORT "leds_n[0]" IO_TYPE=LVCMOS33 PULL_MODE=NONE;
 // ws2812b rgb led
 IO_LOC "ws2812" H16;
 IO_PORT "ws2812" PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+
+// generic IO pins to use for e.g. db9 joystick
+IO_PORT "io[0]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_PORT "io[1]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_PORT "io[2]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_PORT "io[3]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_PORT "io[4]" PULL_MODE=UP IO_TYPE=LVCMOS33;
