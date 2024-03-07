@@ -25,7 +25,7 @@ Features:
 
 HID interfaces aligned in pinmap and control to match [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/misterynano_fw).<br> Basically BL616 µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
 
-**Note** PROJECT IS STILL WORK IN PROGRESS</b>
+**Note** PROJECT IS STILL WORK IN PROGRESS
 <br>
 ## Installation
 
@@ -41,9 +41,11 @@ At a glance the memory layout of the SPI Flash:
 | c1541 CBM DOS 2.6         | 0x208000 | 0x208000 | 0xA08000 |
 | c1541 Speed DOS Plus | 0x210000 | 0x210000 | 0xA10000 |
 | c1541 Jiffy DOS           | 0x218000 | 0x218000 | 0xA18000 |
-```openFPGALoader -b tangnano20k --external-flash -o 0x200000  2dosa_c.bin```
-```openFPGALoader -b tangprimer25k --external-flash -o 0x200000  2dosa_c.bin```
-```openFPGALoader -b tangmega138k --external-flash -o 0xA00000  2dosa_c.bin```
+
+
+```openFPGALoader -b tangnano20k --external-flash -o 0x200000  2dosa_c.bin```<br>
+```openFPGALoader -b tangprimer25k --external-flash -o 0x200000  2dosa_c.bin```<br>
+```openFPGALoader -b tangmega138k --external-flash -o 0xA00000  2dosa_c.bin```<br>
 
 ## c64 Nano on Tang Primer 25K
 See [Tang Primer 25K](TANG_PRIMER_25K.md)
