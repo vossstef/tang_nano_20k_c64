@@ -213,7 +213,6 @@ signal dma_addr       : std_logic_vector(15 downto 0);
 signal dma_dout       : std_logic_vector(7 downto 0);
 signal dma_din        : unsigned(7 downto 0);
 signal dma_we         : std_logic;
-signal io_cycle       : std_logic;
 signal ext_cycle      : std_logic;
 signal ext_cycle_d    : std_logic;
 signal reu_ram_addr   : std_logic_vector(24 downto 0);
@@ -294,6 +293,26 @@ signal flash_lock      : std_logic;
 signal dcsclksel       : std_logic_vector(3 downto 0);
 signal ntscModeD       : std_logic;
 signal ntscModeD1      : std_logic;
+signal ioctl_download  : std_logic := '0';
+signal ioctl_load_addr : std_logic_vector(22 downto 0);
+signal ioctl_req_wr    : std_logic;
+signal cart_id         : std_logic_vector(15 downto 0);
+signal cart_bank_laddr : std_logic_vector(15 downto 0);
+signal cart_bank_size  : std_logic_vector(15 downto 0);
+signal cart_bank_num   : std_logic_vector(15 downto 0);
+signal cart_bank_type  : std_logic_vector(7 downto 0);
+signal cart_exrom      : std_logic_vector(7 downto 0);
+signal cart_game       : std_logic_vector(7 downto 0);
+signal cart_attached   : std_logic := '0';
+signal cart_hdr_cnt    : std_logic_vector(3 downto 0);
+signal cart_hdr_wr     : std_logic;
+signal cart_blk_len    : std_logic_vector(31 downto 0);
+signal io_cycle        : std_logic;
+signal io_cycle_ce     : std_logic := '0';
+signal io_cycle_we     : std_logic := '0';
+signal io_cycle_addr   : std_logic_vector(22 downto 0);
+signal io_cycle_data   : std_logic_vector(7 downto 0);
+signal load_crt        : std_logic;
 
 component DCS
     generic (
@@ -558,10 +577,10 @@ end process;
 -- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
 dram_addr_s <= cart_addr(22 downto 4) & (cart_addr(3 downto 2) xor ram_scramble) & cart_addr(1 downto 0);
 
-addr <= reu_ram_addr(22 downto 0) when ext_cycle = '1' else dram_addr_s;
-cs <= reu_ram_ce when ext_cycle = '1' else cart_ce;
-we <= reu_ram_we when ext_cycle = '1' else cart_we;
-din <= std_logic_vector(reu_ram_dout) when ext_cycle = '1' else std_logic_vector(c64_data_out);
+addr <= io_cycle_addr when io_cycle ='1' else reu_ram_addr(22 downto 0) when ext_cycle = '1' else dram_addr_s;
+cs <= io_cycle_ce when io_cycle ='1' else reu_ram_ce when ext_cycle = '1' else cart_ce; 
+we <= io_cycle_we when io_cycle ='1' else reu_ram_we  when ext_cycle = '1' else cart_we;
+din <= std_logic_vector(io_cycle_data) when io_cycle ='1' else std_logic_vector(reu_ram_dout) when ext_cycle = '1' else std_logic_vector(c64_data_out);
 sdram_data <= unsigned(dout);
 
 --dram_inst: entity work.sdram8
@@ -1043,16 +1062,16 @@ port map
     clk32       => clk32,
     reset_n     => not system_reset(0) and pll_locked,
   
-    cart_loading    => '0',
-    cart_id         => (others => '1'), -- CARTRIDGE_NONE
-    cart_exrom      => (others => '0'),
-    cart_game       => (others => '0'),
-    cart_bank_laddr => (others => '0'),
-    cart_bank_size  => (others => '0'),
-    cart_bank_num   => (others => '0'),
-    cart_bank_type  => (others => '0'),
-    cart_bank_raddr => (others => '0'),
-    cart_bank_wr    => '0',
+    cart_loading    => ioctl_download and load_crt,
+    cart_id         => to_unsigned(99,16), -- CARTRIDGE_NONE -- cart_attached ? cart_id : status[52] ? 8'd99 : 8'd255),
+    cart_exrom      => cart_exrom,
+    cart_game       => cart_game,
+    cart_bank_laddr => cart_bank_laddr,
+    cart_bank_size  => cart_bank_size,
+    cart_bank_num   => cart_bank_num,
+    cart_bank_type  => cart_bank_type,
+    cart_bank_raddr => ioctl_load_addr,
+    cart_bank_wr    => cart_hdr_wr,
   
     exrom       => exrom,
     game        => game,
