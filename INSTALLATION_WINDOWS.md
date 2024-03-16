@@ -58,13 +58,13 @@ should see following screen:**
   - ```tang_nano_20k_c64.fs``` is written to address 0x000000
   - ```reserved for Atari ST !``` address 0x100000
   - ```c1541 DOS Dolphin 2``` is written to address 0x200000
-  - ```c1541 DOS CBM``` is written to address 0x208000
+  - ```c1541 DOS CBM``` is written to address 0x20C000
 
 Optionally two additional DOS ROMs may be flashed to the alternate
 addresses:
 
-  - ```c1541 DOS Speeddos Plus``` is written to address 0x210000
-  - ```c1541 DOS Jiffy``` is written to address 0x218000
+  - ```c1541 DOS Speeddos Plus``` is written to address 0x214000
+  - ```c1541 DOS Jiffy``` is written to address 0x21C000
 
 These DOS for the c1541 emulation can later be selected from the on-screen-display (OSD).
   - For the FS file please choose the ```tang_nano_20k_c64.fs``` you just downloaded
@@ -73,39 +73,50 @@ These DOS for the c1541 emulation can later be selected from the on-screen-displ
     button. You should see a progress bar and then:
 
 ![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/c64_flash.png)
+**At a glance the memory layout of the SPI Flash:**
+| | | | ||
+|-|-|-|-|-|
+| Type | TN20k | TP25k | TM138k |
+| FPGA bitstream            | 0x000000 | 0x000000 | 0x000000 |ROM size |
+| reserved for Atari ST/STE | 0x100000 | 0x100000 | 0x900000 | - |
+| c1541 Dolphin DOS 2       | 0x200000 | 0x200000 | 0xA00000 |32k|
+| c1541 CBM DOS 2.6         | 0x20C000 | 0x20C000 | 0xA0C000 |16k|
+| c1541 Speed DOS Plus      | 0x214000 | 0x214000 | 0xA14000 |16k|
+| c1541 Jiffy DOS           | 0x21C000 | 0x21C000 | 0xA1C000 |16k|
 
-**Production of c1541 DOS 32k ROM binaries** <br>
+**shell / command line Programming alternative**
+
+Windows shell and Gowin Programmer<br>
+```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/atarist.fs --spiaddr 0x000000 --cable-index 1 --d GW2ANR-18C```<br>
+```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/atarist.fs --spiaddr 0x000000 --cable-index 1 --d GW5A-25A```<br>
+```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/atarist.fs --spiaddr 0x000000 --cable-index 1 --d GW5AST-138B```<br>
+
+```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli -r 38 --mcuFile C:/Users/stefa/Downloads/dos_roms/2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW2ANR-18C```<br>
+```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli -r 38 --mcuFile C:/Users/stefa/Downloads/dos_roms/2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW5A-25A```<br>
+```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli -r 38 --mcuFile C:/Users/stefa/Downloads/dos_roms/2dosa_c.bin --spiaddr 0xA00000 --cable-index 1 --d GW5AST-138B```<br>
+Linux shell and openFPGALoader Programmer<br>
+```openFPGALoader -b tangnano20k --external-flash -o 0x200000  2dosa_c.bin```<br>
+```openFPGALoader -b tangprimer25k --external-flash -o 0x200000  2dosa_c.bin```<br>
+```openFPGALoader -b tangmega138k --external-flash -o 0xA00000  2dosa_c.bin```<br>
+
+**c1541 DOS ROM binaries** <br>
 The needed DOS files you will find on the Internet.<br>
 ```Dolphin DOS 2```<br>
-Typically you will [find](https://e4aws.silverdr.com/projects/dolphindos2/) a 32K Byte file e.g. 2dosa_c.bin that can right away be flashed.<br>
+You will [find](https://e4aws.silverdr.com/projects/dolphindos2/) 2dosa_c.bin<br>
 Program at offset 0x200000<br>
 ![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/dolphin.png)
 
-```CBM DOS```<br>You find [CBM 1541 8k low rom](https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-c000.325302-01.bin) 
-and 
-[CBM 1541 8k high rom](https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-e000.901229-05.bin)<br>
-Open a command prompt and enter the directory where you downloaded the files from the Internet and type: <br>
-> COPY /B 1541-c000.325302-01.bin + 1541-e000.901229-05.bin + 1541-c000.325302-01.bin + 1541-e000.901229-05.bin  c1541_cbm.bin<br>
-
-If will create the required 32K size DOS image named c1541_cbm.bin <br>
-Program at offset 0x208000<br>
-![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/cbm.png)
+```CBM DOS```<br>
+You will [find](https://sourceforge.net/p/vice-emu/code/HEAD/tree/trunk/vice/data/DRIVES/dos1541-325302-01%2B901229-05.bin) dos1541-325302-01+901229-05.bin<br>
+Program at offset 0x20C000<br>
 
 ```Speed DOS Plus```<br>
-You will [find](https://rr.pokefinder.org/wiki/Speed_DOS#Binaries) 
-a 32K Byte file e.g. c1541-20-8.rom that can right away be flashed.<br>
-Program at offset 0x210000<br>
-![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/speed.png)
+You will [find](https://rr.pokefinder.org/wiki/Speed_DOS#Binaries) or [here](https://csdb.dk/release/?id=21767&show=summary) C1541.ROM<br>
+Program at offset 0x214000<br>
 
 ```Jiffy DOS```<br>
-You find [CBM 1541 8k low rom](https://www.zimmers.net/anonftp/pub/cbm/firmware/drives/new/1541/1541-c000.325302-01.bin) 
-and get a 8k [JiffyDos](https://www.go4retro.com/products/jiffydos/) file.
-Open a command prompt and enter the directory where you downloaded the file from the Internet and type: <br>
-> COPY /B 1541-c000.325302-01.bin + JiffyDOS_1541.bin + 1541-c000.325302-01.bin + JiffyDOS_1541.bin  c1541_jiffy.bin
-
-If will create the required 32K size DOS image named c1541_jiffy.bin <br>
-Program at offset 0x218000<br>
-![](https://github.com/vossstef/tang_nano_20k_c64/blob/main/.assets/jiffy.png)
+You will get a 16k [JiffyDos](https://www.go4retro.com/products/jiffydos/) JiffyDOS_C1541.bin file.<br>
+Program at offset 0x21C000<br>
 
 **That´s it for the Tang Nano 20k**
 

@@ -30,22 +30,7 @@ HID interfaces aligned in pinmap and control to match [MiSTeryNano project's bl6
 ## Installation
 
 The installation of C64 Nano on the Tang Nano 20k board can be done using a Linux PC or a Windows PC
-[Instruction](INSTALLATION_WINDOWS.md).<br>
-At a glance the memory layout of the SPI Flash:
-| | | | |
-|-|-|-|-|
-| Type | TN20k | TP25k | TM138k |
-| FPGA bitstream            | 0x000000 | 0x000000 | 0x000000 |
-| reserved for Atari ST/STE | 0x100000 | 0x100000 | 0x900000 |
-| c1541 Dolphin DOS 2       | 0x200000 | 0x200000 | 0xA00000 |
-| c1541 CBM DOS 2.6         | 0x208000 | 0x208000 | 0xA08000 |
-| c1541 Speed DOS Plus | 0x210000 | 0x210000 | 0xA10000 |
-| c1541 Jiffy DOS           | 0x218000 | 0x218000 | 0xA18000 |
-
-
-```openFPGALoader -b tangnano20k --external-flash -o 0x200000  2dosa_c.bin```<br>
-```openFPGALoader -b tangprimer25k --external-flash -o 0x200000  2dosa_c.bin```<br>
-```openFPGALoader -b tangmega138k --external-flash -o 0xA00000  2dosa_c.bin```<br>
+[(Instruction)](INSTALLATION_WINDOWS.md).<br>
 
 ## c64 Nano on Tang Primer 25K
 See [Tang Primer 25K](TANG_PRIMER_25K.md)
@@ -76,7 +61,7 @@ Playing around with [GEOS](https://en.wikipedia.org/wiki/GEOS_(8-bit_operating_s
 Enable REU, select c1541 CBM DOS ROM and load the PRG.<br>
 
 ## Push Button utilization
-* S2 Reset (for Flasher)<br>
+* S2 keep pressed during power-up for programming Flash<br>
 * S1 reserved <br>
 
 ## OSD
