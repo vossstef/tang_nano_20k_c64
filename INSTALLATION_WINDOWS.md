@@ -56,7 +56,7 @@ should see following screen:**
 **Important**:
 
   - ```tang_nano_20k_c64.fs``` is written to address 0x000000
-  - ```reserved for Atari ST !``` address 0x100000
+  - ```reserved for Atari ST ROM``` address 0x100000
   - ```c1541 DOS Dolphin 2``` is written to address 0x200000
   - ```c1541 DOS CBM``` is written to address 0x20C000
 
@@ -78,7 +78,7 @@ These DOS for the c1541 emulation can later be selected from the on-screen-displ
 |-|-|-|-|-|
 | Type | TN20k | TP25k | TM138k |
 | FPGA bitstream            | 0x000000 | 0x000000 | 0x000000 |ROM size |
-| reserved for Atari ST/STE | 0x100000 | 0x100000 | 0x900000 | - |
+| reserved for Atari ST ROM | 0x100000 | 0x100000 | 0x900000 | - |
 | c1541 Dolphin DOS 2       | 0x200000 | 0x200000 | 0xA00000 |32k|
 | c1541 CBM DOS 2.6         | 0x20C000 | 0x20C000 | 0xA0C000 |16k|
 | c1541 Speed DOS Plus      | 0x214000 | 0x214000 | 0xA14000 |16k|
@@ -87,9 +87,9 @@ These DOS for the c1541 emulation can later be selected from the on-screen-displ
 **shell / command line Programming alternative**
 
 Windows shell and Gowin Programmer<br>
-```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/atarist.fs --spiaddr 0x000000 --cable-index 1 --d GW2ANR-18C```<br>
-```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/atarist.fs --spiaddr 0x000000 --cable-index 1 --d GW5A-25A```<br>
-```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/atarist.fs --spiaddr 0x000000 --cable-index 1 --d GW5AST-138B```<br>
+```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/tang_nano_20k_c64.fs --spiaddr 0x000000 --cable-index 1 --d GW2ANR-18C```<br>
+```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/tang_nano_20k_c64.fs --spiaddr 0x000000 --cable-index 1 --d GW5A-25A```<br>
+```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/tang_nano_20k_c64.fs --spiaddr 0x000000 --cable-index 1 --d GW5AST-138B```<br>
 
 ```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli -r 38 --mcuFile C:/Users/stefa/Downloads/dos_roms/2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW2ANR-18C```<br>
 ```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli -r 38 --mcuFile C:/Users/stefa/Downloads/dos_roms/2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW5A-25A```<br>
