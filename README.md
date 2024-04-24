@@ -3,14 +3,15 @@ The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wi
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
 [C64 FPGA core ](https://en.wikipedia.org/wiki/Commodore_64) to the 
 [Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) with a new VHDL top level and HDMI Video and Audio Output.<br>It has also been ported to the [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) and [Tang Mega 138k](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html) ([Gowin GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/)) too.<br>
+Be aware that [VIC20](https://github.com/vosstef/VIC20Nano/tree/main/README.md) had been ported in similar manner too.<br>
 <br>
 Original C64 core by Peter Wendrich<br>
-Dram controller and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by Till Harbaum<br>
+All HID components and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by Till Harbaum<br>
 c1541 by https://github.com/darfpga<br>
 
 Features:
 * PAL 800x576p@50Hz or NTSC 800x480p@60Hz HDMI Video and Audio Output
-* USB Keyboard via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) (future plan Tang onboard BL616 µC)
+* USB Keyboard via [Sipeed M0S Dock BL616 RISC-V µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)
 * USB Joystick via µC
 * USB Mouse via µC as c1351 Mouse emulation
 * [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type) [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
@@ -20,6 +21,9 @@ Features:
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with parallel bus [Speedloader Dolphin DOS 2](https://rr.pokefinder.org/wiki/Dolphin_DOS). [GER manual](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * c1541 DOS ROM selection
+* Cartridge (*.CRT) loader
+* Direct program file (*.PRG) injection loader
+* Loadable Kernal ROM (*.BIN)
 * On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 <br>
@@ -84,6 +88,7 @@ invoke by F12 keypress<br>
 * MIDI configuration<br>
 * Pause when OSD open<br>
 * PAL / NTSC Video mode<br>
+* Loader (CRT/PRG/BIN) file selection<br>
 
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: Retro D9<br>

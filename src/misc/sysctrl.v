@@ -44,7 +44,9 @@ module sysctrl (
   output reg [1:0]  system_turbo_speed,
   output reg        system_video_std,
   output reg [2:0]  system_midi,
-  output reg        system_pause
+  output reg        system_pause,
+  output reg [1:0]  system_vic_variant,
+  output reg        system_cia_mode
 );
 
 reg [3:0] state;
@@ -89,6 +91,8 @@ always @(posedge clk) begin
       system_video_std <= 1'b0;
       system_midi <= 2'b000;
       system_pause <= 1'b0;
+      system_vic_variant <= 2'b00;
+      system_cia_mode <= 1'b0;
 
    end else begin
       int_ack <= 8'h00;
@@ -171,6 +175,10 @@ always @(posedge clk) begin
                     if(id == "N") system_midi <= data_in[2:0];
                     // Pause when OSD is open
                     if(id == "G") system_pause <= data_in[0];
+                    // ,vic-ii type mode
+                    if(id == "M") system_vic_variant <= data_in[1:0];
+                    // cia type mode
+                    if(id == "C") system_cia_mode <= data_in[0];
                 end
             end
 

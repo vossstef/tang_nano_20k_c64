@@ -117,8 +117,7 @@ architecture rtl of fpga64_buslogic is
 	signal ultimax        : std_logic;
 
 	signal currentAddr    : unsigned(15 downto 0);
-	signal cartData       : std_logic_vector(7 downto 0);
-	
+		
 begin
 	chargen: entity work.Gowin_pROM_chargen
     port map (
@@ -129,7 +128,6 @@ begin
         reset => '0',
         ad => std_logic_vector(currentAddr(11 downto 0))
     );
- --charData_jap <= (others => '0');
 
 kernel_c64std: entity work.Gowin_pROM_basic_kernal
     port map (
@@ -141,49 +139,25 @@ kernel_c64std: entity work.Gowin_pROM_basic_kernal
         ad => std_logic_vector(cpuAddr(14) & cpuAddr(12 downto 0))
     );
 
---romData_c64gs <= (others => '0');
---romData_c64 <= (others => '0');
---romData_c64jap <= (others => '0');
+--	kernel_c64: entity work.dprom
+--	generic map ("rtl/roms/dol_C64.mif", 14)
+--	port map
+--	(
+--		wrclock => clk,
+--		rdclock => clk,
 
---	romData <= romData_c64jap when c64jap_ena = '1' else
---				  romData_c64std when c64std_ena = '1' else
---				  romData_c64gs  when c64gs_ena  = '1' else
---				  romData_c64;
+--		wren => c64rom_wr,
+--		data => c64rom_data,
+--		wraddress => c64rom_addr,
 
---	charData <= charData_jap when c64jap_ena = '1' else charData_std;
+--		rdaddress => std_logic_vector(cpuAddr(14) & cpuAddr(12 downto 0)),
+--		q => romData_c64
+--	);
 
---	process(clk)
---	begin
---		if rising_edge(clk) then
---			if reset = '1' then 
---				c64gs_ena  <= bios(1);
---				c64std_ena <= bios(0);
---				c64jap_ena <= bios(1) and bios(0);
---			end if;
---		end if;
---	end process;
-
---8K Cartridge, $8000-$9FFF (ROML).
---game = 1, exrom = 0
---ROML is read only. Basic ROM and Kernal ROM are available.
-
---16K Cartridge, $8000-$9FFF / $A000-$BFFF (ROML / ROMH).
---GAME = 0, EXROM = 0
---ROML/ROMH are read only, Basic ROM is overwritten by ROMH.
---cart: entity work.Gowin_pROM_cart
---    port map (
---        dout  => cartData,
---        clk   => clk,
---        oce   => '1',
---        ce    => '1',
---        reset => '0',
---        ad    => std_logic_vector(cpuAddr(12 downto 0))
---    );
 
 	--
 	--begin
 	process(ramData, vicData, sidData, colorData,
---           cia1Data, cia2Data, charData, romData, cartData,
               cia1Data, cia2Data, charData, romData,
 		      cs_romHLoc, cs_romLLoc, cs_romLoc, cs_CharLoc,
 			  cs_ramLoc, cs_vicLoc, cs_sidLoc, cs_colorLoc,
@@ -211,11 +185,9 @@ kernel_c64std: entity work.Gowin_pROM_basic_kernal
 		elsif cs_cia2Loc = '1' then
 			dataToCpu <= cia2Data;
 		elsif cs_romLLoc = '1' then
-			dataToCpu <= ramData;  -- comment for cartridge demo
---			dataToCpu <= unsigned(cartData);  -- uncomment for cartridge demo, set in top level extrom to 0 !
+			dataToCpu <= ramData;
 		elsif cs_romHLoc = '1' then
-			dataToCpu <= ramData;-- comment for cartridge demo
---			dataToCpu <= unsigned(cartData); -- uncomment for cartridge demo, set in top level extrom to 0 !
+			dataToCpu <= ramData;
 		elsif cs_ioELoc = '1' and io_rom = '1' then
 			dataToCpu <= ramData;
 		elsif cs_ioFLoc = '1' and io_rom = '1' then
