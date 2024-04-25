@@ -136,6 +136,17 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
 * **<font color="blue">blue</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;µC firmware detected valid FPGA core<br>
 * **white**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;-<br>
 
+## CRT Loader (.CRT)
+Cartrige can be loaded via OSD file selection.<br>
+Detach a Cartrige by using OSD System/Cold Boot.<br>
+
+## PRG Loader (.PRG)
+A Program *.PRG file can be loaded via OSD file selection.<br>
+
+## Kernal Loader (.BIN)
+8k Kernal files *.BIN can be loaded via OSD selection.<br>
+Dolphin DOS 2.0 is the power-up default Kernal.<br>
+
 ## MIDI-IN and OUT
 Type of MIDI interface can be selected from OSD.<br> There is support for Sequential Inc., Passport/Sentech, DATEL/SIEL/JMS/C-LAB and Namesoft<br>
 You can use a [MiSTeryNano MIDI shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) to interface to a Keyboard.<br>

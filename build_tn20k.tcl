@@ -43,7 +43,8 @@ add_file src/fpga64_buslogic.vhd
 add_file src/fpga64_keyboard.vhd
 add_file src/fpga64_rgbcolor.vhd
 add_file src/fpga64_sid_iec.vhd
-add_file src/gowin_prom/gowin_prom_basic_kernal.vhd
+add_file src/gowin_prom/gowin_prom_basic.vhd
+add_file src/gowin_sdpb/gowin_sdpb_kernal_8k.vhd
 add_file src/gowin_prom/gowin_prom_chargen.vhd
 add_file src/gowin_sp/gowin_sp_2k.vhd
 add_file src/gowin_sp/gowin_sp_8k.vhd

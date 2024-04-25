@@ -1,15 +1,15 @@
 [General]
 ipc_version=4
-file=gowin_prom_basic_kernal
-module=Gowin_pROM_basic_kernal
+file=gowin_prom_basic
+module=Gowin_pROM_basic
 target_device=gw2ar18c-000
 type=ram_prom
 version=1.0
 
 [Config]
-DEPTH=16384
+DEPTH=8192
 LANG=1
-MEM_FILE=basic_dd2.mi
+MEM_FILE=basic_901226-01.mi
 READ=0
 RESET_MODE=true
 WIDTH=8

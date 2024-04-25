@@ -5,7 +5,6 @@
     <Version>5</Version>
     <Device name="GW5A-25A" pn="GW5A-LV25MG121NC1/I0">gw5a25a-002</Device>
     <FileList>
-        <File path="src/loader_sd_card.sv" type="file.verilog" enable="1"/>
         <File path="src/acia.v" type="file.verilog" enable="1"/>
         <File path="src/c1541/mist_sd_card.sv" type="file.verilog" enable="1"/>
         <File path="src/cartridge.v" type="file.verilog" enable="1"/>
@@ -22,6 +21,7 @@
         <File path="src/hdmi/serializer.sv" type="file.verilog" enable="1"/>
         <File path="src/hdmi/source_product_description_info_frame.sv" type="file.verilog" enable="1"/>
         <File path="src/hdmi/tmds_channel.sv" type="file.verilog" enable="1"/>
+        <File path="src/loader_sd_card.sv" type="file.verilog" enable="1"/>
         <File path="src/misc/flash_dspi.v" type="file.verilog" enable="1"/>
         <File path="src/misc/hid.v" type="file.verilog" enable="1"/>
         <File path="src/misc/mcu_spi.v" type="file.verilog" enable="1"/>
@@ -44,15 +44,18 @@
         <File path="src/c1541/via6522.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c64_midi.vhd" type="file.vhdl" enable="1"/>
         <File path="src/cpu_6510.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/fpga64_buslogic.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/fpga64_buslogic.vhd" type="file.vhdl" enable="0"/>
+        <File path="src/fpga64_buslogic_gw5a.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_keyboard.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_rgbcolor.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_sid_iec.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_pll/gowin_pll_flash.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_pll/gowin_pll_ntsc.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_pll/gowin_pll_pal.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/gowin_prom/gowin_prom_basic_kernal.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_prom/gowin_prom_basic.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_prom/gowin_prom_chargen.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/gowin_sdpb/gowin_sdpb_kernal_8k.vhd" type="file.vhdl" enable="0"/>
+        <File path="src/gowin_sdpb/gowin_sdpb_kernal_8k_gw5a.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_sp/gowin_sp_2k.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_sp/gowin_sp_8k.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_sp/gowin_sp_cram.vhd" type="file.vhdl" enable="1"/>
