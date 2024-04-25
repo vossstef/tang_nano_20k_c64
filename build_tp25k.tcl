@@ -71,6 +71,7 @@ add_file src/gowin_pll/gowin_pll_ntsc.vhd
 add_file src/gowin_pll/gowin_pll_flash.vhd
 add_file src/tang_nano_20k_c64_top_25k.cst
 add_file src/tang_nano_20k_c64_top_25k.sdc
+add_file src/loader_sd_card.sv
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name tang_nano_20k_c64_25k
