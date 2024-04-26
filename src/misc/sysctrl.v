@@ -27,8 +27,6 @@ module sysctrl (
   output reg [23:0] color, // a 24bit color to e.g. be used to drive the ws2812
 
   // values that can be configured by the user
-  output reg [1:0]  system_chipset,
-  output reg	    system_memory,
   output reg        system_reu_cfg,
   output reg [1:0]  system_reset,
   output reg [1:0]  system_scanlines,
@@ -75,8 +73,6 @@ always @(posedge clk) begin
       // will very likely override these early
       system_reset <= 2'b00;
       system_1541_reset <= 1'b0;
-      system_chipset <= 2'b0;
-      system_memory <= 1'b0;
       system_reu_cfg <= 1'b1;
       system_scanlines <= 2'b00;
       system_volume <= 2'b10;
@@ -139,10 +135,6 @@ always @(posedge clk) begin
                 if(state == 4'd1) id <= data_in;
 
                 if(state == 4'd2) begin
-                    // Value "C":
-                    if(id == "C") system_chipset <= data_in[1:0];      // unused presently
-                    // Value "M": 
-                    if(id == "M") system_memory <= data_in[0];         // unused presently
                     // Value "V": REU cfg: off, on
                     if(id == "V") system_reu_cfg <= data_in[0];
                     // Value "R": coldboot(3), reset(1) or run(0)

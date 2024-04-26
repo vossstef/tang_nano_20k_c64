@@ -90,12 +90,8 @@ signal sdram_data   : unsigned(7 downto 0);
 signal dout         : std_logic_vector(7 downto 0);
 signal idle         : std_logic;
 signal dram_addr    : std_logic_vector(22 downto 0);
-signal dram_addr_s  : std_logic_vector(22 downto 0);
-signal ram_scramble : std_logic_vector(1 downto 0);
 signal ram_ready    : std_logic;
-signal cb_D         : std_logic;
 signal addr         : std_logic_vector(22 downto 0);
-signal addrdram     : std_logic_vector(22 downto 0);
 signal cs           : std_logic;
 signal we           : std_logic;
 signal din          : std_logic_vector(7 downto 0);
@@ -301,7 +297,6 @@ signal ntscModeD       : std_logic;
 signal audio_div       : unsigned(8 downto 0);
 signal flash_clk       : std_logic;
 signal flash_lock      : std_logic;
-
 signal ioctl_download  : std_logic := '0';
 signal ioctl_load_addr : std_logic_vector(22 downto 0);
 signal ioctl_req_wr    : std_logic := '0';
@@ -456,7 +451,7 @@ joystick_miso_i <= joystick_miso when st_midi = "000" else '1';
 gamepad: entity work.dualshock2
     port map (
     clk           => clk32,
-    rst           => system_reset(0) and not pll_locked,
+    rst           => not reset_n or not pll_locked,
     vsync         => vsync,
     ds2_dat       => joystick_miso_i,
     ds2_cmd       => joystick_mosi,
@@ -936,11 +931,11 @@ pot2 <= not paddle_2 when port_1_sel = "110" else ('0' & std_logic_vector(mouse_
 pot3 <= not paddle_3 when port_2_sel = "110" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
 pot4 <= not paddle_4 when port_2_sel = "110" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
 
-process(clk32, system_reset(0))
+process(clk32, reset_n)
  variable mov_x: signed(6 downto 0);
  variable mov_y: signed(6 downto 0);
 begin
-  if  system_reset(0) = '1' then
+  if  reset_n = '0' then
     mouse_x_pos <= (others => '0');
     mouse_y_pos <= (others => '0');
   elsif rising_edge(clk32) then
@@ -1019,8 +1014,6 @@ module_inst: entity work.sysctrl
   data_out            => sys_data_out,
 
   -- values that can be configured by the user
-  system_chipset      => open,
-  system_memory       => open,
   system_reu_cfg      => reu_cfg,
   system_reset        => system_reset,
   system_scanlines    => system_scanlines,
