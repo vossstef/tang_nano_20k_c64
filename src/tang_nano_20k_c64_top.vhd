@@ -573,8 +573,8 @@ port map
     par_stb_o     => flag2_n,
 
     sd_lba        => disk_lba,
-    sd_rd         => sd_rd(0),
-    sd_wr         => sd_wr(0),
+    sd_rd         => open, --sd_rd(0),
+    sd_wr         => open, --sd_wr(0),
     sd_ack        => sd_busy,
 
     sd_buff_addr  => sd_byte_index,
@@ -589,7 +589,11 @@ port map
     c1541rom_data => c1541rom_data
 );
 
-sd_lba <= disk_lba when img_select = 0 else loader_lba;
+-- workaround for debug purposes !!!!
+sd_rd(0) <= '0';
+sd_wr(0) <= '0';
+sd_lba <= loader_lba;
+--sd_lba <= disk_lba when img_select = 0 else loader_lba;
 ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphindos, speeddos
 sdc_iack <= int_ack(3);
 
