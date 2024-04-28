@@ -38,11 +38,11 @@ module loader_sd_card
 localparam [2:0] WAIT4CHANGE     = 3'd0,
                  READ_WAIT4SD    = 3'd1,
                  READING         = 3'd2,
-                 SPARE2          = 3'd3,
-                 READ_CHECK_NEXT = 3'd4,
+                 WA              = 3'd3,
+                 READ_NEXT       = 3'd4,
                  DESELECT        = 3'd5,
                  START           = 3'd6,
-                 WAITCORE        = 3'd7;
+                 WAIT4CORE       = 3'd7;
 
 reg img_present[3:0];
 wire change = img_present[1]||img_present[2]||img_present[3];
@@ -52,15 +52,13 @@ always @(posedge clk) begin
 reg [2:0] io_state;
 reg old_change;
 reg [22:0] addr;
-reg [31:0] ch_timeout;
 reg wr;
 reg [8:0] cnt;
 reg [4:0] core_wait_cnt;
-reg sd_busyD;
 reg [22:0] img_size[3:0];
 integer i;
 
-	for(i = 0; i < 4; i = i + 1'd1) 
+	for(i = 0; i < 4; i++)
 	begin
 		if (sd_img_mounted[i]) 
 		begin
@@ -80,28 +78,27 @@ integer i;
 //	leds[3] <= img_present[3];
 
 	ioctl_wr <= wr;
-	wr <= 1'b0;
-    sd_busyD <= sd_busy;
-	if(sd_busy) {sd_rd,sd_wr} <= 0;
+	wr <= 0;
+	if(sd_busy) {sd_rd,sd_wr} <= 6'd0;
 	old_change <= change;
 
 	if(reset) 
 	begin
-		img_present[0] <= 1'b0;
-		img_present[1] <= 1'b0;
-		img_present[2] <= 1'b0;
-		img_present[3] <= 1'b0;
+		img_present[0] <= 0;
+		img_present[1] <= 0;
+		img_present[2] <= 0;
+		img_present[3] <= 0;
 		io_state <= WAIT4CHANGE;
 		sd_rd <= 3'd0;
 		sd_wr <= 3'd0;
-		wr <= 1'b0;
-		load_crt <= 1'b0;
-		load_prg <= 1'b0;
-		load_rom <= 1'b0;
-		ioctl_download <= 1'b0;
+		wr <= 0;
+		load_crt <= 0;
+		load_prg <= 0;
+		load_rom <= 0;
+		ioctl_download <= 0;
 		ioctl_addr <= 23'd0;
 		leds <= 5'd0;
-		loader_busy <= 1'b0;
+		loader_busy <= 0;
 	end 
 	else 
 	begin
@@ -110,24 +107,23 @@ integer i;
 			begin
 				if(~old_change && change)
 				begin
-					loader_busy <= 1'b1;
+					loader_busy <= 1;
 					load_crt <= img_present[1];
 					load_prg <= img_present[2];
 					load_rom <= img_present[3];
-					ch_timeout <= 32'd1508863;
 					ioctl_addr <= 23'd0;
-					ioctl_download <= 1'b1;
+					ioctl_download <= 1;
 					addr <= 23'd0;
 					sd_lba <= 32'd0;
 					core_wait_cnt <= 5'd0;
-					io_state <= WAITCORE;
+					io_state <= WA;
 				end
 				else loader_busy <= 1'b0;
 			end
 
-		WAITCORE: 
-			if (~ioctl_wait) 
-				io_state <= START;
+		WAIT4CORE: 
+				if (~ioctl_wait)
+					io_state <= START;
 
 		START: 
 			begin
@@ -139,36 +135,34 @@ integer i;
 			end
 
 		READ_WAIT4SD:
-			if(sd_done) // if(sd_busyD && ~sd_busy)
+			if(sd_done)
 				io_state <= READING;
 
 		READING: 
 			begin
 				if(addr <= img_size[img_select])
-					io_state <= READ_CHECK_NEXT;
+					io_state <= READ_NEXT;
 				else 
 				begin
 					leds[3:0] <= sd_lba[3:0];
-					ioctl_download <= 1'b0;
+					ioctl_download <= 0;
 					ioctl_addr <= 23'd0;
 					io_state <= DESELECT;
 				end
 			end
 
-		READ_CHECK_NEXT:
+		READ_NEXT:
 			begin
-				core_wait_cnt <= core_wait_cnt + 5'd1;
+				core_wait_cnt++;
 				if(~ioctl_wait && &core_wait_cnt) 
 					begin
-						wr <= 1'b1;
-						ioctl_addr <= addr;
-						addr <= addr + 1'd1;
-						cnt <= cnt + 1'd1;
+						wr <= 1;
+						ioctl_addr <= addr++;
+						cnt++;
 						if(cnt == 511) 
 							begin
-								sd_lba <= sd_lba + 1'd1;
-								ch_timeout <= 1'd1;
-								io_state <= WAITCORE;
+								sd_lba++;
+								io_state <= START;
 							end
 					end
 					else
@@ -177,14 +171,27 @@ integer i;
 
 		DESELECT: 
 			begin
-				load_crt <= 1'b0;
-				load_prg <= 1'b0;
-				load_rom <= 1'b0;
+				load_crt <= 0;
+				load_prg <= 0;
+				load_rom <= 0;
 				io_state <= WAIT4CHANGE;
 			end
 
-		SPARE2:
-				io_state <= WAIT4CHANGE;
+		WA:
+		if(~&core_wait_cnt)
+		begin
+			core_wait_cnt++;
+			sd_lba <= img_size[img_select][22:9];
+			sd_rd[0] <= img_present[1];
+			sd_rd[1] <= img_present[2];
+			sd_rd[2] <= img_present[3];
+		end else 
+			if(sd_done)
+			begin 
+				sd_lba <= 32'd0;
+				core_wait_cnt <= 5'd0;
+				io_state <= WAIT4CORE; 
+			end
 
 		default: ;
 

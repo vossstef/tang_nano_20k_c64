@@ -1317,9 +1317,14 @@ port map (
 );
 
 -- spi loader
-process(clk32)
+process(clk32, system_reset(1))
 begin
-  if rising_edge(clk32) then
+  if system_reset(1) = '1' then
+      erase_to <= (others => '0');
+      erasing <= '0';
+      inj_meminit <= '0';
+      erase_cram <= '0';
+  elsif rising_edge(clk32) then
     old_download <= ioctl_download;
     io_cycleD <= io_cycle;
     cart_hdr_wr <= '0';
@@ -1353,12 +1358,12 @@ begin
         -- PRG header
         -- Load address low-byte
           if ioctl_addr = 0 then
-              ioctl_load_addr(7 downto 0) <= x"01"; --ioctl_data;
-              inj_end(7 downto 0)  <= x"01"; --ioctl_data; 
+              ioctl_load_addr(7 downto 0) <= ioctl_data;
+              inj_end(7 downto 0)  <= ioctl_data; 
           -- Load address high-byte
           elsif ioctl_addr = 1 then
-              ioctl_load_addr(22 downto 8) <= 7x"00" & x"08"; --ioctl_data;
-              inj_end(15 downto 8) <= x"08"; -- ioctl_data;
+              ioctl_load_addr(22 downto 8) <= 7x"00" & ioctl_data;
+              inj_end(15 downto 8) <= ioctl_data;
           else
               ioctl_req_wr <= '1';
               inj_end <= inj_end + 1;
@@ -1464,12 +1469,6 @@ begin
 				cart_attached <= '0';
       end if;
 
-      if old_download = '1' and ioctl_download = '0' then
-        erase_to <= (others => '0');
-        erasing <= '0';
-        inj_meminit <= '0';
-        erase_cram <= '0';
-      end if;
 
 			-- start RAM erasing
       if erasing = '0' and force_erase ='1' then
