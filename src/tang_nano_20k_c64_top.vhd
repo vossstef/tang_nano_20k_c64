@@ -348,6 +348,7 @@ signal img_select      : std_logic_vector(1 downto 0);
 signal tap_version     : std_logic_vector(1 downto 0);
 signal vic_variant     : std_logic_vector(1 downto 0);
 signal cia_mode        : std_logic;
+signal loader_busy     : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -549,7 +550,7 @@ port map
  (
     clk32         => clk32,
     reset         => (not flash_ready) or disk_reset,
-    pause         => c64_pause,
+    pause         => c64_pause or loader_busy,
     ce            => '0',
 
     disk_num      => (others =>'0'),
@@ -573,8 +574,8 @@ port map
     par_stb_o     => flag2_n,
 
     sd_lba        => disk_lba,
-    sd_rd         => open, --sd_rd(0),
-    sd_wr         => open, --sd_wr(0),
+    sd_rd         => sd_rd(0),
+    sd_wr         => sd_wr(0),
     sd_ack        => sd_busy,
 
     sd_buff_addr  => sd_byte_index,
@@ -589,11 +590,7 @@ port map
     c1541rom_data => c1541rom_data
 );
 
--- workaround for debug purposes !!!!
-sd_rd(0) <= '0';
-sd_wr(0) <= '0';
-sd_lba <= loader_lba;
---sd_lba <= disk_lba when img_select = 0 else loader_lba;
+sd_lba <= loader_lba when loader_busy = '1' else disk_lba;
 ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphindos, speeddos
 sdc_iack <= int_ack(3);
 
@@ -1037,7 +1034,7 @@ module_inst: entity work.sysctrl
   system_vic_variant  => vic_variant, 
   system_cia_mode     => cia_mode, 
   int_out_n           => m0s(4),
-  int_in              => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
+  int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & "0" & hid_int & "0")),
   int_ack             => int_ack,
 
   buttons             => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
@@ -1304,6 +1301,7 @@ port map (
   sd_rd_byte_strobe => sd_rd_byte_strobe,
 
   sd_img_mounted    => sd_img_mounted,
+  loader_busy       => loader_busy,
   load_crt          => load_crt,
   load_prg          => load_prg,
   load_rom          => load_rom,
@@ -1467,10 +1465,10 @@ begin
       end if;
 
       if old_download = '1' and ioctl_download = '0' then
-    --    erase_to <= (others => '0');
-    --    erasing <= '0';
-    --    inj_meminit <= '0';
-    --    erase_cram <= '0';
+        erase_to <= (others => '0');
+        erasing <= '0';
+        inj_meminit <= '0';
+        erase_cram <= '0';
       end if;
 
 			-- start RAM erasing

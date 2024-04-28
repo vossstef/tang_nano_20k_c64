@@ -23,6 +23,7 @@ module loader_sd_card
 	output reg load_crt,
 	output reg load_prg,
 	output reg load_rom,
+	output reg loader_busy,
 	output reg [1:0] img_select,
 	output reg [4:0] leds,
 
@@ -34,13 +35,13 @@ module loader_sd_card
 );
 
 // states of FSM
-localparam [2:0] SPARE1          = 3'd0,
+localparam [2:0] WAIT4CHANGE     = 3'd0,
                  READ_WAIT4SD    = 3'd1,
                  READING         = 3'd2,
                  SPARE2          = 3'd3,
                  READ_CHECK_NEXT = 3'd4,
                  DESELECT        = 3'd5,
-                 STARTUP  		 = 3'd6,
+                 START           = 3'd6,
                  WAITCORE        = 3'd7;
 
 reg img_present[3:0];
@@ -86,7 +87,11 @@ integer i;
 
 	if(reset) 
 	begin
-		io_state <= STARTUP;
+		img_present[0] <= 1'b0;
+		img_present[1] <= 1'b0;
+		img_present[2] <= 1'b0;
+		img_present[3] <= 1'b0;
+		io_state <= WAIT4CHANGE;
 		sd_rd <= 3'd0;
 		sd_wr <= 3'd0;
 		wr <= 1'b0;
@@ -96,14 +101,16 @@ integer i;
 		ioctl_download <= 1'b0;
 		ioctl_addr <= 23'd0;
 		leds <= 5'd0;
+		loader_busy <= 1'b0;
 	end 
 	else 
 	begin
 	case(io_state)
-		STARTUP: 
+		WAIT4CHANGE: 
 			begin
 				if(~old_change && change)
 				begin
+					loader_busy <= 1'b1;
 					load_crt <= img_present[1];
 					load_prg <= img_present[2];
 					load_rom <= img_present[3];
@@ -115,19 +122,20 @@ integer i;
 					core_wait_cnt <= 5'd0;
 					io_state <= WAITCORE;
 				end
+				else loader_busy <= 1'b0;
 			end
 
 		WAITCORE: 
+			if (~ioctl_wait) 
+				io_state <= START;
+
+		START: 
 			begin
-				if(ch_timeout > 0) ch_timeout <= ch_timeout - 1'd1;
-				if(ch_timeout == 0 && ~ioctl_wait) 
-				begin
-					sd_rd[0] <= img_present[1];
-					sd_rd[1] <= img_present[2];
-					sd_rd[2] <= img_present[3];
-					cnt <= 9'd0;
-					io_state <= READ_WAIT4SD;
-				end
+				sd_rd[0] <= img_present[1];
+				sd_rd[1] <= img_present[2];
+				sd_rd[2] <= img_present[3];
+				cnt <= 9'd0;
+				io_state <= READ_WAIT4SD;
 			end
 
 		READ_WAIT4SD:
@@ -136,7 +144,7 @@ integer i;
 
 		READING: 
 			begin
-				if(ioctl_addr <= img_size[img_select])
+				if(addr <= img_size[img_select])
 					io_state <= READ_CHECK_NEXT;
 				else 
 				begin
@@ -172,14 +180,11 @@ integer i;
 				load_crt <= 1'b0;
 				load_prg <= 1'b0;
 				load_rom <= 1'b0;
-				io_state <= STARTUP;
+				io_state <= WAIT4CHANGE;
 			end
 
-		SPARE1: 
-				io_state <= STARTUP;
-
 		SPARE2:
-				io_state <= STARTUP;
+				io_state <= WAIT4CHANGE;
 
 		default: ;
 
