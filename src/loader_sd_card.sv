@@ -38,7 +38,7 @@ module loader_sd_card
 localparam [2:0] WAIT4CHANGE     = 3'd0,
                  READ_WAIT4SD    = 3'd1,
                  READING         = 3'd2,
-                 WA              = 3'd3,
+                 SPARE           = 3'd3,
                  READ_NEXT       = 3'd4,
                  DESELECT        = 3'd5,
                  START           = 3'd6,
@@ -56,6 +56,8 @@ reg wr;
 reg [8:0] cnt;
 reg [4:0] core_wait_cnt;
 reg [22:0] img_size[3:0];
+reg [31:0] lba;
+reg [31:0] ch_timeout;
 integer i;
 
 	for(i = 0; i < 4; i++)
@@ -114,17 +116,24 @@ integer i;
 					ioctl_addr <= 23'd0;
 					ioctl_download <= 1;
 					addr <= 23'd0;
+					lba <= 32'd0;
 					sd_lba <= 32'd0;
 					core_wait_cnt <= 5'd0;
-				//	io_state <= WA; // LBA workaround, read last LBA 
+					ch_timeout <= 32'd1508863;
 					io_state <= WAIT4CORE;
 				end
 				else loader_busy <= 1'b0;
 			end
 
+	//	WAIT4CORE: 
+	//			if (~ioctl_wait)
+	//				io_state <= START;
 		WAIT4CORE: 
-				if (~ioctl_wait)
-					io_state <= START;
+			begin
+				if(ch_timeout > 0) ch_timeout <= ch_timeout - 1'd1;
+				if(ch_timeout == 0 && ~ioctl_wait) 
+                    io_state <= START;
+			end
 
 		START: 
 			begin
@@ -145,7 +154,7 @@ integer i;
 					io_state <= READ_NEXT;
 				else 
 				begin
-					leds[3:0] <= sd_lba[3:0];
+					leds[3:0] <= lba[3:0];
 					ioctl_download <= 0;
 					ioctl_addr <= 23'd0;
 					io_state <= DESELECT;
@@ -158,11 +167,11 @@ integer i;
 				if(~ioctl_wait && &core_wait_cnt) 
 					begin
 						wr <= 1;
-						ioctl_addr <= addr++;
+						ioctl_addr <= ++addr;
 						cnt++;
 						if(cnt == 511) 
 							begin
-								sd_lba++;
+								sd_lba <= ++lba;
 								io_state <= START;
 							end
 					end
@@ -178,21 +187,8 @@ integer i;
 				io_state <= WAIT4CHANGE;
 			end
 
-		WA:
-		if(~&core_wait_cnt)
-		begin
-			core_wait_cnt++;
-			sd_lba <= img_size[img_select][22:9];
-			sd_rd[0] <= img_present[1];
-			sd_rd[1] <= img_present[2];
-			sd_rd[2] <= img_present[3];
-		end else 
-			if(sd_done)
-			begin 
-				sd_lba <= 32'd0;
-				core_wait_cnt <= 5'd0;
-				io_state <= WAIT4CORE; 
-			end
+		SPARE:
+				io_state <= WAIT4CHANGE;
 
 		default: ;
 
