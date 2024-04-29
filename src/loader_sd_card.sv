@@ -38,10 +38,10 @@ module loader_sd_card
 localparam [2:0] WAIT4CHANGE     = 3'd0,
                  READ_WAIT4SD    = 3'd1,
                  READING         = 3'd2,
-                 SPARE           = 3'd3,
+                 SPARE2          = 3'd3,
                  READ_NEXT       = 3'd4,
                  DESELECT        = 3'd5,
-                 START           = 3'd6,
+                 SPARE1          = 3'd6,
                  WAIT4CORE       = 3'd7;
 
 reg img_present[3:0];
@@ -52,15 +52,14 @@ always @(posedge clk) begin
 reg [2:0] io_state;
 reg old_change;
 reg [22:0] addr;
+reg [31:0] ch_timeout;
 reg wr;
 reg [8:0] cnt;
 reg [4:0] core_wait_cnt;
 reg [22:0] img_size[3:0];
-reg [31:0] lba;
-reg [31:0] ch_timeout;
 integer i;
 
-	for(i = 0; i < 4; i++)
+	for(i = 0; i < 4; i = i + 1'd1) 
 	begin
 		if (sd_img_mounted[i]) 
 		begin
@@ -69,8 +68,8 @@ integer i;
 		end
 	end
 
-    if(img_present[0]) img_select <= 0;
-	else if(img_present[1]) img_select <= 1;
+  //if(img_present[0]) img_select <= 0;
+	if(img_present[1]) img_select <= 1;
 	else if(img_present[2]) img_select <= 2;
 	else if(img_present[3]) img_select <= 3;
 
@@ -80,24 +79,20 @@ integer i;
 //	leds[3] <= img_present[3];
 
 	ioctl_wr <= wr;
-	wr <= 0;
+	wr <= 1'b0;
 	if(sd_busy) {sd_rd,sd_wr} <= 6'd0;
 	old_change <= change;
 
 	if(reset) 
 	begin
-		img_present[0] <= 0;
-		img_present[1] <= 0;
-		img_present[2] <= 0;
-		img_present[3] <= 0;
 		io_state <= WAIT4CHANGE;
 		sd_rd <= 3'd0;
 		sd_wr <= 3'd0;
-		wr <= 0;
-		load_crt <= 0;
-		load_prg <= 0;
-		load_rom <= 0;
-		ioctl_download <= 0;
+		wr <= 1'b0;
+		load_crt <= 1'b0;
+		load_prg <= 1'b0;
+		load_rom <= 1'b0;
+		ioctl_download <= 1'b0;
 		ioctl_addr <= 23'd0;
 		leds <= 5'd0;
 		loader_busy <= 0;
@@ -113,35 +108,28 @@ integer i;
 					load_crt <= img_present[1];
 					load_prg <= img_present[2];
 					load_rom <= img_present[3];
+					ch_timeout <= 32'd1508863;
 					ioctl_addr <= 23'd0;
-					ioctl_download <= 1;
+					ioctl_download <= 1'b1;
 					addr <= 23'd0;
-					lba <= 32'd0;
 					sd_lba <= 32'd0;
 					core_wait_cnt <= 5'd0;
-					ch_timeout <= 32'd1508863;
 					io_state <= WAIT4CORE;
 				end
 				else loader_busy <= 1'b0;
 			end
 
-	//	WAIT4CORE: 
-	//			if (~ioctl_wait)
-	//				io_state <= START;
 		WAIT4CORE: 
 			begin
 				if(ch_timeout > 0) ch_timeout <= ch_timeout - 1'd1;
 				if(ch_timeout == 0 && ~ioctl_wait) 
-                    io_state <= START;
-			end
-
-		START: 
-			begin
-				sd_rd[0] <= img_present[1];
-				sd_rd[1] <= img_present[2];
-				sd_rd[2] <= img_present[3];
-				cnt <= 9'd0;
-				io_state <= READ_WAIT4SD;
+				begin
+					sd_rd[0] <= img_present[1];
+					sd_rd[1] <= img_present[2];
+					sd_rd[2] <= img_present[3];
+					cnt <= 9'd0;
+					io_state <= READ_WAIT4SD;
+				end
 			end
 
 		READ_WAIT4SD:
@@ -150,12 +138,12 @@ integer i;
 
 		READING: 
 			begin
-				if(addr <= img_size[img_select])
+				if(ioctl_addr <= img_size[img_select]) // addr
 					io_state <= READ_NEXT;
 				else 
 				begin
-					leds[3:0] <= lba[3:0];
-					ioctl_download <= 0;
+					leds[3:0] <= sd_lba[3:0];
+					ioctl_download <= 1'b0;
 					ioctl_addr <= 23'd0;
 					io_state <= DESELECT;
 				end
@@ -163,16 +151,18 @@ integer i;
 
 		READ_NEXT:
 			begin
-				core_wait_cnt++;
+				core_wait_cnt <= core_wait_cnt + 5'd1;
 				if(~ioctl_wait && &core_wait_cnt) 
 					begin
-						wr <= 1;
-						ioctl_addr <= ++addr;
-						cnt++;
+						wr <= 1'b1;
+						ioctl_addr <= addr;
+						addr <= addr + 1'd1;
+						cnt <= cnt + 1'd1;
 						if(cnt == 511) 
 							begin
-								sd_lba <= ++lba;
-								io_state <= START;
+								sd_lba <= sd_lba + 1'd1;
+								ch_timeout <= 1'd1;
+								io_state <= WAIT4CORE;
 							end
 					end
 					else
@@ -181,13 +171,16 @@ integer i;
 
 		DESELECT: 
 			begin
-				load_crt <= 0;
-				load_prg <= 0;
-				load_rom <= 0;
+				load_crt <= 1'b0;
+				load_prg <= 1'b0;
+				load_rom <= 1'b0;
 				io_state <= WAIT4CHANGE;
 			end
 
-		SPARE:
+		SPARE1: 
+				io_state <= WAIT4CHANGE;
+
+		SPARE2:
 				io_state <= WAIT4CHANGE;
 
 		default: ;
