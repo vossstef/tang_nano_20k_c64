@@ -116,7 +116,8 @@ integer i;
 					addr <= 23'd0;
 					sd_lba <= 32'd0;
 					core_wait_cnt <= 5'd0;
-					io_state <= WA;
+				//	io_state <= WA; // LBA workaround, read last LBA 
+					io_state <= WAIT4CORE;
 				end
 				else loader_busy <= 1'b0;
 			end
