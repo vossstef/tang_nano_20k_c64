@@ -875,9 +875,6 @@ flashclock: rPLL
 
 leds_n <=  not leds;
 leds(0) <= led1541;
---leds(2 downto 1) <= "00";
---leds(3) <= spi_ext;
---leds(5 downto 4) <= system_leds;
 
 -- 4 3 2 1 0 digital c64
 joyDS2     <=    ("00" & (key_l1 or key_r1) & key_circle & key_square & key_cross & key_triangle);
