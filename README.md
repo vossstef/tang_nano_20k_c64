@@ -1,7 +1,7 @@
 # C64Nano
 The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wiki) and 
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
-[C64 FPGA core ](https://en.wikipedia.org/wiki/Commodore_64) to the 
+[C64 FPGA core ](https://en.wikipedia.org/wiki/Commodore_64) for the 
 [Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) with a new VHDL top level and HDMI Video and Audio Output.<br>It has also been ported to the [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) and [Tang Mega 138k](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html) ([Gowin GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/)) too.<br>
 Be aware that the [VIC20 FPGA core](https://en.wikipedia.org/wiki/VIC-20) had been ported too in similar manner ([link](https://github.com/vossstef/VIC20Nano)).<br>
 <br>
@@ -13,7 +13,7 @@ Features:
 * PAL 800x576p@50Hz or NTSC 800x480p@60Hz HDMI Video and Audio Output
 * USB Keyboard via [Sipeed M0S Dock BL616 RISC-V µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)
 * USB Joystick via µC
-* USB Mouse via µC as c1351 Mouse emulation
+* USB Mouse via µC [c1351](https://en.wikipedia.org/wiki/Commodore_1351) Mouse emulation
 * [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type) [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 * Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys & Stick as Joystick<br>
@@ -56,7 +56,20 @@ Load first program from Disk: (or just LOAD)<br>
 LOAD"*",8<br>
 RUN<br>
 c1541 DOS ROM to be selected from OSD (default Dolphin DOS, CBM DOS or other)<br>
-In case a PRG don't load correctly select via OSD the factory default CBM DOS an give it a try.
+In case a program don't load correctly select via OSD the factory default CBM DOS an give it a try.
+
+## CRT Loader (.CRT)
+Cartrige ROM can be loaded via OSD file selection.<br>
+Detach Cartrige by using OSD System / Cold Boot.<br>
+Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge.
+
+## PRG Loader (.PRG)
+A Program *.PRG file can be loaded via OSD file selection.<br>
+Copy a *.PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program.
+
+## Kernal Loader (.BIN)
+Kernal ROM files *.BIN can be loaded via OSD selection.<br>
+Copy a 8K C64 Kernal ROM *.BIN to your sdcard and rename it to **c64kernal.bin** as default boot Kernal.<br>Dolphin DOS 2.0 is the power-up default Kernal.<br>
 
 ## emulated RAM Expansion Unit REU 1750
 For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.<br>
@@ -123,29 +136,23 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
  Tape Play not implemented.
 
 ## LED UI
-0 c1541 Drive activity. Solid 'red' after power-up indicates a missing DOS in Flash<br>
-1 unused<br>
-2 unused<br>
-3 M0S Dock detect<br>
-4 System LED 0<br>
-5 System LED 1<br>
+
+| LED | function | TN20K | TP25K | TM138K |
+| --- |        - | -     | -     | -      |
+| 0 | c1541 activity  | x | x | x |
+| 1 | D64 selected | x | - | x |
+| 2 | CRT seleced | x | - | x |
+| 3 | PRG selected | x | - | x |
+| 4 | Kernal selected  | x | - | x |
+| 5 | unused | x | - | x |
+
+Solid 'red' of the c1541 led after power-up indicates a missing DOS in Flash<br>
 
 **Multicolor RGB LED**
 * **<font color="green">green</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;all fine and ready to go<br>
 * **<font color="red">red</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;something wrong with SDcard / default boot image<br>
 * **<font color="blue">blue</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;µC firmware detected valid FPGA core<br>
 * **white**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;-<br>
-
-## CRT Loader (.CRT)
-Cartrige can be loaded via OSD file selection.<br>
-Detach a Cartrige by using OSD System/Cold Boot.<br>
-
-## PRG Loader (.PRG)
-A Program *.PRG file can be loaded via OSD file selection.<br>
-
-## Kernal Loader (.BIN)
-8k Kernal files *.BIN can be loaded via OSD selection.<br>
-Dolphin DOS 2.0 is the power-up default Kernal.<br>
 
 ## MIDI-IN and OUT
 Type of MIDI interface can be selected from OSD.<br> There is support for Sequential Inc., Passport/Sentech, DATEL/SIEL/JMS/C-LAB and Namesoft<br>
@@ -207,15 +214,16 @@ and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0
  or ad hoc wiring + soldering.<br>
 or [Sipeed Tang Mega 138k](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)<br>
 and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
+and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)<br>
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)<br>
-microSD or microSDHC card FAT/exFAT formatted<br>
+microSD or microSDHC card FAT32 formatted<br>
 TFT Monitor with HDMI Input and Speaker<br>
 <br>
 
-| HID and Gamecontrol Hardware option | needs | alternative option |Primer 25K|Mega 138K|
+| HID and Gamecontrol Hardware option | TN20k needs | alternative option |Primer 25K|Mega 138K|
 | ----------- | --- | ---  | ---| -|
 | USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH)  |x|x|
 | [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | - |x|x|
 | USB Mouse | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | -  |x|x|
 | Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|-|
-| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) | breadboard to wire everything up and some jumper wires |-|x|
+| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) respectively<br> PMOD DS2x2 | breadboard to wire everything up and some jumper wires |-|x|

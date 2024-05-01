@@ -392,7 +392,7 @@ begin
   end if;
 end process;
 
-disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset or not flash_lock;
+disk_reset <= c1541_osd_reset or not reset_n or c1541_reset or not flash_lock;
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
@@ -1120,7 +1120,7 @@ port map
   midi_inst : entity work.c64_midi
   port map (
     clk32   => clk32,
-    reset   => system_reset(0) or not pll_locked or not (st_midi(2) or st_midi(1) or st_midi(0)),
+    reset   => not reset_n or not (st_midi(2) or st_midi(1) or st_midi(0)),
     Mode    => st_midi,
     E       => phi,
     IOE     => IOE,

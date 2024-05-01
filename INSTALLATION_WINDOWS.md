@@ -162,6 +162,6 @@ Default Mountpoints:
 Copy a *.D64 Disk image to your sdcard and rename it to disk8.d64 as default c1541 boot image.  
 Copy a *.CRT image to your sdcard and rename it to c64crt.crt as default Cartridge boot image.  
 Copy a *.PRG file to your sdcard and rename it to c64prg.prg as default Program boot image.  
-Copy a 8k Byte C64 Kernal file *.BIN to your sdcard and rename it to c64kernal.bin as default Cartridge boot image.
+Copy a 8k Byte C64 Kernal file *.BIN to your sdcard and rename it to c64kernal.bin as default Kernal boot image.
 
 That´s it for now. Have fun using the C64Nano
