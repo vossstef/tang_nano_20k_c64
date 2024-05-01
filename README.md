@@ -19,12 +19,12 @@ Features:
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys & Stick as Joystick<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation (analog mode)<br>
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with parallel bus [Speedloader Dolphin DOS 2](https://rr.pokefinder.org/wiki/Dolphin_DOS). [GER manual](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
-* emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * c1541 DOS ROM selection
 * Cartridge (*.CRT) loader
 * Direct program file (*.PRG) injection loader
-* Loadable Kernal ROM (*.BIN)
-* On Screen Display (OSD) for configuration and D64 / G64 image selection<br>
+* Loadable 8K Kernal ROM (*.BIN)
+* emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
+* On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN)<br>
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 <br>
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">

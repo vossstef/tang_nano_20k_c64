@@ -1069,7 +1069,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   (
   clk32        => clk32,
   reset_n      => reset_n and pll_locked and ram_ready,
-  bios         => "0" & system_reset(1),
+  bios         => "00",
   pause        => freeze,
   pause_out    => c64_pause,
   -- keyboard interface
@@ -1181,8 +1181,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
 
   cass_motor   => open,
   cass_write   => open,
-  cass_sense   => '1',
-  cass_read    => '1'
+  cass_sense   => '0',
+  cass_read    => '0'
   );
 
 process(clk32)
@@ -1284,11 +1284,30 @@ port map
     nmi_ack     => nmi_ack
   );
 
+  midi_inst : entity work.c64_midi
+  port map (
+    clk32   => clk32,
+    reset   => system_reset(0) or not pll_locked or not (st_midi(2) or st_midi(1) or st_midi(0)),
+    Mode    => st_midi,
+    E       => phi,
+    IOE     => IOE,
+    A       => std_logic_vector(c64_addr),
+    Din     => std_logic_vector(c64_data_out),
+    Dout    => midi_data,
+    OE      => midi_oe,
+    RnW     => not (ram_we and IOE),
+    nIRQ    => midi_irq_n,
+    nNMI    => midi_nmi_n,
+  
+    RX      => midi_rx,
+    TX      => midi_tx
+  );
 
 crt_inst : entity work.loader_sd_card
 port map (
   clk               => clk32,
-  reset             => not pll_locked, 
+  reset             => not pll_locked,
+  core_reset        => system_reset(1),
 
   sd_lba            => loader_lba,
   sd_rd             => sd_rd(3 downto 1),
@@ -1353,12 +1372,12 @@ begin
         -- PRG header
         -- Load address low-byte
           if ioctl_addr = 0 then
-              ioctl_load_addr(7 downto 0) <= x"01"; --ioctl_data;
-              inj_end(7 downto 0)  <= x"01"; -- ioctl_data; 
+              ioctl_load_addr(7 downto 0) <= ioctl_data;
+              inj_end(7 downto 0)  <= ioctl_data; 
           -- Load address high-byte
           elsif ioctl_addr = 1 then
-              ioctl_load_addr(22 downto 8) <= 7x"00" & x"08"; -- ioctl_data;
-              inj_end(15 downto 8) <= x"08"; --ioctl_data;
+              ioctl_load_addr(22 downto 8) <= 7x"00" & ioctl_data;
+              inj_end(15 downto 8) <= ioctl_data;
           else
               ioctl_req_wr <= '1';
               inj_end <= inj_end + 1;
@@ -1421,8 +1440,8 @@ begin
       end if;
     end if;
 
-			-- cart added
- 			if old_download /= ioctl_download and load_crt = '1' then
+      -- cart added
+      if old_download /= ioctl_download and load_crt = '1' then
         cart_attached <= old_download;
         erase_cram <= '1';
       end if;
@@ -1438,19 +1457,17 @@ begin
                 if ioctl_load_addr(15 downto 0) = x"0100" then 
                     inj_meminit <= '0'; 
                 end if;
-          -- Initialize BASIC pointers to simulate the BASIC LOAD command
+               -- Initialize BASIC pointers to simulate the BASIC LOAD command
                case ioctl_load_addr(7 downto 0) is
---                -- TXT (2B-2C)
---                -- Set these two bytes to $01, $08 just as they would be on reset (the BASIC LOAD command does not alter these)
+                -- TXT (2B-2C)
+                -- Set these two bytes to $01, $08 just as they would be on reset (the BASIC LOAD command does not alter these)
                 when x"2b" => inj_meminit_data <= X"01";ioctl_req_wr <= '1';
                 when x"2c" => inj_meminit_data <= X"08";ioctl_req_wr <= '1';
---                -- SAVE_START (AC-AD)
---                -- Set these two bytes to zero just as they would be on reset (the BASIC LOAD command does not alter these)
+                -- SAVE_START (AC-AD)
+                -- Set these two bytes to zero just as they would be on reset (the BASIC LOAD command does not alter these)
                 when x"ac"|x"ad" => inj_meminit_data <= X"00";ioctl_req_wr <= '1';
-         --       when x"ac" => inj_meminit_data <= X"01";ioctl_req_wr <= '1';
-         --       when x"ad" => inj_meminit_data <= X"08";ioctl_req_wr <= '1';
-                  -- VAR (2D-2E), ARY (2F-30), STR (31-32), LOAD_END (AE-AF)
---                -- Set these just as they would be with the BASIC LOAD command (essentially they are all set to the load end address)
+                -- VAR (2D-2E), ARY (2F-30), STR (31-32), LOAD_END (AE-AF)
+                -- Set these just as they would be with the BASIC LOAD command (essentially they are all set to the load end address)
                 when x"2d"|x"2f"|x"31"|x"ae" => inj_meminit_data <= inj_end(7 downto 0);ioctl_req_wr <= '1';
                 when x"2e"|x"30"|x"32"|x"af" => inj_meminit_data <= inj_end(15 downto 8);ioctl_req_wr <= '1';
                   -- advance the address
@@ -1461,16 +1478,16 @@ begin
       old_meminit <= inj_meminit;
 
       if  system_reset(1) = '1' then
-				cart_attached <= '0';
+        cart_attached <= '0';
       end if;
 
-			-- start RAM erasing
+      -- start RAM erasing
       if erasing = '0' and force_erase ='1' then
         erasing <= '1';
         ioctl_load_addr <= (others => '0');
       end if;
 
-			-- RAM erasing control
+      -- RAM erasing control
       if erasing = '1' and ioctl_req_wr = '0' then
         erase_to <= erase_to + 1;
         if erase_to = "11111" then

@@ -7,6 +7,7 @@ module loader_sd_card
 (
 	input clk,
 	input reset,
+	input core_reset,
 
 	output reg [31:0] sd_lba,
 	output reg [2:0] sd_rd, // read request for target
@@ -35,57 +36,57 @@ module loader_sd_card
 );
 
 // states of FSM
-localparam [2:0] WAIT4CHANGE     = 3'd0,
-                 READ_WAIT4SD    = 3'd1,
-                 READING         = 3'd2,
-                 SPARE2          = 3'd3,
+localparam [2:0] GO4IT     = 3'd0,
+                 WAIT4CORE       = 3'd1,
+                 READ_WAIT4SD    = 3'd2,
+                 READING         = 3'd3,
                  READ_NEXT       = 3'd4,
                  DESELECT        = 3'd5,
-                 SPARE1          = 3'd6,
-                 WAIT4CORE       = 3'd7;
-
-reg img_present[3:0];
-wire change = img_present[1]||img_present[2]||img_present[3];
+                 START           = 3'd6,
+				 WAIT4RESET      = 3'd7;
 
 always @(posedge clk) begin
 
 reg [2:0] io_state;
-reg old_change;
 reg [22:0] addr;
 reg [31:0] ch_timeout;
 reg wr;
 reg [8:0] cnt;
 reg [4:0] core_wait_cnt;
 reg [22:0] img_size[3:0];
-integer i;
+reg img_present[3:0];
+reg img_presentD[3:0];
+reg [2:0] rd_sel;
+reg boot_crt;
+reg boot_bin;
+reg boot_prg;
+reg [31:0] wait_cnt;
+reg core_resetD;
 
-	for(i = 0; i < 4; i = i + 1'd1) 
+	for(integer i = 0; i < 4; i = i + 1'd1)
 	begin
+		img_presentD[i] <= img_present[i];
+
 		if (sd_img_mounted[i]) 
 		begin
 			img_present[i] <= |sd_img_size;
 			img_size[i] <= sd_img_size[22:0];
-		end
+		end 
 	end
 
-  //if(img_present[0]) img_select <= 0;
-	if(img_present[1]) img_select <= 1;
-	else if(img_present[2]) img_select <= 2;
-	else if(img_present[3]) img_select <= 3;
-
-//	leds[0] <= img_present[0];
-//	leds[1] <= img_present[1];
-//	leds[2] <= img_present[2];
-//	leds[3] <= img_present[3];
-
+	leds[0] <= img_present[0];
+	leds[1] <= img_present[1];
+	leds[2] <= img_present[2];
+	leds[3] <= img_present[3];
+    leds[4] <= 0; 
 	ioctl_wr <= wr;
 	wr <= 1'b0;
 	if(sd_busy) {sd_rd,sd_wr} <= 6'd0;
-	old_change <= change;
+    core_resetD <= core_reset;
 
-	if(reset) 
+	if(reset)
 	begin
-		io_state <= WAIT4CHANGE;
+		io_state <= WAIT4RESET;
 		sd_rd <= 3'd0;
 		sd_wr <= 3'd0;
 		wr <= 1'b0;
@@ -95,19 +96,65 @@ integer i;
 		ioctl_download <= 1'b0;
 		ioctl_addr <= 23'd0;
 		leds <= 5'd0;
-		loader_busy <= 0;
-	end 
-	else 
+		loader_busy <= 1'b0;
+        img_present[0] <= 1'b0;
+        img_present[1] <= 1'b0;
+        img_present[2] <= 1'b0;
+        img_present[3] <= 1'b0;
+		boot_crt <= 1'b0;
+		boot_bin <= 1'b0;
+		boot_prg <= 1'b0;
+		wait_cnt <= 32'd3508863;
+	end
+	else
 	begin
 	case(io_state)
-		WAIT4CHANGE: 
+        WAIT4RESET:
+                begin
+                    if(~core_reset && core_resetD)
+                    io_state <= START;
+                end
+
+        START:
+                begin
+                    if(wait_cnt > 0) wait_cnt <= wait_cnt - 1'd1;
+                    if((img_present[3] && ~img_presentD[3] && boot_bin) || (img_present[3] && ~boot_bin && ~boot_crt && ~boot_prg))
+                        begin 
+                            img_select <= 3; 
+                            io_state <= GO4IT; 
+                            rd_sel = 3'b100;
+                            boot_bin <= 1'b1;
+                            wait_cnt <= 32'd3508863;
+                        end
+                    else if((img_present[2] && ~img_presentD[2] && boot_crt) || (img_present[2] && boot_bin && ~boot_crt && ~boot_prg))
+                        begin 
+                            img_select <= 2; 
+                            io_state <= GO4IT; 
+                            rd_sel = 3'b010;
+                            boot_crt <= 1'b1;
+                            wait_cnt <= 32'd3508863;
+                        end
+                    else if((img_present[1] && ~img_presentD[1] && boot_prg) || (img_present[1] && boot_bin && boot_crt && ~boot_prg))
+                        begin 
+                            img_select <= 1; 
+                            io_state <= GO4IT;
+                            rd_sel = 3'b001;
+                            boot_prg <= 1'b1;
+                            wait_cnt <= 32'd3508863;
+                        end
+                    else if(img_present[0] && ~img_presentD[0])
+                        begin
+                            img_select <= 0; 
+                            wait_cnt <= 32'd3508863;
+                       end
+                end
+
+		GO4IT:
 			begin
-				if(~old_change && change)
-				begin
 					loader_busy <= 1;
-					load_crt <= img_present[1];
-					load_prg <= img_present[2];
-					load_rom <= img_present[3];
+					load_crt <= rd_sel[0];
+					load_prg <= rd_sel[1];
+					load_rom <= rd_sel[2]; 
 					ch_timeout <= 32'd1508863;
 					ioctl_addr <= 23'd0;
 					ioctl_download <= 1'b1;
@@ -115,8 +162,6 @@ integer i;
 					sd_lba <= 32'd0;
 					core_wait_cnt <= 5'd0;
 					io_state <= WAIT4CORE;
-				end
-				else loader_busy <= 1'b0;
 			end
 
 		WAIT4CORE: 
@@ -124,9 +169,7 @@ integer i;
 				if(ch_timeout > 0) ch_timeout <= ch_timeout - 1'd1;
 				if(ch_timeout == 0 && ~ioctl_wait) 
 				begin
-					sd_rd[0] <= img_present[1];
-					sd_rd[1] <= img_present[2];
-					sd_rd[2] <= img_present[3];
+					sd_rd <= rd_sel;
 					cnt <= 9'd0;
 					io_state <= READ_WAIT4SD;
 				end
@@ -138,11 +181,10 @@ integer i;
 
 		READING: 
 			begin
-				if(ioctl_addr <= img_size[img_select]) // addr
+				if(ioctl_addr <= img_size[img_select])
 					io_state <= READ_NEXT;
 				else 
 				begin
-					leds[3:0] <= sd_lba[3:0];
 					ioctl_download <= 1'b0;
 					ioctl_addr <= 23'd0;
 					io_state <= DESELECT;
@@ -151,7 +193,7 @@ integer i;
 
 		READ_NEXT:
 			begin
-				core_wait_cnt <= core_wait_cnt + 5'd1;
+				core_wait_cnt <= core_wait_cnt + 1'd1;
 				if(~ioctl_wait && &core_wait_cnt) 
 					begin
 						wr <= 1'b1;
@@ -169,19 +211,14 @@ integer i;
 						io_state <= READING;
 			end
 
-		DESELECT: 
+		DESELECT:
 			begin
 				load_crt <= 1'b0;
 				load_prg <= 1'b0;
 				load_rom <= 1'b0;
-				io_state <= WAIT4CHANGE;
+				loader_busy <= 1'b0;
+				io_state <= START;
 			end
-
-		SPARE1: 
-				io_state <= WAIT4CHANGE;
-
-		SPARE2:
-				io_state <= WAIT4CHANGE;
 
 		default: ;
 
