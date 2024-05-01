@@ -2,7 +2,7 @@
 	CRT cartridge handling for C64 L.C.Ashmore 2017
 
 	Improvements by Sorgelig
-	modified for TN20k use 2024 Stefan Voss 
+modified for TN20k use 2024 Stefan Voss 
 */
 
 module cartridge
@@ -58,6 +58,8 @@ reg        IOF_wr_ena;
 
 reg        exrom_overide;
 reg        game_overide;
+assign     exrom = exrom_overide |  force_ultimax;
+assign     game  = game_overide  & ~force_ultimax;
 
 reg [6:0] lobanks[0:63];
 reg [6:0] hibanks[0:63];
@@ -118,17 +120,15 @@ reg  reu_map;
 reg  clock_port;
 reg  rom_kbb;
 reg  force_ultimax;
-assign     exrom = exrom_overide |  force_ultimax;
-assign     game  = game_overide  & ~force_ultimax;
+reg  init_n = 0;
+reg  allow_freeze = 0;
+reg  saved_d6 = 0;
 
 // 0018 - EXROM line status
 // 0019 - GAME line status
 
-reg        init_n = 0;
-reg        allow_freeze = 0;
-reg        saved_d6 = 0;
-
 always @(posedge clk32) begin
+
 	reg [15:0] count;
 	reg        count_ena;
 	reg [15:0] old_id;
@@ -485,7 +485,7 @@ always @(posedge clk32) begin
 				end
 			end
 
-		// Super Snapshot v5 -(64k rom 8*8k banks/4*16k banks, 32k ram 4*8k banks)
+		// Super Snapshot v5 -(64k/128K rom 8*8k banks/4*16k banks, 32k ram 4*8k banks)
 		20: begin
 				if(!init_n || freeze_crt) begin
 					romL_we <= 1;
@@ -501,9 +501,9 @@ always @(posedge clk32) begin
 				if(~cart_disable & ioe_wr) begin
 					game_overide <=  data_in[0] | data_in[3];
 					exrom_overide<= ~data_in[1] | data_in[3];
-					bank_lo <= {data_in[4], data_in[2], 1'b0};
-					bank_hi <= {data_in[4], data_in[2], 1'b1};
-					IOE_bank<= {data_in[4], data_in[2], 1'b0};
+					bank_lo <= {data_in[5] & bank_cnt[3], data_in[4], data_in[2], 1'b0};
+					bank_hi <= {data_in[5] & bank_cnt[3], data_in[4], data_in[2], 1'b1};
+					IOE_bank<= {data_in[5] & bank_cnt[3], data_in[4], data_in[2], 1'b0};
 					cart_disable <= data_in[3];
 					IOE_ena <= ~data_in[3];
 
@@ -704,14 +704,14 @@ always @(posedge clk32) begin
 
 
 		// GeoRAM
-	//	99: begin
-	//			IOE_ena    <= 1;
-	//			IOE_wr_ena <= 1;
-	//			if(iof_wr && &addr_in[7:1]) begin
-	//				if(addr_in[0]) geo_bank[13:6] <= data_in;
-	//				else           geo_bank[5:0]  <= data_in[5:0];
-	//			end
-	//		end
+		99: begin
+				IOE_ena    <= 1;
+				IOE_wr_ena <= 1;
+				if(iof_wr && &addr_in[7:1]) begin
+					if(addr_in[0]) geo_bank[13:6] <= data_in;
+					else           geo_bank[5:0]  <= data_in[5:0];
+				end
+			end
 	endcase
 end
 
@@ -742,16 +742,16 @@ always begin
 
 	//prohibit to write in ultimax mode into underlaying (actually non-existent) RAM
 	mem_write_out = ~(romL & ~romL_we & exrom_overide & ~game_overide) & mem_write;
-	addr_out = addr_in;
+	addr_out = {15'd0,addr_in};
 
 	if(reset_n) begin
-		if(romH & (romH_we | ~mem_write)) addr_out[22:13] =  get_bank(bank_hi, romH_we);
-		if(romL & (romL_we | ~mem_write)) addr_out        = {get_bank(bank_lo, romL_we), addr_in[12:0] & mask_lo};
+		if(romH & (romH_we | ~mem_write)) addr_out[22:13] = {2'b00, get_bank(bank_hi, romH_we)};                          // 20:13
+		if(romL & (romL_we | ~mem_write)) addr_out        = {2'b00, get_bank(bank_lo, romL_we), addr_in[12:0] & mask_lo};// 20:13 + 12:0
 
-		if(cs_ioe) addr_out[22:13] = get_bank(IOE_bank, IOE_wr_ena); // read/write to DExx
-		if(cs_iof) addr_out[22:13] = get_bank(IOF_bank, IOF_wr_ena); // read/write to DFxx
+		if(cs_ioe) addr_out[22:13] = {2'b00, get_bank(IOE_bank, IOE_wr_ena)}; // read/write to DExx
+		if(cs_iof) addr_out[22:13] = {2'b00, get_bank(IOF_bank, IOF_wr_ena)}; // read/write to DFxx
 
-		if(UMAXromH) addr_out[22:12] = {get_bank(bank_hi, 0), 1'b1}; // ULTIMAX CharROM
+		if(UMAXromH) addr_out[22:12] = {1'b0,get_bank(bank_hi, 0), 1'b1}; // ULTIMAX CharROM
 
 		case(cart_id)
 			36: if(IOE && !(addr_in[7:0] & (clock_port ? 8'hF0 : 8'hFE)) && ~cart_disable) begin
@@ -763,9 +763,9 @@ always begin
 					force_ultimax = 1;
 					addr_out[22:13] = get_bank(2, 0);
 				end
-	//		99: if(IOE) begin
-	//				addr_out[22:8] <= {3'b1, geo_bank};
-	//			end
+		//	99: if(IOE) begin
+		//			addr_out[22:8] <= {1'b1, geo_bank};
+		//		end
 		default:;
 		endcase
 	end

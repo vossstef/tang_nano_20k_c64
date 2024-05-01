@@ -43,7 +43,8 @@ add_file src/fpga64_buslogic.vhd
 add_file src/fpga64_keyboard.vhd
 add_file src/fpga64_rgbcolor.vhd
 add_file src/fpga64_sid_iec.vhd
-add_file src/gowin_prom/gowin_prom_basic_kernal.vhd
+add_file src/gowin_prom/gowin_prom_basic.vhd
+add_file src/gowin_sdpb/gowin_sdpb_kernal_8k.vhd
 add_file src/gowin_prom/gowin_prom_chargen.vhd
 add_file src/gowin_sp/gowin_sp_2k.vhd
 add_file src/gowin_sp/gowin_sp_8k.vhd
@@ -69,6 +70,7 @@ add_file src/video_sync.vhd
 add_file src/video_vicII_656x.vhd
 add_file src/tang_nano_20k_c64_top.cst
 add_file src/tang_nano_20k_c64_top.sdc
+add_file src/loader_sd_card.sv
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name tang_nano_20k_c64
@@ -77,7 +79,6 @@ set_option -vhdl_std vhd2008
 set_option -top_module tang_nano_20k_c64_top
 set_option -use_mspi_as_gpio 1
 set_option -use_sspi_as_gpio 1
-set_option -loading_rate 10000000
 set_option -print_all_synthesis_warning 1
 set_option -rw_check_on_ram 0
 set_option -gen_text_timing_rpt 1

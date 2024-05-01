@@ -141,34 +141,34 @@ begin
         ad => std_logic_vector(cpuAddr(12 downto 0))
     );
 
---	kernal_loadable_rom_gw5a: entity work.Gowin_SDPB_kernal_8k_gw5a
---    port map (
---        dout => romData_Kernal,
---        clka => clk,
---        cea => c64rom_wr,
---        clkb => clk,
---        ceb => '1',
---        reset => '0',
---        oce => '1',
---        ada => c64rom_addr(12 downto 0),
---        din => c64rom_data,
---        adb => std_logic_vector(cpuAddr(12 downto 0))
---		);
-
-	kernal_loadable_rom: entity work.Gowin_SDPB_kernal_8k
+	kernal_loadable_rom_gw5a: entity work.Gowin_SDPB_kernal_8k_gw5a
     port map (
         dout => romData_Kernal,
         clka => clk,
         cea => c64rom_wr,
-        reseta => '0',
         clkb => clk,
         ceb => '1',
-        resetb => '0',
+        reset => '0',
         oce => '1',
         ada => c64rom_addr(12 downto 0),
         din => c64rom_data,
         adb => std_logic_vector(cpuAddr(12 downto 0))
-    );
+		);
+
+--	kernal_loadable_rom: entity work.Gowin_SDPB_kernal_8k
+--    port map (
+--        dout => romData_Kernal,
+--        clka => clk,
+--        cea => c64rom_wr,
+--        reseta => '0',
+--        clkb => clk,
+--        ceb => '1',
+--        resetb => '0',
+--        oce => '1',
+--        ada => c64rom_addr(12 downto 0),
+--        din => c64rom_data,
+--        adb => std_logic_vector(cpuAddr(12 downto 0))
+--    );
 
 romData <= romData_Kernal when cpuAddr(14) = '1' else romData_Basic;
 

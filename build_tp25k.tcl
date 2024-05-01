@@ -38,11 +38,12 @@ add_file src/c1541/gcr_floppy.vhd
 add_file src/c1541/via6522.vhd
 add_file src/c64_midi.vhd
 add_file src/cpu_6510.vhd
-add_file src/fpga64_buslogic.vhd
+add_file src/fpga64_buslogic_gw5a.vhd
 add_file src/fpga64_keyboard.vhd
 add_file src/fpga64_rgbcolor.vhd
 add_file src/fpga64_sid_iec.vhd
-add_file src/gowin_prom/gowin_prom_basic_kernal.vhd
+add_file src/gowin_prom/gowin_prom_basic.vhd
+add_file src/gowin_sdpb/gowin_sdpb_kernal_8k_gw5a.vhd
 add_file src/gowin_prom/gowin_prom_chargen.vhd
 add_file src/gowin_sp/gowin_sp_2k.vhd
 add_file src/gowin_sp/gowin_sp_8k.vhd
@@ -71,6 +72,7 @@ add_file src/gowin_pll/gowin_pll_ntsc.vhd
 add_file src/gowin_pll/gowin_pll_flash.vhd
 add_file src/tang_nano_20k_c64_top_25k.cst
 add_file src/tang_nano_20k_c64_top_25k.sdc
+add_file src/loader_sd_card.sv
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name tang_nano_20k_c64_25k

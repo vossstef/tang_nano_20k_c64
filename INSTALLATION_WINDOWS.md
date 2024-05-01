@@ -8,14 +8,17 @@ This has been tested on Windows 11. It should work on older versions too.
 
 Software needed:
 
-  - [Gowin V1.9.9 Beta-4 Education](https://www.gowinsemi.com/en/support/home/) **to flash the FPGA or to synthesize the core**
+  - [Gowin V1.9.9.02](https://www.gowinsemi.com/en/support/home/) **to flash the FPGA or to synthesize the core**
   - [BouffaloLabDevCube](https://dev.bouffalolab.com/download) **to flash the BL616**
   - [Latest release](https://github.com/vossstef/tang_nano_20k_c64/releases/latest) of C64Nano **FPGA** bitstream
   - [Latest release](https://github.com/harbaum/MiSTeryNano/releases/latest) of MiSTeryNano **BL616 µC firmware**
 
 In order to use the SD card for disks:
 
-  - c64 disk images in .D64 or .G64 format
+  - C64 disk images in .D64 or .G64 format
+  - Cartridge images in .CRT format
+  - Program files in .PRG format
+  - C64 Kernal files (8K) in .BIN format
 
 # Flashing the Tang Nano 20k
 
@@ -152,9 +155,13 @@ the Tang Nano 20K. Using an external M0S is nevertheless recommended.
 
 ## Prepare the SD card
 
-Format the SD card in FAT32. Copy your D64 / G64 files files on
+Format the SD card in FAT32. Copy your D64 / G64 / CRT / PRG files files on
 it. You can organize your files in subdirectories. These files can later
 be selected using the on-screen-display (OSD).
-Copy a D64 Disk image to your sdcard and rename it to disk8.d64 as default boot image.
+Default Mountpoints:  
+Copy a *.D64 Disk image to your sdcard and rename it to disk8.d64 as default c1541 boot image.  
+Copy a *.CRT image to your sdcard and rename it to c64crt.crt as default Cartridge boot image.  
+Copy a *.PRG file to your sdcard and rename it to c64prg.prg as default Program boot image.  
+Copy a 8k Byte C64 Kernal file *.BIN to your sdcard and rename it to c64kernal.bin as default Cartridge boot image.
 
 That´s it for now. Have fun using the C64Nano

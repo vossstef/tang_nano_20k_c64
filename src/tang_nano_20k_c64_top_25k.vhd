@@ -86,10 +86,7 @@ signal sdram_data   : unsigned(7 downto 0);
 signal dout         : std_logic_vector(7 downto 0);
 signal idle         : std_logic;
 signal dram_addr    : std_logic_vector(22 downto 0);
-signal dram_addr_s  : std_logic_vector(22 downto 0);
-signal ram_scramble : std_logic_vector(1 downto 0);
 signal ram_ready    : std_logic;
-signal cb_D         : std_logic;
 signal addr         : std_logic_vector(22 downto 0);
 signal cs           : std_logic;
 signal we           : std_logic;
@@ -182,7 +179,9 @@ signal sd_img_mounted : std_logic_vector(3 downto 0);
 signal sd_img_mounted_d : std_logic;
 signal sd_rd          : std_logic_vector(3 downto 0);
 signal sd_wr          : std_logic_vector(3 downto 0);
+signal disk_lba       : std_logic_vector(31 downto 0);
 signal sd_lba         : std_logic_vector(31 downto 0);
+signal loader_lba     : std_logic_vector(31 downto 0);
 signal sd_busy        : std_logic;
 signal sd_done        : std_logic;
 signal sd_rd_byte_strobe : std_logic;
@@ -295,7 +294,7 @@ signal ntscModeD       : std_logic;
 signal ntscModeD1      : std_logic;
 signal ioctl_download  : std_logic := '0';
 signal ioctl_load_addr : std_logic_vector(22 downto 0);
-signal ioctl_req_wr    : std_logic;
+signal ioctl_req_wr    : std_logic := '0';
 signal cart_id         : std_logic_vector(15 downto 0);
 signal cart_bank_laddr : std_logic_vector(15 downto 0);
 signal cart_bank_size  : std_logic_vector(15 downto 0);
@@ -308,12 +307,50 @@ signal cart_hdr_cnt    : std_logic_vector(3 downto 0);
 signal cart_hdr_wr     : std_logic;
 signal cart_blk_len    : std_logic_vector(31 downto 0);
 signal io_cycle        : std_logic;
-signal io_cycle_ce     : std_logic := '0';
-signal io_cycle_we     : std_logic := '0';
+signal io_cycle_ce     : std_logic;
+signal io_cycle_we     : std_logic;
 signal io_cycle_addr   : std_logic_vector(22 downto 0);
 signal io_cycle_data   : std_logic_vector(7 downto 0);
-signal load_crt        : std_logic;
+signal load_crt        : std_logic := '0';
+signal old_download    : std_logic;
+signal io_cycleD       : std_logic;
+signal ioctl_wr        : std_logic;
+signal ioctl_data      : std_logic_vector(7 downto 0);
+signal ioctl_addr      : std_logic_vector(22 downto 0);
+signal cid             : std_logic_vector(15 downto 0);
+-- crt loader
+signal erase_to        : std_logic_vector(4 downto 0);
+signal erase_cram      : std_logic := '0';
+signal old_meminit     : std_logic;
+signal inj_end         : std_logic_vector(15 downto 0);
+signal inj_meminit_data : std_logic_vector(7 downto 0);
+signal force_erase     : std_logic := '0';
+signal erasing         : std_logic := '0';
+signal do_erase        : std_logic;
+signal inj_meminit     : std_logic := '0';
+signal load_prg        : std_logic := '0';
+signal load_rom        : std_logic := '0';
+signal load_reu        : std_logic := '0';
+signal load_tap        : std_logic := '0';
+signal tap_play_addr   : std_logic_vector(22 downto 0);
+signal reset_wait      : std_logic := '0';
+signal old_download_r  : std_logic;
+signal reset_n         : std_logic;
+signal por             : std_logic;
+signal c64rom_wr       : std_logic;
+signal img_present     : std_logic_vector(3 downto 0);
+signal img_select      : std_logic_vector(1 downto 0);
+signal tap_version     : std_logic_vector(1 downto 0);
+signal vic_variant     : std_logic_vector(1 downto 0);
+signal cia_mode        : std_logic;
+signal loader_busy     : std_logic;
 
+-- 64k core ram                      0x000000
+-- cartridge RAM banks are mapped to 0x010000
+-- cartridge ROM banks are mapped to 0x100000
+constant CRT_MEM_START : std_logic_vector(22 downto 0) := 23x"100000";
+constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
+constant REU_ADDR      : std_logic_vector(22 downto 0) := 23x"400000";
 component DCS
     generic (
         DCS_MODE : STRING := "RISING"
@@ -364,19 +401,19 @@ process(clk32, pll_locked)
     sd_change <= '0';
     disk_g64 <= '0';
     disk_g64_d <= '0';
-    sd_img_size_d <= (others => '0');
-    sd_img_mounted_d <= '0';
-    disk_chg_trg_d <= '0';
     elsif rising_edge(clk32) then
-      sd_img_size_d <= sd_img_size;
       sd_img_mounted_d <= sd_img_mounted(0);
       disk_chg_trg_d <= disk_chg_trg;
       disk_g64_d <= disk_g64;
-      if (sd_img_size /= sd_img_size_d) or (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
+
+      if sd_img_mounted_d = '0' and sd_img_mounted(0) = '1' then
+      sd_img_size_d <= sd_img_size; else sd_img_size_d <= (others => '0'); end if;
+
+      if (sd_img_mounted(0) /= sd_img_mounted_d) or (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
           sd_change  <= '1';
           else
           sd_change  <= '0';
-      if sd_img_size >= 333744 then  -- g64 disk selected
+      if sd_img_size_d >= 333744 then  -- g64 disk selected
         disk_g64 <= '1';
       else
         disk_g64 <= '0';
@@ -395,7 +432,7 @@ port map
  (
     clk32         => clk32,
     reset         => (not flash_ready) or disk_reset,
-    pause         => c64_pause,
+    pause         => c64_pause or loader_busy,
     ce            => '0',
 
     disk_num      => (others =>'0'),
@@ -418,7 +455,7 @@ port map
     par_data_o    => pb_in,
     par_stb_o     => flag2_n,
 
-    sd_lba        => sd_lba,
+    sd_lba        => disk_lba,
     sd_rd         => sd_rd(0),
     sd_wr         => sd_wr(0),
     sd_ack        => sd_busy,
@@ -434,9 +471,9 @@ port map
     c1541rom_addr => c1541rom_addr,
     c1541rom_data => c1541rom_data
 );
+
+sd_lba <= loader_lba when loader_busy = '1' else disk_lba;
 ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphindos, speeddos
-sd_rd(3 downto 1) <= "000";
-sd_wr(3 downto 1) <= "000";
 sdc_iack <= int_ack(3);
 
 sd_card_inst: entity work.sd_card
@@ -558,32 +595,12 @@ port map(
       tmds_d_p   => tmds_d_p
       );
 
--- system_reset[1] indicates whether a reset is requested. This
--- can either be triggered implicitely by the user changing hardware
--- specs or explicitely via an OSD menu entry.
--- A cold boot means that the ram contents becomes invalid. We achieve this
--- by scrambling the RAM address space a little bit on every rising edge
--- of system_reset[1] 
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    cb_D <= system_reset(1);
-      if system_reset(1) = '1' and cb_D = '0' then  --rising edge of reset trigger
-        ram_scramble <= ram_scramble + 1;
-      end if;
-    end if;
-end process;
-
--- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
-dram_addr_s <= cart_addr(22 downto 4) & (cart_addr(3 downto 2) xor ram_scramble) & cart_addr(1 downto 0);
-
-addr <= io_cycle_addr when io_cycle ='1' else reu_ram_addr(22 downto 0) when ext_cycle = '1' else dram_addr_s;
+addr <= io_cycle_addr when io_cycle ='1' else reu_ram_addr(22 downto 0) when ext_cycle = '1' else cart_addr;
 cs <= io_cycle_ce when io_cycle ='1' else reu_ram_ce when ext_cycle = '1' else cart_ce; 
 we <= io_cycle_we when io_cycle ='1' else reu_ram_we  when ext_cycle = '1' else cart_we;
 din <= std_logic_vector(io_cycle_data) when io_cycle ='1' else std_logic_vector(reu_ram_dout) when ext_cycle = '1' else std_logic_vector(c64_data_out);
 sdram_data <= unsigned(dout);
 
---dram_inst: entity work.sdram8
 dram_inst: entity work.sdram
 port map(
     -- SDRAM side interface
@@ -748,11 +765,11 @@ pot2 <= not paddle_2 when port_1_sel = "110" else ('0' & std_logic_vector(mouse_
 pot3 <= not paddle_3 when port_2_sel = "110" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
 pot4 <= not paddle_4 when port_2_sel = "110" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
 
-process(clk32, system_reset(0))
+process(clk32, reset_n)
  variable mov_x: signed(6 downto 0);
  variable mov_y: signed(6 downto 0);
 begin
-  if  system_reset(0) = '1' then
+  if  reset_n = '0' then
     mouse_x_pos <= (others => '0');
     mouse_y_pos <= (others => '0');
   elsif rising_edge(clk32) then
@@ -831,8 +848,6 @@ module_inst: entity work.sysctrl
   data_out            => sys_data_out,
 
   -- values that can be configured by the user
-  system_chipset      => open,
-  system_memory       => open,
   system_reu_cfg      => reu_cfg,
   system_reset        => system_reset,
   system_scanlines    => system_scanlines,
@@ -849,9 +864,10 @@ module_inst: entity work.sysctrl
   system_video_std    => ntscMode,
   system_midi         => st_midi,
   system_pause        => system_pause,
-
+  system_vic_variant  => vic_variant, 
+  system_cia_mode     => cia_mode, 
   int_out_n           => m0s(4),
-  int_in              => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
+  int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & "0" & hid_int & "0")),
   int_ack             => int_ack,
 
   buttons             => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
@@ -879,13 +895,14 @@ begin
 end process;
 
 io_data <=  unsigned(cart_data) when cart_oe  = '1' else unsigned(midi_data) when midi_oe  = '1' else unsigned(reu_dout);
+c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
 
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
   clk32        => clk32,
-  reset_n      => not system_reset(0) and pll_locked and ram_ready,
-  bios         => (others => '0'),
+  reset_n      => reset_n and pll_locked and ram_ready,
+  bios         => "00",
   pause        => freeze,
   pause_out    => c64_pause,
   -- keyboard interface
@@ -904,11 +921,11 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   ext_cycle    => ext_cycle,
   refresh      => idle,
 
-  cia_mode     => '0',
+  cia_mode     => cia_mode,
   turbo_mode   => ((turbo_mode(1) and not disk_access) & turbo_mode(0)),
   turbo_speed  => turbo_speed,
 
-  vic_variant  => "00",
+  vic_variant  => vic_variant,
   ntscMode     => ntscMode,
   hsync        => hsync,
   vsync        => vsync,
@@ -991,9 +1008,9 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   iec_clk_i    => iec_clk_i,
   iec_atn_o    => iec_atn_o,
 
-  c64rom_addr  => (others => '0'),
-  c64rom_data  => (others => '0'),
-  c64rom_wr    => '0',
+  c64rom_addr  => ioctl_addr(13 downto 0),
+  c64rom_data  => ioctl_data,
+  c64rom_wr    => c64rom_wr,
 
   cass_motor   => open,
   cass_write   => open,
@@ -1014,7 +1031,7 @@ reu_ram_ce <= not ext_cycle_d and ext_cycle and dma_req;
 reu_inst: entity work.reu
 port map(
     clk       => clk32,
-    reset     => system_reset(0) or not pll_locked,
+    reset     => not reset_n,
     cfg       => std_logic_vector(unsigned'( '0' & reu_cfg) ),
   
     dma_req   => dma_req,
@@ -1056,14 +1073,16 @@ port map(
     mspi_do   => mspi_do
 );
 
+cid <= cart_id when cart_attached = '1' else X"00FF";
+
 cartridge_inst: entity work.cartridge
 port map
   (
     clk32       => clk32,
-    reset_n     => not system_reset(0) and pll_locked,
+    reset_n     => reset_n,
   
     cart_loading    => ioctl_download and load_crt,
-    cart_id         => to_unsigned(99,16), -- CARTRIDGE_NONE -- cart_attached ? cart_id : status[52] ? 8'd99 : 8'd255),
+    cart_id         => cid,
     cart_exrom      => cart_exrom,
     cart_game       => cart_game,
     cart_bank_laddr => cart_bank_laddr,
@@ -1091,30 +1110,262 @@ port map
     addr_in     => c64_addr,
     data_in     => c64_data_out,
     addr_out    => cart_addr,
-  
+
     freeze_key  => freeze_key,
     mod_key     => '0',
     nmi         => nmi,
     nmi_ack     => nmi_ack
   );
 
-midi_inst : entity work.c64_midi
-port map (
-  clk32   => clk32,
-  reset   => system_reset(0) or not pll_locked or not (st_midi(2) or st_midi(1) or st_midi(0)),
-  Mode    => st_midi,
-  E       => phi,
-  IOE     => IOE,
-  A       => std_logic_vector(c64_addr),
-  Din     => std_logic_vector(c64_data_out),
-  Dout    => midi_data,
-  OE      => midi_oe,
-  RnW     => not (ram_we and IOE),
-  nIRQ    => midi_irq_n,
-  nNMI    => midi_nmi_n,
+  midi_inst : entity work.c64_midi
+  port map (
+    clk32   => clk32,
+    reset   => system_reset(0) or not pll_locked or not (st_midi(2) or st_midi(1) or st_midi(0)),
+    Mode    => st_midi,
+    E       => phi,
+    IOE     => IOE,
+    A       => std_logic_vector(c64_addr),
+    Din     => std_logic_vector(c64_data_out),
+    Dout    => midi_data,
+    OE      => midi_oe,
+    RnW     => not (ram_we and IOE),
+    nIRQ    => midi_irq_n,
+    nNMI    => midi_nmi_n,
+  
+    RX      => midi_rx,
+    TX      => midi_tx
+  );
 
-  RX      => midi_rx,
-  TX      => midi_tx
+crt_inst : entity work.loader_sd_card
+port map (
+  clk               => clk32,
+  reset             => not pll_locked,
+  core_reset        => system_reset(1),
+
+  sd_lba            => loader_lba,
+  sd_rd             => sd_rd(3 downto 1),
+  sd_wr             => sd_wr(3 downto 1),
+  sd_busy           => sd_busy,
+  sd_done           => sd_done,
+
+  sd_byte_index     => sd_byte_index,
+  sd_rd_data        => sd_rd_data,
+  sd_rd_byte_strobe => sd_rd_byte_strobe,
+
+  sd_img_mounted    => sd_img_mounted,
+  loader_busy       => loader_busy,
+  load_crt          => load_crt,
+  load_prg          => load_prg,
+  load_rom          => load_rom,
+  sd_img_size       => sd_img_size,
+  leds              => open,
+  img_select        => img_select,
+
+  ioctl_download    => ioctl_download,
+  ioctl_addr        => ioctl_addr,
+  ioctl_data        => ioctl_data,
+  ioctl_wr          => ioctl_wr,
+  ioctl_wait        => ioctl_req_wr or reset_wait
 );
+
+-- spi loader
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    old_download <= ioctl_download;
+    io_cycleD <= io_cycle;
+    cart_hdr_wr <= '0';
+
+    if io_cycle = '0' and io_cycleD = '1' then
+      io_cycle_ce <= '1';
+      io_cycle_we <= '0';
+      io_cycle_addr <= tap_play_addr + TAP_ADDR;
+      if ioctl_req_wr = '1' then
+        ioctl_req_wr <= '0';
+        io_cycle_we <= '1';
+        io_cycle_addr <= ioctl_load_addr;
+        ioctl_load_addr <= ioctl_load_addr + 1;
+        if erasing = '1' then  -- fill RAM with 64 bytes 0, 64 bytes ff
+          io_cycle_data <= (others => ioctl_load_addr(6));
+        elsif inj_meminit = '1' then 
+          io_cycle_data <= inj_meminit_data;
+        else 
+          io_cycle_data <= ioctl_data;
+        end if;
+       end if;
+      end if;
+
+    if io_cycle and io_cycleD then
+      io_cycle_ce <= '0';
+      io_cycle_we <= '0';
+    end if;
+
+    if ioctl_wr = '1' then
+      if load_prg = '1' then
+        -- PRG header
+        -- Load address low-byte
+          if ioctl_addr = 0 then
+              ioctl_load_addr(7 downto 0) <= ioctl_data;
+              inj_end(7 downto 0)  <= ioctl_data; 
+          -- Load address high-byte
+          elsif ioctl_addr = 1 then
+              ioctl_load_addr(22 downto 8) <= 7x"00" & ioctl_data;
+              inj_end(15 downto 8) <= ioctl_data;
+          else
+              ioctl_req_wr <= '1';
+              inj_end <= inj_end + 1;
+          end if;
+      end if;
+
+      if load_crt = '1' then
+        if ioctl_addr = 0 then
+          ioctl_load_addr <= CRT_MEM_START;
+          cart_blk_len <= (others => '0');
+          cart_hdr_cnt <= (others => '0');
+        end if;
+
+        if(ioctl_addr = x"16") then cart_id(15 downto 8) <= ioctl_data; end if;
+        if(ioctl_addr = x"17") then cart_id(7 downto 0) <= ioctl_data; end if;
+        if(ioctl_addr = x"18") then cart_exrom <= ioctl_data; end if;
+        if(ioctl_addr = x"19") then cart_game <= ioctl_data; end if;
+
+        if(ioctl_addr >= x"40") then
+          if cart_blk_len = 0 and cart_hdr_cnt = 0 then
+            cart_hdr_cnt <= x"1";
+            if ioctl_load_addr(12 downto 0) /= 0 then
+              -- align to 8KB boundary
+              ioctl_load_addr(12 downto 0) <= (others => '0');
+              ioctl_load_addr(22 downto 13) <= ioctl_load_addr(22 downto 13) + 1;
+            end if;
+            elsif cart_hdr_cnt /= 0 then
+              cart_hdr_cnt <= cart_hdr_cnt + 1;
+              if(cart_hdr_cnt = 4)  then cart_blk_len(31 downto 24)  <= ioctl_data; end if;
+              if(cart_hdr_cnt = 5)  then cart_blk_len(23 downto 16)  <= ioctl_data; end if;
+              if(cart_hdr_cnt = 6)  then cart_blk_len(15 downto 8)   <= ioctl_data; end if;
+              if(cart_hdr_cnt = 7)  then cart_blk_len(7 downto 0)    <= ioctl_data; end if;
+              if(cart_hdr_cnt = 8)  then cart_blk_len <= cart_blk_len - X"10"; end if;
+              if(cart_hdr_cnt = 9)  then cart_bank_type <= ioctl_data; end if;
+              if(cart_hdr_cnt = 10) then cart_bank_num(15 downto 8)  <= ioctl_data; end if;
+              if(cart_hdr_cnt = 11) then cart_bank_num(7 downto 0)   <= ioctl_data; end if;
+              if(cart_hdr_cnt = 12) then cart_bank_laddr(15 downto 8)<= ioctl_data; end if;
+              if(cart_hdr_cnt = 13) then cart_bank_laddr(7 downto 0) <= ioctl_data; end if;
+              if(cart_hdr_cnt = 14) then cart_bank_size(15 downto 8) <= ioctl_data; end if;
+              if(cart_hdr_cnt = 15) then cart_bank_size(7 downto 0)  <= ioctl_data; end if;
+              if(cart_hdr_cnt = 15) then cart_hdr_wr <= '1'; end if;
+        else
+              cart_blk_len <= cart_blk_len - 1;
+              ioctl_req_wr <= '1';
+              end if;
+       end if;
+     end if;
+
+      if load_tap = '1' then
+        if ioctl_addr = 0  then ioctl_load_addr <= TAP_ADDR; end if;
+        if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if;
+        ioctl_req_wr <= '1';
+      end if;
+
+      if load_reu = '1' then
+          if ioctl_addr = 0 then
+            ioctl_load_addr <= REU_ADDR;
+            ioctl_req_wr <= '1';
+          end if;
+      end if;
+    end if;
+
+      -- cart added
+      if old_download /= ioctl_download and load_crt = '1' then
+        cart_attached <= old_download;
+        erase_cram <= '1';
+      end if;
+
+     -- meminit for RAM injection
+        if old_download /= ioctl_download and load_prg = '1' and inj_meminit = '0' then
+          inj_meminit <= '1';
+          ioctl_load_addr <= (others => '0');
+        end if;
+
+        if inj_meminit = '1' and ioctl_req_wr = '0' then
+                -- finish at $100
+                if ioctl_load_addr(15 downto 0) = x"0100" then 
+                    inj_meminit <= '0'; 
+                end if;
+               -- Initialize BASIC pointers to simulate the BASIC LOAD command
+               case ioctl_load_addr(7 downto 0) is
+                -- TXT (2B-2C)
+                -- Set these two bytes to $01, $08 just as they would be on reset (the BASIC LOAD command does not alter these)
+                when x"2b" => inj_meminit_data <= X"01";ioctl_req_wr <= '1';
+                when x"2c" => inj_meminit_data <= X"08";ioctl_req_wr <= '1';
+                -- SAVE_START (AC-AD)
+                -- Set these two bytes to zero just as they would be on reset (the BASIC LOAD command does not alter these)
+                when x"ac"|x"ad" => inj_meminit_data <= X"00";ioctl_req_wr <= '1';
+                -- VAR (2D-2E), ARY (2F-30), STR (31-32), LOAD_END (AE-AF)
+                -- Set these just as they would be with the BASIC LOAD command (essentially they are all set to the load end address)
+                when x"2d"|x"2f"|x"31"|x"ae" => inj_meminit_data <= inj_end(7 downto 0);ioctl_req_wr <= '1';
+                when x"2e"|x"30"|x"32"|x"af" => inj_meminit_data <= inj_end(15 downto 8);ioctl_req_wr <= '1';
+                  -- advance the address
+                when others => ioctl_load_addr <= ioctl_load_addr + 1;
+             end case;
+        end if;
+
+      old_meminit <= inj_meminit;
+
+      if  system_reset(1) = '1' then
+        cart_attached <= '0';
+      end if;
+
+      -- start RAM erasing
+      if erasing = '0' and force_erase ='1' then
+        erasing <= '1';
+        ioctl_load_addr <= (others => '0');
+      end if;
+
+      -- RAM erasing control
+      if erasing = '1' and ioctl_req_wr = '0' then
+        erase_to <= erase_to + 1;
+        if erase_to = "11111" then
+            if ioctl_load_addr(16 downto 0) < (erase_cram & x"FFFF") then 
+              ioctl_req_wr <= '1';
+            else
+              erasing <= '0';
+              erase_cram <= '0';
+            end if;
+        end if;
+     	end if;
+
+    end if;
+end process;
+
+por <= system_reset(0) or not pll_locked;
+
+process(clk32, por)
+variable reset_counter : integer range 0 to 2000000;
+  begin
+    if por = '1' then
+          reset_counter := 100000;
+          do_erase <= '1';
+          reset_n <= '0';
+          reset_wait <= '0';
+          force_erase <= '0';
+       elsif rising_edge(clk32) then
+        if reset_counter = 0 then reset_n <= '1'; else reset_n <= '0'; end if;
+        old_download_r <= ioctl_download;
+        if old_download_r = '0' and ioctl_download = '1' and load_prg = '1' then
+          do_erase <= '1';
+          reset_wait <= '1';
+          reset_counter := 255;
+        elsif ioctl_download = '1' and (load_crt = '1' or load_rom = '1') then
+          do_erase <= '1';
+          reset_counter := 255;
+        elsif erasing = '1' then force_erase <= '0';
+        elsif reset_counter = 0 then
+          do_erase <= '0';
+          if reset_wait = '1' and c64_addr = X"FFCF" then reset_wait <= '0'; end if;
+        else
+          reset_counter := reset_counter - 1;
+          if reset_counter = 100 and do_erase = '1' then force_erase <= '1'; end if;
+      end if;
+    end if;
+end process;
 
 end Behavioral_top;
