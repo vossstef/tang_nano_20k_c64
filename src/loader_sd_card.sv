@@ -118,7 +118,7 @@ reg core_resetD;
         START:
                 begin
                     if(wait_cnt > 0) wait_cnt <= wait_cnt - 1'd1;
-                    if((img_present[3] && ~img_presentD[3] && boot_bin) || (img_present[3] && ~boot_bin && ~boot_crt && ~boot_prg))
+                    if((img_present[3] && ~img_presentD[3]) || (img_present[3] && ~boot_bin && ~boot_crt && ~boot_prg))
                         begin 
                             img_select <= 3; 
                             io_state <= GO4IT; 
@@ -126,7 +126,7 @@ reg core_resetD;
                             boot_bin <= 1'b1;
                             wait_cnt <= 32'd3508863;
                         end
-                    else if((img_present[2] && ~img_presentD[2] && boot_crt) || (img_present[2] && boot_bin && ~boot_crt && ~boot_prg))
+                    else if((img_present[2] && ~img_presentD[2]) || (img_present[2] && boot_bin && ~boot_crt && ~boot_prg))
                         begin 
                             img_select <= 2; 
                             io_state <= GO4IT; 
@@ -134,7 +134,7 @@ reg core_resetD;
                             boot_crt <= 1'b1;
                             wait_cnt <= 32'd3508863;
                         end
-                    else if((img_present[1] && ~img_presentD[1] && boot_prg) || (img_present[1] && boot_bin && boot_crt && ~boot_prg))
+                    else if((img_present[1] && ~img_presentD[1]) || (img_present[1] && boot_bin && boot_crt && ~boot_prg))
                         begin 
                             img_select <= 1; 
                             io_state <= GO4IT;

@@ -92,8 +92,6 @@ tap_fifo_inst: entity work.FIFO_SC_HS_Top
 		WrEn => host_tap_wrreq,
 		RdEn => tap_fifo_rdreq,
 		Reset => restart_tape,
-		Almost_Empty => open,
-		Almost_Full => open,
 		Q => tap_fifo_do,
 		Empty => tap_fifo_empty,
 		Full => tap_fifo_wrfull
