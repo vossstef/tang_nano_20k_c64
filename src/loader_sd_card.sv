@@ -6,8 +6,7 @@
 module loader_sd_card
 (
 	input clk,
-	input reset,
-	input core_reset,
+	input [1:0] system_reset,
 
 	output reg [31:0] sd_lba,
 	output reg [2:0] sd_rd, // read request for target
@@ -36,14 +35,13 @@ module loader_sd_card
 );
 
 // states of FSM
-localparam [2:0] GO4IT     = 3'd0,
-                 WAIT4CORE       = 3'd1,
-                 READ_WAIT4SD    = 3'd2,
-                 READING         = 3'd3,
-                 READ_NEXT       = 3'd4,
-                 DESELECT        = 3'd5,
-                 START           = 3'd6,
-				 WAIT4RESET      = 3'd7;
+localparam [2:0]	GO4IT			= 3'd0,
+					WAIT4CORE		= 3'd1,
+					READ_WAIT4SD	= 3'd2,
+					READING			= 3'd3,
+					READ_NEXT		= 3'd4,
+					DESELECT		= 3'd5,
+					START			= 3'd6;
 
 always @(posedge clk) begin
 
@@ -60,8 +58,7 @@ reg [2:0] rd_sel;
 reg boot_crt;
 reg boot_bin;
 reg boot_prg;
-reg [31:0] wait_cnt;
-reg core_resetD;
+reg [1:0] system_resetD;
 
 	for(integer i = 0; i < 4; i = i + 1'd1)
 	begin
@@ -78,15 +75,14 @@ reg core_resetD;
 	leds[1] <= img_present[1];
 	leds[2] <= img_present[2];
 	leds[3] <= img_present[3];
-    leds[4] <= 0; 
+	leds[4] <= 0; 
 	ioctl_wr <= wr;
 	wr <= 1'b0;
 	if(sd_busy) {sd_rd,sd_wr} <= 6'd0;
-    core_resetD <= core_reset;
+    system_resetD <= system_reset;
 
-	if(reset)
+	if(system_reset[0])
 	begin
-		io_state <= WAIT4RESET;
 		sd_rd <= 3'd0;
 		sd_wr <= 3'd0;
 		wr <= 1'b0;
@@ -97,57 +93,44 @@ reg core_resetD;
 		ioctl_addr <= 23'd0;
 		leds <= 5'd0;
 		loader_busy <= 1'b0;
-        img_present[0] <= 1'b0;
-        img_present[1] <= 1'b0;
-        img_present[2] <= 1'b0;
-        img_present[3] <= 1'b0;
 		boot_crt <= 1'b0;
 		boot_bin <= 1'b0;
 		boot_prg <= 1'b0;
-		wait_cnt <= 32'd3508863;
+		if(~system_resetD[1]) 
+			io_state <= START;
 	end
 	else
 	begin
 	case(io_state)
-        WAIT4RESET:
-                begin
-                    if(~core_reset && core_resetD)
-                    io_state <= START;
-                end
 
-        START:
-                begin
-                    if(wait_cnt > 0) wait_cnt <= wait_cnt - 1'd1;
-                    if((img_present[3] && ~img_presentD[3]) || (img_present[3] && ~boot_bin && ~boot_crt && ~boot_prg))
-                        begin 
-                            img_select <= 3; 
-                            io_state <= GO4IT; 
-                            rd_sel = 3'b100;
-                            boot_bin <= 1'b1;
-                            wait_cnt <= 32'd3508863;
-                        end
-                    else if((img_present[2] && ~img_presentD[2]) || (img_present[2] && boot_bin && ~boot_crt && ~boot_prg))
-                        begin 
-                            img_select <= 2; 
-                            io_state <= GO4IT; 
-                            rd_sel = 3'b010;
-                            boot_crt <= 1'b1;
-                            wait_cnt <= 32'd3508863;
-                        end
-                    else if((img_present[1] && ~img_presentD[1]) || (img_present[1] && boot_bin && boot_crt && ~boot_prg))
-                        begin 
-                            img_select <= 1; 
-                            io_state <= GO4IT;
-                            rd_sel = 3'b001;
-                            boot_prg <= 1'b1;
-                            wait_cnt <= 32'd3508863;
-                        end
-                    else if(img_present[0] && ~img_presentD[0])
-                        begin
-                            img_select <= 0; 
-                            wait_cnt <= 32'd3508863;
-                       end
-                end
+		START:        // 0 c1541 1 CRT 2 PRG 3 BIN
+			begin
+				if((img_present[3] && ~img_presentD[3]) || (img_present[3] && ~boot_bin))
+					begin
+						img_select <= 3;
+						io_state <= GO4IT;
+						rd_sel = 3'b100;
+						boot_bin <= 1'b1;
+					end
+				else if((img_present[1] && ~img_presentD[1]) || (img_present[1] && ~boot_crt))
+					begin 
+						img_select <= 1; 
+						io_state <= GO4IT; 
+						rd_sel = 3'b001;
+						boot_crt <= 1'b1;
+					end
+				else if((img_present[2] && ~img_presentD[2]) || (img_present[2] && ~boot_prg))
+					begin 
+						img_select <= 2;
+						io_state <= GO4IT;
+						rd_sel = 3'b010;
+						boot_prg <= 1'b1;
+					end
+				else if(img_present[0] && ~img_presentD[0])
+					begin
+						img_select <= 0; 
+					end
+			end
 
 		GO4IT:
 			begin

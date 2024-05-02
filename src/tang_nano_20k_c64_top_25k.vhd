@@ -1139,8 +1139,7 @@ port map
 crt_inst : entity work.loader_sd_card
 port map (
   clk               => clk32,
-  reset             => not pll_locked,
-  core_reset        => system_reset(1),
+  system_reset      => system_reset,
 
   sd_lba            => loader_lba,
   sd_rd             => sd_rd(3 downto 1),
@@ -1339,7 +1338,7 @@ end process;
 por <= system_reset(0) or not pll_locked;
 
 process(clk32, por)
-variable reset_counter : integer range 0 to 2000000;
+variable reset_counter : integer;
   begin
     if por = '1' then
           reset_counter := 100000;
