@@ -8,14 +8,12 @@ version=1.0
 
 [Config]
 ALEMPTY=0
-ALEMPTY_SET=60
 ALFULL=0
-ALFULL_SET=1
 COUNT_W=false
 DEPTH_W=5
 ECC=false
-EN_ALEMPTY=true
-EN_ALFULL=true
+EN_ALEMPTY=false
+EN_ALFULL=false
 FWFT=false
 IMPL=0
 IO_INSERTION=false

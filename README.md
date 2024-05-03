@@ -60,16 +60,19 @@ In case a program don't load correctly select via OSD the factory default CBM DO
 
 ## CRT Loader (.CRT)
 Cartrige ROM can be loaded via OSD file selection.<br>
-Detach Cartrige by using OSD System / Cold Boot.<br>
-Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge.
+Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge.<br>
+Detach Cartrige by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
 
 ## PRG Loader (.PRG)
 A Program *.PRG file can be loaded via OSD file selection.<br>
-Copy a *.PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program.
+Copy a *.PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program.<br>
+Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
 
 ## Kernal Loader (.BIN)
+Dolphin DOS 2.0 is the power-up default Kernal.<br>
 Kernal ROM files *.BIN can be loaded via OSD selection.<br>
-Copy a 8K C64 Kernal ROM *.BIN to your sdcard and rename it to **c64kernal.bin** as default boot Kernal.<br>Dolphin DOS 2.0 is the power-up default Kernal.<br>
+Copy a 8K C64 Kernal ROM *.BIN to your sdcard and rename it to **c64kernal.bin** as default boot Kernal.<br>
+Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings** and do a **power-cyle** of the board.<br>
 
 ## emulated RAM Expansion Unit REU 1750
 For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.<br>

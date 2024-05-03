@@ -91,14 +91,16 @@ These DOS for the c1541 emulation can later be selected from the on-screen-displ
 
 Windows shell and Gowin Programmer<br>
 ```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/tang_nano_20k_c64.fs --spiaddr 0x000000 --cable-index 1 --d GW2ANR-18C```<br>
-```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/tang_nano_20k_c64.fs --spiaddr 0x000000 --cable-index 1 --d GW5A-25A```<br>
-```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/tang_nano_20k_c64.fs --spiaddr 0x000000 --cable-index 1 --d GW5AST-138B```<br>
+```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/tang_nano_20k_c64_25k.fs --spiaddr 0x000000 --cable-index 1 --d GW5A-25A```<br>
+```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/tang_nano_20k_c64_138k.fs --spiaddr 0x000000 --cable-index 1 --d GW5AST-138B```<br>
 
 ```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli -r 38 --mcuFile C:/Users/stefa/Downloads/dos_roms/2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW2ANR-18C```<br>
 ```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli -r 38 --mcuFile C:/Users/stefa/Downloads/dos_roms/2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW5A-25A```<br>
-```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli -r 38 --mcuFile C:/Users/stefa/Downloads/dos_roms/2dosa_c.bin --spiaddr 0xA00000 --cable-index 1 --d GW5AST-138B```<br>
+```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli -r 38 --mcuFile C:/Users/stefa/Downloads/dos_roms/2dosa_c.bin --spiaddr 0xA00000 --cable-index 1 --d GW5AST-138B```<br><br>
 Linux shell and openFPGALoader Programmer<br>
 ```openFPGALoader -b tangnano20k --external-flash -o 0x200000  2dosa_c.bin```<br>
+```openFPGALoader -b tangnano20k -f tang_nano_20k_c64.fs```<br>
+<br>
 ```openFPGALoader -b tangprimer25k --external-flash -o 0x200000  2dosa_c.bin```<br>
 ```openFPGALoader -b tangmega138k --external-flash -o 0xA00000  2dosa_c.bin```<br>
 
@@ -155,7 +157,7 @@ the Tang Nano 20K. Using an external M0S is nevertheless recommended.
 
 ## Prepare the SD card
 
-Format the SD card in FAT32. Copy your D64 / G64 / CRT / PRG files files on
+Format the SD card in FAT32. Copy your D64 / G64 / CRT / PRG / BIN files files on
 it. You can organize your files in subdirectories. These files can later
 be selected using the on-screen-display (OSD).
 Default Mountpoints:  
