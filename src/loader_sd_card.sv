@@ -79,9 +79,8 @@ reg [1:0] system_resetD;
 	ioctl_wr <= wr;
 	wr <= 1'b0;
 	if(sd_busy) {sd_rd,sd_wr} <= 6'd0;
-    system_resetD <= system_reset;
 
-	if(system_reset[0])
+	if(system_reset[1])
 	begin
 		sd_rd <= 3'd0;
 		sd_wr <= 3'd0;
@@ -96,8 +95,7 @@ reg [1:0] system_resetD;
 		boot_crt <= 1'b0;
 		boot_bin <= 1'b0;
 		boot_prg <= 1'b0;
-		if(~system_resetD[1]) 
-			io_state <= START;
+		io_state <= START;
 	end
 	else
 	begin
