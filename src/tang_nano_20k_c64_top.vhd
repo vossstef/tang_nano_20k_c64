@@ -1138,9 +1138,9 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   --SID
   audio_l      => audio_data_l,
   audio_r      => audio_data_r,
-  sid_filter   => '1' & sid_filter,
-  sid_ver      => (others => '0'),
-  sid_mode     => (others => '0'),
+  sid_filter   => sid_filter & sid_filter,
+  sid_ver      => "01", -- 6581 / 8580
+  sid_mode     => "000",
   sid_cfg      => (others => '0'),
   sid_fc_off_l => (others => '0'),
   sid_fc_off_r => (others => '0'),

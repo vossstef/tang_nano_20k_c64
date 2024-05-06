@@ -298,8 +298,6 @@ signal pot_y1       : std_logic_vector(7 downto 0);
 signal pot_x2       : std_logic_vector(7 downto 0);
 signal pot_y2       : std_logic_vector(7 downto 0);
 
-signal clk_1MHz_en  : std_logic;
-
 component mos6526
 	PORT (
 		clk           : in  std_logic;
@@ -644,42 +642,37 @@ pot_y1 <= (others => '1' ) when cia1_pao(6) = '0' else not pot2;
 pot_x2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot3;
 pot_y2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot4;
 
-
-div1m: process(clk32) -- this process divides 32 MHz to 1 MHz for the SID
-begin
-  if (rising_edge(clk32)) then
-    if sysCycle = CYCLE_VIC0 then
-          clk_1MHz_en <= '1'; -- single pulse
-    else
-          clk_1MHz_en <= '0';
-    end if;
-  end if;
-end process;
-
-sid_6581: entity work.sid_top
-generic map (
-	g_num_voices => 11
-)
+sid : entity work.sid_top
 port map (
-  clock => clk32,
-  reset => reset,
+	reset => reset,
+	clk => clk32,
+	ce_1m => enableSid,
+	we => pulseWr_io,
+	cs => sid_sel_l,
+	addr => cpuAddr(4 downto 0),
+	data_in => cpuDo,
+	data_out => sid_do,
+	pot_x_l => pot_x1 and pot_x2,
+	pot_y_l => pot_y1 and pot_y2,
+	pot_x_r => (others => '0'),
+	pot_y_r => (others => '0'),
 
-  addr  => "000" & cpuAddr(4 downto 0),
-  wren  => pulseWr_io and cs_sid,
-  wdata => std_logic_vector(cpuDo),
-  unsigned(rdata) => sid_do,
+	audio_l => audio_l,
+	audio_r => audio_r,
 
-  potx => pot_x1 and pot_x2,
-  poty => pot_y1 and pot_y2,
+	ext_in_l(17 downto 0) => (others => '0'),
+	ext_in_r(17 downto 0) => (others => '0'),
 
-  comb_wave_l => '0',
-  comb_wave_r => '0',
+	filter_en => sid_filter(0),
+	mode    => sid_ver(0),
+	cfg     => sid_cfg(1 downto 0),
+	fc_offset_l => sid_fc_off_l,
+	fc_offset_r => sid_fc_off_r,
 
-  extfilter_en => sid_filter(0),
-
-  start_iter => clk_1MHz_en,
-  std_logic_vector(sample_left) => audio_l,
-  std_logic_vector(sample_right) => audio_r
+	ld_clk  => sid_ld_clk,
+	ld_addr => sid_ld_addr,
+	ld_data => sid_ld_data,
+	ld_wr   => sid_ld_wr
 );
 
 -- -----------------------------------------------------------------------
