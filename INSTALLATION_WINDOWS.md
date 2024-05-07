@@ -8,16 +8,16 @@ This has been tested on Windows 11. It should work on older versions too.
 
 Software needed:
 
-  - [Gowin V1.9.9.02](https://www.gowinsemi.com/en/support/home/) **to flash the FPGA or to synthesize the core**
+  - [Gowin V1.9.9.02](https://www.gowinsemi.com/en/support/home/) **to synthesize the core**
   - [BouffaloLabDevCube](https://dev.bouffalolab.com/download) **to flash the BL616**
   - [Latest release](https://github.com/vossstef/tang_nano_20k_c64/releases/latest) of C64Nano **FPGA** bitstream
-  - [Latest release](https://github.com/harbaum/MiSTeryNano/releases/latest) of MiSTeryNano **BL616 µC firmware**
+  - [Latest release](https://github.com/harbaum/MiSTeryNano/releases/latest) of MiSTeryNano **BL616 µC firmware** (if not otherwise stated in the release note.)
 
 In order to use the SD card for disks:
 
   - C64 disk images in .D64 or .G64 format
   - Cartridge images in .CRT format
-  - Program files in .PRG format
+  - BASIC Program files in .PRG format
   - C64 Kernal files (8K) in .BIN format
 
 # Flashing the Tang Nano 20k
@@ -90,14 +90,15 @@ These DOS for the c1541 emulation can later be selected from the on-screen-displ
 **shell / command line Programming alternative**
 
 Windows shell and Gowin Programmer<br>
-```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/tang_nano_20k_c64.fs --spiaddr 0x000000 --cable-index 1 --d GW2ANR-18C```<br>
-```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/tang_nano_20k_c64_25k.fs --spiaddr 0x000000 --cable-index 1 --d GW5A-25A```<br>
-```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli  -r 36 --fsFile C:/Users/stefa/Downloads/tang_nano_20k_c64_138k.fs --spiaddr 0x000000 --cable-index 1 --d GW5AST-138B```<br>
+```programmer_cli  -r 36 --fsFile tang_nano_20k_c64.fs --spiaddr 0x000000 --cable-index 1 --d GW2ANR-18C```<br>
+```programmer_cli  -r 36 --fsFile tang_nano_20k_c64_25k.fs --spiaddr 0x000000 --cable-index 1 --d GW5A-25A```<br>
+```programmer_cli  -r 36 --fsFile tang_nano_20k_c64_138k.fs --spiaddr 0x000000 --cable-index 1 --d GW5AST-138B```<br>
 
-```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli -r 38 --mcuFile C:/Users/stefa/Downloads/dos_roms/2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW2ANR-18C```<br>
-```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli -r 38 --mcuFile C:/Users/stefa/Downloads/dos_roms/2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW5A-25A```<br>
-```C:\Gowin\Gowin_V1.9.9.01_x64\Programmer\bin\programmer_cli -r 38 --mcuFile C:/Users/stefa/Downloads/dos_roms/2dosa_c.bin --spiaddr 0xA00000 --cable-index 1 --d GW5AST-138B```<br><br>
-Linux shell and openFPGALoader Programmer<br>
+```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW2ANR-18C```<br>
+```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW5A-25A```<br>
+```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0xA00000 --cable-index 1 --d GW5AST-138B```<br><br>
+Linux shell and [openFPGAloader](https://github.com/trabucayre/openFPGALoader).<br>
+[Please read here if you run into trouble when using openFPGAloader under Linux](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-Doc/flash-in-linux.html).<br>
 ```openFPGALoader -b tangnano20k --external-flash -o 0x200000  2dosa_c.bin```<br>
 ```openFPGALoader -b tangnano20k -f tang_nano_20k_c64.fs```<br>
 <br>
@@ -162,8 +163,8 @@ it. You can organize your files in subdirectories. These files can later
 be selected using the on-screen-display (OSD).
 Default Mountpoints:  
 Copy a *.D64 Disk image to your sdcard and rename it to disk8.d64 as default c1541 boot image.  
-Copy a *.CRT image to your sdcard and rename it to c64crt.crt as default Cartridge boot image.  
-Copy a *.PRG file to your sdcard and rename it to c64prg.prg as default Program boot image.  
-Copy a 8k Byte C64 Kernal file *.BIN to your sdcard and rename it to c64kernal.bin as default Kernal boot image.
+Copy a *.CRT ROM image to your sdcard and rename it to c64crt.crt as default Cartridge boot image.  
+Copy a *.PRG BASIC file to your sdcard and rename it to c64prg.prg as default Program boot image.  
+Copy a 8k Byte C64 Kernal ROM file *.BIN to your sdcard and rename it to c64kernal.bin as default Kernal boot image.
 
 That´s it for now. Have fun using the C64Nano

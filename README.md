@@ -104,6 +104,7 @@ invoke by F12 keypress<br>
 * MIDI configuration<br>
 * Pause when OSD open<br>
 * PAL / NTSC Video mode<br>
+* VIC-II revision and 6526 / 8521 selection
 * Loader (CRT/PRG/BIN) file selection<br>
 
 ## Gamecontrol support
@@ -147,7 +148,7 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
 | 2 | CRT seleced | x | - | x |
 | 3 | PRG selected | x | - | x |
 | 4 | Kernal selected  | x | - | x |
-| 5 | unused | x | - | x |
+| 5 | (reserved TAP) | x | - | x |
 
 Solid 'red' of the c1541 led after power-up indicates a missing DOS in Flash<br>
 
