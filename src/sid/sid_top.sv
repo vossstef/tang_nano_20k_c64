@@ -2,7 +2,7 @@
 module sid_top 
 #(
 	parameter MULTI_FILTERS = 1, 
-	parameter DUAL = 0
+	parameter DUAL = 1
 )
 (
 	input         reset,

@@ -648,7 +648,7 @@ port map (
 	clk => clk32,
 	ce_1m => enableSid,
 	we => pulseWr_io,
-	cs => sid_sel_l,
+	cs => unsigned'(sid_sel_r & sid_sel_l),
 	addr => cpuAddr(4 downto 0),
 	data_in => cpuDo,
 	data_out => sid_do,
@@ -663,9 +663,9 @@ port map (
 	ext_in_l(17 downto 0) => (others => '0'),
 	ext_in_r(17 downto 0) => (others => '0'),
 
-	filter_en => sid_filter(0),
-	mode    => sid_ver(0),
-	cfg     => sid_cfg(1 downto 0),
+	filter_en => sid_filter,
+	mode    => sid_ver,
+	cfg     => sid_cfg,
 	fc_offset_l => sid_fc_off_l,
 	fc_offset_r => sid_fc_off_r,
 
