@@ -655,7 +655,7 @@ sidl : entity work.sid6581 port map (
   clk_1MHz => enableSid,
   cpuclock => clk32,
   reset => reset,
-  cs => cs_sid,
+  cs => sid_sel_l,
   mode => sid_ver(0),
   we => pulseWr_io,
   addr => cpuAddr(4 downto 0),

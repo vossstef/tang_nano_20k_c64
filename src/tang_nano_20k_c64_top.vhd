@@ -359,12 +359,12 @@ signal tap_download   : std_logic;
 signal tap_reset      : std_logic;
 signal tap_loaded     : std_logic;
 signal tap_play_btn   : std_logic;
-signal osd_tape_play      : std_logic := '0';
+signal osd_tape_play  : std_logic;
 signal tap_last_addr  : std_logic_vector(22 downto 0);
 signal tap_wrreq      : std_logic_vector(1 downto 0);
 signal tap_wrfull     : std_logic;
 signal tap_start      : std_logic;
-signal read_cyc       : std_logic;
+signal read_cyc       : std_logic := '0';
 signal io_cycle_rD    : std_logic;
 signal load_flt       : std_logic;
 signal sid_ver        : std_logic;
@@ -1163,7 +1163,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   audio_r      => audio_data_r,
   sid_filter   => "11",
   sid_ver      => "0" & sid_ver,
-  sid_mode     => "000",
+  sid_mode     => "000", -- Same,DE00,D420,D500,DF00
   sid_cfg      => (others => '0'),
   sid_fc_off_l => (others => '0'),
   sid_fc_off_r => (others => '0'),
@@ -1383,13 +1383,13 @@ begin
        end if;
       end if;
 
-    if io_cycle and io_cycleD then
+    if io_cycle = '1' and io_cycleD = '1' then
       io_cycle_ce <= '0';
       io_cycle_we <= '0';
     end if;
 
-    if ioctl_wr then
-      if load_prg then
+    if ioctl_wr = '1' then
+      if load_prg = '1' then
         -- PRG header
         -- Load address low-byte
           if ioctl_addr = 0 then
@@ -1405,13 +1405,13 @@ begin
           end if;
       end if;
 
-      if load_tap then
+      if load_tap = '1' then
         if ioctl_addr = 0  then ioctl_load_addr <= TAP_ADDR; end if;
         if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if;
         ioctl_req_wr <= '1';
       end if;
 
-      if load_crt then
+      if load_crt = '1' then
         if ioctl_addr = 0 then
           ioctl_load_addr <= CRT_MEM_START;
           cart_blk_len <= (others => '0');
@@ -1550,29 +1550,30 @@ variable reset_counter : integer;
 end process;
 
 --------------- TAP -------------------
+
+tap_download <= ioctl_download and load_tap;
+tap_reset <= '1' when reset_n = '0' or tap_download = '1'or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
+tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
+
 process(clk32)
 begin
-    if rising_edge(clk32) then
+if rising_edge(clk32) then
       io_cycle_rD <= io_cycle;
       tap_wrreq(1 downto 0) <= tap_wrreq(1 downto 0) sll 1;
-      tap_reset <= '1' when reset_n = '0' or tap_download = '1'or tap_last_addr = 0 or cass_finish ='1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
-      tap_download <= ioctl_download and load_tap;
-      tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
+      tap_start <= '0';
 
-      if tap_reset then
+      if tap_reset = '1' then
+        -- C1530 module requires one more byte at the end due to fifo early check.
         read_cyc <= '0';
         tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
         tap_play_addr <= (others => '0');
-        tap_last_addr <= (others => '0');
-        tap_start     <= tap_download;
+        tap_start <= tap_download;
         elsif io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
-            read_cyc <= '1'; 
-        elsif io_cycle and io_cycle_rD and read_cyc then
-            tap_play_addr <= tap_play_addr + 1;
-            read_cyc <= '0';
-            tap_wrreq(0) <= '1';
-        else
-            tap_start <= '0';
+          read_cyc <= '1'; 
+        elsif io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
+          tap_play_addr <= tap_play_addr + 1;
+          read_cyc <= '0';
+          tap_wrreq(0) <= '1';
         end if;
     end if;
 end process;
