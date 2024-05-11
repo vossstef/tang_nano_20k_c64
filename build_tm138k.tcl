@@ -62,7 +62,7 @@ add_file src/gowin_pll/gowin_pll_138k_flash.vhd
 add_file src/tang_nano_20k_c64_top_138k.cst
 add_file src/tang_nano_20k_c64_top_138k.sdc
 add_file src/loader_sd_card.sv
-add_file src/fifo_sc_hs/fifo_sc_hs.vhd
+add_file src/fifo_sc_hs/FIFO_SC_HS_Top_gw5a.vhd
 add_file src/c1530.vhd
 add_file src/m65_sid/sid_6581.vhdl
 add_file src/m65_sid/sid_coeffs.vhdl

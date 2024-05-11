@@ -182,10 +182,10 @@ signal disk_chg_trg   : std_logic;
 signal disk_chg_trg_d : std_logic;
 signal sd_img_size    : std_logic_vector(31 downto 0);
 signal sd_img_size_d  : std_logic_vector(31 downto 0);
-signal sd_img_mounted : std_logic_vector(3 downto 0);
+signal sd_img_mounted : std_logic_vector(4 downto 0);
 signal sd_img_mounted_d : std_logic;
-signal sd_rd          : std_logic_vector(3 downto 0);
-signal sd_wr          : std_logic_vector(3 downto 0);
+signal sd_rd          : std_logic_vector(4 downto 0);
+signal sd_wr          : std_logic_vector(4 downto 0);
 signal disk_lba       : std_logic_vector(31 downto 0);
 signal sd_lba         : std_logic_vector(31 downto 0);
 signal loader_lba     : std_logic_vector(31 downto 0);
@@ -243,7 +243,6 @@ signal io_rom         : std_logic;
 signal cart_oe        : std_logic;
 signal io_data        : unsigned(7 downto 0);
 signal db9_joy        : std_logic_vector(5 downto 0);
-signal sid_filter     : std_logic;
 signal turbo_mode     : std_logic_vector(1 downto 0);
 signal turbo_speed    : std_logic_vector(1 downto 0);
 signal flash_ready    : std_logic;
@@ -343,12 +342,34 @@ signal old_download_r  : std_logic;
 signal reset_n         : std_logic;
 signal por             : std_logic;
 signal c64rom_wr       : std_logic;
-signal img_present     : std_logic_vector(3 downto 0);
-signal img_select      : std_logic_vector(1 downto 0);
+signal img_select      : std_logic_vector(2 downto 0);
 signal tap_version     : std_logic_vector(1 downto 0);
 signal vic_variant     : std_logic_vector(1 downto 0);
 signal cia_mode        : std_logic;
 signal loader_busy     : std_logic;
+-- tape
+signal cass_write     : std_logic;
+signal cass_motor     : std_logic;
+signal cass_sense     : std_logic;
+signal cass_read      : std_logic;
+signal cass_run       : std_logic;
+signal cass_finish    : std_logic;
+signal cass_snd       : std_logic;
+signal tap_download   : std_logic;
+signal tap_reset      : std_logic;
+signal tap_loaded     : std_logic;
+signal tap_play_btn   : std_logic;
+signal osd_tape_play  : std_logic;
+signal tap_last_addr  : std_logic_vector(22 downto 0);
+signal tap_wrreq      : std_logic_vector(1 downto 0);
+signal tap_wrfull     : std_logic;
+signal tap_start      : std_logic;
+signal read_cyc       : std_logic := '0';
+signal io_cycle_rD    : std_logic;
+signal load_flt       : std_logic;
+signal sid_ver        : std_logic;
+signal kbd_tape_play  : std_logic;
+signal sid_digifix    : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -880,7 +901,7 @@ hid_inst: entity work.hid
   keyboard_matrix_out => keyboard_matrix_out,
   keyboard_matrix_in  => keyboard_matrix_in,
   key_restore     => freeze_key,
-  tape_play       => open,
+  tape_play       => kbd_tape_play,
   mod_key         => open,
   mouse_btns      => mouse_btns,
   mouse_x         => mouse_x,
@@ -910,7 +931,7 @@ module_inst: entity work.sysctrl
   system_port_2       => port_2_sel,
   system_dos_sel      => dos_sel,
   system_1541_reset   => c1541_osd_reset,
-  system_audio_filter => sid_filter,
+  system_sid_digifix  => sid_digifix,
   system_turbo_mode   => turbo_mode,
   system_turbo_speed  => turbo_speed,
   system_video_std    => ntscMode,
@@ -918,6 +939,8 @@ module_inst: entity work.sysctrl
   system_pause        => system_pause,
   system_vic_variant  => vic_variant, 
   system_cia_mode     => cia_mode, 
+  system_sid_ver      => sid_ver,
+  system_tape_play    => osd_tape_play,
   int_out_n           => m0s(4),
   int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & "0" & hid_int & "0")),
   int_ack             => int_ack,
@@ -1026,9 +1049,9 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   --SID
   audio_l      => audio_data_l,
   audio_r      => audio_data_r,
-  sid_filter   => '1' & sid_filter,
-  sid_ver      => (others => '0'),
-  sid_mode     => (others => '0'),
+  sid_filter   => "11",
+  sid_ver      => "0" & sid_ver,
+  sid_mode     => "000", -- Same,DE00,D420,D500,DF00
   sid_cfg      => (others => '0'),
   sid_fc_off_l => (others => '0'),
   sid_fc_off_r => (others => '0'),
@@ -1036,6 +1059,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   sid_ld_addr  => (others => '0'),
   sid_ld_data  => (others => '0'),
   sid_ld_wr    => '0',
+	sid_digifix  => sid_digifix,
 
   -- USER
   pb_i         => unsigned(pb_in),
@@ -1064,10 +1088,10 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   c64rom_data  => ioctl_data,
   c64rom_wr    => c64rom_wr,
 
-  cass_motor   => open,
-  cass_write   => open,
-  cass_sense   => '0',
-  cass_read    => '0'
+  cass_motor   => cass_motor,
+  cass_write   => cass_write,
+  cass_sense   => cass_sense,
+  cass_read    => cass_read
   );
 
 process(clk32)
@@ -1199,8 +1223,8 @@ port map (
   system_reset      => system_reset,
 
   sd_lba            => loader_lba,
-  sd_rd             => sd_rd(3 downto 1),
-  sd_wr             => sd_wr(3 downto 1),
+  sd_rd             => sd_rd(4 downto 1),
+  sd_wr             => sd_wr(4 downto 1),
   sd_busy           => sd_busy,
   sd_done           => sd_done,
 
@@ -1213,6 +1237,7 @@ port map (
   load_crt          => load_crt,
   load_prg          => load_prg,
   load_rom          => load_rom,
+  load_tap          => load_tap,
   sd_img_size       => sd_img_size,
   leds              => leds(5 downto 1),
   img_select        => img_select,
@@ -1251,7 +1276,7 @@ begin
        end if;
       end if;
 
-    if io_cycle and io_cycleD then
+    if io_cycle = '1' and io_cycleD = '1' then
       io_cycle_ce <= '0';
       io_cycle_we <= '0';
     end if;
@@ -1271,6 +1296,12 @@ begin
               ioctl_req_wr <= '1';
               inj_end <= inj_end + 1;
           end if;
+      end if;
+
+      if load_tap = '1' then
+        if ioctl_addr = 0  then ioctl_load_addr <= TAP_ADDR; end if;
+        if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if;
+        ioctl_req_wr <= '1';
       end if;
 
       if load_crt = '1' then
@@ -1312,19 +1343,6 @@ begin
               cart_blk_len <= cart_blk_len - 1;
               ioctl_req_wr <= '1';
               end if;
-       end if;
-     end if;
-
-      if load_tap = '1' then
-        if ioctl_addr = 0  then ioctl_load_addr <= TAP_ADDR; end if;
-        if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if;
-        ioctl_req_wr <= '1';
-      end if;
-
-      if load_reu = '1' then
-          if ioctl_addr = 0 then
-            ioctl_load_addr <= REU_ADDR;
-            ioctl_req_wr <= '1';
           end if;
       end if;
     end if;
@@ -1423,5 +1441,53 @@ variable reset_counter : integer;
       end if;
     end if;
 end process;
+
+--------------- TAP -------------------
+
+tap_download <= ioctl_download and load_tap;
+tap_reset <= '1' when reset_n = '0' or tap_download = '1'or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
+tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
+
+process(clk32)
+begin
+if rising_edge(clk32) then
+      io_cycle_rD <= io_cycle;
+      tap_wrreq(1 downto 0) <= tap_wrreq(1 downto 0) sll 1;
+      tap_start <= '0';
+
+      if tap_reset = '1' then
+        -- C1530 module requires one more byte at the end due to fifo early check.
+        read_cyc <= '0';
+        tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
+        tap_play_addr <= (others => '0');
+        tap_start <= tap_download;
+        elsif io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
+          read_cyc <= '1'; 
+        elsif io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
+          tap_play_addr <= tap_play_addr + 1;
+          read_cyc <= '0';
+          tap_wrreq(0) <= '1';
+        end if;
+    end if;
+end process;
+
+c1530_inst: entity work.c1530
+port map (
+  clk32           => clk32,
+  restart_tape    => tap_reset,
+  wav_mode        => '0',
+  tap_version     => tap_version,
+  host_tap_in     => std_logic_vector(sdram_data),
+  host_tap_wrreq  => tap_wrreq(1),
+  tap_fifo_wrfull => tap_wrfull,
+  tap_fifo_error  => cass_finish,
+  cass_read       => cass_read,
+  cass_write      => cass_write,
+  cass_motor      => cass_motor,
+  cass_sense      => cass_sense,
+  cass_run        => cass_run,
+  osd_play_stop_toggle => osd_tape_play or kbd_tape_play or tap_start,
+  ear_input       => '0'
+);
 
 end Behavioral_top;
