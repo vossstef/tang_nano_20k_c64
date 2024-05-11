@@ -76,7 +76,7 @@ architecture Behavioral of sid_voice is
 	signal 	pulsewidth					: unsigned(11 downto 0) := (others => '0');
 
 	-- Envelope Generator
-	type		envelope_state_types is 	(idle, attack, attack_lp, decay, decay_lp, sustain, release, release_lp);
+	type		envelope_state_types is 	(idle, attack, attack_lp, decay, decay_lp, sustain, xrelease, release_lp);
 	signal 	cur_state, next_state	: envelope_state_types; 
 	signal 	divider_value				: integer range 0 to 2**15 - 1 :=0;
 	signal 	divider_attack				: integer range 0 to 2**15 - 1 :=0;
@@ -392,7 +392,7 @@ begin
 					divider_rst		<= '1';
 					divider_value	<= divider_attack;
 					next_state		<= attack_lp;
-					Dec_rel_sel		<= '0';			-- select decay as input for decay/release table
+					Dec_rel_sel		<= '0';			-- select decay as input for decay/xrelease table
             
 				when attack_lp =>
 					env_count_hold_B	<= '0';		-- enable envelope env_counter
@@ -404,7 +404,7 @@ begin
 						next_state		<= decay;
 					else
 						if gate = '0' and gate_edge='0' then
-							next_state	<= release;
+							next_state	<= xrelease;
 						else
 							next_state	<= attack_lp;
 						end if;
@@ -428,7 +428,7 @@ begin
 						next_state		<= sustain;
 					else
 						if gate = '0' and gate_edge='0' then
-							next_state	<= release;
+							next_state	<= xrelease;
 						else
 							next_state	<= decay_lp;
 						end if;
@@ -453,7 +453,7 @@ begin
 					divider_value	<= 0;
 					Dec_rel_sel		<='1';			-- select release as input for decay/release table
 					if gate = '0' and gate_edge='0' then	
-						next_state	<= release;
+						next_state	<= xrelease;
 					else
 						if (env_counter(7 downto 4) = Sus_Rel(7 downto 4)) then
 							next_state	<= sustain;
@@ -462,7 +462,7 @@ begin
 						end if;
 					end  if;
             
-				when release =>
+				when xrelease =>
 					divider_rst			<= '1';
 					exp_table_active 	<= '1';		-- activate exponential look-up table
 					env_cnt_up			<= '0';		-- envelope env_counter must count down (decrement)

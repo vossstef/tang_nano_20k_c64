@@ -642,38 +642,25 @@ pot_y1 <= (others => '1' ) when cia1_pao(6) = '0' else not pot2;
 pot_x2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot3;
 pot_y2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot4;
 
-sid : entity work.sid_top
+sid : entity work.sid8580 
 port map (
-	reset => reset,
-	clk => clk32,
-	ce_1m => enableSid,
-	we => pulseWr_io,
-	cs => unsigned'(sid_sel_r & sid_sel_l),
-	addr => cpuAddr(4 downto 0),
-	data_in => cpuDo,
-	data_out => sid_do,
-	pot_x_l => pot_x1 and pot_x2,
-	pot_y_l => pot_y1 and pot_y2,
-	pot_x_r => (others => '0'),
-	pot_y_r => (others => '0'),
 
-	audio_l => audio_l,
-	audio_r => audio_r,
+			clk_1MHz	=> enableSid,   -- ce_1m => enableSid,
+			clk32	    => clk32,		-- main clock signal
+			reset	    => reset,		-- high active signal (reset when reset = '1')
+			cs			=> cs_sid, 
+			we		    => pulseWr_io,		-- when '1' this model can be written to, otherwise access is considered as read
+	
+			addr	    => cpuAddr(4 downto 0),
+			di			=> cpuDo,
+			do			=> sid_do,
+			pot_x		=> unsigned(pot_x1 and pot_x2),
+			pot_y		=> unsigned(pot_y1 and pot_y2),
+			mode		=> sid_filter(0),
+			unsigned(audio_data)	=> audio_l
+		);
 
-	ext_in_l(17 downto 0) => (others => '0'),
-	ext_in_r(17 downto 0) => (others => '0'),
-
-	filter_en => sid_filter,
-	mode    => sid_ver,
-	cfg     => sid_cfg,
-	fc_offset_l => sid_fc_off_l,
-	fc_offset_r => sid_fc_off_r,
-
-	ld_clk  => sid_ld_clk,
-	ld_addr => sid_ld_addr,
-	ld_data => sid_ld_data,
-	ld_wr   => sid_ld_wr
-);
+	audio_r <= audio_l;
 
 -- -----------------------------------------------------------------------
 -- CIAs

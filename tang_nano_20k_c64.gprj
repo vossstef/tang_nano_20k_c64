@@ -5,6 +5,8 @@
     <Version>5</Version>
     <Device name="GW2AR-18C" pn="GW2AR-LV18QN88C8/I7">gw2ar18c-000</Device>
     <FileList>
+        <File path="src/Mega65-Sid/sid_envelope.v" type="file.verilog" enable="1"/>
+        <File path="src/Mega65-Sid/sid_voice_8580.v" type="file.verilog" enable="1"/>
         <File path="src/acia.v" type="file.verilog" enable="1"/>
         <File path="src/c1541/mist_sd_card.sv" type="file.verilog" enable="1"/>
         <File path="src/cartridge.v" type="file.verilog" enable="1"/>
@@ -38,13 +40,22 @@
         <File path="src/mos6526.v" type="file.verilog" enable="1"/>
         <File path="src/reu.v" type="file.verilog" enable="1"/>
         <File path="src/sdram8.v" type="file.verilog" enable="1"/>
-        <File path="src/sid/sid_dac.sv" type="file.verilog" enable="1"/>
-        <File path="src/sid/sid_envelope.sv" type="file.verilog" enable="1"/>
-        <File path="src/sid/sid_filter.sv" type="file.verilog" enable="1"/>
-        <File path="src/sid/sid_tables.sv" type="file.verilog" enable="1"/>
-        <File path="src/sid/sid_top.sv" type="file.verilog" enable="1"/>
-        <File path="src/sid/sid_voice.sv" type="file.verilog" enable="1"/>
+        <File path="src/sid/sid_dac.sv" type="file.verilog" enable="0"/>
+        <File path="src/sid/sid_envelope.sv" type="file.verilog" enable="0"/>
+        <File path="src/sid/sid_filter.sv" type="file.verilog" enable="0"/>
+        <File path="src/sid/sid_tables.sv" type="file.verilog" enable="0"/>
+        <File path="src/sid/sid_top.sv" type="file.verilog" enable="0"/>
+        <File path="src/sid/sid_voice.sv" type="file.verilog" enable="0"/>
         <File path="src/video_freezer.sv" type="file.verilog" enable="1"/>
+        <File path="src/Mega65-Sid/sid_6581.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/Mega65-Sid/sid_8580.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/Mega65-Sid/sid_coeffs.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/Mega65-Sid/sid_coeffs_mux.vhdl" type="file.vhdl" enable="1"/>
+        <File path="src/Mega65-Sid/sid_components.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/Mega65-Sid/sid_filters.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/Mega65-Sid/sid_tables.vhdl" type="file.vhdl" enable="1"/>
+        <File path="src/Mega65-Sid/sid_voice.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/Mega65-Sid/simple_sigmadelta.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/c1541_logic.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/c1541_sd.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/gcr_floppy.vhd" type="file.vhdl" enable="1"/>

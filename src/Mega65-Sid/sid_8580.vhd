@@ -304,7 +304,7 @@ begin
 
 -- SID filters
 
-	process (do_buf,cs)
+	process (all)
 	begin
 		-- Tristate data lines
 		if cs='1' then
@@ -329,7 +329,7 @@ begin
 	end process;
 
         
-	process (clk_1MHz,reset)
+	process (all)
 	begin
 		if reset_drive='1' then
 			ff1<='0';
