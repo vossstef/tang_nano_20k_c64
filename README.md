@@ -20,9 +20,12 @@ Features:
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation (analog mode)<br>
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with parallel bus [Speedloader Dolphin DOS 2](https://rr.pokefinder.org/wiki/Dolphin_DOS). [GER manual](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * c1541 DOS ROM selection
-* Cartridge (*.CRT) loader
-* Direct program file (*.PRG) injection loader
+* Cartridge ROM (*.CRT) loader
+* Direct BASIC program (*.PRG) injection loader
+* Tape (*.TAP) file loader
 * Loadable 8K Kernal ROM (*.BIN)
+* VIC-II revision and 6526 / 8521 selection
+* [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) revision 6561 or 8580 selectable with [DigiFix](https://www.c64-wiki.de/wiki/Digifix) option
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN)<br>
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
@@ -58,14 +61,21 @@ RUN<br>
 c1541 DOS ROM to be selected from OSD (default Dolphin DOS, CBM DOS or other)<br>
 In case a program don't load correctly select via OSD the factory default CBM DOS an give it a try.
 
-## CRT Loader (.CRT)
+## Cartdrige ROM Loader (.CRT)
 Cartrige ROM can be loaded via OSD file selection.<br>
-Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge.<br>
+Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge ROM.<br>
 Detach Cartrige by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
 
-## PRG Loader (.PRG)
-A Program *.PRG file can be loaded via OSD file selection.<br>
+## BASIC Program Loader (.PRG)
+A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
 Copy a *.PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program.<br>
+Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
+
+## Tape Loader (*.TAP)
+A Tape *.TAP file can be loaded via OSD file selection.<br>
+In order to start a tape download select CBM Kernal and type: LOAD<br>
+Tape file is loaded by autoload function as sonn as file selected via OSD.<br>
+Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default boot tape.<br>
 Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
 
 ## Kernal Loader (.BIN)
@@ -104,7 +114,8 @@ invoke by F12 keypress<br>
 * MIDI configuration<br>
 * Pause when OSD open<br>
 * PAL / NTSC Video mode<br>
-* Loader (CRT/PRG/BIN) file selection<br>
+* VIC-II revision, 6526 / 8521 and SID 6561/8580 selection
+* Loader (CRT/PRG/BIN/TAP) file selection<br>
 
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: Retro D9<br>
@@ -147,7 +158,7 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
 | 2 | CRT seleced | x | - | x |
 | 3 | PRG selected | x | - | x |
 | 4 | Kernal selected  | x | - | x |
-| 5 | unused | x | - | x |
+| 5 | (reserved TAP) | x | - | x |
 
 Solid 'red' of the c1541 led after power-up indicates a missing DOS in Flash<br>
 
