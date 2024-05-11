@@ -35,13 +35,4 @@ for the different FPGA of the Tang Primer using either the [TCL script with the 
 
 Since the Tang Mega 138K needs a bigger portion of the available flash
 memory space, the DOS ROMs need to be flashed to a different memory location
-on the TM138K. The flash locations to be used on the Tang Mega 138K are:
-
-| Address | TOS slot  |
-|---------|-----------|
-| 0x000000 | reserved FPGA |
-| 0x900000 | reserved Atari ST |
-| 0xA00000 | Dolphin DOS 2 |
-| 0xA08000 | CBM DOS |
-| 0xA10000 | SpeedDOS Plus |
-| 0xA18000 | JiffyDOS |
+on the TM138K.

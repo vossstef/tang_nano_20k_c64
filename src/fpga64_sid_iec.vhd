@@ -131,7 +131,8 @@ port(
 	sid_ld_addr : in  std_logic_vector(11 downto 0);
 	sid_ld_data : in  std_logic_vector(15 downto 0);
 	sid_ld_wr   : in  std_logic;
-	
+	sid_digifix : in  std_logic;
+
 	-- USER
 	pb_i        : in  unsigned(7 downto 0);
 	pb_o        : out unsigned(7 downto 0);
@@ -297,6 +298,8 @@ signal pot_x1       : std_logic_vector(7 downto 0);
 signal pot_y1       : std_logic_vector(7 downto 0);
 signal pot_x2       : std_logic_vector(7 downto 0);
 signal pot_y2       : std_logic_vector(7 downto 0);
+signal filter_table_addr0 : integer range 0 to 2047;
+signal filter_table_val0 : unsigned(15 downto 0);
 
 component mos6526
 	PORT (
@@ -631,8 +634,6 @@ end process;
 -- SID
 -- -----------------------------------------------------------------------
 
---	Right SID Port: Same,DE00,D420,D500,DF00
-
 sid_sel_l <= cs_sid when sid_mode(2 downto 1) /= 1 else (cs_sid and ((not sid_mode(0) and not cpuAddr(5)) or (sid_mode(0) and not cpuAddr(8))));
 sid_sel_r <= sid_sel_l when sid_mode = 0 else ioe_i when sid_mode = 1 else iof_i when sid_mode = 4 else (cs_sid and not sid_sel_l);
 io_data_i <= io_data when io_ext = '1' else sid_do when sid_sel_r = '1' else (others => '1');
@@ -642,25 +643,33 @@ pot_y1 <= (others => '1' ) when cia1_pao(6) = '0' else not pot2;
 pot_x2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot3;
 pot_y2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot4;
 
-sid : entity work.sid8580 
-port map (
+audio_r <= audio_l;
 
-			clk_1MHz	=> enableSid,   -- ce_1m => enableSid,
-			clk32	    => clk32,		-- main clock signal
-			reset	    => reset,		-- high active signal (reset when reset = '1')
-			cs			=> cs_sid, 
-			we		    => pulseWr_io,		-- when '1' this model can be written to, otherwise access is considered as read
-	
-			addr	    => cpuAddr(4 downto 0),
-			di			=> cpuDo,
-			do			=> sid_do,
-			pot_x		=> unsigned(pot_x1 and pot_x2),
-			pot_y		=> unsigned(pot_y1 and pot_y2),
-			mode		=> sid_filter(0),
-			unsigned(audio_data)	=> audio_l
-		);
+sidc: entity work.sid_coeffs_mux port map (
+  clk => clk32,
+  addr0 => filter_table_addr0,
+  val0 => filter_table_val0
+);
 
-	audio_r <= audio_l;
+sidl : entity work.sid6581 port map (
+  clk_1MHz => enableSid,
+  cpuclock => clk32,
+  reset => reset,
+  cs => cs_sid,
+  mode => sid_ver(0),
+  we => pulseWr_io,
+  addr => cpuAddr(4 downto 0),
+  di => cpuDo,
+  do => sid_do,
+  pot_x => unsigned(pot_x1 and pot_x2),
+  pot_y => unsigned(pot_y1 and pot_y2),
+  std_logic_vector(signed_audio) => audio_l,
+  audio_data => open,
+  ext_in_signed(12) => sid_ver(0) and sid_digifix,
+  ext_in_signed(11 downto 0) => (others => '0'),
+  filter_table_addr => filter_table_addr0,
+  filter_table_val => filter_table_val0
+  );
 
 -- -----------------------------------------------------------------------
 -- CIAs
