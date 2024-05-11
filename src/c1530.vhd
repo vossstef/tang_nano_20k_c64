@@ -71,20 +71,6 @@ constant autostop_time: std_logic_vector(28 downto 0) := std_logic_vector(to_uns
 
 begin
 
--- for wav mode use large depth fifo (eg 512 x 32bits)
--- for tap mode fifo may be smaller (eg 16 x 32bits)
---tap_fifo_inst : entity work.tap_fifo
---port map(
---	aclr	 => restart_tape,
---	data	 => host_tap_in,
---	clock	 => clk32,
---	rdreq	 => tap_fifo_rdreq,
---	wrreq	 => host_tap_wrreq,
---	q	     => tap_fifo_do,
---	empty	 => tap_fifo_empty,
---	full	 => tap_fifo_wrfull
---);
-
 tap_fifo_inst: entity work.FIFO_SC_HS_Top
 	port map (
 		Data => host_tap_in,
