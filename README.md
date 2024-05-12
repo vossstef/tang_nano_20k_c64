@@ -62,10 +62,10 @@ RUN<br>
 c1541 DOS ROM to be selected from OSD (default Dolphin DOS, CBM DOS or other)<br>
 In case a program don't load correctly select via OSD the factory default CBM DOS an give it a try.
 
-## Cartdrige ROM Loader (.CRT)
-Cartrige ROM can be loaded via OSD file selection.<br>
+## Cartridge ROM Loader (.CRT)
+Cartridge ROM can be loaded via OSD file selection.<br>
 Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge ROM.<br>
-Prevent Cartridge load at boot or for **Detach Cartrige** OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
+Prevent cartridge load at boot or for **Detach Cartrige** OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
 
 ## BASIC Program Loader (.PRG)
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
