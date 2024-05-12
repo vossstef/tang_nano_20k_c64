@@ -300,6 +300,8 @@ signal pot_x2       : std_logic_vector(7 downto 0);
 signal pot_y2       : std_logic_vector(7 downto 0);
 signal filter_table_addr0 : integer range 0 to 2047;
 signal filter_table_val0 : unsigned(15 downto 0);
+--signal filter_table_addr1 : integer range 0 to 2047;
+--signal filter_table_val1 : unsigned(15 downto 0);
 
 component mos6526
 	PORT (
@@ -649,7 +651,9 @@ sidc: entity work.sid_coeffs_mux port map (
   clk => clk32,
   addr0 => filter_table_addr0,
   val0 => filter_table_val0
-);
+--  addr1 => filter_table_addr1,
+--  val1 => filter_table_val1
+  );
 
 sidl : entity work.sid6581 port map (
   clk_1MHz => enableSid,
@@ -670,6 +674,26 @@ sidl : entity work.sid6581 port map (
   filter_table_addr => filter_table_addr0,
   filter_table_val => filter_table_val0
   );
+
+--  sidr : entity work.sid6581 port map (
+--	clk_1MHz => enableSid,
+--	cpuclock => clk32,
+--	reset => reset,
+--	cs => sid_sel_r,
+--	mode => sid_ver(0),
+--	we => pulseWr_io,
+--	addr => cpuAddr(4 downto 0),
+--	di => cpuDo,
+--	do => sid_do,
+--	pot_x => unsigned(pot_x1 and pot_x2),
+--	pot_y => unsigned(pot_y1 and pot_y2),
+--	std_logic_vector(signed_audio) => audio_r,
+--	audio_data => open,
+--	ext_in_signed(12) => sid_ver(0) and sid_digifix,
+--	ext_in_signed(11 downto 0) => (others => '0'),
+--	filter_table_addr => filter_table_addr1,
+--	filter_table_val => filter_table_val1
+--	);
 
 -- -----------------------------------------------------------------------
 -- CIAs

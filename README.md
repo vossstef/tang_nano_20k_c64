@@ -22,10 +22,11 @@ Features:
 * c1541 DOS ROM selection
 * Cartridge ROM (*.CRT) loader
 * Direct BASIC program (*.PRG) injection loader
-* Tape (*.TAP) file loader
+* Tape (*.TAP) image loader [C1530 Datasette](https://en.wikipedia.org/wiki/Commodore_Datasette)
 * Loadable 8K Kernal ROM (*.BIN)
-* VIC-II revision and 6526 / 8521 selection
-* [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) revision 6561 or 8580 selectable with [DigiFix](https://www.c64-wiki.de/wiki/Digifix) option
+* [VIC-II](https://en.wikipedia.org/wiki/MOS_Technology_VIC-II) revision and [6526](https://en.wikipedia.org/wiki/MOS_Technology_CIA) / 8521 selection
+* [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) revision 6561 or 8580 selectable
+* 2nd SID (Stereo) for Tang Primer 25K and Tang Mega 138K
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN)<br>
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
@@ -71,10 +72,11 @@ A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
 Copy a *.PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program.<br>
 Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
 
-## Tape Loader (*.TAP)
-A Tape *.TAP file can be loaded via OSD file selection.<br>
-In order to start a tape download select CBM Kernal and type: LOAD<br>
-Tape file is loaded by autoload function as sonn as file selected via OSD.<br>
+## Tape Image Loader (*.TAP)
+A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection.
+In order to start a tape download select CBM Kernal (mandatory) and type: LOAD<br>
+The file is loaded automatically as soon as file selected via OSD (no need to press PLAY button).<br>
+Screen will blank for some seconds and then display briefly the filename of the to be loaded file.<br> It will blank afterwards till load completed.
 Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default boot tape.<br>
 Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
 
