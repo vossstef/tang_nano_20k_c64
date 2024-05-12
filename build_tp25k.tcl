@@ -41,25 +41,13 @@ add_file src/cpu_6510.vhd
 add_file src/fpga64_buslogic_gw5a.vhd
 add_file src/fpga64_keyboard.vhd
 add_file src/fpga64_rgbcolor.vhd
-add_file src/fpga64_sid_iec.vhd
+add_file src/fpga64_sid_iec_gw5a.vhd
 add_file src/gowin_prom/gowin_prom_basic.vhd
 add_file src/gowin_sdpb/gowin_sdpb_kernal_8k_gw5a.vhd
 add_file src/gowin_prom/gowin_prom_chargen.vhd
 add_file src/gowin_sp/gowin_sp_2k.vhd
 add_file src/gowin_sp/gowin_sp_8k.vhd
 add_file src/gowin_sp/gowin_sp_cram.vhd
-add_file src/sid6581/Q_table.vhd
-add_file src/sid6581/adsr_multi.vhd
-add_file src/sid6581/mult_acc.vhd
-add_file src/sid6581/my_math_pkg.vhd
-add_file src/sid6581/oscillator.vhd
-add_file src/sid6581/sid_ctrl.vhd
-add_file src/sid6581/sid_debug_pkg.vhd
-add_file src/sid6581/sid_filter.vhd
-add_file src/sid6581/sid_mixer.vhd
-add_file src/sid6581/sid_regs.vhd
-add_file src/sid6581/sid_top.vhd
-add_file src/sid6581/wave_map.vhd
 add_file src/t65/T65.vhd
 add_file src/t65/T65_ALU.vhd
 add_file src/t65/T65_MCode.vhd
@@ -73,6 +61,17 @@ add_file src/gowin_pll/gowin_pll_flash.vhd
 add_file src/tang_nano_20k_c64_top_25k.cst
 add_file src/tang_nano_20k_c64_top_25k.sdc
 add_file src/loader_sd_card.sv
+add_file src/fifo_sc_hs/FIFO_SC_HS_Top_gw5a.vhd
+add_file src/c1530.vhd
+add_file src/m65_sid/sid_6581.vhdl
+add_file src/m65_sid/sid_coeffs.vhdl
+add_file src/m65_sid/sid_coeffs_mux.vhdl
+add_file src/m65_sid/sid_components.vhdl
+add_file src/m65_sid/sid_filters.vhdl
+add_file src/m65_sid/sid_tables.vhdl
+add_file src/m65_sid/sid_voice.vhdl
+add_file src/m65_sid/sid_envelope.v
+add_file src/m65_sid/sid_voice_8580.v
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name tang_nano_20k_c64_25k

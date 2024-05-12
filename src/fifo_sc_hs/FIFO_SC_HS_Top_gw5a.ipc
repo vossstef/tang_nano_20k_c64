@@ -1,8 +1,8 @@
 [General]
 ipc_version=4
-file=fifo_sc_hs
+file=FIFO_SC_HS_Top_gw5a
 module=FIFO_SC_HS_Top
-target_device=gw2ar18c-000
+target_device=gw5a25a-002
 type=fifo_sc_hs
 version=1.0
 

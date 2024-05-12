@@ -37,14 +37,16 @@ module sysctrl (
   output reg [2:0]  system_port_2,
   output reg [1:0]  system_dos_sel,
   output reg        system_1541_reset,
-  output reg        system_audio_filter,
+  output reg        system_sid_digifix,
   output reg [1:0]  system_turbo_mode,
   output reg [1:0]  system_turbo_speed,
   output reg        system_video_std,
   output reg [2:0]  system_midi,
   output reg        system_pause,
   output reg [1:0]  system_vic_variant,
-  output reg        system_cia_mode
+  output reg        system_cia_mode,
+  output reg [2:0]  system_sid_mode,
+  output reg        system_sid_ver
 );
 
 reg [3:0] state;
@@ -81,7 +83,7 @@ always @(posedge clk) begin
       system_port_1 <= 3'b111;  // Off
       system_port_2 <= 3'b000;  // DB_9
       system_dos_sel <= 2'b00;
-      system_audio_filter <= 1'b1;
+      system_sid_digifix <= 1'b1;
       system_turbo_mode <= 2'b00;
       system_turbo_speed <= 2'b00;
       system_video_std <= 1'b0;
@@ -89,7 +91,8 @@ always @(posedge clk) begin
       system_pause <= 1'b0;
       system_vic_variant <= 2'b00;
       system_cia_mode <= 1'b0;
-
+      system_sid_mode <= 3'b000;
+      system_sid_ver <= 1'b0;
    end else begin
       int_ack <= 8'h00;
 
@@ -156,7 +159,7 @@ always @(posedge clk) begin
                     // c1541 reset
                     if(id == "Z") system_1541_reset <= data_in[0];
                     // sid audio filter
-                    if(id == "U") system_audio_filter <= data_in[0];
+                    if(id == "U") system_sid_digifix <= data_in[0];
                     // turbo mode
                     if(id == "X") system_turbo_mode <= data_in[1:0];
                     // turbo speed
@@ -171,6 +174,10 @@ always @(posedge clk) begin
                     if(id == "M") system_vic_variant <= data_in[1:0];
                     // cia type mode
                     if(id == "C") system_cia_mode <= data_in[0];
+                    // sid version
+                    if(id == "O") system_sid_ver <= data_in[0];
+                    // sid mode
+                    if(id == "K") system_sid_mode <= data_in[2:0];
                 end
             end
 
