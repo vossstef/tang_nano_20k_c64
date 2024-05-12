@@ -18,6 +18,7 @@ In order to use the SD card for disks:
   - C64 disk images in .D64 or .G64 format
   - Cartridge images in .CRT format
   - BASIC Program files in .PRG format
+  - Tape images in .TAP format
   - C64 Kernal files (8K) in .BIN format
 
 # Flashing the Tang Nano 20k
@@ -165,6 +166,7 @@ Default Mountpoints:
 Copy a *.D64 Disk image to your sdcard and rename it to disk8.d64 as default c1541 boot image.  
 Copy a *.CRT ROM image to your sdcard and rename it to c64crt.crt as default Cartridge boot image.  
 Copy a *.PRG BASIC file to your sdcard and rename it to c64prg.prg as default Program boot image.  
+Copy a *.TAP Type image to your sdcard and rename it to c64tap.tap as default tape boot image. 
 Copy a 8k Byte C64 Kernal ROM file *.BIN to your sdcard and rename it to c64kernal.bin as default Kernal boot image.
 
 That´s it for now. Have fun using the C64Nano
