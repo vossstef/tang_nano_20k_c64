@@ -65,20 +65,20 @@ In case a program don't load correctly select via OSD the factory default CBM DO
 ## Cartdrige ROM Loader (.CRT)
 Cartrige ROM can be loaded via OSD file selection.<br>
 Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge ROM.<br>
-Detach Cartrige by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
+Prevent Cartridge load at boot or for **Detach Cartrige** OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
 
 ## BASIC Program Loader (.PRG)
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
 Copy a *.PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program.<br>
-Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
+Prevent PRG load at boot by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
 
 ## Tape Image Loader (*.TAP)
-A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection.
+A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection.<br>
 In order to start a tape download select CBM Kernal (mandatory) and type: LOAD<br>
-The file is loaded automatically as soon as file selected via OSD (no need to press PLAY button).<br>
-Screen will blank for some seconds and then display briefly the filename of the to be loaded file.<br> It will blank afterwards till load completed.
+The file is loaded automatically as soon as file selected via OSD (no need to press PLAY TAPE button).<br>
+Screen will blank for several seconds and then display briefly the filename of the to be loaded file.<br> It will blank afterwards till load completed. I will take time...<br>
 Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default boot tape.<br>
-Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
+Prevent TAP load at boot or for **Tape unload** OSD TAP selection **No Disk** , **Save settings** and **Reset**.<br>
 
 ## Kernal Loader (.BIN)
 Dolphin DOS 2.0 is the power-up default Kernal.<br>
@@ -160,7 +160,7 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
 | 2 | CRT seleced | x | - | x |
 | 3 | PRG selected | x | - | x |
 | 4 | Kernal selected  | x | - | x |
-| 5 | (reserved TAP) | x | - | x |
+| 5 | TAP selected | x | - | x |
 
 Solid 'red' of the c1541 led after power-up indicates a missing DOS in Flash<br>
 
