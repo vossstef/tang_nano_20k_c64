@@ -52,7 +52,7 @@
         <File path="src/fpga64_buslogic_gw5a.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_keyboard.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_rgbcolor.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/fpga64_sid_iec.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/fpga64_sid_iec_gw5a.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_pll/gowin_pll_flash.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_pll/gowin_pll_ntsc.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_pll/gowin_pll_pal.vhd" type="file.vhdl" enable="1"/>

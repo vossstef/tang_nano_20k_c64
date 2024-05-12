@@ -354,7 +354,6 @@ signal tap_download   : std_logic;
 signal tap_reset      : std_logic;
 signal tap_loaded     : std_logic;
 signal tap_play_btn   : std_logic;
-signal osd_tape_play  : std_logic;
 signal tap_last_addr  : std_logic_vector(22 downto 0);
 signal tap_wrreq      : std_logic_vector(1 downto 0);
 signal tap_wrfull     : std_logic;
@@ -363,7 +362,7 @@ signal read_cyc       : std_logic := '0';
 signal io_cycle_rD    : std_logic;
 signal load_flt       : std_logic;
 signal sid_ver        : std_logic;
-signal kbd_tape_play  : std_logic;
+signal sid_mode       : unsigned(2 downto 0);
 signal sid_digifix    : std_logic;
 
 -- 64k core ram                      0x000000
@@ -849,7 +848,7 @@ hid_inst: entity work.hid
   keyboard_matrix_out => keyboard_matrix_out,
   keyboard_matrix_in  => keyboard_matrix_in,
   key_restore     => freeze_key,
-  tape_play       => kbd_tape_play,
+  tape_play       => open,
   mod_key         => open,
   mouse_btns      => mouse_btns,
   mouse_x         => mouse_x,
@@ -888,7 +887,7 @@ module_inst: entity work.sysctrl
   system_vic_variant  => vic_variant, 
   system_cia_mode     => cia_mode, 
   system_sid_ver      => sid_ver,
-  system_tape_play    => osd_tape_play,
+  system_sid_mode     => sid_mode,
   int_out_n           => m0s(4),
   int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & "0" & hid_int & "0")),
   int_ack             => int_ack,
@@ -998,8 +997,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   audio_l      => audio_data_l,
   audio_r      => audio_data_r,
   sid_filter   => "11",
-  sid_ver      => "0" & sid_ver,
-  sid_mode     => "000", -- Same,DE00,D420,D500,DF00
+  sid_ver      => sid_ver & sid_ver,
+  sid_mode     => sid_mode,
   sid_cfg      => (others => '0'),
   sid_fc_off_l => (others => '0'),
   sid_fc_off_r => (others => '0'),
@@ -1429,7 +1428,7 @@ port map (
   cass_motor      => cass_motor,
   cass_sense      => cass_sense,
   cass_run        => cass_run,
-  osd_play_stop_toggle => osd_tape_play or kbd_tape_play or tap_start,
+  osd_play_stop_toggle => tap_start,
   ear_input       => '0'
 );
 

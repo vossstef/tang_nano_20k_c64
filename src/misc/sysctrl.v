@@ -45,7 +45,7 @@ module sysctrl (
   output reg        system_pause,
   output reg [1:0]  system_vic_variant,
   output reg        system_cia_mode,
-  output reg        system_tape_play,
+  output reg [2:0]  system_sid_mode,
   output reg        system_sid_ver
 );
 
@@ -91,7 +91,7 @@ always @(posedge clk) begin
       system_pause <= 1'b0;
       system_vic_variant <= 2'b00;
       system_cia_mode <= 1'b0;
-      system_tape_play <= 1'b0;
+      system_sid_mode <= 3'b000;
       system_sid_ver <= 1'b0;
    end else begin
       int_ack <= 8'h00;
@@ -174,10 +174,10 @@ always @(posedge clk) begin
                     if(id == "M") system_vic_variant <= data_in[1:0];
                     // cia type mode
                     if(id == "C") system_cia_mode <= data_in[0];
-                    // sid mode
+                    // sid version
                     if(id == "O") system_sid_ver <= data_in[0];
-                    // type play button
-                    if(id == "K") system_tape_play <= data_in[0];
+                    // sid mode
+                    if(id == "K") system_sid_mode <= data_in[2:0];
                 end
             end
 
