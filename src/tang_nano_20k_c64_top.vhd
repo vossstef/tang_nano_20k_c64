@@ -383,6 +383,7 @@ signal system_tape_sound : std_logic;
 signal uart_rxD         : std_logic_vector(3 downto 0);
 signal uart_rx_filtered : std_logic;
 signal cnt2_i          : std_logic;
+signal cnt2_o          : std_logic;
 signal sp2_i           : std_logic;
 signal sp1_o           : std_logic;
 signal system_up9600   : std_logic;
@@ -1116,7 +1117,7 @@ end process;
 
 io_data <=  unsigned(cart_data) when cart_oe  = '1' else unsigned(midi_data) when midi_oe  = '1' else unsigned(reu_dout);
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
-sid_fc_lr <= 13x"600" - (sid_fc_offset & 7x"00") when sid_filter = "100" else (others => '0');
+sid_fc_lr <= 13x"600" - (sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
 
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
@@ -1219,7 +1220,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   sp1_i        => '1',
   sp1_o        => sp1_o,
   cnt2_i       => cnt2_i,
-  cnt2_o       => open,
+  cnt2_o       => cnt2_o,
   cnt1_i       => '1',
   cnt1_o       => open,
 
@@ -1278,7 +1279,12 @@ port map(
     irq       => reu_irq
   ); 
 
--- c1541 ROM's SPI Flash, offset in spi flash $200000
+-- c1541 ROM's SPI Flash
+-- TN20k  Winbond 25Q64JVIQ
+-- TP25k  XTX XT25F64FWOIG
+-- TM138k Winbond 25Q128BVEA
+-- phase shift 135° TN, TP and 270° TM
+-- offset in spi flash TN20K, TP25K $200000, TM138K $A00000
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
@@ -1647,20 +1653,21 @@ begin
   pa2_i <= pa2_o;
   cnt2_i <= '1';
   sp2_i <= '1';
-  pb_i <= (others => '1');
+  pb_i <= pb_o;
   drive_par_i <= (others => '1');
   drive_stb_i <= '1';
+  uart_tx <= '1';
 if ext_en = '1' and disk_access = '1' then
    -- c1541 parallel bus
    drive_par_i <= pb_o;
    drive_stb_i <= pc2_n_o;
    pb_i <= drive_par_o;
    flag2_n_i <= drive_stb_o;
-   uart_tx <= '1';
  elsif system_up9600 = '0' then
    -- UART 
    -- https://www.pagetable.com/?p=1656
-   -- PB0 + FLAG2 RXD
+   -- FLAG2 RXD
+   -- PB0 RXD
    -- PB1 RTS
    -- PB2 DTR
    -- PB3 RI
@@ -1671,8 +1678,7 @@ if ext_en = '1' and disk_access = '1' then
    uart_tx <= pa2_o;
    flag2_n_i <= uart_rx_filtered;
    pb_i(0) <= uart_rx_filtered;
-   sp2_i <= uart_rx_filtered;
- else
+   else
    -- UART UP9600
    -- https://www.pagetable.com/?p=1656
    -- SP1 TXD
@@ -1681,9 +1687,9 @@ if ext_en = '1' and disk_access = '1' then
    -- SP2 RXD
    -- FLAG2 RXD
    -- PB7 to CNT2 
+   pb_i(7) <= cnt2_o;
    cnt2_i <= pb_o(7);
-   uart_tx <= pa2_o and sp1_o;
-   pb_i(0) <= uart_rx_filtered;
+   uart_tx <= sp1_o;
    sp2_i <= uart_rx_filtered;
    flag2_n_i <= uart_rx_filtered;
  end if;

@@ -19,6 +19,8 @@ entity tang_nano_20k_c64_top_25k is
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
     leds_n      : out std_logic_vector(1 downto 0);
+    uart_rx     : in std_logic;
+    uart_tx     : out std_logic;
 
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(5 downto 0);
@@ -78,6 +80,8 @@ attribute syn_keep of mspi_clk_x5       : signal is 1;
 
 signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
+signal audio_l       : std_logic_vector(17 downto 0);
+signal audio_r       : std_logic_vector(17 downto 0);
 
 -- external memory
 signal c64_addr     : unsigned(15 downto 0);
@@ -136,11 +140,17 @@ signal vsync       :  std_logic;
 signal r           :  unsigned(7 downto 0);
 signal g           :  unsigned(7 downto 0);
 signal b           :  unsigned(7 downto 0);
-
-signal pb_out      : std_logic_vector(7 downto 0);
-signal pc2_n       : std_logic;
-signal pb_in       : std_logic_vector(7 downto 0);
-signal flag2_n     : std_logic;
+-- user port
+signal pb_o        : std_logic_vector(7 downto 0);
+signal pc2_n_o     : std_logic;
+signal pb_i        : std_logic_vector(7 downto 0);
+signal flag2_n_i   : std_logic;
+signal pa2_i       : std_logic;
+signal pa2_o       : std_logic;
+signal drive_par_i : std_logic_vector(7 downto 0);
+signal drive_par_o : std_logic_vector(7 downto 0);
+signal drive_stb_i : std_logic;
+signal drive_stb_o : std_logic;
 
 -- BL616 interfaces
 signal mcu_start      : std_logic;
@@ -364,6 +374,18 @@ signal load_flt       : std_logic;
 signal sid_ver        : std_logic;
 signal sid_mode       : unsigned(2 downto 0);
 signal sid_digifix    : std_logic;
+signal system_tape_sound : std_logic;
+signal uart_rxD         : std_logic_vector(3 downto 0);
+signal uart_rx_filtered : std_logic;
+signal cnt2_i          : std_logic;
+signal cnt2_o          : std_logic;
+signal sp2_i           : std_logic;
+signal sp1_o           : std_logic;
+signal system_up9600   : std_logic;
+signal sid_fc_offset   : std_logic_vector(2 downto 0);
+signal sid_fc_lr       : std_logic_vector(12 downto 0);
+signal sid_filter      : std_logic_vector(2 downto 0);
+signal georam          : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -470,10 +492,10 @@ port map
     iec_clk_o     => iec_clk_i,
 
     -- Userport parallel bus to 1541 disk
-    par_data_i    => pb_out,
-    par_stb_i     => pc2_n,
-    par_data_o    => pb_in,
-    par_stb_o     => flag2_n,
+    par_data_i    => drive_par_i,
+    par_stb_i     => drive_stb_i,
+    par_data_o    => drive_par_o,
+    par_stb_o     => drive_stb_o,
 
     sd_lba        => disk_lba,
     sd_rd         => sd_rd(0),
@@ -579,6 +601,10 @@ port map(
 
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
 
+cass_snd <= cass_read and not cass_run and  system_tape_sound   and not cass_finish;
+audio_l <= audio_data_l or (5x"00" & cass_snd & 12x"00000");
+audio_r <= audio_data_r or (5x"00" & cass_snd & 12x"00000");
+
 video_inst: entity work.video 
 port map(
       pll_lock     => pll_locked, 
@@ -596,8 +622,8 @@ port map(
       g_in      => std_logic_vector(g(7 downto 4)),
       b_in      => std_logic_vector(b(7 downto 4)),
 
-      audio_l => audio_data_l,  -- interface C64 core specific
-      audio_r => audio_data_r,
+      audio_l => audio_l,  -- interface C64 core specific
+      audio_r => audio_r,
       osd_status => osd_status,
 
       mcu_start => mcu_start,
@@ -856,7 +882,7 @@ hid_inst: entity work.hid
   mouse_strobe    => mouse_strobe
  );
 
-module_inst: entity work.sysctrl 
+ module_inst: entity work.sysctrl 
  port map 
  (
   clk                 => clk32,
@@ -885,9 +911,15 @@ module_inst: entity work.sysctrl
   system_midi         => st_midi,
   system_pause        => system_pause,
   system_vic_variant  => vic_variant, 
-  system_cia_mode     => cia_mode, 
+  system_cia_mode     => cia_mode,
   system_sid_ver      => sid_ver,
   system_sid_mode     => sid_mode,
+  system_tape_sound   => system_tape_sound,
+  system_up9600       => system_up9600,
+  system_sid_filter   => sid_filter,
+  system_sid_fc_offset => sid_fc_offset,
+  system_georam       => georam,
+
   int_out_n           => m0s(4),
   int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & "0" & hid_int & "0")),
   int_ack             => int_ack,
@@ -903,12 +935,15 @@ begin
   if rising_edge(clk32) then
     c64_iec_clk_old   <= iec_clk_i;
     drive_iec_clk_old <= iec_clk_o;
-    drive_stb_i_old   <= pc2_n;
-    drive_stb_o_old   <= flag2_n;
-    if ( c64_iec_clk_old /= iec_clk_i or drive_iec_clk_old /= iec_clk_o or ((drive_stb_i_old /= pc2_n or drive_stb_o_old /= flag2_n) and ext_en = '1') ) then
+    drive_stb_i_old   <= drive_stb_i;
+    drive_stb_o_old   <= drive_stb_o;
+    if c64_iec_clk_old /= iec_clk_i
+      or drive_iec_clk_old /= iec_clk_o
+      or ((drive_stb_i_old /= drive_stb_i
+      or drive_stb_o_old /= drive_stb_o) and ext_en = '1') then
         disk_access <= '1';
         toX := 16000000; -- 0.5s
-    elsif (toX /= 0) then
+    elsif toX /= 0 then
       toX := toX - 1;
     else  
       disk_access <= '0';
@@ -918,6 +953,7 @@ end process;
 
 io_data <=  unsigned(cart_data) when cart_oe  = '1' else unsigned(midi_data) when midi_oe  = '1' else unsigned(reu_dout);
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
+sid_fc_lr <= 13x"600" - (sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
 
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
@@ -999,28 +1035,28 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   sid_filter   => "11",
   sid_ver      => sid_ver & sid_ver,
   sid_mode     => sid_mode,
-  sid_cfg      => (others => '0'),
-  sid_fc_off_l => (others => '0'),
-  sid_fc_off_r => (others => '0'),
-  sid_ld_clk   => '0',
+  sid_cfg      => std_logic_vector(sid_filter(1 downto 0) & sid_filter(1 downto 0)),
+  sid_fc_off_l => sid_fc_lr,
+  sid_fc_off_r => sid_fc_lr,
+  sid_ld_clk   => clk32,
   sid_ld_addr  => (others => '0'),
   sid_ld_data  => (others => '0'),
   sid_ld_wr    => '0',
-	sid_digifix  => sid_digifix,
+  sid_digifix  => sid_digifix,
 
   -- USER
-  pb_i         => unsigned(pb_in),
-  std_logic_vector(pb_o) => pb_out,
-  pa2_i        => '1',
-  pa2_o        => open,
-  pc2_n_o      => pc2_n,
-  flag2_n_i    => flag2_n,
-  sp2_i        => '1',
+  pb_i         => unsigned(pb_i),
+  std_logic_vector(pb_o) => pb_o,
+  pa2_i        => pa2_i,
+  pa2_o        => pa2_o,
+  pc2_n_o      => pc2_n_o,
+  flag2_n_i    => flag2_n_i,
+  sp2_i        => sp2_i,
   sp2_o        => open,
   sp1_i        => '1',
-  sp1_o        => open,
-  cnt2_i       => '1',
-  cnt2_o       => open,
+  sp1_o        => sp1_o,
+  cnt2_i       => cnt2_i,
+  cnt2_o       => cnt2_o,
   cnt1_i       => '1',
   cnt1_o       => open,
 
@@ -1096,7 +1132,7 @@ port map(
     mspi_do   => mspi_do
 );
 
-cid <= cart_id when cart_attached = '1' else X"00FF";
+cid <= cart_id when cart_attached = '1' else X"0099" when georam ='1' else X"00FF";
 
 cartridge_inst: entity work.cartridge
 port map
@@ -1285,9 +1321,9 @@ begin
               cart_blk_len <= cart_blk_len - 1;
               ioctl_req_wr <= '1';
               end if;
-          end if;
-      end if;
-    end if;
+       end if;
+     end if;
+  end if;
 
       -- cart added
       if old_download /= ioctl_download and load_crt = '1' then
@@ -1431,5 +1467,64 @@ port map (
   osd_play_stop_toggle => tap_start,
   ear_input       => '0'
 );
+
+	-- UART_RX synchronizer
+	process(clk32)
+	begin
+		if rising_edge(clk32) then
+			uart_rxD <= uart_rxD(2 downto 0) & uart_rx;
+			if uart_rxD = "0000" then uart_rx_filtered <= '0'; end if;
+			if uart_rxD = "1111" then uart_rx_filtered <= '1'; end if;
+		end if;
+	end process;
+
+-- connect user port
+process (all)
+begin
+  pa2_i <= pa2_o;
+  cnt2_i <= '1';
+  sp2_i <= '1';
+  pb_i <= pb_o;
+  drive_par_i <= (others => '1');
+  drive_stb_i <= '1';
+  uart_tx <= '1';
+if ext_en = '1' and disk_access = '1' then
+   -- c1541 parallel bus
+   drive_par_i <= pb_o;
+   drive_stb_i <= pc2_n_o;
+   pb_i <= drive_par_o;
+   flag2_n_i <= drive_stb_o;
+   uart_tx <= '1';
+ elsif system_up9600 = '0' then
+   -- UART 
+   -- https://www.pagetable.com/?p=1656
+   -- FLAG2 RXD
+   -- PB0 RXD
+   -- PB1 RTS
+   -- PB2 DTR
+   -- PB3 RI
+   -- PB4 DCD
+   -- PB6 CTS
+   -- PB7 DSR
+   -- PA2 TXD
+   uart_tx <= pa2_o;
+   flag2_n_i <= uart_rx_filtered;
+   pb_i(0) <= uart_rx_filtered;
+   else
+   -- UART UP9600
+   -- https://www.pagetable.com/?p=1656
+   -- SP1 TXD
+   -- PA2 TXD
+   -- PB0 RXD
+   -- SP2 RXD
+   -- FLAG2 RXD
+   -- PB7 to CNT2 
+   pb_i(7) <= cnt2_o;
+   cnt2_i <= pb_o(7);
+   uart_tx <= sp1_o;
+   sp2_i <= uart_rx_filtered;
+   flag2_n_i <= uart_rx_filtered;
+ end if;
+end process;
 
 end Behavioral_top;

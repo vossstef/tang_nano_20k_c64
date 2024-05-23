@@ -7,6 +7,13 @@
 //Device Version: C
 //Created Time: Wed 10 25 23:26:16 2023
 
+// tang onboard bl616 µc uart
+IO_LOC "uart_rx" B3;
+IO_LOC "uart_tx" C3;
+IO_PORT "uart_rx" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "uart_tx" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+
+
 // HDMI (USB-A side PMOD)
 IO_LOC "tmds_clk_p" H5,J5;
 IO_PORT "tmds_clk_p" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33D;

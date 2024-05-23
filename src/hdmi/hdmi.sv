@@ -78,7 +78,7 @@ wire [7:0] cea0 = 8'd2; // CEA is HDMI mode in group 1
    
 // PAL
 wire [55:0] htiming1  = { 11'd0,  12'd1008, 11'd800, 11'd24, 11'd72 }; 
-wire [55:0] whtiming1 = { 11'd64, 12'd1008, 11'd950, 11'd20, 11'd32 };  
+wire [55:0] whtiming1 = { 11'd60, 12'd1008, 11'd952, 11'd16, 11'd32 };  
 wire [39:0] vtiming1  = {          10'd624, 10'd576,  10'd5,  10'd5 };
 wire [7:0] cea1 = 8'd17;
    
