@@ -68,7 +68,7 @@ add_file src/sid/sid_dac.sv
 add_file src/sid/sid_envelope.sv
 add_file src/sid/sid_filter.sv
 add_file src/sid/sid_tables.sv
-add_file src/sid/sid_top.sv
+add_file src/sid/sid_top_gw5a.sv
 add_file src/sid/sid_voice.sv
 
 set_option -synthesis_tool gowinsynthesis

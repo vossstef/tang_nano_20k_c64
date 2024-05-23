@@ -40,7 +40,8 @@
         <File path="src/sid/sid_envelope.sv" type="file.verilog" enable="1"/>
         <File path="src/sid/sid_filter.sv" type="file.verilog" enable="1"/>
         <File path="src/sid/sid_tables.sv" type="file.verilog" enable="1"/>
-        <File path="src/sid/sid_top.sv" type="file.verilog" enable="1"/>
+        <File path="src/sid/sid_top.sv" type="file.verilog" enable="0"/>
+        <File path="src/sid/sid_top_gw5a.sv" type="file.verilog" enable="1"/>
         <File path="src/sid/sid_voice.sv" type="file.verilog" enable="1"/>
         <File path="src/video_freezer.sv" type="file.verilog" enable="1"/>
         <File path="src/c1530.vhd" type="file.vhdl" enable="1"/>
