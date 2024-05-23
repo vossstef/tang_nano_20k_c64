@@ -25,12 +25,12 @@ Features:
 * Tape (*.TAP) image loader [C1530 Datasette](https://en.wikipedia.org/wiki/Commodore_Datasette)
 * Loadable 8K Kernal ROM (*.BIN)
 * [VIC-II](https://en.wikipedia.org/wiki/MOS_Technology_VIC-II) revision and [6526](https://en.wikipedia.org/wiki/MOS_Technology_CIA) / 8521 selection
-* [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) revision 6561 or 8580 selectable
+* [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) revision 6581 or 8580 selectable
 * 2nd SID (Stereo) for Tang Primer 25K and Tang Mega 138K
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN)<br>
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
-* RS232C Serial [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) to Tang onboard PC USB serial interface
+* RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode to Tang onboard USB-C serial port.
 <br>
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
@@ -80,6 +80,8 @@ The file is loaded automatically as soon as file selected via OSD (no need to pr
 Screen will blank for several seconds and then display briefly the filename of the to be loaded file.<br> It will blank afterwards till load completed. I will take time...<br>
 Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default boot tape.<br>
 Prevent TAP load at boot or for **Tape unload** OSD TAP selection **No Disk** , **Save settings** and **Reset**.<br>
+The available Tape Sound can be disabled from OSD.
+<br>
 
 ## Kernal Loader (.BIN)
 Dolphin DOS 2.0 is the power-up default Kernal.<br>
