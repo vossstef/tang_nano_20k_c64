@@ -63,15 +63,12 @@ add_file src/tang_nano_20k_c64_top_25k.sdc
 add_file src/loader_sd_card.sv
 add_file src/fifo_sc_hs/FIFO_SC_HS_Top_gw5a.vhd
 add_file src/c1530.vhd
-add_file src/m65_sid/sid_6581.vhdl
-add_file src/m65_sid/sid_coeffs.vhdl
-add_file src/m65_sid/sid_coeffs_mux.vhdl
-add_file src/m65_sid/sid_components.vhdl
-add_file src/m65_sid/sid_filters.vhdl
-add_file src/m65_sid/sid_tables.vhdl
-add_file src/m65_sid/sid_voice.vhdl
-add_file src/m65_sid/sid_envelope.v
-add_file src/m65_sid/sid_voice_8580.v
+add_file src/sid/sid_dac.sv
+add_file src/sid/sid_envelope
+add_file src/sid/sid_filter.s
+add_file src/sid/sid_tables.s
+add_file src/sid/sid_top.sv
+add_file src/sid/sid_voice.sv
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name tang_nano_20k_c64_25k

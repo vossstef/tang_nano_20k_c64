@@ -30,6 +30,7 @@ Features:
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU)<br>
 * On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN)<br>
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
+* RS232C Serial [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) to Tang onboard PC USB serial interface
 <br>
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
