@@ -298,10 +298,6 @@ signal pot_x1       : std_logic_vector(7 downto 0);
 signal pot_y1       : std_logic_vector(7 downto 0);
 signal pot_x2       : std_logic_vector(7 downto 0);
 signal pot_y2       : std_logic_vector(7 downto 0);
-signal filter_table_addr0 : integer range 0 to 2047;
-signal filter_table_val0 : unsigned(15 downto 0);
-signal filter_table_addr1 : integer range 0 to 2047;
-signal filter_table_val1 : unsigned(15 downto 0);
 
 component mos6526
 	PORT (
@@ -645,54 +641,43 @@ pot_y1 <= (others => '1' ) when cia1_pao(6) = '0' else not pot2;
 pot_x2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot3;
 pot_y2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot4;
 
-
-sidc: entity work.sid_coeffs_mux port map (
-  clk => clk32,
-  addr0 => filter_table_addr0,
-  val0 => filter_table_val0,
-  addr1 => filter_table_addr1,
-  val1 => filter_table_val1
-  );
-
-sidl : entity work.sid6581 port map (
-  clk_1MHz => enableSid,
-  cpuclock => clk32,
-  reset => reset,
-  cs => sid_sel_l,
-  mode => sid_ver(0),
-  we => pulseWr_io,
-  addr => cpuAddr(4 downto 0),
-  di => cpuDo,
-  do => sid_do,
-  pot_x => unsigned(pot_x1 and pot_x2),
-  pot_y => unsigned(pot_y1 and pot_y2),
-  std_logic_vector(signed_audio) => audio_l,
-  audio_data => open,
-  ext_in_signed(12) => sid_ver(0) and sid_digifix,
-  ext_in_signed(11 downto 0) => (others => '0'),
-  filter_table_addr => filter_table_addr0,
-  filter_table_val => filter_table_val0
-  );
-
-  sidr : entity work.sid6581 port map (
-	clk_1MHz => enableSid,
-	cpuclock => clk32,
+sid : entity work.sid_top_gw5a
+port map (
 	reset => reset,
-	cs => sid_sel_r,
-	mode => sid_ver(0),
+	clk => clk32,
+	ce_1m => enableSid,
 	we => pulseWr_io,
+	cs => unsigned'(sid_sel_r & sid_sel_l),
 	addr => cpuAddr(4 downto 0),
-	di => cpuDo,
-	do => sid_do,
-	pot_x => unsigned(pot_x1 and pot_x2),
-	pot_y => unsigned(pot_y1 and pot_y2),
-	std_logic_vector(signed_audio) => audio_r,
-	audio_data => open,
-	ext_in_signed(12) => sid_ver(0) and sid_digifix,
-	ext_in_signed(11 downto 0) => (others => '0'),
-	filter_table_addr => filter_table_addr1,
-	filter_table_val => filter_table_val1
-	);
+	data_in => cpuDo,
+	data_out => sid_do,
+	pot_x_l => pot_x1 and pot_x2,
+	pot_y_l => pot_x1 and pot_x2,
+
+	pot_x_r => pot_x1 and pot_x2,
+	pot_y_r => pot_x1 and pot_x2,
+
+	audio_l => audio_l,
+	audio_r => audio_r,
+
+	ext_in_l(17) => sid_ver(0) and sid_digifix,
+	ext_in_l(16 downto 0) => (others => '0'),
+
+	ext_in_r(17) => sid_ver(1) and sid_digifix,
+	ext_in_r(16 downto 0) => (others => '0'),
+
+	filter_en => sid_filter,
+	mode    => sid_ver,
+	cfg     => sid_cfg,
+	
+	fc_offset_l => sid_fc_off_l,
+	fc_offset_r => sid_fc_off_r,
+
+	ld_clk  => sid_ld_clk,
+	ld_addr => sid_ld_addr,
+	ld_data => sid_ld_data,
+	ld_wr   => sid_ld_wr
+);
 
 -- -----------------------------------------------------------------------
 -- CIAs

@@ -1,3 +1,9 @@
+// UART through USB-C port
+IO_LOC "uart_rx" N16;
+IO_LOC "uart_tx" P15;
+IO_PORT "uart_rx" IO_TYPE=LVCMOS33;
+IO_PORT "uart_tx" IO_TYPE=LVCMOS33;
+
 IO_LOC "clk" P16;        // 50Mhz
 IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=OFF BANK_VCCIO=3.3;
 

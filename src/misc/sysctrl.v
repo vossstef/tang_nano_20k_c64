@@ -46,7 +46,12 @@ module sysctrl (
   output reg [1:0]  system_vic_variant,
   output reg        system_cia_mode,
   output reg [2:0]  system_sid_mode,
-  output reg        system_sid_ver
+  output reg        system_sid_ver,
+  output reg        system_tape_sound,
+  output reg        system_up9600,
+  output reg [2:0]  system_sid_filter,
+  output reg [2:0]  system_sid_fc_offset,
+  output reg        system_georam
 );
 
 reg [3:0] state;
@@ -93,6 +98,11 @@ always @(posedge clk) begin
       system_cia_mode <= 1'b0;
       system_sid_mode <= 3'b000;
       system_sid_ver <= 1'b0;
+      system_tape_sound <= 1'b0;
+      system_up9600 <= 1'b0;
+      system_sid_filter <= 3'b000;
+      system_sid_fc_offset <= 3'b000;
+      system_georam <= 1'b0;
    end else begin
       int_ack <= 8'h00;
 
@@ -166,11 +176,11 @@ always @(posedge clk) begin
                     if(id == "Y") system_turbo_speed <= data_in[1:0];
                     // sid pot 1 / 2
                     if(id == "E") system_video_std <= data_in[0];
-                    // midi
+                    // midi interface
                     if(id == "N") system_midi <= data_in[2:0];
                     // Pause when OSD is open
                     if(id == "G") system_pause <= data_in[0];
-                    // ,vic-ii type mode
+                    // vic-ii type mode
                     if(id == "M") system_vic_variant <= data_in[1:0];
                     // cia type mode
                     if(id == "C") system_cia_mode <= data_in[0];
@@ -178,6 +188,16 @@ always @(posedge clk) begin
                     if(id == "O") system_sid_ver <= data_in[0];
                     // sid mode
                     if(id == "K") system_sid_mode <= data_in[2:0];
+                    // tape sound
+                    if(id == "I") system_tape_sound <= data_in[0];
+                    // UART mode
+                    if(id == "<") system_up9600 <= data_in[0];
+                    // SID Filter
+                    if(id == "H") system_sid_filter <= data_in[2:0];
+                    // SID FC Offset
+                    if(id == ">") system_sid_fc_offset <= data_in[2:0];
+                    // GeoRAM
+                    if(id == "#") system_georam <= data_in[0];
                 end
             end
 
