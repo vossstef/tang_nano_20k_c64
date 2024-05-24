@@ -26,17 +26,17 @@ module sid_tables
 );
 
 // P + T
-always @(posedge clock) begin
+always_ff @(posedge clock) begin
 	p_t_out <= mode ? wave8580_p_t[acc_t[10:0]] : wave6581_p_t[acc_t[10:0]];
 end
 
 // P + S
-always @(posedge clock) begin
+always_ff @(posedge clock) begin
 	ps__out <= mode ? wave8580_ps_[acc_t] : wave6581_ps_[acc_t[10:0]];
 end
 
 // S + T
-always @(posedge clock) begin
+always_ff @(posedge clock) begin
 	_st_out <= mode ? {
 		((acc_t & 'he7e) == 'he7e) | ((acc_t & 'he80) == 'he80) | ((acc_t & 'hf00) == 'hf00) | ((acc_t & 'he7d) == 'he7d),
 		((acc_t & 'h7f8) == 'h7f8) | ((acc_t & 'hf00) == 'hf00),
@@ -59,7 +59,7 @@ always @(posedge clock) begin
 end
 
 // P + S + T
-always @(posedge clock) begin
+always_ff @(posedge clock) begin
 	pst_out <= mode ? {
 		((acc_t & 'he89) == 'he89) | ((acc_t & 'he3e) == 'he3e) | ((acc_t & 'hec0) == 'hec0) | ((acc_t & 'he8a) == 'he8a) | ((acc_t & 'hdf7) == 'hdf7) | ((acc_t & 'hdf8) == 'hdf8) | ((acc_t & 'he85) == 'he85) | ((acc_t & 'he6a) == 'he6a) | ((acc_t & 'he90) == 'he90) | ((acc_t & 'he83) == 'he83) | ((acc_t & 'he67) == 'he67) | ((acc_t & 'hea0) == 'hea0) | ((acc_t & 'hf00) == 'hf00) | ((acc_t & 'he5e) == 'he5e) | ((acc_t & 'he70) == 'he70) | ((acc_t & 'he6c) == 'he6c),
 		((acc_t & 'heee) == 'heee) | ((acc_t & 'h7ef) == 'h7ef) | ((acc_t & 'h7f2) == 'h7f2) | ((acc_t & 'h7f4) == 'h7f4) | ((acc_t & 'hef0) == 'hef0) | ((acc_t & 'h7f8) == 'h7f8) | ((acc_t & 'hf00) == 'hf00) | ((acc_t & 'h7f1) == 'h7f1),
@@ -749,11 +749,11 @@ reg [15:0] f0;
 generate
 	if(MULTI_FILTERS) begin
 //		always @(posedge ld_clk) if(ld_wr) f6581_curve[1024+ld_addr] <= ld_data;
-		always @(posedge clock) f0 <= f6581_curve[{cfg, Fc[10:1]}];
+		always_ff @(posedge clock) f0 <= f6581_curve[{cfg, Fc[10:1]}];
 	end
 	else begin
 //		always @(posedge ld_clk) if(ld_wr) f6581_curve[ld_addr[9:0]] <= ld_data;
-		always @(posedge clock) f0 <= f6581_curve[Fc[10:1]];
+		always_ff @(posedge clock) f0 <= f6581_curve[Fc[10:1]];
 	end
 endgenerate
 
@@ -764,7 +764,7 @@ sid_dac #(.BITS(11)) fc_dac
   .vout (fc_6581)
 );
 
-function [9:0] tanh_x_mirror(signed [10:0] x);
+function reg [9:0] tanh_x_mirror(signed [10:0] x);
     tanh_x_mirror = 10'(x < 0 ? -x : x);
 endfunction
 
@@ -774,7 +774,7 @@ function signed [10:0] tanh_x_clamp(signed [12:0] x);
                    11'(x);
 endfunction
 
-function signed [15:0] tanh_y_mirror(x_neg,signed [15:0] y);
+function signed [15:0] tanh_y_mirror(logic x_neg,signed [15:0] y);
     tanh_y_mirror = x_neg ? -y : y;
 endfunction
 
@@ -782,7 +782,7 @@ wire signed [15:0] f6581_adj_y0 = 16'(9883+250);
 wire [10:0] fc_x = tanh_x_clamp(13'(fc_6581) - Fc_offset);
 
 reg [15:0] f0_adj;
-always @(posedge clock) f0_adj <= {fc_x[10], f6581_adj[tanh_x_mirror(fc_x)]};
+always_ff @(posedge clock) f0_adj <= {fc_x[10], f6581_adj[tanh_x_mirror(fc_x)]};
 
 assign F0 = mode ? ({ 3'b000, Fc, 2'b00 } + Fc) : Fc_offset ? (f6581_adj_y0 + tanh_y_mirror(f0_adj[15], f0_adj[14:0])) : {1'b0, f0[15:1]};
 
