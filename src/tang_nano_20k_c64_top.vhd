@@ -1651,33 +1651,43 @@ port map (
 process (all)
 begin
   pa2_i <= pa2_o;
-  cnt2_i <= '1';
-  sp2_i <= '1';
-  pb_i <= pb_o;
+--  pb_i <= pb_o;
   drive_par_i <= (others => '1');
   drive_stb_i <= '1';
-  uart_tx <= '1';
 if ext_en = '1' and disk_access = '1' then
    -- c1541 parallel bus
    drive_par_i <= pb_o;
    drive_stb_i <= pc2_n_o;
    pb_i <= drive_par_o;
    flag2_n_i <= drive_stb_o;
+   uart_tx <= '1';
+   sp2_i <= '1';
+   cnt2_i <= '1';
  elsif system_up9600 = '0' then
    -- UART 
    -- https://www.pagetable.com/?p=1656
    -- FLAG2 RXD
-   -- PB0 RXD
-   -- PB1 RTS
-   -- PB2 DTR
-   -- PB3 RI
-   -- PB4 DCD
-   -- PB6 CTS
-   -- PB7 DSR
-   -- PA2 TXD
+   -- PB0 RXD in
+   -- PB1 RTS out
+   -- PB2 DTR out
+   -- PB3 RI in
+   -- PB4 DCD in
+   -- PB6 CTS in
+   -- PB7 DSR in
+   -- PA2 TXD out
    uart_tx <= pa2_o;
+   sp2_i <= uart_rx_filtered;
    flag2_n_i <= uart_rx_filtered;
    pb_i(0) <= uart_rx_filtered;
+   -- Zeromodem
+   pb_i(6) <= pb_o(1);  -- RTS > CTS
+   pb_i(4) <= pb_o(2);  -- DTR > DCD
+   pb_i(7) <= pb_o(2);  -- DTR > DSR
+   pb_i(3) <= pb_o(2);  -- DTR > RI
+   pb_i(1) <= pb_o(1);  
+   pb_i(2) <= pb_o(2);
+   pb_i(5) <= pb_o(5);
+   cnt2_i <= '1';
    else
    -- UART UP9600
    -- https://www.pagetable.com/?p=1656
@@ -1689,9 +1699,17 @@ if ext_en = '1' and disk_access = '1' then
    -- PB7 to CNT2 
    pb_i(7) <= cnt2_o;
    cnt2_i <= pb_o(7);
-   uart_tx <= sp1_o;
+   uart_tx <= pa2_o and sp1_o;
    sp2_i <= uart_rx_filtered;
    flag2_n_i <= uart_rx_filtered;
+   pb_i(0) <= uart_rx_filtered;
+   -- Zeromodem
+   pb_i(6) <= pb_o(1);  -- RTS > CTS
+   pb_i(4) <= pb_o(2);  -- DTR > DCD
+   pb_i(1) <= pb_o(1);  
+   pb_i(2) <= pb_o(2);
+   pb_i(3) <= pb_o(3);
+   pb_i(5) <= pb_o(5);
  end if;
 end process;
 
