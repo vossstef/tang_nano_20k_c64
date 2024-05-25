@@ -82,7 +82,6 @@ set_option -use_done_as_gpio 1
 set_option -use_cpu_as_gpio 1
 set_option -use_ready_as_gpio 1
 set_option -print_all_synthesis_warning 1
-set_option -rw_check_on_ram 0
-set_option -gen_posp 1
+set_option -rw_check_on_ram 1
 
 run all
