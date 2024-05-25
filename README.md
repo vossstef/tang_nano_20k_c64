@@ -97,6 +97,9 @@ Enable REU, and load the PRG.<br>
 
 Playing around with [GEOS](https://en.wikipedia.org/wiki/GEOS_(8-bit_operating_system))<br>
 Enable REU, select c1541 CBM DOS ROM and load the PRG.<br>
+## RS232 Serial Interface 
+The Tang onboard USB-C serial port can be used for communication with the C64 Userport Serial port in [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode.<br>
+Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal rather than default DolphinDOS.<br> For a first start use UP9600 mode and a Terminal program like [ccgms](https://github.com/mist64/ccgmsterm) and on the PC side [Putty](https://www.putty.org) with 2400 Baud.<br>
 
 ## Push Button utilization
 * S2 keep pressed during power-up for programming Flash<br>
@@ -111,7 +114,6 @@ invoke by F12 keypress<br>
 * Widescreen activation<br>
 * HID device selection for Joystick Port 1 and Port 2<br>
 * REU activation<br>
-* Audio Filter<br>
 * c1541 Drive disk image selection<br>
 * c1541 Disk write protetcion<br>
 * c1541 Reset<br>
@@ -120,6 +122,8 @@ invoke by F12 keypress<br>
 * Pause when OSD open<br>
 * PAL / NTSC Video mode<br>
 * VIC-II revision, 6526 / 8521 and SID 6561/8580 selection
+* SID Filter selection
+* GEOram activation
 * Loader (CRT/PRG/BIN/TAP) file selection<br>
 
 ## Gamecontrol support

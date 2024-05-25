@@ -64,9 +64,9 @@ add_file src/loader_sd_card.sv
 add_file src/fifo_sc_hs/FIFO_SC_HS_Top_gw5a.vhd
 add_file src/c1530.vhd
 add_file src/sid/sid_dac.sv
-add_file src/sid/sid_envelope
-add_file src/sid/sid_filter.s
-add_file src/sid/sid_tables.s
+add_file src/sid/sid_envelope.sv
+add_file src/sid/sid_filter.sv
+add_file src/sid/sid_tables.sv
 add_file src/sid/sid_top_gw5a.sv
 add_file src/sid/sid_voice.sv
 
@@ -82,7 +82,6 @@ set_option -use_cpu_as_gpio 1
 set_option -use_i2c_as_gpio 1
 set_option -use_ready_as_gpio 1
 set_option -print_all_synthesis_warning 1
-set_option -rw_check_on_ram 0
-set_option -gen_posp 1
+set_option -rw_check_on_ram 1
 
 run all
