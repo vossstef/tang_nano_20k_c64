@@ -97,9 +97,6 @@ Enable REU, and load the PRG.<br>
 
 Playing around with [GEOS](https://en.wikipedia.org/wiki/GEOS_(8-bit_operating_system))<br>
 Enable REU, select c1541 CBM DOS ROM and load the PRG.<br>
-## RS232 Serial Interface 
-The Tang onboard USB-C serial port can be used for communication with the C64 Userport Serial port in [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode.<br>
-Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal rather than default DolphinDOS.<br> For a first start use UP9600 mode and a Terminal program like [ccgms](https://github.com/mist64/ccgmsterm) and on the PC side [Putty](https://www.putty.org) with 2400 Baud.<br>
 
 ## Push Button utilization
 * S2 keep pressed during power-up for programming Flash<br>
@@ -180,6 +177,9 @@ Solid 'red' of the c1541 led after power-up indicates a missing DOS in Flash<br>
 ## MIDI-IN and OUT
 Type of MIDI interface can be selected from OSD.<br> There is support for Sequential Inc., Passport/Sentech, DATEL/SIEL/JMS/C-LAB and Namesoft<br>
 You can use a [MiSTeryNano MIDI shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) to interface to a Keyboard.<br>
+## RS232 Serial Interface 
+The Tang onboard USB-C serial port can be used for communication with the C64 Userport Serial port in [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode.<br>
+Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal rather than default DolphinDOS.<br> For a first start use UP9600 mode and a Terminal program like [ccgms](https://github.com/mist64/ccgmsterm) and on the PC side [Putty](https://www.putty.org) with 2400 Baud.<br>
 ## Powering
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis
