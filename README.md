@@ -7,7 +7,8 @@ Be aware that the [VIC20 FPGA core](https://en.wikipedia.org/wiki/VIC-20) had be
 <br>
 Original C64 core by Peter Wendrich<br>
 All HID components and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by Till Harbaum<br>
-c1541 by https://github.com/darfpga<br>
+c1541 by [darfpga](https://github.com/darfpga)<br>
+SID by [Dag Lem](https://github.com/daglem/reDIP-SID)<br>
 
 Features:
 * PAL 800x576p@50Hz or NTSC 800x480p@60Hz HDMI Video and Audio Output
@@ -26,7 +27,7 @@ Features:
 * Loadable 8K Kernal ROM (*.BIN)
 * [VIC-II](https://en.wikipedia.org/wiki/MOS_Technology_VIC-II) revision and [6526](https://en.wikipedia.org/wiki/MOS_Technology_CIA) / 8521 selection
 * [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) revision 6581 or 8580 selectable
-* 2nd SID (Stereo) for Tang Primer 25K and Tang Mega 138K
+* 2nd SID (Stereo) and selectable [Filter](https://github.com/daglem/reDIP-SID/blob/master/research/fc-curves.png) Follin, Galway, Average, Strong, Extreme
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) or [GeoRAM](https://en.wikipedia.org/wiki/GeoRAM)<br>
 * On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN)<br>
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>

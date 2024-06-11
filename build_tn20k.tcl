@@ -61,12 +61,20 @@ add_file src/tang_nano_20k_c64_top.sdc
 add_file src/loader_sd_card.sv
 add_file src/fifo_sc_hs/fifo_sc_hs.vhd
 add_file src/c1530.vhd
-add_file src/sid/sid_dac.sv
-add_file src/sid/sid_envelope.sv
-add_file src/sid/sid_filter.sv
-add_file src/sid/sid_tables.sv
-add_file src/sid/sid_top.sv
-add_file src/sid/sid_voice.sv
+add_file src/redip-sid/sid_api.sv
+add_file src/redip-sid/sid_core.sv
+add_file src/redip-sid/sid_dac.sv
+add_file src/redip-sid/sid_envelope.sv
+add_file src/redip-sid/sid_filter.sv
+add_file src/redip-sid/sid_pkg.sv
+add_file src/redip-sid/sid_voice.sv
+add_file src/redip-sid/sid_waveform.sv
+add_file src/uart6551/6551rx.v
+add_file src/uart6551/6551tx.v
+add_file src/uart6551/uart_6551.v
+add_file src/uart6551/BaudRate.vhd
+add_file src/redip-sid/sid_waveform_PST.svh
+add_file src/redip-sid/sid_waveform__ST.svh
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name tang_nano_20k_c64

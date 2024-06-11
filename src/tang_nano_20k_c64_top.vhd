@@ -15,22 +15,15 @@ use IEEE.numeric_std.ALL;
 entity tang_nano_20k_c64_top is
   port
   (
-    clk_27mhz   : in std_logic;
+    clk         : in std_logic;
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
     leds_n      : out std_logic_vector(5 downto 0);
     io          : in std_logic_vector(4 downto 0);
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
-
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(5 downto 0);
-    -- SPI interface onboard BL616 uC
-    spi_csn     : in std_logic;
-    spi_sclk    : in std_logic;
-    spi_dat     : in std_logic;
-    spi_dir     : out std_logic; -- unusable due to hw bug / capacitor
-    jtag_tck    : out std_logic; -- replacement spi_dir
     --
     tmds_clk_n  : out std_logic;
     tmds_clk_p  : out std_logic;
@@ -206,7 +199,6 @@ signal sd_change      : std_logic;
 signal sdc_int        : std_logic;
 signal sdc_iack       : std_logic;
 signal int_ack        : std_logic_vector(7 downto 0);
-signal spi_ext        : std_logic;
 signal spi_io_din     : std_logic;
 signal spi_io_ss      : std_logic;
 signal spi_io_clk     : std_logic;
@@ -233,6 +225,7 @@ signal reu_ram_addr   : std_logic_vector(24 downto 0);
 signal reu_ram_dout   : std_logic_vector(7 downto 0);
 signal reu_ram_we     : std_logic;
 signal reu_irq        : std_logic;
+signal IO7            : std_logic;
 signal IOE            : std_logic;
 signal IOF            : std_logic;
 signal reu_dout       : std_logic_vector(7 downto 0);
@@ -386,11 +379,19 @@ signal cnt2_i          : std_logic;
 signal cnt2_o          : std_logic;
 signal sp2_i           : std_logic;
 signal sp1_o           : std_logic;
-signal system_up9600   : std_logic;
+signal system_up9600   : unsigned(2 downto 0);
 signal sid_fc_offset   : std_logic_vector(2 downto 0);
-signal sid_fc_lr       : std_logic_vector(12 downto 0);
+signal sid_fc_lr       : std_logic_vector(10 downto 0);
 signal sid_filter      : std_logic_vector(2 downto 0);
 signal georam          : std_logic;
+signal sid_fc_base_lr  : std_logic_vector(8 downto 0);
+signal uart_data       : unsigned(7 downto 0);
+signal uart_oe         : std_logic;
+signal uart_en         : std_logic;
+signal tx_6551         : std_logic;
+signal uart_irq        : std_logic;
+signal uart_cs         : std_logic;
+signal CLK_6551_EN     : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -457,30 +458,11 @@ component rPLL
 end component;
 
 begin
--- ----------------- SPI input parser ----------------------
--- map output data onto both spi outputs
-  spi_io_din  <= m0s(1) when spi_ext = '1' else spi_dat;
-  spi_io_ss   <= m0s(2) when spi_ext = '1' else spi_csn;
-  spi_io_clk  <= m0s(3) when spi_ext = '1' else spi_sclk;
-  jtag_tck    <= spi_io_dout; -- onboad bl616 back-up miso signal
-  m0s(0)      <= spi_io_dout; -- M0 Dock
-  spi_dir     <= spi_io_dout; -- unusable due to hw bug
+  spi_io_din  <= m0s(1);
+  spi_io_ss   <= m0s(2);
+  spi_io_clk  <= m0s(3);
+  m0s(0)      <= spi_io_dout;
   m0s(5)      <= 'Z';
-
--- by default the internal SPI is being used. Once there is
--- a select from the external spi (M0S Dock) , then the connection is being switched
-process (clk32, pll_locked)
-begin
-  if rising_edge(clk32) then
-    if pll_locked = '0' then
-        spi_ext <= '0';
-    elsif m0s(2) = '0' then
-        spi_ext <= '1';
-    else 
-        spi_ext <= spi_ext;
-    end if;
-  end if;
-end process;
 
 -- mux overlapping DS2 and MIDI signals to IO pin
 joystick_cs     <= joystick_cs_i when st_midi = "000" else 'Z';
@@ -841,7 +823,7 @@ mainclock: rPLL
             CLKOUTD3 => open,
             RESET    => '0',
             RESET_P  => '0',
-            CLKIN    => clk_27mhz,
+            CLKIN    => clk,
             CLKFB    => '0',
             FBDSEL   => FBDSEL,
             IDSEL    => IDSEL,
@@ -909,7 +891,7 @@ flashclock: rPLL
             CLKOUTD3 => open,
             RESET    => '0',
             RESET_P  => '0',
-            CLKIN    => clk_27mhz,
+            CLKIN    => clk,
             CLKFB    => '0',
             FBDSEL   => (others => '0'),
             IDSEL    => (others => '0'),
@@ -921,10 +903,10 @@ flashclock: rPLL
 
 leds_n <=  not leds;
 leds(0) <= led1541;
-
--- 4 3 2 1 0 digital c64
 joyDS2     <=    ("00" & (key_l1 or key_r1) & key_circle & key_square & key_cross & key_triangle);
-joyDigital <= not("11" & io(0) & io(4) & io(3) & io(2) & io(1));
+--                       4  3  2  1  0 digital c64 
+--                       TR RI LE DN UP
+joyDigital <= not("11" & io(0) & io(3) & io(4) & io(1) & io(2));
 joyUsb1    <=    ("00" & joystick1(4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3));
 joyUsb2    <=    ("00" & joystick2(4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3));
 joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
@@ -1115,9 +1097,57 @@ begin
   end if;
 end process;
 
-io_data <=  unsigned(cart_data) when cart_oe  = '1' else unsigned(midi_data) when midi_oe  = '1' else unsigned(reu_dout);
+uart_en <= system_up9600(2) or system_up9600(1);
+uart_oe <= not ram_we and uart_cs and uart_en;
+io_data <=  unsigned(cart_data) when cart_oe = '1' else
+            unsigned(midi_data) when midi_oe = '1' else
+            uart_data when uart_oe = '1' else
+            unsigned(reu_dout);
+
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
-sid_fc_lr <= 13x"600" - (sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
+
+-- Example filter curves:
+-- Follin-style: fc_curve(x, 240, -785)
+-- Galway-style: fc_curve(x, 280, -405)
+-- Average     : fc_curve(x, 250,    0)  default
+-- Strong      : fc_curve(x, 260, +400)
+-- Extreme     : fc_curve(x, 200, +760)
+process(clk32)
+begin
+  if rising_edge(clk32) then
+  case sid_filter is
+    when 3x"0" =>
+    -- Follin-style: fc_curve(x, 240, -785)
+    sid_fc_lr <= std_logic_vector(to_signed(-785, sid_fc_lr'length)); --  Final FC register offset for curve shifting
+    sid_fc_base_lr <= std_logic_vector(to_unsigned(240, sid_fc_base_lr'length)); -- Base cutoff frequency in Hz    
+
+    when 3x"1" =>
+    -- Galway-style: fc_curve(x, 280, -405)
+    sid_fc_lr <= std_logic_vector(to_signed(-405, sid_fc_lr'length)); --  Final FC register offset for curve shifting
+    sid_fc_base_lr <= std_logic_vector(to_unsigned(280, sid_fc_base_lr'length)); -- Base cutoff frequency in Hz    
+
+    -- Average     : fc_curve(x, 250,    0)  default
+    when 3x"2" =>
+      sid_fc_lr <= std_logic_vector(to_signed(0, sid_fc_lr'length)); --  Final FC register offset for curve shifting
+      sid_fc_base_lr <= std_logic_vector(to_unsigned(250, sid_fc_base_lr'length)); -- Base cutoff frequency in Hz    
+
+    when 3x"3" =>
+    -- Strong      : fc_curve(x, 260, +400)
+    sid_fc_lr <= std_logic_vector(to_signed(400, sid_fc_lr'length)); --  Final FC register offset for curve shifting
+    sid_fc_base_lr <= std_logic_vector(to_unsigned(260, sid_fc_base_lr'length)); -- Base cutoff frequency in Hz    
+
+    when 3x"4" =>
+    -- Extreme     : fc_curve(x, 200, +760)
+    sid_fc_lr <= std_logic_vector(to_signed(760, sid_fc_lr'length)); --  Final FC register offset for curve shifting
+    sid_fc_base_lr <= std_logic_vector(to_unsigned(200, sid_fc_base_lr'length)); -- Base cutoff frequency in Hz    
+
+    when others => 
+    -- Average default
+    sid_fc_lr <= std_logic_vector(to_signed(0, sid_fc_lr'length)); --  Final FC register offset for curve shifting
+    sid_fc_base_lr <= std_logic_vector(to_unsigned(250, sid_fc_base_lr'length)); -- Base cutoff frequency in Hz    
+    end case;
+  end if;
+end process;
 
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
@@ -1162,14 +1192,15 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => game,
   exrom        => exrom,
   io_rom       => io_rom,
-  io_ext       => (reu_oe or cart_oe or midi_oe),
+  io_ext       => (reu_oe or cart_oe or midi_oe or uart_oe),
   io_data      => io_data,
   irq_n        => midi_irq_n,
-  nmi_n        => (not nmi and midi_nmi_n),
+  nmi_n        => (not nmi and midi_nmi_n and not (uart_irq and uart_en)),
   nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,
   UMAXromH     => UMAXromH,
+  IO7          => IO7,
   IOE          => IOE,
   IOF          => IOF,
   freeze_key   => open,
@@ -1196,10 +1227,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   --SID
   audio_l      => audio_data_l,
   audio_r      => audio_data_r,
-  sid_filter   => "11",
   sid_ver      => sid_ver & sid_ver,
   sid_mode     => sid_mode,
-  sid_cfg      => std_logic_vector(sid_filter(1 downto 0) & sid_filter(1 downto 0)),
   sid_fc_off_l => sid_fc_lr,
   sid_fc_off_r => sid_fc_lr,
   sid_ld_clk   => clk32,
@@ -1207,6 +1236,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   sid_ld_data  => (others => '0'),
   sid_ld_wr    => '0',
   sid_digifix  => sid_digifix,
+  sid_fc_base_r => sid_fc_base_lr,
+  sid_fc_base_l => sid_fc_base_lr,
 
   -- USER
   pb_i         => unsigned(pb_i),
@@ -1657,13 +1688,15 @@ begin
   drive_par_i <= (others => '1');
   drive_stb_i <= '1';
   uart_tx <= '1';
-if ext_en = '1' and disk_access = '1' then
+  flag2_n_i <= uart_rx_filtered;
+  uart_cs <= '0';
+  if ext_en = '1' and disk_access = '1' then
    -- c1541 parallel bus
    drive_par_i <= pb_o;
    drive_stb_i <= pc2_n_o;
    pb_i <= drive_par_o;
    flag2_n_i <= drive_stb_o;
- elsif system_up9600 = '0' then
+ elsif system_up9600 = 0 then
    -- UART 
    -- https://www.pagetable.com/?p=1656
    -- FLAG2 RXD
@@ -1683,7 +1716,7 @@ if ext_en = '1' and disk_access = '1' then
    --pb_i(6) <= pb_o(1);  -- RTS > CTS
    --pb_i(4) <= pb_o(2);  -- DTR > DCD
    --pb_i(7) <= pb_o(2);  -- DTR > DSR
- else
+   elsif system_up9600 = 1 then 
    -- UART UP9600
    -- https://www.pagetable.com/?p=1656
    -- SP1 TXD
@@ -1701,7 +1734,52 @@ if ext_en = '1' and disk_access = '1' then
    -- Zeromodem
    --pb_i(6) <= pb_o(1);  -- RTS > CTS
    --pb_i(4) <= pb_o(2);  -- DTR > DCD
- end if;
+  elsif system_up9600 = 2 then
+    uart_tx <= tx_6551;
+    uart_cs <= IOE;
+  elsif system_up9600 = 3 then
+    uart_tx <= tx_6551;
+    uart_cs <= IOF;
+  elsif system_up9600 = 4 then
+    uart_tx <= tx_6551;
+    uart_cs <= IO7;
+  end if;
 end process;
+
+-- | SwiftLink       $DE00/$DF00/$D700/NMI (300-38400 baud)
+-- | Turbo-232 only: $DE07/56839/TURBO232+7  Enhanced-Speed Register
+-- https://gglabs.us/node/2057
+uart_inst : entity work.glb6551
+port map (
+  RESET_N     => reset_n,
+  CLK         => clk32,
+  RX_CLK      => open,
+  RX_CLK_IN   => CLK_6551_EN,
+  XTAL_CLK_IN => CLK_6551_EN,
+  PH_2        => '1',
+  DI          => c64_data_out,
+  DO          => uart_data,
+  IRQ         => uart_irq,
+  CS          => unsigned'( not uart_en & uart_cs ),
+  RW_N        => not (ram_we and uart_cs),
+  RS          => c64_addr(1 downto 0),
+  TXDATA_OUT  => tx_6551,
+  RXDATA_IN   => uart_rx,
+  RTS         => open,
+  CTS         => '1',
+  DCD         => '1',
+  DTR         => open,
+  DSR         => '1'
+  );
+
+--  3.686.400Hz clock enable derived from 315 Mhz clock
+baudgen_inst: entity work.BaudRate
+ GENERIC map(
+  BAUD_RATE	=> 230400
+ )
+ port map(
+   i_CLOCK	=> clk_pixel_x10,
+   o_serialEn	=> CLK_6551_EN
+);
 
 end Behavioral_top;
