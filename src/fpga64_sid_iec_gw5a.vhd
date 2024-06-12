@@ -95,6 +95,7 @@ port(
 	romL        : out std_logic;
 	romH        : out std_logic;
 	UMAXromH 	: out std_logic;
+	IO7			: out std_logic;
 	IOE			: out std_logic;
 	IOF			: out std_logic;
 	freeze_key  : out std_logic;
@@ -121,12 +122,17 @@ port(
 	--SID
 	audio_l     : out std_logic_vector(17 downto 0);
 	audio_r     : out std_logic_vector(17 downto 0);
-	sid_filter  : in  std_logic_vector(1 downto 0);
+	audio_l_t   : out std_logic_vector(23 downto 0);
+	audio_r_t   : out std_logic_vector(23 downto 0);
+
+	--sid_filter  : in  std_logic_vector(1 downto 0);
 	sid_ver     : in  std_logic_vector(1 downto 0);
 	sid_mode    : in  unsigned(2 downto 0);
-	sid_cfg     : in  std_logic_vector(3 downto 0);
-	sid_fc_off_l: in  std_logic_vector(12 downto 0);
-	sid_fc_off_r: in  std_logic_vector(12 downto 0);
+	--sid_cfg     : in  std_logic_vector(3 downto 0);
+	sid_fc_off_l: in  std_logic_vector(10 downto 0);
+	sid_fc_off_r: in  std_logic_vector(10 downto 0);
+	sid_fc_base_l : in  std_logic_vector(8 downto 0);
+	sid_fc_base_r : in  std_logic_vector(8 downto 0);
 	sid_ld_clk  : in  std_logic;
 	sid_ld_addr : in  std_logic_vector(11 downto 0);
 	sid_ld_data : in  std_logic_vector(15 downto 0);
@@ -249,6 +255,7 @@ signal cpuDo        : unsigned(7 downto 0);
 signal cpuDo_pre    : unsigned(7 downto 0);
 signal cpuIO        : unsigned(7 downto 0);
 signal io_data_i    : unsigned(7 downto 0);
+signal io7_i        : std_logic;
 signal ioe_i        : std_logic;
 signal iof_i        : std_logic;
 
@@ -479,6 +486,7 @@ port map (
 	cs_ram => cs_ram,
 	cs_ioE => ioe_i,
 	cs_ioF => iof_i,
+	cs_io7 => io7_i,
 	cs_romL => romL,
 	cs_romH => romH,
 	cs_UMAXromH => UMAXromH,
@@ -488,6 +496,7 @@ port map (
 	c64rom_wr => c64rom_wr
 );
 
+IO7 <= io7_i;
 IOE <= ioe_i;
 IOF <= iof_i;
 
@@ -631,7 +640,7 @@ end process;
 -- -----------------------------------------------------------------------
 -- SID
 -- -----------------------------------------------------------------------
-
+-- Right SID Port: Same,DE00,D420,D500,DF00
 sid_sel_l <= cs_sid when sid_mode(2 downto 1) /= 1 else (cs_sid and ((not sid_mode(0) and not cpuAddr(5)) or (sid_mode(0) and not cpuAddr(8))));
 sid_sel_r <= sid_sel_l when sid_mode = 0 else ioe_i when sid_mode = 1 else iof_i when sid_mode = 4 else (cs_sid and not sid_sel_l);
 io_data_i <= io_data when io_ext = '1' else sid_do when sid_sel_r = '1' else (others => '1');
@@ -641,43 +650,37 @@ pot_y1 <= (others => '1' ) when cia1_pao(6) = '0' else not pot2;
 pot_x2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot3;
 pot_y2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot4;
 
-sid : entity work.sid_top_gw5a
+sidpipe: entity work.sid_api
 port map (
+    clk => clk32,
 	reset => reset,
-	clk => clk32,
-	ce_1m => enableSid,
 	we => pulseWr_io,
 	cs => unsigned'(sid_sel_r & sid_sel_l),
+	phi2  => enableSid,
 	addr => cpuAddr(4 downto 0),
-	data_in => cpuDo,
-	data_out => sid_do,
+	data_i => cpuDo,
+	data_o => sid_do,
 	pot_x_l => pot_x1 and pot_x2,
-	pot_y_l => pot_x1 and pot_x2,
-
+	pot_y_l => pot_y1 and pot_y2,
 	pot_x_r => pot_x1 and pot_x2,
-	pot_y_r => pot_x1 and pot_x2,
-
-	audio_l => audio_l,
-	audio_r => audio_r,
-
-	ext_in_l(17) => sid_ver(0) and sid_digifix,
-	ext_in_l(16 downto 0) => (others => '0'),
-
-	ext_in_r(17) => sid_ver(1) and sid_digifix,
-	ext_in_r(16 downto 0) => (others => '0'),
-
-	filter_en => sid_filter,
-	mode    => sid_ver,
-	cfg     => sid_cfg,
-	
+	pot_y_r => pot_y1 and pot_y2,
+	mode    => sid_ver(0),
 	fc_offset_l => sid_fc_off_l,
 	fc_offset_r => sid_fc_off_r,
+    fc_base_l => sid_fc_base_l,
+    fc_base_r => sid_fc_base_r,
 
-	ld_clk  => sid_ld_clk,
-	ld_addr => sid_ld_addr,
-	ld_data => sid_ld_data,
-	ld_wr   => sid_ld_wr
-);
+	audio_o_l => audio_l_t,
+	audio_o_r => audio_r_t,
+
+	audio_i_l(23) => sid_ver(0) and sid_digifix,
+	audio_i_l(22 downto 0) => (others => '0'),
+	audio_i_r(23) => sid_ver(0) and sid_digifix,
+	audio_i_r(22 downto 0) => (others => '0')
+	);
+
+	audio_l <= audio_l_t(23 downto 6);
+	audio_r <= audio_r_t(23 downto 6);
 
 -- -----------------------------------------------------------------------
 -- CIAs

@@ -58,6 +58,7 @@ architecture Behavioral_top of tang_nano_20k_c64_top_25k is
 signal clk64          : std_logic;
 signal clk32          : std_logic;
 signal pll_locked     : std_logic;
+signal clk_pixel_x10  : std_logic;
 signal clk_pixel_x5   : std_logic;
 signal mspi_clk_x5    : std_logic;
 signal clk64_ntsc     : std_logic;
@@ -68,6 +69,7 @@ signal clk64_pal      : std_logic;
 signal clk32_pal      : std_logic;
 signal pll_locked_pal : std_logic;
 signal clk_pixel_x5_pal   : std_logic;
+signal clk_pixel_x10_pal  : std_logic;
 attribute syn_keep : integer;
 attribute syn_keep of clk64             : signal is 1;
 attribute syn_keep of clk32             : signal is 1;
@@ -228,6 +230,7 @@ signal reu_ram_addr   : std_logic_vector(24 downto 0);
 signal reu_ram_dout   : std_logic_vector(7 downto 0);
 signal reu_ram_we     : std_logic;
 signal reu_irq        : std_logic;
+signal IO7            : std_logic;
 signal IOE            : std_logic;
 signal IOF            : std_logic;
 signal reu_dout       : std_logic_vector(7 downto 0);
@@ -381,11 +384,19 @@ signal cnt2_i          : std_logic;
 signal cnt2_o          : std_logic;
 signal sp2_i           : std_logic;
 signal sp1_o           : std_logic;
-signal system_up9600   : std_logic;
+signal system_up9600   : unsigned(2 downto 0);
 signal sid_fc_offset   : std_logic_vector(2 downto 0);
-signal sid_fc_lr       : std_logic_vector(12 downto 0);
+signal sid_fc_lr       : std_logic_vector(10 downto 0);
 signal sid_filter      : std_logic_vector(2 downto 0);
 signal georam          : std_logic;
+signal sid_fc_base_lr  : std_logic_vector(8 downto 0);
+signal uart_data       : unsigned(7 downto 0);
+signal uart_oe         : std_logic;
+signal uart_en         : std_logic;
+signal tx_6551         : std_logic;
+signal uart_irq        : std_logic;
+signal uart_cs         : std_logic;
+signal CLK_6551_EN     : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -723,7 +734,7 @@ clk32 <= clk32_pal when ntscMode = '0' else clk32_ntsc;
 mainclock_pal: entity work.Gowin_PLL_pal
 port map (
     lock => pll_locked_pal,
-    clkout0 => open,
+    clkout0 => clk_pixel_x10_pal,
     clkout1 => clk_pixel_x5_pal,
     clkout2 => clk64_pal,
     clkout3 => clk32_pal,
@@ -951,9 +962,57 @@ begin
   end if;
 end process;
 
-io_data <=  unsigned(cart_data) when cart_oe  = '1' else unsigned(midi_data) when midi_oe  = '1' else unsigned(reu_dout);
+uart_en <= system_up9600(2) or system_up9600(1);
+uart_oe <= not ram_we and uart_cs and uart_en;
+io_data <=  unsigned(cart_data) when cart_oe = '1' else
+            unsigned(midi_data) when midi_oe = '1' else
+            uart_data when uart_oe = '1' else
+            unsigned(reu_dout);
+
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
-sid_fc_lr <= 13x"600" - (sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
+
+-- Example filter curves:
+-- Follin-style: fc_curve(x, 240, -785)
+-- Galway-style: fc_curve(x, 280, -405)
+-- Average     : fc_curve(x, 250,    0)  default
+-- Strong      : fc_curve(x, 260, +400)
+-- Extreme     : fc_curve(x, 200, +760)
+process(clk32)
+begin
+  if rising_edge(clk32) then
+  case sid_filter is
+    when 3x"0" =>
+    -- Follin-style: fc_curve(x, 240, -785)
+    sid_fc_lr <= std_logic_vector(to_signed(-785, sid_fc_lr'length)); --  Final FC register offset for curve shifting
+    sid_fc_base_lr <= std_logic_vector(to_unsigned(240, sid_fc_base_lr'length)); -- Base cutoff frequency in Hz    
+
+    when 3x"1" =>
+    -- Galway-style: fc_curve(x, 280, -405)
+    sid_fc_lr <= std_logic_vector(to_signed(-405, sid_fc_lr'length)); --  Final FC register offset for curve shifting
+    sid_fc_base_lr <= std_logic_vector(to_unsigned(280, sid_fc_base_lr'length)); -- Base cutoff frequency in Hz    
+
+    -- Average     : fc_curve(x, 250,    0)  default
+    when 3x"2" =>
+      sid_fc_lr <= std_logic_vector(to_signed(0, sid_fc_lr'length)); --  Final FC register offset for curve shifting
+      sid_fc_base_lr <= std_logic_vector(to_unsigned(250, sid_fc_base_lr'length)); -- Base cutoff frequency in Hz    
+
+    when 3x"3" =>
+    -- Strong      : fc_curve(x, 260, +400)
+    sid_fc_lr <= std_logic_vector(to_signed(400, sid_fc_lr'length)); --  Final FC register offset for curve shifting
+    sid_fc_base_lr <= std_logic_vector(to_unsigned(260, sid_fc_base_lr'length)); -- Base cutoff frequency in Hz    
+
+    when 3x"4" =>
+    -- Extreme     : fc_curve(x, 200, +760)
+    sid_fc_lr <= std_logic_vector(to_signed(760, sid_fc_lr'length)); --  Final FC register offset for curve shifting
+    sid_fc_base_lr <= std_logic_vector(to_unsigned(200, sid_fc_base_lr'length)); -- Base cutoff frequency in Hz    
+
+    when others => 
+    -- Average default
+    sid_fc_lr <= std_logic_vector(to_signed(0, sid_fc_lr'length)); --  Final FC register offset for curve shifting
+    sid_fc_base_lr <= std_logic_vector(to_unsigned(250, sid_fc_base_lr'length)); -- Base cutoff frequency in Hz    
+    end case;
+  end if;
+end process;
 
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
@@ -998,14 +1057,15 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => game,
   exrom        => exrom,
   io_rom       => io_rom,
-  io_ext       => (reu_oe or cart_oe or midi_oe),
+  io_ext       => (reu_oe or cart_oe or midi_oe or uart_oe),
   io_data      => io_data,
   irq_n        => midi_irq_n,
-  nmi_n        => (not nmi and midi_nmi_n),
+  nmi_n        => (not nmi and midi_nmi_n and not (uart_irq and uart_en)),
   nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,
   UMAXromH     => UMAXromH,
+  IO7          => IO7,
   IOE          => IOE,
   IOF          => IOF,
   freeze_key   => open,
@@ -1032,10 +1092,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   --SID
   audio_l      => audio_data_l,
   audio_r      => audio_data_r,
-  sid_filter   => "11",
   sid_ver      => sid_ver & sid_ver,
   sid_mode     => sid_mode,
-  sid_cfg      => std_logic_vector(sid_filter(1 downto 0) & sid_filter(1 downto 0)),
   sid_fc_off_l => sid_fc_lr,
   sid_fc_off_r => sid_fc_lr,
   sid_ld_clk   => clk32,
@@ -1043,6 +1101,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   sid_ld_data  => (others => '0'),
   sid_ld_wr    => '0',
   sid_digifix  => sid_digifix,
+  sid_fc_base_r => sid_fc_base_lr,
+  sid_fc_base_l => sid_fc_base_lr,
 
   -- USER
   pb_i         => unsigned(pb_i),
@@ -1115,7 +1175,12 @@ port map(
     irq       => reu_irq
   ); 
 
--- c1541 ROM's SPI Flash, offset in spi flash $200000
+-- c1541 ROM's SPI Flash
+-- TN20k  Winbond 25Q64JVIQ
+-- TP25k  XTX XT25F64FWOIG
+-- TM138k Winbond 25Q128BVEA
+-- phase shift 135° TN, TP and 270° TM
+-- offset in spi flash TN20K, TP25K $200000, TM138K $A00000
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
@@ -1488,13 +1553,15 @@ begin
   drive_par_i <= (others => '1');
   drive_stb_i <= '1';
   uart_tx <= '1';
+  flag2_n_i <= uart_rx_filtered;
+  uart_cs <= '0';
 if ext_en = '1' and disk_access = '1' then
    -- c1541 parallel bus
    drive_par_i <= pb_o;
    drive_stb_i <= pc2_n_o;
    pb_i <= drive_par_o;
    flag2_n_i <= drive_stb_o;
- elsif system_up9600 = '0' then
+ elsif system_up9600 = 0 then
    -- UART 
    -- https://www.pagetable.com/?p=1656
    -- FLAG2 RXD
@@ -1514,7 +1581,7 @@ if ext_en = '1' and disk_access = '1' then
    --pb_i(6) <= pb_o(1);  -- RTS > CTS
    --pb_i(4) <= pb_o(2);  -- DTR > DCD
    --pb_i(7) <= pb_o(2);  -- DTR > DSR
- else
+   elsif system_up9600 = 1 then 
    -- UART UP9600
    -- https://www.pagetable.com/?p=1656
    -- SP1 TXD
@@ -1532,7 +1599,52 @@ if ext_en = '1' and disk_access = '1' then
    -- Zeromodem
    --pb_i(6) <= pb_o(1);  -- RTS > CTS
    --pb_i(4) <= pb_o(2);  -- DTR > DCD
+  elsif system_up9600 = 2 then
+    uart_tx <= tx_6551;
+    uart_cs <= IOE;
+  elsif system_up9600 = 3 then
+    uart_tx <= tx_6551;
+    uart_cs <= IOF;
+  elsif system_up9600 = 4 then
+    uart_tx <= tx_6551;
+    uart_cs <= IO7;
  end if;
 end process;
+
+-- | SwiftLink       $DE00/$DF00/$D700/NMI (300-38400 baud)
+-- | Turbo-232 only: $DE07/56839/TURBO232+7  Enhanced-Speed Register
+-- https://gglabs.us/node/2057
+uart_inst : entity work.glb6551
+port map (
+  RESET_N     => reset_n,
+  CLK         => clk32,
+  RX_CLK      => open,
+  RX_CLK_IN   => CLK_6551_EN,
+  XTAL_CLK_IN => CLK_6551_EN,
+  PH_2        => '1',
+  DI          => c64_data_out,
+  DO          => uart_data,
+  IRQ         => uart_irq,
+  CS          => unsigned'( not uart_en & uart_cs ),
+  RW_N        => not (ram_we and uart_cs),
+  RS          => c64_addr(1 downto 0),
+  TXDATA_OUT  => tx_6551,
+  RXDATA_IN   => uart_rx,
+  RTS         => open,
+  CTS         => '1',
+  DCD         => '1',
+  DTR         => open,
+  DSR         => '1'
+  );
+
+--  3.686.400Hz clock enable derived from 315 Mhz clock
+baudgen_inst: entity work.BaudRate
+ GENERIC map(
+  BAUD_RATE	=> 230400
+ )
+ port map(
+   i_CLOCK	=> clk_pixel_x10_pal,
+   o_serialEn	=> CLK_6551_EN
+);
 
 end Behavioral_top;
