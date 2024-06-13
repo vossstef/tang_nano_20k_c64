@@ -196,17 +196,17 @@ see pin configuration in .cst configuration file
 - Joystick interface is 3.3V tolerant. Joystick 5V supply pin has to be left floating !<br>
 ![pinmap](\.assets/vic20-Joystick.png)
 
-| Joystick pin | Tang Nano pin | FPGA pin | Joystick Function |
-| ----------- | ---   | --------  | ----- |
-| 1 | J6 9  | 28   | Joy3 RIGHT | 28 |
-| 2 | J6 11  | 25 | Joy2 LEFT | 25 |
-| 3 | J6 10 | 26 | Joy1 DOWN | 26 |
-| 4 | J5 12 | 29 | Joy0 UP | 29 |
-| 5 | - | - | POT Y | - |
-| 6 | J5 8 | 27 | FIRE B.| 27 |
-| 7 | n.c | n.c | 5V | - |
-| 8 | J5 20 | - | GND | - |
-| 9 | - | - | POT X | - |
+| Joystick pin |IO| Tang Nano pin | FPGA pin | Joystick Function |
+| ----------- |-----| ---   | --------  | ----- |
+| 1 |2| J6 10  | 25   | UP | 
+| 2 |1| J6 9  | 28 | DOWN |
+| 3 |4| J6 12 | 29 | LEFT |
+| 4 |3| J5 11 | 26 | RIGHT |
+| 5 |-| - | - | POT Y | - |
+| 6 |0| J5 8 | 27 | TRIGGER|
+| 7 |-| n.c | n.c | 5V | - |
+| 8 |-| J5 20 | - | GND | - |
+| 9 |-| - | - | POT X | - |
 
 **Pinmap Dualshock 2 Controller Interface** <br>
 <img src="./.assets/controller-pinout.jpg" alt="image" width="30%" height="auto">

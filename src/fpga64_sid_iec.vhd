@@ -82,6 +82,8 @@ port(
 	debugY      : out unsigned(8 downto 0);
 
     phi         : out std_logic;
+    phi2_p      : out std_logic; -- Phi 2 positive edge
+    phi2_n      : out std_logic; -- Phi 2 negative edge
 
 	-- cartridge port
 	game        : in  std_logic;
@@ -95,6 +97,7 @@ port(
 	romL        : out std_logic;
 	romH        : out std_logic;
 	UMAXromH 	: out std_logic;
+	IO7			: out std_logic;
 	IOE			: out std_logic;
 	IOF			: out std_logic;
 	freeze_key  : out std_logic;
@@ -249,6 +252,7 @@ signal cpuDo        : unsigned(7 downto 0);
 signal cpuDo_pre    : unsigned(7 downto 0);
 signal cpuIO        : unsigned(7 downto 0);
 signal io_data_i    : unsigned(7 downto 0);
+signal io7_i        : std_logic;
 signal ioe_i        : std_logic;
 signal iof_i        : std_logic;
 
@@ -391,6 +395,8 @@ begin
 end process;
 
 	phi <= phi0_cpu;
+    phi2_p <= enableCia_p;
+    phi2_n <= enableCia_n;
 
 process(clk32)
 begin
@@ -479,6 +485,7 @@ port map (
 	cs_ram => cs_ram,
 	cs_ioE => ioe_i,
 	cs_ioF => iof_i,
+	cs_io7 => io7_i,
 	cs_romL => romL,
 	cs_romH => romH,
 	cs_UMAXromH => UMAXromH,
@@ -488,6 +495,7 @@ port map (
 	c64rom_wr => c64rom_wr
 );
 
+IO7 <= io7_i;
 IOE <= ioe_i;
 IOF <= iof_i;
 
@@ -644,7 +652,7 @@ pot_y2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot4;
 sid : entity work.sid_top
 port map (
 	reset => reset,
-	clk => clk32,
+    clk => clk32,
 	ce_1m => enableSid,
 	we => pulseWr_io,
 	cs => sid_sel_l,
@@ -652,10 +660,10 @@ port map (
 	data_in => cpuDo,
 	data_out => sid_do,
 	pot_x_l => pot_x1 and pot_x2,
-	pot_y_l => pot_x1 and pot_x2,
+	pot_y_l => pot_y1 and pot_y2,
 
 	pot_x_r => pot_x1 and pot_x2,
-	pot_y_r => pot_x1 and pot_x2,
+	pot_y_r => pot_y1 and pot_y2,
 
 	audio_l => audio_l,
 	audio_r => audio_r,
