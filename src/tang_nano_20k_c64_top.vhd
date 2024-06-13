@@ -1192,7 +1192,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   sid_cfg      => std_logic_vector(sid_filter(1 downto 0) & sid_filter(1 downto 0)),
   sid_fc_off_l => sid_fc_lr,
   sid_fc_off_r => sid_fc_lr,
-  sid_ld_clk   => clk32,
+  sid_ld_clk   => '0',
   sid_ld_addr  => (others => '0'),
   sid_ld_data  => (others => '0'),
   sid_ld_wr    => '0',

@@ -650,6 +650,9 @@ pot_x2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot3;
 pot_y2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot4;
 
 sid : entity work.sid_top_gw5a
+generic map (
+	MULTI_FILTERS => 1,
+	DUAL => 1 )
 port map (
 	reset => reset,
     clk => clk32,
@@ -671,7 +674,7 @@ port map (
 	ext_in_l(17) => sid_ver(0) and sid_digifix,
 	ext_in_l(16 downto 0) => (others => '0'),
 
-	ext_in_r(17) => sid_ver(1) and sid_digifix,
+	ext_in_r(17) => sid_ver(0) and sid_digifix,
 	ext_in_r(16 downto 0) => (others => '0'),
 
 	filter_en => sid_filter,

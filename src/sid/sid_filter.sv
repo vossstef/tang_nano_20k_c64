@@ -73,8 +73,8 @@ always_comb begin
 	vhp_next = clamp(o[10 +: 17]);
 end
 
-reg signed [15:0] vi = 0;
-reg signed [15:0] vd = 0;
+//reg signed [15:0] vi = 0;
+//reg signed [15:0] vd = 0;
 
 // Filter
 always @(posedge clk) begin
@@ -82,7 +82,8 @@ always @(posedge clk) begin
 
 //	reg signed [15:0] vi = 0;
 //	reg signed [15:0] vd = 0;
-
+	reg signed [15:0] vi;
+	reg signed [15:0] vd;
 	case (state)
 		2:	begin
 				// MOS6581: 1/Q =~ ~res/8 (not used - op-amps are not ideal)
