@@ -45,6 +45,7 @@
         <File path="src/sid/sid_top_gw5a.sv" type="file.verilog" enable="1"/>
         <File path="src/sid/sid_voice.sv" type="file.verilog" enable="1"/>
         <File path="src/video_freezer.sv" type="file.verilog" enable="1"/>
+        <File path="src/c1530.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/c1541_logic.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/c1541_sd.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/gcr_floppy.vhd" type="file.vhdl" enable="1"/>

@@ -399,6 +399,7 @@ signal tx_6551         : std_logic;
 signal uart_irq        : std_logic := '0';
 signal uart_cs         : std_logic;
 signal CLK_6551_EN     : std_logic;
+signal phi2_p, phi2_n  : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -1060,6 +1061,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
 	debugY       => open,
 
   phi          => phi,
+  phi2_p       => phi2_p, -- Phi 2 positive edge
+  phi2_n       => phi2_n, -- Phi 2 negative edge
 
   game         => game,
   exrom        => exrom,

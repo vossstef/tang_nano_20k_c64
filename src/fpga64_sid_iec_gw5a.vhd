@@ -82,6 +82,8 @@ port(
 	debugY      : out unsigned(8 downto 0);
 
     phi         : out std_logic;
+    phi2_p      : out std_logic; -- Phi 2 positive edge
+    phi2_n      : out std_logic; -- Phi 2 negative edge
 
 	-- cartridge port
 	game        : in  std_logic;
@@ -393,6 +395,8 @@ begin
 end process;
 
 	phi <= phi0_cpu;
+    phi2_p <= enableCia_p;
+    phi2_n <= enableCia_n;
 
 process(clk32)
 begin

@@ -394,6 +394,7 @@ signal tx_6551         : std_logic;
 signal uart_irq        : std_logic := '0';
 signal uart_cs         : std_logic;
 signal CLK_6551_EN     : std_logic;
+signal phi2_p, phi2_n  : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -1008,6 +1009,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
 	debugY       => open,
 
   phi          => phi,
+  phi2_p       => phi2_p, -- Phi 2 positive edge
+  phi2_n       => phi2_n, -- Phi 2 negative edge
 
   game         => game,
   exrom        => exrom,
@@ -1510,7 +1513,7 @@ begin
   uart_tx <= '1';
   flag2_n_i <= uart_rx_filtered;
   uart_cs <= '0';
-if ext_en = '1' and disk_access = '1' then
+  if ext_en = '1' and disk_access = '1' then
    -- c1541 parallel bus
    drive_par_i <= pb_o;
    drive_stb_i <= pc2_n_o;
@@ -1563,7 +1566,7 @@ if ext_en = '1' and disk_access = '1' then
   elsif system_up9600 = 4 then
     uart_tx <= tx_6551;
     uart_cs <= IO7;
- end if;
+  end if;
 end process;
 
 end Behavioral_top;
