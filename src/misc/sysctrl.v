@@ -48,7 +48,7 @@ module sysctrl (
   output reg [2:0]  system_sid_mode,
   output reg        system_sid_ver,
   output reg        system_tape_sound,
-  output reg        system_up9600,
+  output reg [2:0]  system_up9600,
   output reg [2:0]  system_sid_filter,
   output reg [2:0]  system_sid_fc_offset,
   output reg        system_georam
@@ -99,7 +99,7 @@ always @(posedge clk) begin
       system_sid_mode <= 3'b000;
       system_sid_ver <= 1'b0;
       system_tape_sound <= 1'b0;
-      system_up9600 <= 1'b0;
+      system_up9600 <= 3'b000;
       system_sid_filter <= 3'b000;
       system_sid_fc_offset <= 3'b000;
       system_georam <= 1'b0;
@@ -191,7 +191,7 @@ always @(posedge clk) begin
                     // tape sound
                     if(id == "I") system_tape_sound <= data_in[0];
                     // UART mode
-                    if(id == "<") system_up9600 <= data_in[0];
+                    if(id == "<") system_up9600 <= data_in[2:0];
                     // SID Filter
                     if(id == "H") system_sid_filter <= data_in[2:0];
                     // SID FC Offset

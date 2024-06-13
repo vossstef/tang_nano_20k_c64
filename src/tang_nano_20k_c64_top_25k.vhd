@@ -228,6 +228,7 @@ signal reu_ram_addr   : std_logic_vector(24 downto 0);
 signal reu_ram_dout   : std_logic_vector(7 downto 0);
 signal reu_ram_we     : std_logic;
 signal reu_irq        : std_logic;
+signal IO7            : std_logic;
 signal IOE            : std_logic;
 signal IOF            : std_logic;
 signal reu_dout       : std_logic_vector(7 downto 0);
@@ -381,11 +382,18 @@ signal cnt2_i          : std_logic;
 signal cnt2_o          : std_logic;
 signal sp2_i           : std_logic;
 signal sp1_o           : std_logic;
-signal system_up9600   : std_logic;
+signal system_up9600   : unsigned(2 downto 0);
 signal sid_fc_offset   : std_logic_vector(2 downto 0);
 signal sid_fc_lr       : std_logic_vector(12 downto 0);
 signal sid_filter      : std_logic_vector(2 downto 0);
 signal georam          : std_logic;
+signal uart_data       : unsigned(7 downto 0);
+signal uart_oe         : std_logic;
+signal uart_en         : std_logic;
+signal tx_6551         : std_logic;
+signal uart_irq        : std_logic := '0';
+signal uart_cs         : std_logic;
+signal CLK_6551_EN     : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -951,7 +959,13 @@ begin
   end if;
 end process;
 
-io_data <=  unsigned(cart_data) when cart_oe  = '1' else unsigned(midi_data) when midi_oe  = '1' else unsigned(reu_dout);
+uart_en <= system_up9600(2) or system_up9600(1);
+uart_oe <= not ram_we and uart_cs and uart_en;
+io_data <=  unsigned(cart_data) when cart_oe = '1' else
+            unsigned(midi_data) when midi_oe = '1' else
+            uart_data when uart_oe = '1' else
+            unsigned(reu_dout);
+
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
 sid_fc_lr <= 13x"600" - (sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
 
@@ -998,14 +1012,15 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => game,
   exrom        => exrom,
   io_rom       => io_rom,
-  io_ext       => (reu_oe or cart_oe or midi_oe),
+  io_ext       => (reu_oe or cart_oe or midi_oe or uart_oe),
   io_data      => io_data,
   irq_n        => midi_irq_n,
-  nmi_n        => (not nmi and midi_nmi_n),
+  nmi_n        => (not nmi and midi_nmi_n and not (uart_irq and uart_en)),
   nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,
   UMAXromH     => UMAXromH,
+  IO7          => IO7,
   IOE          => IOE,
   IOF          => IOF,
   freeze_key   => open,
@@ -1115,7 +1130,12 @@ port map(
     irq       => reu_irq
   ); 
 
--- c1541 ROM's SPI Flash, offset in spi flash $200000
+-- c1541 ROM's SPI Flash
+-- TN20k  Winbond 25Q64JVIQ
+-- TP25k  XTX XT25F64FWOIG
+-- TM138k Winbond 25Q128BVEA
+-- phase shift 135° TN, TP and 270° TM
+-- offset in spi flash TN20K, TP25K $200000, TM138K $A00000
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
@@ -1488,13 +1508,15 @@ begin
   drive_par_i <= (others => '1');
   drive_stb_i <= '1';
   uart_tx <= '1';
+  flag2_n_i <= uart_rx_filtered;
+  uart_cs <= '0';
 if ext_en = '1' and disk_access = '1' then
    -- c1541 parallel bus
    drive_par_i <= pb_o;
    drive_stb_i <= pc2_n_o;
    pb_i <= drive_par_o;
    flag2_n_i <= drive_stb_o;
- elsif system_up9600 = '0' then
+ elsif system_up9600 = 0 then
    -- UART 
    -- https://www.pagetable.com/?p=1656
    -- FLAG2 RXD
@@ -1514,7 +1536,7 @@ if ext_en = '1' and disk_access = '1' then
    --pb_i(6) <= pb_o(1);  -- RTS > CTS
    --pb_i(4) <= pb_o(2);  -- DTR > DCD
    --pb_i(7) <= pb_o(2);  -- DTR > DSR
- else
+   elsif system_up9600 = 1 then 
    -- UART UP9600
    -- https://www.pagetable.com/?p=1656
    -- SP1 TXD
@@ -1532,6 +1554,15 @@ if ext_en = '1' and disk_access = '1' then
    -- Zeromodem
    --pb_i(6) <= pb_o(1);  -- RTS > CTS
    --pb_i(4) <= pb_o(2);  -- DTR > DCD
+  elsif system_up9600 = 2 then
+    uart_tx <= tx_6551;
+    uart_cs <= IOE;
+  elsif system_up9600 = 3 then
+    uart_tx <= tx_6551;
+    uart_cs <= IOF;
+  elsif system_up9600 = 4 then
+    uart_tx <= tx_6551;
+    uart_cs <= IO7;
  end if;
 end process;
 
