@@ -368,7 +368,7 @@ signal tap_wrfull     : std_logic;
 signal tap_start      : std_logic;
 signal read_cyc       : std_logic := '0';
 signal io_cycle_rD    : std_logic;
-signal load_flt       : std_logic;
+signal load_flt       : std_logic := '0';
 signal sid_ver        : std_logic;
 signal sid_mode       : unsigned(2 downto 0);
 signal sid_digifix    : std_logic;
@@ -392,6 +392,9 @@ signal uart_irq        : std_logic := '0';
 signal uart_cs         : std_logic;
 signal CLK_6551_EN     : std_logic;
 signal phi2_p, phi2_n  : std_logic;
+signal sid_ld_addr     : std_logic_vector(11 downto 0) := (others =>'0');
+signal sid_ld_data     : std_logic_vector(15 downto 0) := (others =>'0');
+signal sid_ld_wr       : std_logic := '0';
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -1193,12 +1196,11 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   sid_cfg      => std_logic_vector(sid_filter(1 downto 0) & sid_filter(1 downto 0)),
   sid_fc_off_l => sid_fc_lr,
   sid_fc_off_r => sid_fc_lr,
-  sid_ld_clk   => '0',
-  sid_ld_addr  => (others => '0'),
-  sid_ld_data  => (others => '0'),
-  sid_ld_wr    => '0',
+  sid_ld_clk   => clk32,
+  sid_ld_addr  => sid_ld_addr,
+  sid_ld_data  => sid_ld_data,
+  sid_ld_wr    => sid_ld_wr,
   sid_digifix  => sid_digifix,
-
   -- USER
   pb_i         => unsigned(pb_i),
   std_logic_vector(pb_o) => pb_o,
@@ -1704,6 +1706,22 @@ begin
     uart_tx <= tx_6551;
     uart_cs <= IO7;
   end if;
+end process;
+
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    sid_ld_wr <= '0';
+    if ioctl_wr = '1' and load_flt = '1' and ioctl_addr < 6144 then
+        if ioctl_addr(0) = '1' then
+          sid_ld_data(15 downto 8) <= ioctl_data;
+          sid_ld_addr <= ioctl_addr(12 downto 1);
+          sid_ld_wr <= '1';
+        else
+          sid_ld_data(7 downto 0) <= ioctl_data;
+        end if;
+    end if;
+	end if;
 end process;
 
 end Behavioral_top;

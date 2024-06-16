@@ -748,11 +748,11 @@ wire [7:0] wave8580_ps_[0:4095] =
 reg [15:0] f0;
 generate
 	if(MULTI_FILTERS) begin
-//		always @(posedge ld_clk) if(ld_wr) f6581_curve[1024+ld_addr] <= ld_data;
+		always_ff @(posedge ld_clk) if(ld_wr) f6581_curve[1024+ld_addr] <= ld_data;
 		always_ff @(posedge clock) f0 <= f6581_curve[{cfg, Fc[10:1]}];
 	end
 	else begin
-//		always @(posedge ld_clk) if(ld_wr) f6581_curve[ld_addr[9:0]] <= ld_data;
+		always_ff @(posedge ld_clk) if(ld_wr) f6581_curve[ld_addr[9:0]] <= ld_data;
 		always_ff @(posedge clock) f0 <= f6581_curve[Fc[10:1]];
 	end
 endgenerate
