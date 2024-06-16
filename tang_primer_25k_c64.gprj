@@ -40,7 +40,7 @@
         <File path="src/sid/sid_envelope.sv" type="file.verilog" enable="1"/>
         <File path="src/sid/sid_filter.sv" type="file.verilog" enable="1"/>
         <File path="src/sid/sid_tables.sv" type="file.verilog" enable="1"/>
-        <File path="src/sid/sid_top_gw5a.sv" type="file.verilog" enable="1"/>
+        <File path="src/sid/sid_top.sv" type="file.verilog" enable="1"/>
         <File path="src/sid/sid_voice.sv" type="file.verilog" enable="1"/>
         <File path="src/video_freezer.sv" type="file.verilog" enable="1"/>
         <File path="src/c1530.vhd" type="file.vhdl" enable="1"/>
@@ -54,7 +54,7 @@
         <File path="src/fpga64_buslogic_gw5a.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_keyboard.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_rgbcolor.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/fpga64_sid_iec_gw5a.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/fpga64_sid_iec.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_pll/gowin_pll_flash.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_pll/gowin_pll_ntsc.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_pll/gowin_pll_pal.vhd" type="file.vhdl" enable="1"/>

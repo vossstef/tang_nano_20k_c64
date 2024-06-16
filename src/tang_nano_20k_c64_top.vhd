@@ -1097,7 +1097,8 @@ begin
   end if;
 end process;
 
-uart_en <= system_up9600(2) or system_up9600(1);
+uart_en <= '1' when ((system_up9600(2) = '1' or system_up9600(1) = '1') 
+                  and (sid_mode = 0 or sid_mode = 2)) else '0';  -- D400 or D420
 uart_oe <= not ram_we and uart_cs and uart_en;
 io_data <=  unsigned(cart_data) when cart_oe = '1' else
             unsigned(midi_data) when midi_oe = '1' else
@@ -1192,7 +1193,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   sid_cfg      => std_logic_vector(sid_filter(1 downto 0) & sid_filter(1 downto 0)),
   sid_fc_off_l => sid_fc_lr,
   sid_fc_off_r => sid_fc_lr,
-  sid_ld_clk   => clk32,
+  sid_ld_clk   => '0',
   sid_ld_addr  => (others => '0'),
   sid_ld_data  => (others => '0'),
   sid_ld_wr    => '0',
