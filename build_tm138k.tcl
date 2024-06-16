@@ -42,7 +42,7 @@ add_file src/cpu_6510.vhd
 add_file src/fpga64_buslogic_gw5a.vhd
 add_file src/fpga64_keyboard.vhd
 add_file src/fpga64_rgbcolor.vhd
-add_file src/fpga64_sid_iec_gw5a.vhd
+add_file src/fpga64_sid_iec.vhd
 add_file src/gowin_prom/gowin_prom_basic.vhd
 add_file src/gowin_sdpb/gowin_sdpb_kernal_8k_gw5a.vhd
 add_file src/gowin_prom/gowin_prom_chargen.vhd
@@ -68,7 +68,7 @@ add_file src/sid/sid_dac.sv
 add_file src/sid/sid_envelope.sv
 add_file src/sid/sid_filter.sv
 add_file src/sid/sid_tables.sv
-add_file src/sid/sid_top_gw5a.sv
+add_file src/sid/sid_top.sv
 add_file src/sid/sid_voice.sv
 
 set_option -synthesis_tool gowinsynthesis
