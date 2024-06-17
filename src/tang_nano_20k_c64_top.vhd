@@ -13,6 +13,10 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.numeric_std.ALL;
 
 entity tang_nano_20k_c64_top is
+  generic
+  (
+   dualsid  : integer := 0 -- 0:no, 1:yes dual SID build option
+  );
   port
   (
     clk         : in std_logic;
@@ -182,10 +186,10 @@ signal disk_chg_trg   : std_logic;
 signal disk_chg_trg_d : std_logic;
 signal sd_img_size    : std_logic_vector(31 downto 0);
 signal sd_img_size_d  : std_logic_vector(31 downto 0);
-signal sd_img_mounted : std_logic_vector(4 downto 0);
+signal sd_img_mounted : std_logic_vector(5 downto 0);
 signal sd_img_mounted_d : std_logic;
-signal sd_rd          : std_logic_vector(4 downto 0);
-signal sd_wr          : std_logic_vector(4 downto 0);
+signal sd_rd          : std_logic_vector(5 downto 0);
+signal sd_wr          : std_logic_vector(5 downto 0);
 signal disk_lba       : std_logic_vector(31 downto 0);
 signal sd_lba         : std_logic_vector(31 downto 0);
 signal loader_lba     : std_logic_vector(31 downto 0);
@@ -268,9 +272,9 @@ signal frz_hs          : std_logic;
 signal frz_vs          : std_logic;
 signal hbl_out         : std_logic; 
 signal vbl_out         : std_logic;
-signal midi_data       : std_logic_vector(7 downto 0);
+signal midi_data       : std_logic_vector(7 downto 0) := (others =>'0');
 signal midi_oe         : std_logic;
-signal midi_irq_n      : std_logic;
+signal midi_irq_n      : std_logic := '1';
 signal midi_nmi_n      : std_logic;
 signal midi_rx         : std_logic;
 signal midi_tx         : std_logic;
@@ -392,9 +396,9 @@ signal uart_irq        : std_logic := '0';
 signal uart_cs         : std_logic;
 signal CLK_6551_EN     : std_logic;
 signal phi2_p, phi2_n  : std_logic;
-signal sid_ld_addr     : std_logic_vector(11 downto 0) := (others =>'0');
-signal sid_ld_data     : std_logic_vector(15 downto 0) := (others =>'0');
-signal sid_ld_wr       : std_logic := '0';
+signal sid_ld_addr     : std_logic_vector(11 downto 0);
+signal sid_ld_data     : std_logic_vector(15 downto 0);
+signal sid_ld_wr       : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -1110,7 +1114,12 @@ io_data <=  unsigned(cart_data) when cart_oe = '1' else
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
 sid_fc_lr <= 13x"600" - (sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
 
+-- single SID build
+--not_dual: if dualsid = False generate
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
+  generic map (
+    DUAL =>  dualsid -- 0:no, 1:yes  dual SID build
+  )
   port map
   (
   clk32        => clk32,
@@ -1233,6 +1242,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   cass_sense   => cass_sense,
   cass_read    => cass_read
   );
+--end generate;
 
 process(clk32)
 begin
@@ -1352,7 +1362,7 @@ port map
     RnW     => not (ram_we and IOE),
     nIRQ    => midi_irq_n,
     nNMI    => midi_nmi_n,
-  
+ 
     RX      => midi_rx,
     TX      => midi_tx
   );
@@ -1363,8 +1373,8 @@ port map (
   system_reset      => system_reset,
 
   sd_lba            => loader_lba,
-  sd_rd             => sd_rd(4 downto 1),
-  sd_wr             => sd_wr(4 downto 1),
+  sd_rd             => sd_rd(5 downto 1),
+  sd_wr             => sd_wr(5 downto 1),
   sd_busy           => sd_busy,
   sd_done           => sd_done,
 
@@ -1378,6 +1388,7 @@ port map (
   load_prg          => load_prg,
   load_rom          => load_rom,
   load_tap          => load_tap,
+  load_flt          => load_flt,
   sd_img_size       => sd_img_size,
   leds              => leds(5 downto 1),
   img_select        => img_select,
