@@ -109,7 +109,7 @@ reg [1:0] system_resetD;
 	begin
 	case(io_state)
 
-		START:        // 0 c1541 1 CRT 2 PRG 3 BIN 4 TAP
+		START:        // 0 c1541 1 CRT 2 PRG 3 BIN 4 TAP 5 FLT
 			begin
 				if((img_present[3] && ~img_presentD[3]) || (img_present[3] && ~boot_bin))
 					begin
@@ -132,19 +132,19 @@ reg [1:0] system_resetD;
 						rd_sel = 5'b00010;
 						boot_prg <= 1'b1;
 					end
-				else if((img_present[4] && ~img_presentD[4]) || (img_present[4] && ~boot_tap))
-					begin 
-						img_select <= 4;
-						io_state <= GO4IT;
-						rd_sel = 5'b01000;
-						boot_tap <= 1'b1;
-					end
 				else if((img_present[5] && ~img_presentD[5]) || (img_present[5] && ~boot_flt))
 					begin 
 						img_select <= 5;
 						io_state <= GO4IT;
 						rd_sel = 5'b10000;
 						boot_flt <= 1'b1;
+					end
+				else if((img_present[4] && ~img_presentD[4]) || (img_present[4] && ~boot_tap))
+					begin 
+						img_select <= 4;
+						io_state <= GO4IT;
+						rd_sel = 5'b01000;
+						boot_tap <= 1'b1;
 					end
 				else if(img_present[0] && ~img_presentD[0])
 					begin

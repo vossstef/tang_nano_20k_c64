@@ -7,8 +7,6 @@ module video (
           input [8:0] audio_div,
 
           input    ntscmode,
-          input    vb_in,
-          input    hb_in,
 	      input	   vs_in_n,
 	      input	   hs_in_n,
 
@@ -80,16 +78,14 @@ wire [5:0] sd_b;
 scandoubler #(10) scandoubler (
         // system interface
         .clk_sys(clk),
-        .bypass(1'b0),      // bypass in ST high/mono
-        .ce_divider(3'd1),
+        .bypass(1'b0),
+        .ce_divider(1'b1),
         .pixel_ena(),
 
         // scanlines (00-none 01-25% 10-50% 11-75%)
         .scanlines(system_scanlines),
 
         // shifter video interface
-        .hb_in(hb_in),
-	    .vb_in(vb_in),
         .hs_in(hs_in_n),
         .vs_in(vs_in_n),
         .r_in( r_in ),
@@ -97,8 +93,6 @@ scandoubler #(10) scandoubler (
         .b_in( b_in ),
 
         // output interface
-        .hb_out(),
-        .vb_out(),
         .hs_out(sd_hs_n),
         .vs_out(sd_vs_n),
         .r_out(sd_r),

@@ -15,7 +15,7 @@ use IEEE.numeric_std.ALL;
 entity tang_nano_20k_c64_top is
   generic
   (
-   dualsid  : integer := 0 -- 0:no, 1:yes dual SID build option
+   DUAL  : integer := 1 -- 0:no, 1:yes dual SID build option
   );
   port
   (
@@ -676,36 +676,6 @@ begin
         end if;
   end if;
 end process;
-
-video_sync_inst: entity work.video_sync
-port map(
-	clk32   => clk32,
-	pause   => c64_pause,
-	hsync   => hsync,
-	vsync   => vsync,
-	ntsc    => '0',
-	wide    => '0',
-	hsync_out => hsync_out,
-	vsync_out => vsync_out,
-	hblank  => hblank,
-	vblank  => vblank
-);
-
-video_freezer_inst: entity work.video_freezer
-port map(
-	clk     => clk32,
-	freeze  => freeze,
-	hs_in   => hsync_out,
-	vs_in   => vsync_out,
-	hbl_in  => hblank,
-	vbl_in  => vblank,
-	sync    => freeze_sync,
-	hs_out  => frz_hs,
-	vs_out  => frz_vs,
-	hbl_out => frz_hbl,
-	vbl_out => frz_vbl
-);
-
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
 
 cass_snd <= cass_read and not cass_run and  system_tape_sound   and not cass_finish;
@@ -720,10 +690,8 @@ port map(
       audio_div    => audio_div,
 
       ntscmode  => ntscMode,
-      vb_in     => frz_vbl,
-      hb_in     => frz_hbl,
-      hs_in_n   => frz_hs,
-      vs_in_n   => frz_vs,
+      hs_in_n   => hsync,
+      vs_in_n   => vsync,
 
       r_in      => std_logic_vector(r(7 downto 4)),
       g_in      => std_logic_vector(g(7 downto 4)),
@@ -1112,13 +1080,11 @@ io_data <=  unsigned(cart_data) when cart_oe = '1' else
             uart_data when uart_oe = '1' else
             unsigned(reu_dout);
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
-sid_fc_lr <= 13x"600" - (sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
+sid_fc_lr <= 13x"0600" - (3x"0" & sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
 
--- single SID build
---not_dual: if dualsid = False generate
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   generic map (
-    DUAL =>  dualsid -- 0:no, 1:yes  dual SID build
+    DUAL =>  DUAL   -- 0:no, 1:yes  Dual SID component build
   )
   port map
   (
@@ -1242,7 +1208,6 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   cass_sense   => cass_sense,
   cass_read    => cass_read
   );
---end generate;
 
 process(clk32)
 begin
@@ -1593,6 +1558,22 @@ variable reset_counter : integer;
     end if;
 end process;
 
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    sid_ld_wr <= '0';
+    if ioctl_wr = '1' and load_flt = '1' and ioctl_addr < 6144 then
+        if ioctl_addr(0) = '1' then
+          sid_ld_data(15 downto 8) <= ioctl_data;
+          sid_ld_addr <= ioctl_addr(12 downto 1);
+          sid_ld_wr <= '1';
+        else
+          sid_ld_data(7 downto 0) <= ioctl_data;
+        end if;
+    end if;
+	end if;
+end process;
+
 --------------- TAP -------------------
 
 tap_download <= ioctl_download and load_tap;
@@ -1719,20 +1700,5 @@ begin
   end if;
 end process;
 
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    sid_ld_wr <= '0';
-    if ioctl_wr = '1' and load_flt = '1' and ioctl_addr < 6144 then
-        if ioctl_addr(0) = '1' then
-          sid_ld_data(15 downto 8) <= ioctl_data;
-          sid_ld_addr <= ioctl_addr(12 downto 1);
-          sid_ld_wr <= '1';
-        else
-          sid_ld_data(7 downto 0) <= ioctl_data;
-        end if;
-    end if;
-	end if;
-end process;
 
 end Behavioral_top;

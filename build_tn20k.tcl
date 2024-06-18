@@ -32,7 +32,6 @@ add_file src/misc/ws2812.v
 add_file src/mos6526.v
 add_file src/reu.v
 add_file src/sdram8.v
-add_file src/video_freezer.sv
 add_file src/c1541/c1541_logic.vhd
 add_file src/c1541/c1541_sd.vhd
 add_file src/c1541/gcr_floppy.vhd
@@ -54,7 +53,6 @@ add_file src/t65/T65_ALU.vhd
 add_file src/t65/T65_MCode.vhd
 add_file src/t65/T65_Pack.vhd
 add_file src/tang_nano_20k_c64_top.vhd
-add_file src/video_sync.vhd
 add_file src/video_vicII_656x.vhd
 add_file src/tang_nano_20k_c64_top.cst
 add_file src/tang_nano_20k_c64_top.sdc
