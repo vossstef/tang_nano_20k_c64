@@ -61,8 +61,8 @@ reg        game_overide;
 assign     exrom = exrom_overide |  force_ultimax;
 assign     game  = game_overide  & ~force_ultimax;
 
-reg [6:0] lobanks[0:63];
-reg [6:0] hibanks[0:63];
+(* ramstyle = "logic" *) reg [6:0] lobanks[0:63];
+(* ramstyle = "logic" *) reg [6:0] hibanks[0:63];
 
 reg  [7:0] bank_cnt;
 always @(posedge clk32) begin
@@ -713,6 +713,7 @@ always @(posedge clk32) begin
 					else           geo_bank[5:0]  <= data_in[5:0];
 				end
 			end
+		default:;
 	endcase
 end
 

@@ -580,8 +580,8 @@ c1541_sd_inst : entity work.c1541_sd
 port map
  (
     clk32         => clk32,
-    reset         => (not flash_ready) or disk_reset,
-    pause         => c64_pause or loader_busy,
+    reset         => disk_reset, -- (not flash_ready) or disk_reset,
+    pause         => loader_busy, -- c64_pause or loader_busy,
     ce            => '0',
 
     disk_num      => (others =>'0'),
@@ -667,15 +667,17 @@ generic map (
     outbyte         => sd_rd_data         -- a byte of sector content
 );
 
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    old_sync <= freeze_sync;
-      if not old_sync and freeze_sync then
-          freeze <= osd_status and system_pause;
-        end if;
-  end if;
-end process;
+--process(clk32)
+--begin
+--  if rising_edge(clk32) then
+--    old_sync <= freeze_sync;
+--      if not old_sync and freeze_sync then
+--          freeze <= osd_status and system_pause;
+--        end if;
+--  end if;
+--end process;
+freeze <= '0';
+
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
 
 cass_snd <= cass_read and not cass_run and  system_tape_sound   and not cass_finish;
@@ -1642,7 +1644,7 @@ begin
   drive_par_i <= (others => '1');
   drive_stb_i <= '1';
   uart_tx <= '1';
-  flag2_n_i <= uart_rx_filtered;
+  flag2_n_i <= '1';
   uart_cs <= '0';
   if ext_en = '1' and disk_access = '1' then
    -- c1541 parallel bus
