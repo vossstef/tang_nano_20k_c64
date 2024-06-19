@@ -400,7 +400,7 @@ signal CLK_6551_EN     : std_logic;
 signal phi2_p, phi2_n  : std_logic;
 signal sid_ld_addr     : std_logic_vector(11 downto 0);
 signal sid_ld_data     : std_logic_vector(15 downto 0);
-signal sid_ld_wr       : std_logic;
+signal sid_ld_wr       : std_logic := '0';
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -488,7 +488,7 @@ c1541_sd_inst : entity work.c1541_sd
 port map
  (
     clk32         => clk32,
-    reset         => (not flash_ready) or disk_reset,
+    reset         => disk_reset, -- (not flash_ready) or disk_reset,
     pause         => c64_pause or loader_busy,
     ce            => '0',
 
@@ -575,7 +575,8 @@ generic map (
     outbyte         => sd_rd_data         -- a byte of sector content
 );
 
-freeze <= '0'; -- osd_status and system_pause;
+freeze <= '0';
+
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
 
 cass_snd <= cass_read and not cass_run and  system_tape_sound   and not cass_finish;
@@ -590,8 +591,6 @@ port map(
       audio_div    => audio_div,
 
       ntscmode  => ntscMode,
-      vb_in     => '0',
-      hb_in     => '0',
       hs_in_n   => hsync,
       vs_in_n   => vsync,
 
@@ -1498,7 +1497,7 @@ begin
   drive_par_i <= (others => '1');
   drive_stb_i <= '1';
   uart_tx <= '1';
-  flag2_n_i <= uart_rx_filtered;
+  flag2_n_i <= '1';
   uart_cs <= '0';
   if ext_en = '1' and disk_access = '1' then
    -- c1541 parallel bus

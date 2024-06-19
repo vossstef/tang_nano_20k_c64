@@ -632,7 +632,8 @@ generic map (
     outbyte         => sd_rd_data         -- a byte of sector content
 );
 
-freeze <= '0'; -- osd_status and system_pause;
+freeze <= '0';
+
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
 
 cass_snd <= cass_read and not cass_run and  system_tape_sound   and not cass_finish;
@@ -647,8 +648,6 @@ port map(
       audio_div    => audio_div,
 
       ntscmode  => ntscMode,
-      vb_in     => '0',
-      hb_in     => '0',
       hs_in_n   => hsync,
       vs_in_n   => vsync,
 
@@ -987,7 +986,6 @@ io_data <=  unsigned(cart_data) when cart_oe = '1' else
             unsigned(midi_data) when midi_oe = '1' else
             uart_data when uart_oe = '1' else
             unsigned(reu_dout);
-
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
 sid_fc_lr <= 13x"0600" - (3x"0" & sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
 
@@ -1551,7 +1549,7 @@ begin
   drive_par_i <= (others => '1');
   drive_stb_i <= '1';
   uart_tx <= '1';
-  flag2_n_i <= uart_rx_filtered;
+  flag2_n_i <= '1';
   uart_cs <= '0';
 if ext_en = '1' and disk_access = '1' then
    -- c1541 parallel bus
