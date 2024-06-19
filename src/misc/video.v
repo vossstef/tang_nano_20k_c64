@@ -75,7 +75,7 @@ wire [5:0] sd_r;
 wire [5:0] sd_g;
 wire [5:0] sd_b;
   
-scandoubler #(10) scandoubler (
+scandoubler #(11) scandoubler (
         // system interface
         .clk_sys(clk),
         .bypass(1'b0),
