@@ -71,13 +71,11 @@ signal clk32          : std_logic;
 signal pll_locked     : std_logic;
 signal clk_pixel_x10  : std_logic;
 signal clk_pixel_x5   : std_logic;
-signal mspi_clk_x5    : std_logic;
 attribute syn_keep : integer;
 attribute syn_keep of clk64         : signal is 1;
 attribute syn_keep of clk32         : signal is 1;
 attribute syn_keep of clk_pixel_x10 : signal is 1;
 attribute syn_keep of clk_pixel_x5  : signal is 1;
-attribute syn_keep of mspi_clk_x5   : signal is 1;
 
 signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
@@ -398,7 +396,7 @@ signal CLK_6551_EN     : std_logic;
 signal phi2_p, phi2_n  : std_logic;
 signal sid_ld_addr     : std_logic_vector(11 downto 0);
 signal sid_ld_data     : std_logic_vector(15 downto 0);
-signal sid_ld_wr       : std_logic;
+signal sid_ld_wr       : std_logic := '0';
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -581,7 +579,7 @@ port map
  (
     clk32         => clk32,
     reset         => disk_reset, -- (not flash_ready) or disk_reset,
-    pause         => loader_busy, -- c64_pause or loader_busy,
+    pause         => c64_pause or loader_busy,
     ce            => '0',
 
     disk_num      => (others =>'0'),
@@ -667,15 +665,6 @@ generic map (
     outbyte         => sd_rd_data         -- a byte of sector content
 );
 
---process(clk32)
---begin
---  if rising_edge(clk32) then
---    old_sync <= freeze_sync;
---      if not old_sync and freeze_sync then
---          freeze <= osd_status and system_pause;
---        end if;
---  end if;
---end process;
 freeze <= '0';
 
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
@@ -795,7 +784,7 @@ mainclock: rPLL
         port map (
             CLKOUT   => clk_pixel_x10,
             LOCK     => pll_locked,
-            CLKOUTP  => mspi_clk_x5,
+            CLKOUTP  => open,
             CLKOUTD  => clk_pixel_x5,
             CLKOUTD3 => open,
             RESET    => '0',
@@ -1701,6 +1690,5 @@ begin
     uart_cs <= IO7;
   end if;
 end process;
-
 
 end Behavioral_top;
