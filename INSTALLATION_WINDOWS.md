@@ -8,7 +8,7 @@ This has been tested on Windows 11. It should work on older versions too.
 
 Software needed:
 
-  - [Gowin V1.9.9.02](https://www.gowinsemi.com/en/support/home/) **to synthesize the core**
+  - [Gowin V1.9.9.03](https://www.gowinsemi.com/en/support/home/) **to synthesize the core**
   - [BouffaloLabDevCube](https://dev.bouffalolab.com/download) **to flash the BL616**
   - [Latest release](https://github.com/vossstef/tang_nano_20k_c64/releases/latest) of C64Nano **FPGA** bitstream
   - [Latest release](https://github.com/harbaum/MiSTeryNano/releases/latest) of MiSTeryNano **BL616 µC firmware** (if not otherwise stated in the release note.)
@@ -20,6 +20,7 @@ In order to use the SD card for disks:
   - BASIC Program files in .PRG format
   - Tape images in .TAP format
   - C64 Kernal files (8K) in .BIN format
+  - SID Filter curve in .FLT format
 
 # Flashing the Tang Nano 20k
 
@@ -151,7 +152,7 @@ the Tang Nano 20K. Using an external M0S is nevertheless recommended.
   device with a COM port. If not take a look in the device manager to check for
   the correct device detection.
 - On the top click on MCU and browse to the firmware image file named
-  ```misterynano_fw_bl616.bin``` (contains a unified firmware both for Atari ST and C64Nano)
+  ```misterynano_fw_bl616.bin``` (contains a unified firmware both for all cores)
 - Choose “Open Uart” and than press “Create & Download”. The firmware should now be
   flashed
 
@@ -167,6 +168,9 @@ Copy a *.D64 Disk image to your sdcard and rename it to disk8.d64 as default c15
 Copy a *.CRT ROM image to your sdcard and rename it to c64crt.crt as default Cartridge boot image.  
 Copy a *.PRG BASIC file to your sdcard and rename it to c64prg.prg as default Program boot image.  
 Copy a *.TAP Type image to your sdcard and rename it to c64tap.tap as default tape boot image. 
-Copy a 8k Byte C64 Kernal ROM file *.BIN to your sdcard and rename it to c64kernal.bin as default Kernal boot image.
+Copy a 8k Byte C64 Kernal ROM file *.BIN to your sdcard and rename it to c64kernal.bin as default Kernal boot image.<br>
+Copy a *.FLT sid filter curve to your sdcard and rename it to c64flt.flt as default filter boot image.<br>
+The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order: (1)BIN Kernal, (2)CRT ROM, (3)PRG Basic, (4)FLT and finally (5) TAP Tape.<br>
+In order to catch the ongoing Tape load you have to type on the screen LOAD+ENTER using the original CBM Kernal withe the buildin tape routines. Remember that Dolpin DOS doesn't support Tape load.
 
 That´s it for now. Have fun using the C64Nano

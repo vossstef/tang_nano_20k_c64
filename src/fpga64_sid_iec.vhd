@@ -41,7 +41,10 @@ use IEEE.numeric_std.all;
 -- -----------------------------------------------------------------------
 
 entity fpga64_sid_iec is
-port(
+generic (
+  DUAL : integer := 1 -- 0:no, 1:yes dual SID build option
+);
+port  (
 	clk32       : in  std_logic;
 	reset_n     : in  std_logic;
 	bios        : in  std_logic_vector(1 downto 0);
@@ -649,6 +652,52 @@ pot_y1 <= (others => '1' ) when cia1_pao(6) = '0' else not pot2;
 pot_x2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot3;
 pot_y2 <= (others => '1' ) when cia1_pao(7) = '0' else not pot4;
 
+-- single SID build
+not_dual: if DUAL = 0 generate
+sid : entity work.sid_top
+generic map (
+	MULTI_FILTERS => 1,
+	DUAL => 0 )
+port map (
+	reset => reset,
+    clk => clk32,
+	ce_1m => enableSid,
+	we => pulseWr_io,
+	cs => sid_sel_l, -- unsigned'(sid_sel_r & sid_sel_l),
+	addr => cpuAddr(4 downto 0),
+	data_in => cpuDo,
+	data_out => sid_do,
+	pot_x_l => pot_x1 and pot_x2,
+	pot_y_l => pot_y1 and pot_y2,
+
+	pot_x_r => pot_x1 and pot_x2,
+	pot_y_r => pot_y1 and pot_y2,
+
+	audio_l => audio_l,
+	audio_r => audio_r,
+
+	ext_in_l(17) => sid_ver(0) and sid_digifix,
+	ext_in_l(16 downto 0) => (others => '0'),
+
+	ext_in_r(17) => sid_ver(0) and sid_digifix,
+	ext_in_r(16 downto 0) => (others => '0'),
+
+	filter_en => sid_filter(0),
+	mode    => sid_ver(0),
+	cfg     => sid_cfg(1 downto 0),
+	
+	fc_offset_l => sid_fc_off_l,
+	fc_offset_r => sid_fc_off_r,
+
+	ld_clk  => sid_ld_clk,
+	ld_addr => sid_ld_addr,
+	ld_data => sid_ld_data,
+	ld_wr   => sid_ld_wr
+);
+end generate;
+
+-- dual SID build
+yes_dual: if DUAL /= 0 generate
 sid : entity work.sid_top
 generic map (
 	MULTI_FILTERS => 1,
@@ -689,7 +738,7 @@ port map (
 	ld_data => sid_ld_data,
 	ld_wr   => sid_ld_wr
 );
-
+end generate;
 -- -----------------------------------------------------------------------
 -- CIAs
 -- -----------------------------------------------------------------------

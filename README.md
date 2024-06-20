@@ -26,7 +26,7 @@ Features:
 * Loadable 8K Kernal ROM (*.BIN)
 * [VIC-II](https://en.wikipedia.org/wiki/MOS_Technology_VIC-II) revision and [6526](https://en.wikipedia.org/wiki/MOS_Technology_CIA) / 8521 selection
 * [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) revision 6581 or 8580 selectable
-* 2nd dual SID Option
+* 2nd dual SID Option and loadable Filter curves
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) or [GeoRAM](https://en.wikipedia.org/wiki/GeoRAM)<br>
 * On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN)<br>
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
@@ -89,6 +89,16 @@ Kernal ROM files *.BIN can be loaded via OSD selection.<br>
 Copy a 8K C64 Kernal ROM *.BIN to your sdcard and rename it to **c64kernal.bin** as default boot Kernal.<br>
 Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings** and do a **power-cyle** of the board.<br>
 
+## SID Filter Curve (.FLT)
+Custom Filters curves can be loaded via OSD. Remember to select the 6581 chip, not the 8580.
+Select 'Custom 1' as the filter to activate it.<br> When a custom filter is loaded, there's no difference between custom options Custom 1, 2, and 3. Selecting 'Default' switches back to the built-in filter curve.<br>
+Prevent Filter curve load by OSD Kernal **FLT** selection **No Disk** and **Save settings** and System **Cold Boot**.<br>
+Option to enable at address e.g. $D420 a second [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) component (dual) in Stereo mode for some Demos requiring it.<br> 
+
+## Core Loader Sequencing
+The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order: (1)BIN Kernal, (2)CRT ROM, (3)PRG Basic, (4)FLT and finally (5) TAP Tape.<br>
+In order to catch the ongoing Tape load you have to type on the screen LOAD+ENTER using the original CBM Kernal withe the buildin tape routines. Remember that Dolpin DOS doesn't support Tape load.
+
 ## emulated RAM Expansion Unit REU 1750
 For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.<br>
 <br>
@@ -97,11 +107,8 @@ Enable REU, and load the PRG.<br>
 Playing around with [GEOS](https://en.wikipedia.org/wiki/GEOS_(8-bit_operating_system))<br>
 Enable REU, select c1541 CBM DOS ROM and load the PRG.<br>
 
-## SID
-Option to enable at address e.g. $D420 a second [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) component (dual) in Stereo mode for some Demos requiring it.<br>
-
 ## Push Button utilization
-* S2 keep pressed during power-up for programming Flash<br>
+* S2 keep pressed during power-up and programming Flash for FPGA until done.<br>
 * S1 reserved <br>
 
 ## OSD
@@ -118,7 +125,6 @@ invoke by F12 keypress<br>
 * c1541 Reset<br>
 * c1541 DOS ROM selection<br>
 * MIDI configuration<br>
-* Pause when OSD open<br>
 * PAL / NTSC Video mode<br>
 * VIC-II revision, 6526 / 8521 and SID 6561/8580 selection
 * SID Filter selection
