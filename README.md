@@ -28,7 +28,7 @@ Features:
 * [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) revision 6581 or 8580 selectable
 * 2nd dual SID Option and loadable Filter curves
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) or [GeoRAM](https://en.wikipedia.org/wiki/GeoRAM)<br>
-* On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN)<br>
+* On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN/TAP/FLT)<br>
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 * RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode to Tang onboard USB-C serial port.
 <br>
@@ -77,7 +77,7 @@ Prevent PRG load at boot by OSD PRG selection **No Disk** , **Save settings** an
 A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection.<br>
 In order to start a tape download select CBM Kernal (mandatory) and type: LOAD<br>
 The file is loaded automatically as soon as file selected via OSD (no need to press PLAY TAPE button).<br>
-Screen will blank for several seconds and then display briefly the filename of the to be loaded file.<br> It will blank afterwards till load completed. I will take time...<br>
+Screen will blank for several seconds and then display briefly the filename of the to be loaded file.<br> It will blank afterwards till load completed and take time...<br>
 Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default boot tape.<br>
 Prevent TAP load at boot or for **Tape unload** OSD TAP selection **No Disk** , **Save settings** and **Reset**.<br>
 The available Tape Sound can be disabled from OSD.
@@ -96,8 +96,8 @@ Prevent Filter curve load by OSD Kernal **FLT** selection **No Disk** and **Save
 Option to enable at address e.g. $D420 a second [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) component (dual) in Stereo mode for some Demos requiring it.<br> 
 
 ## Core Loader Sequencing
-The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order: (1)BIN Kernal, (2)CRT ROM, (3)PRG Basic, (4)FLT and finally (5) TAP Tape.<br>
-In order to catch the ongoing Tape load you have to type on the screen LOAD+ENTER using the original CBM Kernal withe the buildin tape routines. Remember that Dolpin DOS doesn't support Tape load.
+The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order: (1) BIN Kernal, (2) CRT ROM, (3) PRG Basic, (4) FLT and finally (5) TAP Tape.<br>
+In order to catch the ongoing Tape load you have to be quick and type on the screen LOAD+ENTER using the original CBM Kernal. Remember that Dolpin DOS doesn't support Tape load.
 
 ## emulated RAM Expansion Unit REU 1750
 For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.<br>
