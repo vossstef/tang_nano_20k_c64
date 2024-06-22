@@ -204,7 +204,7 @@ always @(posedge clk) begin
 			if(command == 8'd1) begin
                // request status byte, for the MCU it doesn't matter whether
 			   // the core wants to write or to read
-			   if(byte_cnt == 4'd0) data_out <= { 3'b000, rstart | wstart };
+			   if(byte_cnt == 4'd0) data_out <= { 2'b00, rstart | wstart };
 			   if(byte_cnt == 4'd1) data_out <= rsector[31:24];
 			   if(byte_cnt == 4'd2) data_out <= rsector[23:16];
 			   if(byte_cnt == 4'd3) data_out <= rsector[15: 8];
