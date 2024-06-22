@@ -82,7 +82,10 @@ reg [1:0] system_resetD;
 	leds[4] <= img_present[4];
 	ioctl_wr <= wr;
 	wr <= 1'b0;
-	if(sd_busy) {sd_rd,sd_wr} <= 0;
+	if(sd_busy) begin
+		sd_rd <= 5'd0;
+		sd_wr <= 5'd0; 
+	end
 
 	if(system_reset[1])
 	begin

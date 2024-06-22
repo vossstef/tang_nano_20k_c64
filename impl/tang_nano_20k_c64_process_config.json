@@ -59,7 +59,7 @@
  "Promote_Physical_Constraint_Warning_to_Error" : true,
  "READY" : false,
  "RECONFIG_N" : false,
- "Ram_RW_Check" : false,
+ "Ram_RW_Check" : true,
  "Replicate_Resources" : false,
  "Report_Auto-Placed_Io_Information" : true,
  "Route_Maxfan" : 23,
