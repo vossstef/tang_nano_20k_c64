@@ -248,7 +248,6 @@ signal io_data        : unsigned(7 downto 0);
 signal db9_joy        : std_logic_vector(5 downto 0);
 signal turbo_mode     : std_logic_vector(1 downto 0);
 signal turbo_speed    : std_logic_vector(1 downto 0);
-signal flash_ready    : std_logic;
 signal dos_sel        : std_logic_vector(1 downto 0);
 signal c1541rom_cs    : std_logic;
 signal c1541rom_addr  : std_logic_vector(14 downto 0);
@@ -578,7 +577,7 @@ c1541_sd_inst : entity work.c1541_sd
 port map
  (
     clk32         => clk32,
-    reset         => disk_reset, -- (not flash_ready) or disk_reset,
+    reset         => disk_reset,
     pause         => c64_pause or loader_busy,
     ce            => '0',
 
@@ -1248,7 +1247,7 @@ flash_inst: entity work.flash
 port map(
     clk       => flash_clk,
     resetn    => flash_lock,
-    ready     => flash_ready,
+    ready     => open,
     busy      => open,
     address   => ("0010" & "000" & dos_sel & c1541rom_addr),
     cs        => c1541rom_cs,

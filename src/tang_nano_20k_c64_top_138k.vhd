@@ -185,6 +185,7 @@ signal mouse_x        : signed(7 downto 0);
 signal mouse_y        : signed(7 downto 0);
 signal mouse_strobe   : std_logic;
 signal freeze         : std_logic;
+
 signal c64_pause      : std_logic;
 signal old_sync       : std_logic;
 signal osd_status     : std_logic;
@@ -259,7 +260,6 @@ signal io_data        : unsigned(7 downto 0);
 signal db9_joy        : std_logic_vector(5 downto 0);
 signal turbo_mode     : std_logic_vector(1 downto 0);
 signal turbo_speed    : std_logic_vector(1 downto 0);
-signal flash_ready    : std_logic;
 signal dos_sel        : std_logic_vector(1 downto 0);
 signal c1541rom_cs    : std_logic;
 signal c1541rom_addr  : std_logic_vector(14 downto 0);
@@ -403,9 +403,9 @@ signal uart_irq        : std_logic := '0';
 signal uart_cs         : std_logic;
 signal CLK_6551_EN     : std_logic;
 signal phi2_p, phi2_n  : std_logic;
-signal sid_ld_addr     : std_logic_vector(11 downto 0);
-signal sid_ld_data     : std_logic_vector(15 downto 0);
-signal sid_ld_wr       : std_logic;
+signal sid_ld_addr     : std_logic_vector(11 downto 0) := (others =>'0');
+signal sid_ld_data     : std_logic_vector(15 downto 0) := (others =>'0');
+signal sid_ld_wr       : std_logic := '0';
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -545,7 +545,7 @@ c1541_sd_inst : entity work.c1541_sd
 port map
  (
     clk32         => clk32,
-    reset         => (not flash_ready) or disk_reset,
+    reset         => disk_reset,
     pause         => c64_pause or loader_busy,
     ce            => '0',
 
@@ -1164,7 +1164,7 @@ flash_inst: entity work.flash
 port map(
     clk       => flash_clk,
     resetn    => flash_lock,
-    ready     => flash_ready,
+    ready     => open,
     busy      => open,
     address   => (X"A" & "000" & dos_sel & c1541rom_addr),
     cs        => c1541rom_cs,
@@ -1469,7 +1469,7 @@ process(clk32)
 begin
   if rising_edge(clk32) then
     sid_ld_wr <= '0';
-    if ioctl_wr = '1' and load_flt = '1' and ioctl_addr < 6144 then
+    if ioctl_wr = '1' and load_flt = '1' and ioctl_addr < std_logic_vector(to_unsigned(6144, ioctl_addr'length)) then
         if ioctl_addr(0) = '1' then
           sid_ld_data(15 downto 8) <= ioctl_data;
           sid_ld_addr <= ioctl_addr(12 downto 1);
