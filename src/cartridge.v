@@ -61,8 +61,8 @@ reg        game_overide;
 assign     exrom = exrom_overide |  force_ultimax;
 assign     game  = game_overide  & ~force_ultimax;
 
-reg [6:0] lobanks[0:63];
-reg [6:0] hibanks[0:63];
+reg [6:0] lobanks[0:63] /* synthesis syn_ramstyle = "registers,no_rw_check" */;
+reg [6:0] hibanks[0:63] /* synthesis syn_ramstyle = "registers,no_rw_check" */;
 
 reg  [7:0] bank_cnt;
 always @(posedge clk32) begin

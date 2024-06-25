@@ -394,8 +394,8 @@ signal uart_irq        : std_logic := '0';
 signal uart_cs         : std_logic;
 signal CLK_6551_EN     : std_logic;
 signal phi2_p, phi2_n  : std_logic;
-signal sid_ld_addr     : std_logic_vector(11 downto 0);
-signal sid_ld_data     : std_logic_vector(15 downto 0);
+signal sid_ld_addr     : std_logic_vector(11 downto 0) := (others =>'0');
+signal sid_ld_data     : std_logic_vector(15 downto 0) := (others =>'0');
 signal sid_ld_wr       : std_logic := '0';
 
 -- 64k core ram                      0x000000
@@ -1553,7 +1553,7 @@ process(clk32)
 begin
   if rising_edge(clk32) then
     sid_ld_wr <= '0';
-    if ioctl_wr = '1' and load_flt = '1' and ioctl_addr < 6144 then
+    if ioctl_wr = '1' and load_flt = '1' and ioctl_addr < std_logic_vector(to_unsigned(6144, ioctl_addr'length)) then
         if ioctl_addr(0) = '1' then
           sid_ld_data(15 downto 8) <= ioctl_data;
           sid_ld_addr <= ioctl_addr(12 downto 1);
