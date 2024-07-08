@@ -51,7 +51,7 @@ See [Tang Primer 25K](TANG_PRIMER_25K.md)
 See [Tang Mega 138K](TANG_MEGA_138K.md)
 
 ## emulated Diskdrive c1541
-Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS.<br>
+Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS 2.0.<br>
 Copy a D64 Disk image to your sdcard and rename it to **disk8.d64** as default boot image.<br>
 Add further D64 or G64 images as you like and insert card in TN slot. Power Cycle TN. LED 0 acts as Drive activity indicator.<br> 
 Disk directory listing: (or F7 keypress)<br> 
@@ -71,33 +71,38 @@ Prevent cartridge load at boot or for **Detach Cartrige** OSD CRT selection **No
 ## BASIC Program Loader (.PRG)
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
 Copy a *.PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program.<br>
-Prevent PRG load at boot by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
+Prevent PRG load at boot by OSD PRG selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.<br>
+Check loaded file by command LIST (there should be something...) and then command RUN + Keyboard Return<br>
 
 ## Tape Image Loader (*.TAP)
-A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection.<br>
-In order to start a tape download select CBM Kernal (mandatory) and type: LOAD<br>
-The file is loaded automatically as soon as file selected via OSD (no need to press PLAY TAPE button).<br>
-Screen will blank for several seconds and then display briefly the filename of the to be loaded file.<br> It will blank afterwards till load completed and take time...<br>
-Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default boot tape.<br>
-Prevent TAP load at boot or for **Tape unload** OSD TAP selection **No Disk** , **Save settings** and **Reset**.<br>
-The available Tape Sound can be disabled from OSD.
-<br>
+A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection<br>
+In order to start a tape download select C64 CBM Kernal (mandatory as Dolphin DOS doesn't support Tape). Best to save Kernal OSD selection via **Save settings**. Make sure no PRG file is selected and we are in **No Disk** mode.<br>
+Type: LOAD + Keyboard Return<br>
+Screen will blank!<br>
+The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case no TAP had been previously selected.<br>
+As mentioned screen will blank for several seconds and then display briefly the filename of the to be loaded file.<br> It will blank afterwards till load completed and take a lot of time...<br>
+Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default boot tape mountpoint.<br>
+Prevent TAP load at boot or for **Tape unload** OSD TAP selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.<br>
+**NOTE:** After board power-up TAP file will not autoloaded even if TAP file had been saved or c64tap.tap mountpoint available !!!<br>
+Unblock loader by OSD TAP selection **No Disk** and then select the desired TAP file to be loaded.<br>
+Check loaded file by command LIST (there should be something...) and then command RUN + Keyboard Return<br>
+The available (muffled) Tape Sound audio can be disabled from OSD.<br>
 
 ## Kernal Loader (.BIN)
-Dolphin DOS 2.0 is the power-up default Kernal.<br>
-Kernal ROM files *.BIN can be loaded via OSD selection.<br>
+Dolphin DOS 2.0 is the power-up default C64 Kernal with an excellent C1541 speedloader.<br>
+If you are fine with that no need to load anything via OSD and just leave as is !<br>
+In general Kernal ROM files *.BIN can be loaded via OSD selection.<br>
 Copy a 8K C64 Kernal ROM *.BIN to your sdcard and rename it to **c64kernal.bin** as default boot Kernal.<br>
-Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings** and do a **power-cyle** of the board.<br>
+Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings** and do a **power-cyle** of the board. In this case the build-in Dolphin DOS 2.0 will by default used after next power cycle.<br>
 
 ## SID Filter Curve (.FLT)
 Custom Filters curves can be loaded via OSD. Remember to select the 6581 chip, not the 8580.
 Select 'Custom 1' as the filter to activate it.<br> When a custom filter is loaded, there's no difference between custom options Custom 1, 2, and 3. Selecting 'Default' switches back to the built-in filter curve.<br>
-Prevent Filter curve load by OSD Kernal **FLT** selection **No Disk** and **Save settings** and System **Cold Boot**.<br>
+Prevent Filter curve load by OSD Kernal **FLT** selection **No Disk** and **Save settings** and **power-cyle** of the board.<br>
 Option to enable at address e.g. $D420 a second [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) component (dual) in Stereo mode for some Demos requiring it.<br> 
 
 ## Core Loader Sequencing
-The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order: (1) BIN Kernal, (2) CRT ROM, (3) PRG Basic, (4) FLT and finally (5) TAP Tape.<br>
-In order to catch the ongoing Tape load you have to be quick and type on the screen LOAD+ENTER using the original CBM Kernal. Remember that Dolpin DOS doesn't support Tape load.
+The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order: (1) BIN Kernal, (2) CRT ROM, (3) PRG Basic and finally (4) FLT.<br>
 
 ## emulated RAM Expansion Unit REU 1750
 For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.<br>
