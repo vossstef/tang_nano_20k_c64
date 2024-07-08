@@ -1572,10 +1572,9 @@ tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
 process(clk32)
 begin
-if rising_edge(clk32) then
+  if rising_edge(clk32) then
       io_cycle_rD <= io_cycle;
       tap_wrreq(1 downto 0) <= tap_wrreq(1 downto 0) sll 1;
-      tap_start <= '0';
 
       if tap_reset = '1' then
         -- C1530 module requires one more byte at the end due to fifo early check.
@@ -1583,14 +1582,18 @@ if rising_edge(clk32) then
         tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
         tap_play_addr <= (others => '0');
         tap_start <= tap_download;
-        elsif io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
-          read_cyc <= '1'; 
-        elsif io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
-          tap_play_addr <= tap_play_addr + 1;
-          read_cyc <= '0';
-          tap_wrreq(0) <= '1';
-        end if;
-    end if;
+      else
+        tap_start <= '0';
+        if io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
+            read_cyc <= '1';
+          end if;
+        if io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
+            tap_play_addr <= tap_play_addr + 1;
+            read_cyc <= '0';
+            tap_wrreq(0) <= '1';
+          end if;
+      end if;
+  end if;
 end process;
 
 c1530_inst: entity work.c1530
