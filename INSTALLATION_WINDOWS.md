@@ -160,7 +160,7 @@ the Tang Nano 20K. Using an external M0S is nevertheless recommended.
 
 ## Prepare the SD card
 
-Format the SD card in FAT32. Copy your D64 / G64 / CRT / PRG / BIN files files on
+Format the SD card in FAT32. Copy your D64 / G64 / CRT / PRG / BIN / FLT files files on
 it. You can organize your files in subdirectories. These files can later
 be selected using the on-screen-display (OSD).
 Default Mountpoints:  
@@ -170,7 +170,5 @@ Copy a *.PRG BASIC file to your sdcard and rename it to c64prg.prg as default Pr
 Copy a *.TAP Type image to your sdcard and rename it to c64tap.tap as default tape boot image. 
 Copy a 8k Byte C64 Kernal ROM file *.BIN to your sdcard and rename it to c64kernal.bin as default Kernal boot image.<br>
 Copy a *.FLT sid filter curve to your sdcard and rename it to c64flt.flt as default filter boot image.<br>
-The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order: (1)BIN Kernal, (2)CRT ROM, (3)PRG Basic, (4)FLT and finally (5) TAP Tape.<br>
-In order to catch the ongoing Tape load you have to type on the screen LOAD+ENTER using the original CBM Kernal withe the buildin tape routines. Remember that Dolpin DOS doesn't support Tape load.
 
 That´s it for now. Have fun using the C64Nano
