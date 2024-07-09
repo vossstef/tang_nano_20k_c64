@@ -72,9 +72,10 @@ Prevent cartridge load at boot or for **Detach Cartrige** OSD CRT selection **No
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
 Copy a *.PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program.<br>
 Prevent PRG load at boot by OSD PRG selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.<br>
-[!TIP]
-Check loaded file by command LIST (there should be something...) and then 
-[!IMPORTANT]
+> [!TIP]
+Check loaded file by command LIST (there should be something...) and then<br>
+
+> [!IMPORTANT]
 command **RUN** + Keyboard Return<br>
 
 ## Tape Image Loader (*.TAP)
@@ -85,22 +86,26 @@ Screen will blank!<br>
 The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case no TAP had been previously selected.<br>
 As mentioned screen will blank for several seconds and then display briefly the filename of the to be loaded file.<br> It will blank afterwards till load completed and take a lot of time...<br>
 Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default tape mountpoint.<br>
-For **Tape unload** OSD TAP selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.<br>
-[!IMPORTANT]
-After board power-up TAP file will **not autoloaded** even if TAP file had been saved or c64tap.tap mountpoint available !!!<br>
-Unblock loader by OSD TAP selection **No Disk** and then select the desired TAP file to be loaded.<br>
-[!TIP]
+For **Tape unload** use OSD TAP selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.<br>
+> [!WARNING]
+After board power-up TAP file will **not autoloaded** even if TAP file had been saved or c64tap.tap mountpoint available !<br>
+Unblock loader by OSD TAP selection **No Disk** and then select the desired TAP file to be loaded after you typed LOAD + Keyboard Return.<br>
+
+> [!TIP]
 Check loaded file by command LIST (there should be something...) and then 
-[!IMPORTANT]
+
+> [!IMPORTANT]
 command **RUN** + Keyboard Return<br>
-[!NOTE]
+
+> [!NOTE]
 The available (muffled) Tape Sound audio can be disabled from OSD.<br>
 
 ## Kernal Loader (.BIN)
 Dolphin DOS 2.0 is the power-up default C64 Kernal with an excellent C1541 speedloader.<br>
-[!TIP]
+> [!TIP]
 If you are fine with that no need to load anything via OSD and just OSD Kernal BIN selection **No Disk** and **Save settings**!<br>
-[!IMPORTANT]
+
+> [!IMPORTANT]
 In general Kernal ROM files *.BIN can be loaded via OSD selection.<br>
 Copy a 8K C64 Kernal ROM *.BIN to your sdcard and rename it to **c64kernal.bin** as default boot Kernal.<br>
 Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings** and do a **power-cyle** of the board. In this case the build-in Dolphin DOS 2.0 will by default used after next power cycle.<br>
@@ -109,11 +114,11 @@ Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings*
 Custom Filters curves can be loaded via OSD. Remember to select the 6581 chip, not the 8580.
 Select 'Custom 1' as the filter to activate it.<br> When a custom filter is loaded, there's no difference between custom options Custom 1, 2, and 3. Selecting 'Default' switches back to the built-in filter curve.<br>
 Prevent Filter curve load by OSD Kernal **FLT** selection **No Disk** and **Save settings** and **power-cyle** of the board.<br>
+> [!TIP]
 Option to enable at address e.g. $D420 a second [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) component (dual) in Stereo mode for some Demos requiring it.<br> 
 
 ## Core Loader Sequencing
-The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order:
-[!IMPORTANT] (1) BIN Kernal, (2) CRT ROM, (3) PRG Basic and finally (4) FLT.<br>
+The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order: (1) BIN Kernal, (2) CRT ROM, (3) PRG Basic and finally (4) FLT.<br>
 
 ## emulated RAM Expansion Unit REU 1750
 For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.<br>
