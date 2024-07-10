@@ -26,10 +26,9 @@ entity tang_nano_20k_c64_top_138k is
     io          : in std_logic_vector(4 downto 0);
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
-    
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(5 downto 0);
-
+    --
     tmds_clk_n  : out std_logic;
     tmds_clk_p  : out std_logic;
     tmds_d_n    : out std_logic_vector( 2 downto 0);
@@ -436,7 +435,7 @@ begin
   m0s(0)      <= spi_io_dout;
   m0s(5)      <= 'Z';
 
-  -- mux overlapping DS2 and MIDI signals to IO pin
+-- mux overlapping DS2 and MIDI signals to IO pin
 joystick_cs     <= joystick_cs_i when st_midi = "000" else 'Z';
 midi_rx         <= joystick_cs when st_midi /= "000" else '1';
 joystick_miso   <= midi_tx when st_midi /= "000" else 'Z';
@@ -1234,7 +1233,7 @@ port map
     RnW     => not (ram_we and IOE),
     nIRQ    => midi_irq_n,
     nNMI    => midi_nmi_n,
-  
+ 
     RX      => midi_rx,
     TX      => midi_tx
   );
@@ -1477,8 +1476,8 @@ begin
         else
           sid_ld_data(7 downto 0) <= ioctl_data;
         end if;
-      end if;
     end if;
+	end if;
 end process;
 
 --------------- TAP -------------------
@@ -1489,10 +1488,9 @@ tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
 process(clk32)
 begin
-if rising_edge(clk32) then
+  if rising_edge(clk32) then
       io_cycle_rD <= io_cycle;
       tap_wrreq(1 downto 0) <= tap_wrreq(1 downto 0) sll 1;
-      tap_start <= '0';
 
       if tap_reset = '1' then
         -- C1530 module requires one more byte at the end due to fifo early check.
@@ -1500,14 +1498,18 @@ if rising_edge(clk32) then
         tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
         tap_play_addr <= (others => '0');
         tap_start <= tap_download;
-        elsif io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
-          read_cyc <= '1'; 
-        elsif io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
-          tap_play_addr <= tap_play_addr + 1;
-          read_cyc <= '0';
-          tap_wrreq(0) <= '1';
-        end if;
-    end if;
+      else
+        tap_start <= '0';
+        if io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
+            read_cyc <= '1';
+          end if;
+        if io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
+            tap_play_addr <= tap_play_addr + 1;
+            read_cyc <= '0';
+            tap_wrreq(0) <= '1';
+          end if;
+      end if;
+  end if;
 end process;
 
 c1530_inst: entity work.c1530
@@ -1551,7 +1553,7 @@ begin
   uart_tx <= '1';
   flag2_n_i <= '1';
   uart_cs <= '0';
-if ext_en = '1' and disk_access = '1' then
+  if ext_en = '1' and disk_access = '1' then
    -- c1541 parallel bus
    drive_par_i <= pb_o;
    drive_stb_i <= pc2_n_o;
@@ -1604,7 +1606,7 @@ if ext_en = '1' and disk_access = '1' then
   elsif system_up9600 = 4 then
     uart_tx <= tx_6551;
     uart_cs <= IO7;
- end if;
+  end if;
 end process;
 
 end Behavioral_top;
