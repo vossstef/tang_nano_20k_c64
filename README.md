@@ -70,7 +70,9 @@ In case a program don't load correctly select via OSD the factory default CBM DO
 ## Cartridge ROM Loader (.CRT)
 Cartridge ROM can be loaded via OSD file selection.<br>
 Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge ROM.<br>
-Prevent the cartridge load at boot or for **Detach Cartridge** by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
+Prevent the cartridge load at boot by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
+> [!TIP]
+**Detach Cartridge** by OSD CRT selection **No Disk** and System **Cold Boot**.<br>
 
 ## BASIC Program Loader (.PRG)
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
@@ -88,7 +90,7 @@ In order to start a tape download choose C64 CBM Kernal (mandatory as Dolphin DO
 Type: **LOAD** + Keyboard Return<br>
 Screen will blank!<br>
 
-The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case no TAP had been previously selected.<br>
+The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case ***no** TAP had been previously selected*.<br>
 As mentioned screen will blank for several seconds and then display briefly the filename of the to be loaded file. It will blank shortly afterwards again till load completed and take a lot of time...<br>
 Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default tape mountpoint.<br>
 For **Tape unload** use OSD TAP selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.<br>
@@ -115,13 +117,15 @@ Copy a 8K C64 Kernal ROM *.BIN to your sdcard and rename it to **c64kernal.bin**
 Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings** and do a **power-cyle** of the board. In this case the build-in Dolphin Kernal will by default be used after next power cycle.<br>
 
 ## SID Filter Curve (.FLT)
-Custom Filters curves can optionally be loaded via OSD. This is in most cases not needed and build-in filters curves are already an optimum.
+Custom Filters curves can optionally be loaded via OSD. 
+> [!TIP]
+> This is in most cases not needed and build-in filters curves are already an optimum.
+
 > [!NOTE]
 Remember to select the 6581 chip, not the 8580.
 Select 'Custom 1' as the filter to activate it.<br> When a custom filter is loaded, there's no difference between custom options Custom 1, 2, and 3. Selecting 'Default' switches back to the built-in filter curve.<br>
 
 Prevent Filter curve load by OSD Kernal **FLT** selection **No Disk** and **Save settings** and **power-cyle** of the board.<br>
-Option to enable at address e.g. $D420 a second [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) component (dual) in Stereo mode for some Demos requiring it.<br> 
 
 ## Core Loader Sequencing
 The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order:
@@ -137,7 +141,7 @@ Playing around with [GEOS](https://en.wikipedia.org/wiki/GEOS_(8-bit_operating_s
 Enable REU, select c1541 CBM DOS ROM and load the PRG.<br>
 
 ## Push Button utilization
-* S2 keep pressed during power-up and programming Flash for FPGA until done.<br>
+* S2 keep pressed during power-up for FLASH programming of FPGA bitstream<br>
 > [!CAUTION]
 A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
 * S1 reserved <br>
@@ -188,7 +192,7 @@ USB Mouse as c1351 Mouse emulation.
 or Paddle. OSD: **Paddle**<br>
 Dualshock 2 Sticks in analog mode as VC-1312 Paddle emulation.<br>
 Left **L1 / L2**  and Right **R1 / R2** shoulder Button as Trigger<br>
-You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the Joystick mode agin. OSD: DS2<br>
+You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the **Joystick** mode again and set OSD: **DualShock**<br>
 
 ## Keyboard 
  ![Layout](\.assets/keymap.gif)
@@ -205,7 +209,7 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
 | 4 | Kernal selected  | x | - | x |
 | 5 | TAP selected | x | - | x |
 
-Solid 'red' of the c1541 led after power-up indicates a missing DOS in Flash<br>
+Solid **<font color="red">red</font>** of the c1541 led after power-up indicates a missing DOS in Flash<br>
 
 **Multicolor RGB LED**
 * **<font color="green">green</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;all fine and ready to go<br>
