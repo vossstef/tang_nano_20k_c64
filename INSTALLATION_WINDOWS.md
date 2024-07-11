@@ -34,6 +34,10 @@ on your desktop or in your start menu.
  - Press the ```S2``` button on the Tang Nano 20K and keep it pressed
  - Connect the Tang Nano 20k to the USB on your computer. You should hear the connecting sound of Windows.
  - Release the ```S2``` button
+
+> [!CAUTION]
+A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
+
  - Start Gowin. **You should see the following screen**
 
 Explanation: The C64Nano core makes use of the flash memory of the

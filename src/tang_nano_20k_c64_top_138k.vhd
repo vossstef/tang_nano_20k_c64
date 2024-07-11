@@ -405,6 +405,9 @@ signal phi2_p, phi2_n  : std_logic;
 signal sid_ld_addr     : std_logic_vector(11 downto 0) := (others =>'0');
 signal sid_ld_data     : std_logic_vector(15 downto 0) := (others =>'0');
 signal sid_ld_wr       : std_logic := '0';
+signal img_present     : std_logic := '0';
+signal c1541_sd_rd     : std_logic;
+signal c1541_sd_wr     : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -519,8 +522,15 @@ process(clk32, pll_locked)
       disk_chg_trg_d <= disk_chg_trg;
       disk_g64_d <= disk_g64;
 
+      if sd_img_mounted(0) = '1' then
+        img_present <= '0' when sd_img_size = 0 else '1';
+      end if;
+
       if sd_img_mounted_d = '0' and sd_img_mounted(0) = '1' then
-      sd_img_size_d <= sd_img_size; else sd_img_size_d <= (others => '0'); end if;
+        sd_img_size_d <= sd_img_size;
+      else 
+        sd_img_size_d <= (others => '0'); 
+      end if;
 
       if (sd_img_mounted(0) /= sd_img_mounted_d) or (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
           sd_change  <= '1';
@@ -550,7 +560,7 @@ port map
 
     disk_num      => (others =>'0'),
     disk_change   => sd_change, 
-    disk_mount    => '1',
+    disk_mount    => img_present,
     disk_readonly => system_floppy_wprot(0),
     disk_g64      => disk_g64,
 
@@ -569,8 +579,8 @@ port map
     par_stb_o     => drive_stb_o,
 
     sd_lba        => disk_lba,
-    sd_rd         => sd_rd(0),
-    sd_wr         => sd_wr(0),
+    sd_rd         => c1541_sd_rd,
+    sd_wr         => c1541_sd_wr,
     sd_ack        => sd_busy,
 
     sd_buff_addr  => sd_byte_index,
@@ -585,7 +595,9 @@ port map
     c1541rom_data => c1541rom_data
 );
 
-sd_lba <= loader_lba when loader_busy = '1' else disk_lba;
+sd_lba <= loader_lba when loader_busy = '1' else loader_lba when img_present = '0' else disk_lba;
+sd_rd(0) <= c1541_sd_rd when img_present = '1' else '0';
+sd_wr(0) <= c1541_sd_wr when img_present = '1' else '0';
 ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphindos, speeddos
 sdc_iack <= int_ack(3);
 
