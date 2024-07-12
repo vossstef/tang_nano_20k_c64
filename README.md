@@ -14,7 +14,7 @@ Features:
 * PAL 800x576p@50Hz or NTSC 800x480p@60Hz HDMI Video and Audio Output
 * USB Keyboard via [Sipeed M0S Dock BL616 RISC-V µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)
 * USB Joystick via µC
-* USB Mouse via µC [c1351](https://en.wikipedia.org/wiki/Commodore_1351) Mouse emulation
+* USB Mouse via µC as [c1351](https://en.wikipedia.org/wiki/Commodore_1351) Mouse emulation
 * [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type) [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 * Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys & Stick as Joystick<br>
@@ -23,20 +23,22 @@ Features:
 * c1541 DOS ROM selection
 * Cartridge ROM (*.CRT) loader
 * Direct BASIC program (*.PRG) injection loader
-* Tape (*.TAP) image loader [C1530 Datasette](https://en.wikipedia.org/wiki/Commodore_Datasette)
+* Tape (*.TAP) image loader as [C1530 Datasette](https://en.wikipedia.org/wiki/Commodore_Datasette)
 * Loadable 8K Kernal ROM (*.BIN)
 * [VIC-II](https://en.wikipedia.org/wiki/MOS_Technology_VIC-II) revision and [6526](https://en.wikipedia.org/wiki/MOS_Technology_CIA) / 8521 selection
 * [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) revision 6581 or 8580 selectable
 * 2nd SID (Stereo) and selectable fixed [Filter](https://github.com/daglem/reDIP-SID/blob/master/research/fc-curves.png) modes: Follin, Galway, Average, Strong, Extreme
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) or [GeoRAM](https://en.wikipedia.org/wiki/GeoRAM)<br>
-* On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN)<br>
+* On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN/TAP/FLT)<br>
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 * RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode to Tang onboard USB-C serial port.
 <br>
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
 
-HID interfaces aligned in pinmap and control to match [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/misterynano_fw).<br> Basically BL616 µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
+HID interfaces aligned in pinmap and control to match [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/misterynano_fw)
+respectively [FPGA-Companion](https://github.com/harbaum/FPGA-Companion)<br>
+Basically BL616 µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
 
 **Note** PROJECT IS STILL WORK IN PROGRESS
 <br>
@@ -52,50 +54,90 @@ See [Tang Primer 25K](TANG_PRIMER_25K.md)
 See [Tang Mega 138K](TANG_MEGA_138K.md)
 
 ## emulated Diskdrive c1541
-Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS.<br>
+Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS 2.0.<br>
 Copy a D64 Disk image to your sdcard and rename it to **disk8.d64** as default boot image.<br>
 Add further D64 or G64 images as you like and insert card in TN slot. Power Cycle TN. LED 0 acts as Drive activity indicator.<br> 
+> [!TIP]
 Disk directory listing: (or F7 keypress)<br> 
 LOAD"$",8<br>
 LIST<br> 
-Load first program from Disk: (or just LOAD)<br> 
+Load first program from Disk: (or just LOAD if Dolphin Kernal active)<br> 
 LOAD"*",8<br>
 RUN<br>
-c1541 DOS ROM to be selected from OSD (default Dolphin DOS, CBM DOS or other)<br>
+
+c1541 DOS ROM can be selected from OSD (default Dolphin DOS 2.0, CBM DOS, SpeedDos Plus or JiffyDOS)<br>
 In case a program don't load correctly select via OSD the factory default CBM DOS an give it a try.
 
 ## Cartridge ROM Loader (.CRT)
 Cartridge ROM can be loaded via OSD file selection.<br>
 Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge ROM.<br>
-Prevent cartridge load at boot or for **Detach Cartrige** OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
+Prevent the cartridge load at boot by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
+> [!TIP]
+**Detach Cartridge** by OSD CRT selection **No Disk** and System **Cold Boot**.<br>
 
 ## BASIC Program Loader (.PRG)
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
-Copy a *.PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program.<br>
-Prevent PRG load at boot by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
+Copy a *.PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program. Prevent the PRG load at boot by OSD PRG selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.<br>
+> [!TIP]
+Check loaded file by command **LIST** + Keyboard Return<br>
+
+> [!IMPORTANT]
+command **RUN** + Keyboard Return<br>
 
 ## Tape Image Loader (*.TAP)
-A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection.<br>
-In order to start a tape download select CBM Kernal (mandatory) and type: LOAD<br>
-The file is loaded automatically as soon as file selected via OSD (no need to press PLAY TAPE button).<br>
-Screen will blank for several seconds and then display briefly the filename of the to be loaded file.<br> It will blank afterwards till load completed. I will take time...<br>
-Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default boot tape.<br>
-Prevent TAP load at boot or for **Tape unload** OSD TAP selection **No Disk** , **Save settings** and **Reset**.<br>
-The available Tape Sound can be disabled from OSD.
-<br>
+A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection<br>
+In order to start a tape download choose C64 CBM Kernal (mandatory as Dolphin DOS doesn't support Tape). Best to save Kernal OSD selection via **Save settings**.<br>
+> [!IMPORTANT]
+Type: **LOAD** + Keyboard Return<br>
+Screen will blank!<br>
+
+The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case ***no** TAP had been previously selected*.<br>
+As mentioned screen will blank for several seconds and then display briefly the filename of the to be loaded file. It will blank shortly afterwards again till load completed and take a lot of time...<br>
+Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default tape mountpoint.<br>
+For **Tape unload** use OSD TAP selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.<br>
+> [!WARNING]
+After board power-up or coldboot a TAP file will **not autoloaded** even if TAP file selection had been saved or c64tap.tap mountpoint available !<br>
+Unblock loader by OSD TAP selection **No Disk** or simply select again the desired TAP file to be loaded after you typed **LOAD** + Keyboard Return.<br>
+
+> [!TIP]
+Check loaded file by command **LIST** + Keyboard Return 
+
+> [!IMPORTANT]
+command **RUN** + Keyboard Return<br>
+
+> [!NOTE]
+The available (muffled) Tape Sound audio can be disabled from OSD.<br>
 
 ## Kernal Loader (.BIN)
-Dolphin DOS 2.0 is the power-up default Kernal.<br>
-Kernal ROM files *.BIN can be loaded via OSD selection.<br>
+The build-in Dolphin Kernal is the power-up default C64 Kernal with an excellent C1541 speedloader.
+> [!TIP]
+If you are fine with that then there is no need to load another Kernal via OSD and just select OSD Kernal BIN selection **No Disk** and **Save settings**!<br>
+
+In general Kernal ROM files *.BIN can be loaded via OSD selection.<br>
 Copy a 8K C64 Kernal ROM *.BIN to your sdcard and rename it to **c64kernal.bin** as default boot Kernal.<br>
-Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings** and do a **power-cyle** of the board.<br>
+Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings** and do a **power-cyle** of the board. In this case the build-in Dolphin Kernal will by default be used after next power cycle.<br>
+
+## SID Filter Curve (.FLT)
+Custom Filters curves can optionally be loaded via OSD. 
+> [!TIP]
+> This is in most cases not needed and build-in filters curves are already an optimum.
+
+> [!NOTE]
+Remember to select the 6581 chip, not the 8580.
+Select 'Custom 1' as the filter to activate it.<br> When a custom filter is loaded, there's no difference between custom options Custom 1, 2, and 3. Selecting 'Default' switches back to the built-in filter curve.<br>
+
+Prevent Filter curve load by OSD Kernal **FLT** selection **No Disk** and **Save settings** and **power-cyle** of the board.<br>
+
+## Core Loader Sequencing
+The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order:
+> [!NOTE] 
+(1) BIN Kernal, (2) CRT ROM, (3) PRG Basic and finally (4) FLT.<br>
 
 ## emulated RAM Expansion Unit REU 1750
 For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.<br>
 <br>
 Playing [Sonic the Hedgehog V1.2](https://csdb.dk/release/?id=212523)<br>
 Enable REU, and load the PRG.<br>
-
 Playing around with [GEOS](https://en.wikipedia.org/wiki/GEOS_(8-bit_operating_system))<br>
 Enable REU, select c1541 CBM DOS ROM and load the PRG.<br>
 
@@ -104,7 +146,9 @@ Option to enable at address e.g. $D420 a second [SID](https://en.wikipedia.org/w
 There are 5 fixed [Filter](https://github.com/daglem/reDIP-SID/blob/master/research/fc-curves.png) modes selectable for default chip type 6551: Follin, Galway, Average, Strong and Extreme <br>
 
 ## Push Button utilization
-* S2 keep pressed during power-up for programming Flash<br>
+* S2 keep pressed during power-up for FLASH programming of FPGA bitstream<br>
+> [!CAUTION]
+A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
 * S1 reserved <br>
 
 ## OSD
@@ -121,19 +165,18 @@ invoke by F12 keypress<br>
 * c1541 Reset<br>
 * c1541 DOS ROM selection<br>
 * MIDI configuration<br>
-* Pause when OSD open<br>
 * PAL / NTSC Video mode<br>
 * VIC-II revision, 6526 / 8521 and SID 6561/8580 selection
 * SID Filter selection
-* GEOram activation
-* Loader (CRT/PRG/BIN/TAP) file selection<br>
+* geoRAM activation
+* Loader (CRT/PRG/BIN/TAP/FLT) file selection<br>
 
 ## Gamecontrol support
-legacy single D9 Digital Joystick. OSD: Retro D9<br>
+legacy single D9 Digital Joystick. OSD: **Retro D9**<br>
 or<br>
-USB Joystick(s). OSD: USB #1 or USB #2 <br>
+USB Joystick(s). OSD: **USB #1** or **USB #2** <br>
 or<br>
-Gamepad. OSD: DualShock
+Gamepad. OSD: **DualShock**
 <br>**stick digital** for Move and Left **L1** or Right **R1** shoulder Button for Trigger or following **Pad** controls:<br>
 | Buttons | - | - |
 | - | - | -  |
@@ -141,20 +184,20 @@ Gamepad. OSD: DualShock
 | square button<br>Left | - | circle button<br>Right |
 | - | cross button<br>Down | - |<br>
 
-or Keyboard **Numpad**. OSD: Numpad<br>
+or Keyboard Numpad. OSD: **Numpad**<br>
 | | | |
 |-|-|-|
 |0<br>Trigger|8<br>Up|-|
 |4<br>Left|-|6<br>Right|
 |-|2<br>Down|-|
 
-or Mouse. OSD: Mouse<br>
+or Mouse. OSD: **Mouse**<br>
 USB Mouse as c1351 Mouse emulation.
 
-or Paddle. OSD: Paddle<br>
+or Paddle. OSD: **Paddle**<br>
 Dualshock 2 Sticks in analog mode as VC-1312 Paddle emulation.<br>
 Left **L1 / L2**  and Right **R1 / R2** shoulder Button as Trigger<br>
-You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the Joystick mode agin. OSD: DS2<br>
+You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the **Joystick** mode again and set OSD: **DualShock**<br>
 
 ## Keyboard 
  ![Layout](\.assets/keymap.gif)
@@ -171,7 +214,7 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
 | 4 | Kernal selected  | x | - | x |
 | 5 | TAP selected | x | - | x |
 
-Solid 'red' of the c1541 led after power-up indicates a missing DOS in Flash<br>
+Solid **<font color="red">red</font>** of the c1541 led after power-up indicates a missing DOS in Flash<br>
 
 **Multicolor RGB LED**
 * **<font color="green">green</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;all fine and ready to go<br>
@@ -184,13 +227,13 @@ Type of MIDI interface can be selected from OSD.<br> There is support for Sequen
 You can use a [MiSTeryNano MIDI shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) to interface to a Keyboard.<br>
 ## RS232 Serial Interface 
 The Tang onboard USB-C serial port can be used for communication with the C64 Userport Serial port in [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode.<br>
-Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal + c1541 CBM DOS rather than default DolphinDOS.<br> For a first start use UP9600 mode and a Terminal program like [ccgms](https://github.com/mist64/ccgmsterm) and on the PC side [Putty](https://www.putty.org) with 2400 Baud.<br>
+Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal rather than default DolphinDOS.<br> For a first start use UP9600 mode and a Terminal program like [ccgms](https://github.com/mist64/ccgmsterm) and on the PC side [Putty](https://www.putty.org) with 2400 Baud.<br>
 A future release will add [Swiftlink](https://www.commodoreserver.com/BlogEntryView.asp?EID=FA5AE758474345A9A0A7208C7F408538) [6551](https://en.wikipedia.org/wiki/MOS_Technology_6551) UART support @ $DE00, $DF00 and $D700, NMI.<br>
 ## Powering
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
-Alternatively use the command line build script gw_sh.exe build_tn20k.tcl, build_tp25k.tcl or build_tm138k.tcl<br>
+Alternatively use the command line build script **gw_sh.exe** build_tn20k.tcl, build_tp25k.tcl or build_tm138k.tcl<br>
 ## Pin mapping 
 see pin configuration in .cst configuration file
 ## HW circuit considerations
@@ -251,8 +294,8 @@ TFT Monitor with HDMI Input and Speaker<br>
 
 | HID and Gamecontrol Hardware option | TN20k needs | alternative option |Primer 25K|Mega 138K|
 | ----------- | --- | ---  | ---| -|
-| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH)  |x|x|
-| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | - |x|x|
+| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  |x|x|
+| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH) | - |x|x|
 | USB Mouse | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | -  |x|x|
 | Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|-|
 | [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) respectively<br> PMOD DS2x2 | breadboard to wire everything up and some jumper wires |-|x|

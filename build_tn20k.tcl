@@ -32,7 +32,6 @@ add_file src/misc/ws2812.v
 add_file src/mos6526.v
 add_file src/reu.v
 add_file src/sdram8.v
-add_file src/video_freezer.sv
 add_file src/c1541/c1541_logic.vhd
 add_file src/c1541/c1541_sd.vhd
 add_file src/c1541/gcr_floppy.vhd
@@ -54,7 +53,6 @@ add_file src/t65/T65_ALU.vhd
 add_file src/t65/T65_MCode.vhd
 add_file src/t65/T65_Pack.vhd
 add_file src/tang_nano_20k_c64_top.vhd
-add_file src/video_sync.vhd
 add_file src/video_vicII_656x.vhd
 add_file src/tang_nano_20k_c64_top.cst
 add_file src/tang_nano_20k_c64_top.sdc
@@ -84,6 +82,10 @@ set_option -top_module tang_nano_20k_c64_top
 set_option -use_mspi_as_gpio 1
 set_option -use_sspi_as_gpio 1
 set_option -print_all_synthesis_warning 1
-set_option -rw_check_on_ram 1
+set_option -show_all_warn 0
+set_option -rw_check_on_ram 0
+set_option -user_code 00000001
+set_option -bit_security 0
 
+#run syn
 run all

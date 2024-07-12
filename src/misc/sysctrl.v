@@ -80,7 +80,7 @@ always @(posedge clk) begin
       // will very likely override these early
       system_reset <= 2'b00;
       system_1541_reset <= 1'b0;
-      system_reu_cfg <= 1'b1;
+      system_reu_cfg <= 1'b0;
       system_scanlines <= 2'b00;
       system_volume <= 2'b10;
       system_wide_screen <= 1'b0;
@@ -88,7 +88,7 @@ always @(posedge clk) begin
       system_port_1 <= 3'b111;  // Off
       system_port_2 <= 3'b000;  // DB_9
       system_dos_sel <= 2'b00;
-      system_sid_digifix <= 1'b1;
+      system_sid_digifix <= 1'b0;
       system_turbo_mode <= 2'b00;
       system_turbo_speed <= 2'b00;
       system_video_std <= 1'b0;

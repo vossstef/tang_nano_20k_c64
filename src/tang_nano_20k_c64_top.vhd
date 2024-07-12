@@ -13,6 +13,10 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.numeric_std.ALL;
 
 entity tang_nano_20k_c64_top is
+  generic
+  (
+   DUAL  : integer := 1 -- 0:no, 1:yes dual SID build option
+  );
   port
   (
     clk         : in std_logic;
@@ -67,13 +71,11 @@ signal clk32          : std_logic;
 signal pll_locked     : std_logic;
 signal clk_pixel_x10  : std_logic;
 signal clk_pixel_x5   : std_logic;
-signal mspi_clk_x5    : std_logic;
 attribute syn_keep : integer;
 attribute syn_keep of clk64         : signal is 1;
 attribute syn_keep of clk32         : signal is 1;
 attribute syn_keep of clk_pixel_x10 : signal is 1;
 attribute syn_keep of clk_pixel_x5  : signal is 1;
-attribute syn_keep of mspi_clk_x5   : signal is 1;
 
 signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
@@ -171,7 +173,7 @@ signal mouse_x        : signed(7 downto 0);
 signal mouse_y        : signed(7 downto 0);
 signal mouse_strobe   : std_logic;
 signal freeze         : std_logic;
-signal freeze_sync    : std_logic;
+
 signal c64_pause      : std_logic;
 signal old_sync       : std_logic;
 signal osd_status     : std_logic;
@@ -182,10 +184,10 @@ signal disk_chg_trg   : std_logic;
 signal disk_chg_trg_d : std_logic;
 signal sd_img_size    : std_logic_vector(31 downto 0);
 signal sd_img_size_d  : std_logic_vector(31 downto 0);
-signal sd_img_mounted : std_logic_vector(4 downto 0);
+signal sd_img_mounted : std_logic_vector(5 downto 0);
 signal sd_img_mounted_d : std_logic;
-signal sd_rd          : std_logic_vector(4 downto 0);
-signal sd_wr          : std_logic_vector(4 downto 0);
+signal sd_rd          : std_logic_vector(5 downto 0);
+signal sd_wr          : std_logic_vector(5 downto 0);
 signal disk_lba       : std_logic_vector(31 downto 0);
 signal sd_lba         : std_logic_vector(31 downto 0);
 signal loader_lba     : std_logic_vector(31 downto 0);
@@ -246,7 +248,6 @@ signal io_data        : unsigned(7 downto 0);
 signal db9_joy        : std_logic_vector(5 downto 0);
 signal turbo_mode     : std_logic_vector(1 downto 0);
 signal turbo_speed    : std_logic_vector(1 downto 0);
-signal flash_ready    : std_logic;
 signal dos_sel        : std_logic_vector(1 downto 0);
 signal c1541rom_cs    : std_logic;
 signal c1541rom_addr  : std_logic_vector(14 downto 0);
@@ -268,9 +269,9 @@ signal frz_hs          : std_logic;
 signal frz_vs          : std_logic;
 signal hbl_out         : std_logic; 
 signal vbl_out         : std_logic;
-signal midi_data       : std_logic_vector(7 downto 0);
+signal midi_data       : std_logic_vector(7 downto 0) := (others =>'0');
 signal midi_oe         : std_logic;
-signal midi_irq_n      : std_logic;
+signal midi_irq_n      : std_logic := '1';
 signal midi_nmi_n      : std_logic;
 signal midi_rx         : std_logic;
 signal midi_tx         : std_logic;
@@ -368,7 +369,7 @@ signal tap_wrfull     : std_logic;
 signal tap_start      : std_logic;
 signal read_cyc       : std_logic := '0';
 signal io_cycle_rD    : std_logic;
-signal load_flt       : std_logic;
+signal load_flt       : std_logic := '0';
 signal sid_ver        : std_logic;
 signal sid_mode       : unsigned(2 downto 0);
 signal sid_digifix    : std_logic;
@@ -389,9 +390,16 @@ signal uart_data       : unsigned(7 downto 0);
 signal uart_oe         : std_logic;
 signal uart_en         : std_logic;
 signal tx_6551         : std_logic;
-signal uart_irq        : std_logic;
+signal uart_irq        : std_logic := '0';
 signal uart_cs         : std_logic;
 signal CLK_6551_EN     : std_logic;
+signal phi2_p, phi2_n  : std_logic;
+signal sid_ld_addr     : std_logic_vector(11 downto 0) := (others =>'0');
+signal sid_ld_data     : std_logic_vector(15 downto 0) := (others =>'0');
+signal sid_ld_wr       : std_logic := '0';
+signal img_present     : std_logic := '0';
+signal c1541_sd_rd     : std_logic;
+signal c1541_sd_wr     : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -548,8 +556,15 @@ process(clk32, pll_locked)
       disk_chg_trg_d <= disk_chg_trg;
       disk_g64_d <= disk_g64;
 
+      if sd_img_mounted(0) = '1' then
+        img_present <= '0' when sd_img_size = 0 else '1';
+      end if;
+
       if sd_img_mounted_d = '0' and sd_img_mounted(0) = '1' then
-      sd_img_size_d <= sd_img_size; else sd_img_size_d <= (others => '0'); end if;
+        sd_img_size_d <= sd_img_size;
+      else 
+        sd_img_size_d <= (others => '0'); 
+      end if;
 
       if (sd_img_mounted(0) /= sd_img_mounted_d) or (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
           sd_change  <= '1';
@@ -573,13 +588,13 @@ c1541_sd_inst : entity work.c1541_sd
 port map
  (
     clk32         => clk32,
-    reset         => (not flash_ready) or disk_reset,
+    reset         => disk_reset,
     pause         => c64_pause or loader_busy,
     ce            => '0',
 
     disk_num      => (others =>'0'),
     disk_change   => sd_change, 
-    disk_mount    => '1',
+    disk_mount    => img_present,
     disk_readonly => system_floppy_wprot(0),
     disk_g64      => disk_g64,
 
@@ -598,8 +613,8 @@ port map
     par_stb_o     => drive_stb_o,
 
     sd_lba        => disk_lba,
-    sd_rd         => sd_rd(0),
-    sd_wr         => sd_wr(0),
+    sd_rd         => c1541_sd_rd,
+    sd_wr         => c1541_sd_wr,
     sd_ack        => sd_busy,
 
     sd_buff_addr  => sd_byte_index,
@@ -614,7 +629,9 @@ port map
     c1541rom_data => c1541rom_data
 );
 
-sd_lba <= loader_lba when loader_busy = '1' else disk_lba;
+sd_lba <= loader_lba when loader_busy = '1' else loader_lba when img_present = '0' else disk_lba;
+sd_rd(0) <= c1541_sd_rd when img_present = '1' else '0';
+sd_wr(0) <= c1541_sd_wr when img_present = '1' else '0';
 ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphindos, speeddos
 sdc_iack <= int_ack(3);
 
@@ -660,44 +677,7 @@ generic map (
     outbyte         => sd_rd_data         -- a byte of sector content
 );
 
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    old_sync <= freeze_sync;
-      if not old_sync and freeze_sync then
-          freeze <= osd_status and system_pause;
-        end if;
-  end if;
-end process;
-
-video_sync_inst: entity work.video_sync
-port map(
-	clk32   => clk32,
-	pause   => c64_pause,
-	hsync   => hsync,
-	vsync   => vsync,
-	ntsc    => '0',
-	wide    => '0',
-	hsync_out => hsync_out,
-	vsync_out => vsync_out,
-	hblank  => hblank,
-	vblank  => vblank
-);
-
-video_freezer_inst: entity work.video_freezer
-port map(
-	clk     => clk32,
-	freeze  => freeze,
-	hs_in   => hsync_out,
-	vs_in   => vsync_out,
-	hbl_in  => hblank,
-	vbl_in  => vblank,
-	sync    => freeze_sync,
-	hs_out  => frz_hs,
-	vs_out  => frz_vs,
-	hbl_out => frz_hbl,
-	vbl_out => frz_vbl
-);
+freeze <= '0';
 
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
 
@@ -713,10 +693,8 @@ port map(
       audio_div    => audio_div,
 
       ntscmode  => ntscMode,
-      vb_in     => frz_vbl,
-      hb_in     => frz_hbl,
-      hs_in_n   => frz_hs,
-      vs_in_n   => frz_vs,
+      hs_in_n   => hsync,
+      vs_in_n   => vsync,
 
       r_in      => std_logic_vector(r(7 downto 4)),
       g_in      => std_logic_vector(g(7 downto 4)),
@@ -818,7 +796,7 @@ mainclock: rPLL
         port map (
             CLKOUT   => clk_pixel_x10,
             LOCK     => pll_locked,
-            CLKOUTP  => mspi_clk_x5,
+            CLKOUTP  => open,
             CLKOUTD  => clk_pixel_x5,
             CLKOUTD3 => open,
             RESET    => '0',
@@ -1097,7 +1075,8 @@ begin
   end if;
 end process;
 
-uart_en <= system_up9600(2) or system_up9600(1);
+uart_en <= '1' when ((system_up9600(2) = '1' or system_up9600(1) = '1') 
+                  and (sid_mode = 0 or sid_mode = 2)) else '0';  -- D400 or D420
 uart_oe <= not ram_we and uart_cs and uart_en;
 io_data <=  unsigned(cart_data) when cart_oe = '1' else
             unsigned(midi_data) when midi_oe = '1' else
@@ -1150,6 +1129,9 @@ begin
 end process;
 
 fpga64_sid_iec_inst: entity work.fpga64_sid_iec
+  generic map (
+    DUAL =>  DUAL   -- 0:no, 1:yes  Dual SID component build
+  )
   port map
   (
   clk32        => clk32,
@@ -1188,6 +1170,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
 	debugY       => open,
 
   phi          => phi,
+  phi2_p       => phi2_p, -- Phi 2 positive edge
+  phi2_n       => phi2_n, -- Phi 2 negative edge
 
   game         => game,
   exrom        => exrom,
@@ -1232,9 +1216,9 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   sid_fc_off_l => sid_fc_lr,
   sid_fc_off_r => sid_fc_lr,
   sid_ld_clk   => clk32,
-  sid_ld_addr  => (others => '0'),
-  sid_ld_data  => (others => '0'),
-  sid_ld_wr    => '0',
+  sid_ld_addr  => sid_ld_addr,
+  sid_ld_data  => sid_ld_data,
+  sid_ld_wr    => sid_ld_wr,
   sid_digifix  => sid_digifix,
   sid_fc_base_r => sid_fc_base_lr,
   sid_fc_base_l => sid_fc_base_lr,
@@ -1320,7 +1304,7 @@ flash_inst: entity work.flash
 port map(
     clk       => flash_clk,
     resetn    => flash_lock,
-    ready     => flash_ready,
+    ready     => open,
     busy      => open,
     address   => ("0010" & "000" & dos_sel & c1541rom_addr),
     cs        => c1541rom_cs,
@@ -1390,7 +1374,7 @@ port map
     RnW     => not (ram_we and IOE),
     nIRQ    => midi_irq_n,
     nNMI    => midi_nmi_n,
-  
+ 
     RX      => midi_rx,
     TX      => midi_tx
   );
@@ -1401,8 +1385,8 @@ port map (
   system_reset      => system_reset,
 
   sd_lba            => loader_lba,
-  sd_rd             => sd_rd(4 downto 1),
-  sd_wr             => sd_wr(4 downto 1),
+  sd_rd             => sd_rd(5 downto 1),
+  sd_wr             => sd_wr(5 downto 1),
   sd_busy           => sd_busy,
   sd_done           => sd_done,
 
@@ -1416,6 +1400,7 @@ port map (
   load_prg          => load_prg,
   load_rom          => load_rom,
   load_tap          => load_tap,
+  load_flt          => load_flt,
   sd_img_size       => sd_img_size,
   leds              => leds(5 downto 1),
   img_select        => img_select,
@@ -1620,6 +1605,22 @@ variable reset_counter : integer;
     end if;
 end process;
 
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    sid_ld_wr <= '0';
+    if ioctl_wr = '1' and load_flt = '1' and ioctl_addr < std_logic_vector(to_unsigned(6144, ioctl_addr'length)) then
+        if ioctl_addr(0) = '1' then
+          sid_ld_data(15 downto 8) <= ioctl_data;
+          sid_ld_addr <= ioctl_addr(12 downto 1);
+          sid_ld_wr <= '1';
+        else
+          sid_ld_data(7 downto 0) <= ioctl_data;
+        end if;
+    end if;
+	end if;
+end process;
+
 --------------- TAP -------------------
 
 tap_download <= ioctl_download and load_tap;
@@ -1628,10 +1629,9 @@ tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
 process(clk32)
 begin
-if rising_edge(clk32) then
+  if rising_edge(clk32) then
       io_cycle_rD <= io_cycle;
       tap_wrreq(1 downto 0) <= tap_wrreq(1 downto 0) sll 1;
-      tap_start <= '0';
 
       if tap_reset = '1' then
         -- C1530 module requires one more byte at the end due to fifo early check.
@@ -1639,14 +1639,18 @@ if rising_edge(clk32) then
         tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
         tap_play_addr <= (others => '0');
         tap_start <= tap_download;
-        elsif io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
-          read_cyc <= '1'; 
-        elsif io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
-          tap_play_addr <= tap_play_addr + 1;
-          read_cyc <= '0';
-          tap_wrreq(0) <= '1';
-        end if;
-    end if;
+      else
+        tap_start <= '0';
+        if io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
+            read_cyc <= '1';
+          end if;
+        if io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
+            tap_play_addr <= tap_play_addr + 1;
+            read_cyc <= '0';
+            tap_wrreq(0) <= '1';
+          end if;
+      end if;
+  end if;
 end process;
 
 c1530_inst: entity work.c1530
@@ -1688,7 +1692,7 @@ begin
   drive_par_i <= (others => '1');
   drive_stb_i <= '1';
   uart_tx <= '1';
-  flag2_n_i <= uart_rx_filtered;
+  flag2_n_i <= '1';
   uart_cs <= '0';
   if ext_en = '1' and disk_access = '1' then
    -- c1541 parallel bus

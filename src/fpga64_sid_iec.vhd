@@ -41,7 +41,10 @@ use IEEE.numeric_std.all;
 -- -----------------------------------------------------------------------
 
 entity fpga64_sid_iec is
-port(
+generic (
+  DUAL : integer := 1 -- 0:no, 1:yes dual SID build option
+);
+port  (
 	clk32       : in  std_logic;
 	reset_n     : in  std_logic;
 	bios        : in  std_logic_vector(1 downto 0);
@@ -82,6 +85,8 @@ port(
 	debugY      : out unsigned(8 downto 0);
 
     phi         : out std_logic;
+    phi2_p      : out std_logic; -- Phi 2 positive edge
+    phi2_n      : out std_logic; -- Phi 2 negative edge
 
 	-- cartridge port
 	game        : in  std_logic;
@@ -398,6 +403,8 @@ begin
 end process;
 
 	phi <= phi0_cpu;
+    phi2_p <= enableCia_p;
+    phi2_n <= enableCia_n;
 
 process(clk32)
 begin
