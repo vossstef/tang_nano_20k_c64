@@ -55,9 +55,10 @@ See [Tang Mega 138K](TANG_MEGA_138K.md)
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS 2.0.<br>
 Copy a D64 Disk image to your sdcard and rename it to **disk8.d64** as default boot image.<br>
-Add further D64 or G64 images as you like and insert card in TN slot. Power Cycle TN. LED 0 acts as Drive activity indicator.<br> 
+Add further D64 or G64 images as you like and insert card in TN slot. LED 0 acts as Drive activity indicator.<br> 
 > [!TIP]
-Disk directory listing: (or F7 keypress)<br> 
+Disk directory listing: [(or F7 keypress)](https://project64.c64.org/hw/dolphindos.txt)<br> 
+command: <br>
 LOAD"$",8<br>
 LIST<br> 
 Load first program from Disk: (or just LOAD if Dolphin Kernal active)<br> 
@@ -78,31 +79,31 @@ Prevent the cartridge load at boot by OSD CRT selection **No Disk** , **Save set
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
 Copy a *.PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program. Prevent the PRG load at boot by OSD PRG selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.<br>
 > [!TIP]
-Check loaded file by command **LIST** + Keyboard Return<br>
+Check loaded file by command: **LIST**<br>
 
 > [!IMPORTANT]
-command **RUN** + Keyboard Return<br>
+command: **RUN**<br>
 
 ## Tape Image Loader (*.TAP)
 A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection<br>
 In order to start a tape download choose C64 CBM Kernal (mandatory as Dolphin DOS doesn't support Tape). Best to save Kernal OSD selection via **Save settings**.<br>
 > [!IMPORTANT]
-Type: **LOAD** + Keyboard Return<br>
+command: **LOAD**<br>
 Screen will blank!<br>
 
 The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case ***no** TAP had been previously selected*.<br>
 As mentioned screen will blank for several seconds and then display briefly the filename of the to be loaded file. It will blank shortly afterwards again till load completed and take a lot of time...<br>
 Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default tape mountpoint.<br>
-For **Tape unload** use OSD TAP selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.<br>
+For **Tape unload** use OSD TAP selection **No Disk** and **Reset** or System **Cold Boot**.<br>
 > [!WARNING]
 After board power-up or coldboot a TAP file will **not autoloaded** even if TAP file selection had been saved or c64tap.tap mountpoint available !<br>
-Unblock loader by OSD TAP selection **No Disk** or simply select again the desired TAP file to be loaded after you typed **LOAD** + Keyboard Return.<br>
+Unblock loader by OSD TAP selection **No Disk** or simply select again the desired TAP file to be loaded after you typed **LOAD**<br>
 
 > [!TIP]
-Check loaded file by command **LIST** + Keyboard Return 
+Check loaded file by command: **LIST**<br>
 
 > [!IMPORTANT]
-command **RUN** + Keyboard Return<br>
+command: **RUN**<br>
 
 > [!NOTE]
 The available (muffled) Tape Sound audio can be disabled from OSD.<br>
