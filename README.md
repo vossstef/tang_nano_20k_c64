@@ -89,6 +89,7 @@ A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be lo
 In order to start a tape download choose C64 CBM Kernal (mandatory as Dolphin DOS doesn't support Tape). Best to save Kernal OSD selection via **Save settings**.<br>
 > [!IMPORTANT]
 command: **LOAD**<br>
+___ Only if you have [Exbasic Level II](https://www.c64-wiki.de/index.php?title=Exbasic_Level_II&oldid=261004) .CRT Basic loaded then use command: **LOAD***<br>
 Screen will blank!<br>
 
 The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case ***no** TAP had been previously selected*.<br>
