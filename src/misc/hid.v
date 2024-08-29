@@ -31,7 +31,11 @@ module hid (
   reg [1:0]    mouse_btns,
   reg [7:0]    mouse_x,
   reg [7:0]    mouse_y,
-  reg          mouse_strobe
+  reg          mouse_strobe,
+  reg [7:0]    joystick0a0,
+  reg [7:0]    joystick1a0,
+  reg [7:0]    joystick0a1,
+  reg [7:0]    joystick1a1
 );
 
 reg [7:0] keyboard[7:0]; // array of 8 elements of width 8bit
@@ -124,6 +128,14 @@ always @(posedge clk) begin
                              key_restore <= data_in[6]; 
                              tape_play <= data_in[7];
                           end // 0, 0, KP * button2, KP0 trigger, KP 8 up, KP 2 down, KP 4 left, KP 6 right
+                end
+                if(state == 4'd3) begin
+                    if(device == 8'd0) joystick0a0 <= data_in;
+                    if(device == 8'd1) joystick1a0 <= data_in;
+                end
+                if(state == 4'd4) begin
+                    if(device == 8'd0) joystick0a1 <= data_in;
+                    if(device == 8'd1) joystick1a1 <= data_in;
                 end
             end
 
