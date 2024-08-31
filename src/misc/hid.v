@@ -28,14 +28,14 @@ module hid (
   output reg   key_restore,
   output reg   tape_play,
   output reg   mod_key,
-  reg [1:0]    mouse_btns,
-  reg [7:0]    mouse_x,
-  reg [7:0]    mouse_y,
-  reg          mouse_strobe,
-  reg [7:0]    joystick0a0,
-  reg [7:0]    joystick1a0,
-  reg [7:0]    joystick0a1,
-  reg [7:0]    joystick1a1
+  output reg [1:0]    mouse_btns,
+  output reg [7:0]    mouse_x,
+  output reg [7:0]    mouse_y,
+  output reg          mouse_strobe,
+  output reg [7:0]    joystick0a0,
+  output reg [7:0]    joystick1a0,
+  output reg [7:0]    joystick0a1,
+  output reg [7:0]    joystick1a1
 );
 
 reg [7:0] keyboard[7:0]; // array of 8 elements of width 8bit
