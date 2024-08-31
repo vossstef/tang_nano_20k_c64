@@ -51,7 +51,8 @@ module sysctrl (
   output reg [2:0]  system_up9600,
   output reg [2:0]  system_sid_filter,
   output reg [2:0]  system_sid_fc_offset,
-  output reg        system_georam
+  output reg        system_georam,
+  output reg [1:0]  system_uart
 );
 
 reg [3:0] state;
@@ -92,7 +93,7 @@ always @(posedge clk) begin
       system_turbo_mode <= 2'b00;
       system_turbo_speed <= 2'b00;
       system_video_std <= 1'b0;
-      system_midi <= 2'b000;
+      system_midi <= 3'b000;
       system_pause <= 1'b0;
       system_vic_variant <= 2'b00;
       system_cia_mode <= 1'b0;
@@ -103,6 +104,7 @@ always @(posedge clk) begin
       system_sid_filter <= 3'b000;
       system_sid_fc_offset <= 3'b000;
       system_georam <= 1'b0;
+      system_uart <= 2'b00;
    end else begin
       int_ack <= 8'h00;
 
@@ -198,6 +200,8 @@ always @(posedge clk) begin
                     if(id == ">") system_sid_fc_offset <= data_in[2:0];
                     // GeoRAM
                     if(id == "#") system_georam <= data_in[0];
+                    // RS232 UART port
+                    if(id == "*") system_uart <= data_in[1:0];
                 end
             end
 
