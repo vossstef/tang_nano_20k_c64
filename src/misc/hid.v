@@ -32,10 +32,11 @@ module hid (
   output reg [7:0]    mouse_x,
   output reg [7:0]    mouse_y,
   output reg          mouse_strobe,
-  output reg [7:0]    joystick0a0,
-  output reg [7:0]    joystick1a0,
-  output reg [7:0]    joystick0a1,
-  output reg [7:0]    joystick1a1
+  output reg [7:0]    joystick0ax,
+  output reg [7:0]    joystick0ay,
+  output reg [7:0]    joystick1ax,
+  output reg [7:0]    joystick1ay,
+  output reg          joystick_strobe
 );
 
 reg [7:0] keyboard[7:0]; // array of 8 elements of width 8bit
@@ -67,6 +68,7 @@ always @(posedge clk) begin
       key_restore <= 1'b0;
       tape_play  <= 1'b0;
       mod_key  <= 1'b0;
+      joystick_strobe <= 1'b0; 
 
       // reset entire keyboard to 1's
       keyboard[ 0] <= 8'hff; keyboard[ 1] <= 8'hff; keyboard[ 2] <= 8'hff;
@@ -87,6 +89,7 @@ always @(posedge clk) begin
 
       if(iack) irq <= 1'b0;      // iack clears interrupt
       mouse_strobe <=1'b0;
+      joystick_strobe <=1'b0; 
       if(data_in_strobe) begin      
         if(data_in_start) begin
             state <= 4'd1;
@@ -122,20 +125,21 @@ always @(posedge clk) begin
                 if(state == 4'd2) begin
                     if(device == 8'd0) joystick0 <= data_in;
                     if(device == 8'd1) joystick1 <= data_in;
-                    if(device == 8'h80) begin 
-                             numpad <= data_in;
-                             mod_key <= data_in[5];
-                             key_restore <= data_in[6]; 
-                             tape_play <= data_in[7];
-                          end // 0, 0, KP * button2, KP0 trigger, KP 8 up, KP 2 down, KP 4 left, KP 6 right
-                end
+                    if(device == 8'h80) begin // 0, 0, KP * button2, KP0 trigger, KP 8 up, KP 2 down, KP 4 left, KP 6 right
+                        numpad <= data_in;
+                        mod_key <= data_in[5];
+                        key_restore <= data_in[6]; 
+                        tape_play <= data_in[7];
+                     end
+                  end
                 if(state == 4'd3) begin
-                    if(device == 8'd0) joystick0a0 <= data_in;
-                    if(device == 8'd1) joystick1a0 <= data_in;
+                    if(device == 8'd0) joystick0ax <= data_in;
+                    if(device == 8'd1) joystick1ax <= data_in;
                 end
                 if(state == 4'd4) begin
-                    if(device == 8'd0) joystick0a1 <= data_in;
-                    if(device == 8'd1) joystick1a1 <= data_in;
+                    if(device == 8'd0) joystick0ay <= data_in;
+                    if(device == 8'd1) joystick1ay <= data_in;
+                    joystick_strobe <=1'b1; 
                 end
             end
 
