@@ -410,6 +410,8 @@ signal joystick1_x_pos : std_logic_vector(7 downto 0);
 signal joystick1_y_pos : std_logic_vector(7 downto 0);
 signal joystick2_x_pos : std_logic_vector(7 downto 0);
 signal joystick2_y_pos : std_logic_vector(7 downto 0);
+signal extra_button0   : std_logic_vector(7 downto 0);
+signal extra_button1   : std_logic_vector(7 downto 0);
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -901,8 +903,14 @@ joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
 joyPaddle  <=    ("00" & '0' & key_l1 & key_l2 & "00"); -- bound to physical paddle position DS2
 joyPaddle2 <=    ("00" & '0' & key_r1 & key_r2 & "00");
-joyUsb1A    <=   ("00" & '0' & joystick1(5) & joystick1(4) & "00");
-joyUsb2A    <=   ("00" & '0' & joystick2(5) & joystick2(4) & "00");
+--joyUsb1A    <=   ("00" & '0' & joystick1(5) & joystick1(4) & "00");
+--joyUsb2A    <=   ("00" & '0' & joystick2(5) & joystick2(4) & "00");
+joyUsb1A    <=   ("00" & '0' & extra_button0(1) & extra_button0(0) & "00");  -- gamepad shoulder l1 and l2
+joyUsb2A    <=   ("00" & '0' & extra_button1(1) & extra_button1(0) & "00");
+
+--joyUsb1A    <=   ("00" & '0' & joystick1(1) & joystick1(0) & "00");
+--Paddle A, X-Firebutton Bit2 (0=Firebutton pushed ; 1=Firebutton not pushed)
+--Paddle A, Y-Firebutton Bit3 (0=Firebutton pushed ; 1=Firebutton not pushed)
 
 -- send external DB9 joystick port to µC
 db9_joy <= not('1' & io(0), io(2), io(1), io(4), io(3));
@@ -1033,8 +1041,10 @@ hid_inst: entity work.hid
   joystick0ay     => joystick0ay,
   joystick1ax     => joystick1ax,
   joystick1ay     => joystick1ay,
-  joystick_strobe => joystick_strobe
-  );
+  joystick_strobe => joystick_strobe,
+  extra_button0   => extra_button0,
+  extra_button1   => extra_button1
+);
 
  module_inst: entity work.sysctrl 
  port map 

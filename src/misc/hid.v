@@ -36,7 +36,9 @@ module hid (
   output reg [7:0]    joystick0ay,
   output reg [7:0]    joystick1ax,
   output reg [7:0]    joystick1ay,
-  output reg          joystick_strobe
+  output reg          joystick_strobe,
+  output reg [7:0]    extra_button0,
+  output reg [7:0]    extra_button1
 );
 
 reg [7:0] keyboard[7:0]; // array of 8 elements of width 8bit
@@ -139,7 +141,11 @@ always @(posedge clk) begin
                 if(state == 4'd4) begin
                         if(device == 8'd0) joystick0ay <= data_in;
                         if(device == 8'd1) joystick1ay <= data_in;
-                        joystick_strobe <= 1'b1; 
+                end
+                if(state == 4'd5) begin
+                        if(device == 8'd0) extra_button0 <= data_in;
+                        if(device == 8'd1) extra_button1 <= data_in;
+                        joystick_strobe <= 1'b1;
                 end
             end
 
