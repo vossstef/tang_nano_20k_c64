@@ -131,15 +131,15 @@ always @(posedge clk) begin
                         key_restore <= data_in[6]; 
                         tape_play <= data_in[7];
                      end
-                  end
+                end
                 if(state == 4'd3) begin
-                    if(device == 8'd0) joystick0ax <= data_in;
-                    if(device == 8'd1) joystick1ax <= data_in;
+                        if(device == 8'd0) joystick0ax <= data_in;
+                        if(device == 8'd1) joystick1ax <= data_in;
                 end
                 if(state == 4'd4) begin
-                    if(device == 8'd0) joystick0ay <= data_in;
-                    if(device == 8'd1) joystick1ay <= data_in;
-                    joystick_strobe <=1'b1; 
+                        if(device == 8'd0) joystick0ay <= data_in;
+                        if(device == 8'd1) joystick1ay <= data_in;
+                        joystick_strobe <= 1'b1; 
                 end
             end
 

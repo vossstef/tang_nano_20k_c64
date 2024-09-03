@@ -406,10 +406,10 @@ signal joystick0ay     : signed(7 downto 0);
 signal joystick1ax     : signed(7 downto 0);
 signal joystick1ay     : signed(7 downto 0);
 signal joystick_strobe : std_logic;
-signal joystick1_x_pos : signed(10 downto 0);
-signal joystick1_y_pos : signed(10 downto 0);
-signal joystick2_x_pos : signed(10 downto 0);
-signal joystick2_y_pos : signed(10 downto 0);
+signal joystick1_x_pos : std_logic_vector(7 downto 0);
+signal joystick1_y_pos : std_logic_vector(7 downto 0);
+signal joystick2_x_pos : std_logic_vector(7 downto 0);
+signal joystick2_y_pos : std_logic_vector(7 downto 0);
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -945,55 +945,37 @@ begin
   end if;
 end process;
 
-process(clk32, reset_n)
-variable mov1_x: signed(6 downto 0);
-variable mov1_y: signed(6 downto 0);
-variable mov2_x: signed(6 downto 0);
-variable mov2_y: signed(6 downto 0);
-begin
-  if reset_n = '0' then
-    joystick1_x_pos <= (others => '0');
-    joystick1_y_pos <= (others => '0');
-    joystick2_x_pos <= (others => '0');
-    joystick2_y_pos <= (others => '0');
-  elsif rising_edge(clk32) then
-    if joystick_strobe = '1' then
---     if joystick0ax > 40 then mov1_x:="0101000"; elsif joystick0ax < -40 then mov1_x:= "1011000"; else mov1_x := joystick0ax(6 downto 0); end if;
---     if joystick0ay > 40 then mov1_y:="0101000"; elsif joystick0ay < -40 then mov1_y:= "1011000"; else mov1_y := joystick0ay(6 downto 0); end if;
-     mov1_x := joystick0ax(6 downto 0);
-     mov1_y := joystick0ay(6 downto 0);
-     if joystick1ax > 40 then mov2_x:="0101000"; elsif joystick1ax < -40 then mov2_x:= "1011000"; else mov2_x := joystick1ax(6 downto 0); end if;
-     if joystick1ay > 40 then mov2_y:="0101000"; elsif joystick1ay < -40 then mov2_y:= "1011000"; else mov2_y := joystick1ay(6 downto 0); end if;
-     joystick1_x_pos <= joystick1_x_pos - mov1_x;
-     joystick1_y_pos <= joystick1_y_pos + mov1_y;
-     joystick2_x_pos <= joystick2_x_pos - mov2_x;
-     joystick2_y_pos <= joystick2_y_pos + mov2_y;
-    end if;
-  end if;
-end process;
-
 -- paddle pins - mouse
-pot1 <= not paddle_1 when port_1_sel = "0110" else ('0' & std_logic_vector(joystick1_x_pos(6 downto 0))) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
-pot2 <= not paddle_2 when port_1_sel = "0110" else ('0' & std_logic_vector(joystick1_y_pos(6 downto 0))) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
-pot3 <= not paddle_3 when port_2_sel = "0110" else ('0' & std_logic_vector(joystick2_x_pos(6 downto 0))) when port_2_sel = "1000" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
-pot4 <= not paddle_4 when port_2_sel = "0110" else ('0' & std_logic_vector(joystick2_x_pos(6 downto 0))) when port_2_sel = "1000" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
+pot1 <= not paddle_1 when port_1_sel = "0110" else x"ff" when port_2_sel = "1000" else joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
+pot2 <= not paddle_2 when port_1_sel = "0110" else x"ff" when port_2_sel = "1000" else joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
+pot3 <= not paddle_3 when port_2_sel = "0110" else x"ff" when port_1_sel = "0111" else joystick2_x_pos(7 downto 0) when port_2_sel = "1000" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
+pot4 <= not paddle_4 when port_2_sel = "0110" else x"ff" when port_1_sel = "0111" else joystick2_x_pos(7 downto 0) when port_2_sel = "1000" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
 
 process(clk32, reset_n)
  variable mov_x: signed(6 downto 0);
  variable mov_y: signed(6 downto 0);
-begin
+ begin
   if  reset_n = '0' then
     mouse_x_pos <= (others => '0');
     mouse_y_pos <= (others => '0');
-  elsif rising_edge(clk32) then
+    joystick1_x_pos <= x"80";
+    joystick1_y_pos <= x"80";
+    joystick2_x_pos <= x"80";
+    joystick2_y_pos <= x"80";
+    elsif rising_edge(clk32) then
     if mouse_strobe = '1' then
      -- due to limited resolution on the c64 side, limit the mouse movement speed
      if mouse_x > 40 then mov_x:="0101000"; elsif mouse_x < -40 then mov_x:= "1011000"; else mov_x := mouse_x(6 downto 0); end if;
      if mouse_y > 40 then mov_y:="0101000"; elsif mouse_y < -40 then mov_y:= "1011000"; else mov_y := mouse_y(6 downto 0); end if;
      mouse_x_pos <= mouse_x_pos - mov_x;
      mouse_y_pos <= mouse_y_pos + mov_y;
+    elsif joystick_strobe = '1' then
+      joystick1_x_pos <= std_logic_vector(joystick0ax(7 downto 0));
+      joystick1_y_pos <= std_logic_vector(joystick0ay(7 downto 0));
+      joystick2_x_pos <= std_logic_vector(joystick1ax(7 downto 0));
+      joystick2_y_pos <= std_logic_vector(joystick1ay(7 downto 0));
+     end if;
     end if;
-  end if;
 end process;
 
 mcu_spi_inst: entity work.mcu_spi 
