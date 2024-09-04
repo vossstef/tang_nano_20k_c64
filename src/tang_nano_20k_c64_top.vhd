@@ -903,14 +903,8 @@ joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
 joyPaddle  <=    ("00" & '0' & key_l1 & key_l2 & "00"); -- bound to physical paddle position DS2
 joyPaddle2 <=    ("00" & '0' & key_r1 & key_r2 & "00");
---joyUsb1A    <=   ("00" & '0' & joystick1(5) & joystick1(4) & "00");
---joyUsb2A    <=   ("00" & '0' & joystick2(5) & joystick2(4) & "00");
-joyUsb1A    <=   ("00" & '0' & extra_button0(1) & extra_button0(0) & "00");  -- gamepad shoulder l1 and l2
-joyUsb2A    <=   ("00" & '0' & extra_button1(1) & extra_button1(0) & "00");
-
---joyUsb1A    <=   ("00" & '0' & joystick1(1) & joystick1(0) & "00");
---Paddle A, X-Firebutton Bit2 (0=Firebutton pushed ; 1=Firebutton not pushed)
---Paddle A, Y-Firebutton Bit3 (0=Firebutton pushed ; 1=Firebutton not pushed)
+joyUsb1A    <=   ("00" & '0' & joystick1(5) & joystick1(4) & "00"); -- Y,X button
+joyUsb2A    <=   ("00" & '0' & joystick2(5) & joystick2(4) & "00"); -- Y,X button
 
 -- send external DB9 joystick port to µC
 db9_joy <= not('1' & io(0), io(2), io(1), io(4), io(3));
@@ -954,10 +948,10 @@ begin
 end process;
 
 -- paddle pins - mouse
-pot1 <= not paddle_1 when port_1_sel = "0110" else x"ff" when port_2_sel = "1000" else joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
-pot2 <= not paddle_2 when port_1_sel = "0110" else x"ff" when port_2_sel = "1000" else joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
-pot3 <= not paddle_3 when port_2_sel = "0110" else x"ff" when port_1_sel = "0111" else joystick2_x_pos(7 downto 0) when port_2_sel = "1000" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
-pot4 <= not paddle_4 when port_2_sel = "0110" else x"ff" when port_1_sel = "0111" else joystick2_x_pos(7 downto 0) when port_2_sel = "1000" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
+pot1 <= not paddle_1 when port_1_sel = "0110" else joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_1_sel = "0101" else x"ff";
+pot2 <= not paddle_2 when port_1_sel = "0110" else joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_1_sel = "0101" else x"ff";
+pot3 <= not paddle_3 when port_2_sel = "0110" else joystick2_x_pos(7 downto 0) when port_2_sel = "1000" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_2_sel = "0101" else x"ff";
+pot4 <= not paddle_4 when port_2_sel = "0110" else joystick2_y_pos(7 downto 0) when port_2_sel = "1000" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_2_sel = "0101" else x"ff";
 
 process(clk32, reset_n)
  variable mov_x: signed(6 downto 0);
@@ -966,10 +960,10 @@ process(clk32, reset_n)
   if  reset_n = '0' then
     mouse_x_pos <= (others => '0');
     mouse_y_pos <= (others => '0');
-    joystick1_x_pos <= x"80";
-    joystick1_y_pos <= x"80";
-    joystick2_x_pos <= x"80";
-    joystick2_y_pos <= x"80";
+    joystick1_x_pos <= x"ff";
+    joystick1_y_pos <= x"ff";
+    joystick2_x_pos <= x"ff";
+    joystick2_y_pos <= x"ff";
     elsif rising_edge(clk32) then
     if mouse_strobe = '1' then
      -- due to limited resolution on the c64 side, limit the mouse movement speed
