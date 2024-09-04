@@ -33,8 +33,8 @@ module sysctrl (
   output reg [1:0]  system_volume,
   output reg	    system_wide_screen,
   output reg [1:0]  system_floppy_wprot,
-  output reg [2:0]  system_port_1,
-  output reg [2:0]  system_port_2,
+  output reg [3:0]  system_port_1,
+  output reg [3:0]  system_port_2,
   output reg [1:0]  system_dos_sel,
   output reg        system_1541_reset,
   output reg        system_sid_digifix,
@@ -51,7 +51,8 @@ module sysctrl (
   output reg [2:0]  system_up9600,
   output reg [2:0]  system_sid_filter,
   output reg [2:0]  system_sid_fc_offset,
-  output reg        system_georam
+  output reg        system_georam,
+  output reg [1:0]  system_uart
 );
 
 reg [3:0] state;
@@ -85,14 +86,14 @@ always @(posedge clk) begin
       system_volume <= 2'b10;
       system_wide_screen <= 1'b0;
       system_floppy_wprot <= 2'b00;
-      system_port_1 <= 3'b111;  // Off
-      system_port_2 <= 3'b000;  // DB_9
+      system_port_1 <= 4'b0111;  // Off
+      system_port_2 <= 4'b0000;  // DB_9
       system_dos_sel <= 2'b00;
       system_sid_digifix <= 1'b0;
       system_turbo_mode <= 2'b00;
       system_turbo_speed <= 2'b00;
       system_video_std <= 1'b0;
-      system_midi <= 2'b000;
+      system_midi <= 3'b000;
       system_pause <= 1'b0;
       system_vic_variant <= 2'b00;
       system_cia_mode <= 1'b0;
@@ -103,6 +104,7 @@ always @(posedge clk) begin
       system_sid_filter <= 3'b000;
       system_sid_fc_offset <= 3'b000;
       system_georam <= 1'b0;
+      system_uart <= 2'b00;
    end else begin
       int_ack <= 8'h00;
 
@@ -161,9 +163,9 @@ always @(posedge clk) begin
                     // Value "P": floppy write protecion None(0), A(1), B(2) both(3)
                     if(id == "P") system_floppy_wprot <= data_in[1:0];
                     // Joystick port 1 input device selection
-                    if(id == "Q") system_port_1 <= data_in[2:0];
+                    if(id == "Q") system_port_1 <= data_in[3:0];
                     // Joystick port 2 input device selection
-                    if(id == "J") system_port_2 <= data_in[2:0];
+                    if(id == "J") system_port_2 <= data_in[3:0];
                     // DOS system
                     if(id == "D") system_dos_sel <= data_in[1:0];
                     // c1541 reset
@@ -198,6 +200,8 @@ always @(posedge clk) begin
                     if(id == ">") system_sid_fc_offset <= data_in[2:0];
                     // GeoRAM
                     if(id == "#") system_georam <= data_in[0];
+                    // RS232 UART port
+                    if(id == "*") system_uart <= data_in[1:0];
                 end
             end
 

@@ -670,8 +670,8 @@ port map (
 	pot_x_l => pot_x1 and pot_x2,
 	pot_y_l => pot_y1 and pot_y2,
 
-	pot_x_r => pot_x1 and pot_x2,
-	pot_y_r => pot_y1 and pot_y2,
+	pot_x_r => (others => '0'),
+	pot_y_r => (others => '0'),
 
 	audio_l => audio_l,
 	audio_r => audio_r,
@@ -714,8 +714,8 @@ port map (
 	pot_x_l => pot_x1 and pot_x2,
 	pot_y_l => pot_y1 and pot_y2,
 
-	pot_x_r => pot_x1 and pot_x2,
-	pot_y_r => pot_y1 and pot_y2,
+	pot_x_r => (others => '0'),
+	pot_y_r => (others => '0'),
 
 	audio_l => audio_l,
 	audio_r => audio_r,
