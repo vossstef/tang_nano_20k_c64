@@ -1,4 +1,4 @@
-set_device GW5AST-LV138FPG676AES -name GW5AST-138B
+set_device GW5AST-LV138FPG676AC1/I0 -device_version B
 
 add_file src/acia.v
 add_file src/c1541/mist_sd_card.sv

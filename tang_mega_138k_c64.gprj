@@ -3,7 +3,7 @@
 <Project>
     <Template>FPGA</Template>
     <Version>5</Version>
-    <Device name="GW5AST-138B" pn="GW5AST-LV138FPG676AES">gw5ast138b-002</Device>
+    <Device name="GW5AST-138B" pn="GW5AST-LV138FPG676AC1/I0">gw5ast138b-007</Device>
     <FileList>
         <File path="src/acia.v" type="file.verilog" enable="1"/>
         <File path="src/c1541/mist_sd_card.sv" type="file.verilog" enable="1"/>
