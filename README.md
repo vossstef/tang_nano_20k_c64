@@ -2,7 +2,7 @@
 The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wiki) and 
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
 [C64 FPGA core ](https://en.wikipedia.org/wiki/Commodore_64) for the 
-[Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) with a new VHDL top level and HDMI Video and Audio Output.<br>It has also been ported to the [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) and [Tang Mega 138k](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html) ([Gowin GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/)) too.<br>
+[Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) with a new VHDL top level and HDMI Video and Audio Output.<br>It has also been ported to the [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) and [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html) ([Gowin GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/)) too.<br>
 Be aware that the [VIC20 FPGA core](https://en.wikipedia.org/wiki/VIC-20) had been ported too in similar manner ([link](https://github.com/vossstef/VIC20Nano)).<br>
 <br>
 Original C64 core by Peter Wendrich<br>
@@ -38,14 +38,19 @@ Features:
 
 HID interfaces aligned in pinmap and control to match [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/misterynano_fw)
 respectively [FPGA-Companion](https://github.com/harbaum/FPGA-Companion)<br>
-Basically BL616 µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
+Basically a µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
 
 **Note** PROJECT IS STILL WORK IN PROGRESS
 <br>
 ## Installation
 
 The installation of C64 Nano on the Tang Nano 20k board can be done using a Linux PC or a Windows PC
-[(Instruction)](INSTALLATION_WINDOWS.md).<br>Raspberry Pi Pico/RP2040,
+[(Instruction)](INSTALLATION_WINDOWS.md).<br>
+
+## c64 Nano on Tang Primer 25K
+See [Tang Primer 25K](TANG_PRIMER_25K.md)
+
+## c64 Nano on Tang Mega 138k Pro
 See [Tang Mega 138K](TANG_MEGA_138K.md)
 
 ## emulated Diskdrive c1541
@@ -281,7 +286,7 @@ and [PMOD TF-CARD](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.
 and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)
  or ad hoc wiring + soldering.<br>
-or [Sipeed Tang Mega 138k](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)<br>
+or [Sipeed Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)<br>
 and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
 and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)<br>
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)<br>
