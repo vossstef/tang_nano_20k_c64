@@ -13,7 +13,6 @@ IO_LOC "uart_tx" C3;
 IO_PORT "uart_rx" IO_TYPE=LVCMOS33;
 IO_PORT "uart_tx" IO_TYPE=LVCMOS33;
 
-
 // HDMI (USB-A side PMOD)
 IO_LOC "tmds_clk_p" H5,J5;
 IO_PORT "tmds_clk_p" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33D;
@@ -55,8 +54,12 @@ IO_LOC "m0s[3]" E11;
 IO_PORT "m0s[3]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 IO_LOC "m0s[4]" L11;
 IO_PORT "m0s[4]" PULL_MODE=UP IO_TYPE=LVCMOS33;
-IO_LOC "m0s[5]" K11;
-IO_PORT "m0s[5]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+//IO_LOC "m0s[5]" K11; // spare
+//IO_PORT "m0s[5]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "io[6]" K5;  // ext UART hw pin RX input
+IO_PORT "io[6]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "io[7]" L5;  // ext UART hw pin TX output
+IO_PORT "io[7]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 
 // generic IO pins
 
