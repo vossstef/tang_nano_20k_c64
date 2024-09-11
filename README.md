@@ -238,7 +238,7 @@ OSD selection allows to change in between TANG USB-C port or external HW pin int
 | Board      |RX (I)  |TX (O)|Note|
 | TN20k      |31      | 77   |io(6) / io(7)|
 | TP25k      |K5      | L5   | J4-6 J4-5 share M0S Dock PMOD|
-| TM138k Pro | tbd    | tbd  | tbd |
+| TM138k Pro |H15     | H14  | J24-6 J24-5 share M0S Dock PMOD |
 
 Remember that in + out to be crossed to connect to external device. Level are 3V3 tolerant.
 
