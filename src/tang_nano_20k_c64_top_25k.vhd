@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------
---  C64 Top level for Tang Nano
+--  C64 Top level for Tang Nano Primer 25k
 --  2023 / 2024 Stefan Voss
 --  based on the work of many others
 --
@@ -23,12 +23,12 @@ entity tang_nano_20k_c64_top_25k is
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
     leds_n      : out std_logic_vector(1 downto 0);
+    io          : inout std_logic_vector(7 downto 6);-- share m0s connector
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
-
     -- SPI interface Sipeed M0S Dock external BL616 uC
-    m0s         : inout std_logic_vector(5 downto 0);
-
+    m0s         : inout std_logic_vector(4 downto 0);
+    --
     tmds_clk_n  : out std_logic;
     tmds_clk_p  : out std_logic;
     tmds_d_n    : out std_logic_vector( 2 downto 0);
@@ -417,6 +417,8 @@ signal joystick2_x_pos : std_logic_vector(7 downto 0);
 signal joystick2_y_pos : std_logic_vector(7 downto 0);
 signal extra_button0   : std_logic_vector(7 downto 0);
 signal extra_button1   : std_logic_vector(7 downto 0);
+signal system_uart     : std_logic_vector(1 downto 0);
+signal uart_rx_muxed   : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -444,7 +446,6 @@ begin
   spi_io_ss   <= m0s(2);
   spi_io_clk  <= m0s(3);
   m0s(0)      <= spi_io_dout;
-  m0s(5)      <= 'Z';
 
 	process(clk32, disk_reset)
     variable reset_cnt : integer range 0 to 2147483647;
@@ -938,7 +939,7 @@ hid_inst: entity work.hid
   system_sid_filter   => sid_filter,
   system_sid_fc_offset => sid_fc_offset,
   system_georam       => georam,
-  system_uart         => open,
+  system_uart         => system_uart,
 
   int_out_n           => m0s(4),
   int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & "0" & hid_int & "0")),
@@ -1524,11 +1525,16 @@ port map (
   ear_input       => '0'
 );
 
+-- external HW pin UART interface
+-- IO7(O) IO6(I)
+uart_rx_muxed <= uart_rx when system_uart = "00" else io(6) when system_uart = "01" else '1';
+io(7) <= uart_tx;
+
 	-- UART_RX synchronizer
 	process(clk32)
 	begin
 		if rising_edge(clk32) then
-			uart_rxD <= uart_rxD(2 downto 0) & uart_rx;
+			uart_rxD <= uart_rxD(2 downto 0) & uart_rx_muxed;
 			if uart_rxD = "0000" then uart_rx_filtered <= '0'; end if;
 			if uart_rxD = "1111" then uart_rx_filtered <= '1'; end if;
 		end if;
