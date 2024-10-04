@@ -52,7 +52,8 @@ module sysctrl (
   output reg [2:0]  system_sid_filter,
   output reg [2:0]  system_sid_fc_offset,
   output reg        system_georam,
-  output reg [1:0]  system_uart
+  output reg [1:0]  system_uart,
+  output reg        system_joyswap
 );
 
 reg [3:0] state;
@@ -105,6 +106,8 @@ always @(posedge clk) begin
       system_sid_fc_offset <= 3'b000;
       system_georam <= 1'b0;
       system_uart <= 2'b00;
+      system_joyswap <= 1'b0;
+
    end else begin
       int_ack <= 8'h00;
 
@@ -202,6 +205,8 @@ always @(posedge clk) begin
                     if(id == "#") system_georam <= data_in[0];
                     // RS232 UART port
                     if(id == "*") system_uart <= data_in[1:0];
+                    // Joystick swap port
+                    if(id == "&") system_joyswap <= data_in[0];
                 end
             end
 

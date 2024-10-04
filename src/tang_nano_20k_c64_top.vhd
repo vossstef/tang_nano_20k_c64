@@ -117,10 +117,13 @@ signal joyMouse     : std_logic_vector(6 downto 0);
 signal joyPaddle    : std_logic_vector(6 downto 0); 
 signal joyPaddle2   : std_logic_vector(6 downto 0); 
 signal numpad       : std_logic_vector(7 downto 0);
+signal numpad_d     : std_logic_vector(7 downto 0);
 signal joyDS2       : std_logic_vector(6 downto 0);
 -- joystick interface
 signal joyA        : std_logic_vector(6 downto 0);
 signal joyB        : std_logic_vector(6 downto 0);
+signal joyA_c64    : std_logic_vector(6 downto 0);
+signal joyB_c64    : std_logic_vector(6 downto 0);
 signal port_1_sel  : std_logic_vector(3 downto 0);
 signal port_2_sel  : std_logic_vector(3 downto 0);
 -- mouse / paddle
@@ -296,6 +299,12 @@ signal key_triangle    : std_logic;
 signal key_square      : std_logic;
 signal key_circle      : std_logic;
 signal key_cross       : std_logic;
+signal key_up          : std_logic;
+signal key_down        : std_logic;
+signal key_left        : std_logic;
+signal key_right       : std_logic;
+signal key_start       : std_logic;
+signal key_select      : std_logic;
 signal IDSEL           : std_logic_vector(5 downto 0);
 signal FBDSEL          : std_logic_vector(5 downto 0);
 signal ntscModeD       : std_logic;
@@ -414,6 +423,11 @@ signal extra_button0   : std_logic_vector(7 downto 0);
 signal extra_button1   : std_logic_vector(7 downto 0);
 signal system_uart     : std_logic_vector(1 downto 0);
 signal uart_rx_muxed   : std_logic;
+signal joyswap         : std_logic;
+signal user_d          : std_logic := '0';
+signal system_joyswap  : std_logic;
+signal pd1,pd2,pd3,pd4 : std_logic_vector(7 downto 0);
+signal cs_uart         : std_logic_vector(1 downto 0);
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -508,10 +522,10 @@ gamepad: entity work.dualshock2
     stick_ly      => paddle_2,
     stick_rx      => paddle_3,
     stick_ry      => paddle_4,
-    key_up        => open,
-    key_down      => open,
-    key_left      => open,
-    key_right     => open,
+    key_up        => key_up,
+    key_down      => key_down,
+    key_left      => key_left,
+    key_right     => key_right,
     key_l1        => key_l1,
     key_l2        => key_l2,
     key_r1        => key_r1,
@@ -520,8 +534,8 @@ gamepad: entity work.dualshock2
     key_square    => key_square,
     key_circle    => key_circle,
     key_cross     => key_cross,
-    key_start     => open,
-    key_select    => open,
+    key_start     => key_start,
+    key_select    => key_select,
     key_lstick    => open,
     key_rstick    => open,
     debug1        => open,
@@ -894,23 +908,24 @@ flashclock: rPLL
 
 leds_n <=  not leds;
 leds(0) <= led1541;
-joyDS2     <=    ("00" & (key_l1 or key_r1) & key_circle & key_square & key_cross & key_triangle);
---                       4  3  2  1  0 digital c64 
---                       TR RI LE DN UP
-joyDigital <= not("11" & io(0) & io(3) & io(4) & io(1) & io(2));
-joyUsb1    <=    ("00" & joystick1(4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3));
-joyUsb2    <=    ("00" & joystick2(4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3));
-joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
-joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
-joyPaddle  <=    ("00" & '0' & key_l1 & key_l2 & "00"); -- bound to physical paddle position DS2
-joyPaddle2 <=    ("00" & '0' & key_r1 & key_r2 & "00");
-joyUsb1A    <=   ("00" & '0' & joystick1(5) & joystick1(4) & "00"); -- Y,X button
-joyUsb2A    <=   ("00" & '0' & joystick2(5) & joystick2(4) & "00"); -- Y,X button
+
+--                    6   5  4  3  2  1  0
+--                  TR3 TR2 TR RI LE DN UP digital c64 
+joyDS2     <= key_circle & key_cross & key_square & key_right & key_left & key_down & key_up;
+joyDigital <= not('1' & io(5) & io(0) & io(3) & io(4) & io(1) & io(2));
+joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3);
+joyUsb2    <= joystick2(6 downto 4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3);
+joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
+joyMouse   <= "00" & mouse_btns(0) & "000" & mouse_btns(1);
+joyPaddle  <= "00" & '0' & key_cross & key_square & "00"; -- single DS left stick
+joyPaddle2 <= "00" & '0' & key_triangle & key_circle & "00"; -- single DS right stick
+joyUsb1A   <= "00" & '0' & joystick1(5) & joystick1(4) & "00"; -- Y,X button
+joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 
 -- send external DB9 joystick port to µC
-db9_joy <= not('1' & io(0), io(2), io(1), io(4), io(3));
-io(5) <= 'Z'; -- reserved for digital joystick button 2
+db9_joy <= not(io(5) & io(0), io(2), io(1), io(4), io(3));
 
+-- http://wiki.icomp.de/wiki/DE-9_Joystick:de
 process(clk32)
 begin
 	if rising_edge(clk32) then
@@ -934,11 +949,11 @@ process(clk32)
 begin
 	if rising_edge(clk32) then
     case port_2_sel is
-      when "0000"  => joyB <= joyDigital;
-      when "0001"  => joyB <= joyUsb1;
-      when "0010"  => joyB <= joyUsb2;
-      when "0011"  => joyB <= joyNumpad;
-      when "0100"  => joyB <= joyDS2;
+      when "0000"  => joyB <= joyDigital;  -- 2nd button
+      when "0001"  => joyB <= joyUsb1;     -- 2nd button
+      when "0010"  => joyB <= joyUsb2;     -- 2nd button
+      when "0011"  => joyB <= joyNumpad;   -- 2nd button
+      when "0100"  => joyB <= joyDS2;      -- 2nd button
       when "0101"  => joyB <= joyMouse;
       when "0110"  => joyB <= joyPaddle2;
       when "0111"  => joyB <= joyUsb1A;
@@ -949,17 +964,62 @@ begin
   end if;
 end process;
 
--- paddle pins - mouse
-pot1 <= not paddle_1 when port_1_sel = "0110" else joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_1_sel = "0101" else x"ff";
-pot2 <= not paddle_2 when port_1_sel = "0110" else joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_1_sel = "0101" else x"ff";
-pot3 <= not paddle_3 when port_2_sel = "0110" else joystick2_x_pos(7 downto 0) when port_2_sel = "1000" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_2_sel = "0101" else x"ff";
-pot4 <= not paddle_4 when port_2_sel = "0110" else joystick2_y_pos(7 downto 0) when port_2_sel = "1000" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_2_sel = "0101" else x"ff";
+-- process to toggle joy A/B port with USER button or Keyboard page-up (STRG + CSR UP)
+-- TN20k,TP25k user button is high active
+-- TM138k pro low active
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    if vsync = '1' then
+      user_d <= user;
+      numpad_d <= numpad;
+      if (user = '1' and user_d = '0') or
+         (numpad(7) = '1' and numpad_d(7) = '0') then
+        joyswap <= not joyswap; -- toggle mode
+        elsif system_joyswap = '1' then -- OSD fixed setting mode
+          joyswap <= '1'; -- OSD fixed setting mode
+      end if;
+    end if;
+  end if;
+end process;
+
+-- swap joysticks
+joyA_c64 <= joyB when joyswap = '1' else joyA;
+joyB_c64 <= joyA when joyswap = '1' else joyB;
+
+-- swap paddle 
+pot1 <= pd3 when joyswap = '1' else pd1;
+pot2 <= pd4 when joyswap = '1' else pd2;
+pot3 <= pd1 when joyswap = '1' else pd3;
+pot4 <= pd2 when joyswap = '1' else pd4;
+
+-- paddle - mouse - GS controller 2nd button and 3rd button
+pd1 <= not paddle_1 when port_1_sel = "0110" else 
+          joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else
+          ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_1_sel = "0101" else
+          x"00" when port_1_sel < 5 and joyA_c64(5) = '1' else
+          x"ff";
+pd2 <= not paddle_2 when port_1_sel = "0110" else
+          joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else
+          ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_1_sel = "0101" else
+          x"00" when port_1_sel < 5 and joyA_c64(6) = '1' else
+          x"ff";
+pd3 <= not paddle_3 when port_2_sel = "0110" else 
+          joystick2_x_pos(7 downto 0) when port_2_sel = "1000" else 
+          ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_2_sel = "0101" else
+          x"00" when port_2_sel < 5 and joyB_c64(5) = '1' else
+          x"ff";
+pd4 <= not paddle_4 when port_2_sel = "0110" else 
+          joystick2_y_pos(7 downto 0) when port_2_sel = "1000" else 
+          ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_2_sel = "0101" else
+          x"00" when port_2_sel < 5 and joyB_c64(6) = '1' else
+          x"ff";
 
 process(clk32, reset_n)
  variable mov_x: signed(6 downto 0);
  variable mov_y: signed(6 downto 0);
  begin
-  if  reset_n = '0' then
+  if reset_n = '0' then
     mouse_x_pos <= (others => '0');
     mouse_y_pos <= (others => '0');
     joystick1_x_pos <= x"ff";
@@ -1080,7 +1140,7 @@ hid_inst: entity work.hid
   system_sid_fc_offset => sid_fc_offset,
   system_georam       => georam,
   system_uart         => system_uart,
-
+  system_joyswap      => system_joyswap,
   int_out_n           => m0s(4),
   int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & "0" & hid_int & "0")),
   int_ack             => int_ack,
@@ -1195,8 +1255,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   irq_ext_n    => not reu_irq,
 
   -- joystick interface
-  joyA         => joyA,
-  joyB         => joyB,
+  joyA         => joyA_c64,
+  joyB         => joyB_c64,
   pot1         => pot1,
   pot2         => pot2,
   pot3         => pot3,
@@ -1347,7 +1407,7 @@ port map
     data_in     => c64_data_out,
     addr_out    => cart_addr,
 
-    freeze_key  => freeze_key,
+    freeze_key  => numpad(6),
     mod_key     => '0',
     nmi         => nmi,
     nmi_ack     => nmi_ack
@@ -1670,15 +1730,17 @@ port map (
 uart_rx_muxed <= uart_rx when system_uart = "00" else io(6) when system_uart = "01" else '1';
 io(7) <= uart_tx;
 
-	-- UART_RX synchronizer
-	process(clk32)
-	begin
-		if rising_edge(clk32) then
-			uart_rxD <= uart_rxD(2 downto 0) & uart_rx_muxed;
-			if uart_rxD = "0000" then uart_rx_filtered <= '0'; end if;
-			if uart_rxD = "1111" then uart_rx_filtered <= '1'; end if;
-		end if;
-	end process;
+-- UART_RX synchronizer
+process(clk32)
+begin
+    if rising_edge(clk32) then
+      uart_rxD(0) <= uart_rx_muxed;
+      uart_rxD(1) <= uart_rxD(0);
+      if uart_rxD(0) = uart_rxD(1) then
+        uart_rx_filtered <= uart_rxD(1);
+      end if;
+    end if;
+end process;
 
 -- connect user port
 process (all)
@@ -1747,5 +1809,41 @@ begin
     uart_cs <= IO7;
   end if;
 end process;
+
+--  3.686.400Hz clock enable derived from 315 Mhz clock
+--baudgen_inst: entity work.BaudRate
+--port map(
+--   i_CLOCK	=> clk_pixel_x10,
+--   o_serialEn	=> CLK_6551_EN
+--);
+
+-- | SwiftLink       $DE00/$DF00/$D700/NMI (300-38400 baud)
+-- | Turbo-232 only: $DE07/56839/TURBO232+7  Enhanced-Speed Register
+-- https://gglabs.us/node/2057
+
+cs_uart <= not uart_en & uart_cs;
+
+--uart_inst : entity work.glb6551
+--port map (
+--  RESET_N     => reset_n,
+--  CLK         => clk32,
+--  RX_CLK      => open,
+--  RX_CLK_IN   => CLK_6551_EN,
+--  XTAL_CLK_IN => CLK_6551_EN,
+--  PH_2        => phi2_p,
+--  DI          => c64_data_out,
+--  DO          => uart_data,
+--  IRQ         => uart_irq,
+--  CS          => cs_uart,
+--  RW_N        => not (ram_we and uart_cs),
+--  RS          => c64_addr(1 downto 0),
+--  TXDATA_OUT  => tx_6551,
+--  RXDATA_IN   => uart_rx_filtered,
+--  RTS         => open,
+--  CTS         => '1',
+--  DCD         => '1',
+--  DTR         => open,
+--  DSR         => '1'
+--  );
 
 end Behavioral_top;

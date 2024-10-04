@@ -77,7 +77,7 @@
  "Synthesize_tool" : "GowinSyn",
  "TclPre" : "",
  "TopModule" : "tang_nano_20k_c64_top",
- "USERCODE" : "default",
+ "USERCODE" : "00000001",
  "Unused_Pin" : "As_input_tri_stated_with_pull_up",
  "VCC" : "1.0",
  "VCCAUX" : 3.3,

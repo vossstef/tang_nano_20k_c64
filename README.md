@@ -19,6 +19,7 @@ Features:
 * Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys & Stick as Joystick<br>
 * [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation (analog mode)<br>
+* Emulation of C64GS Cheetah Annihilator joystick 2nd Trigger Button (Pot X/Y)
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with parallel bus [Speedloader Dolphin DOS 2](https://rr.pokefinder.org/wiki/Dolphin_DOS). [GER manual](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * c1541 DOS ROM selection
 * Cartridge ROM (*.CRT) loader
@@ -147,7 +148,7 @@ Enable REU, select c1541 CBM DOS ROM and load the PRG.<br>
 * S2 keep pressed during power-up for FLASH programming of FPGA bitstream<br>
 > [!CAUTION]
 A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
-* S1 reserved <br>
+* S1 swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.<br>
 
 ## OSD
 invoke by F12 keypress<br>
@@ -168,24 +169,29 @@ invoke by F12 keypress<br>
 * SID Filter selection
 * geoRAM activation
 * Loader (CRT/PRG/BIN/TAP/FLT) file selection<br>
+* Joystick Port Swap
 
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: **Retro D9**<br>
+Atari ST type of Joystick 2nd button supported using a MiSTeryNano shield.
+
 or<br>
 USB Joystick(s). OSD: **USB #1 Joy** or **USB #2 Joy** <br>
 or<br>
-Gamepad Stick as Joystick. OSD: **DualShock2**
-<br>**stick digital** for Move and Left **L1** or Right **R1** shoulder Button for Trigger or following **Pad** controls:<br>
+Gamepad Stick as Joystick. OSD: **DualShock 2**
+
+<br>left **stick digital** for Move and **square** , **cross**  and **circle** Button for 3 Trigger buttons  
+or following **Pad** controls:<br>
 | Buttons | - | - |
 | - | - | -  |
-| Left L1/R1<br>Trigger | triangle button<br>Up  | .  |
-| square button<br>Left | - | circle button<br>Right |
-| - | cross button<br>Down | - |<br>
+| square<br>Trigger | Up  | cross<br>Trigger 2 |
+| Left | - | Right |
+| - | Down | circle<br>Trigger 3 |<br>
 
 or Keyboard Numpad. OSD: **Numpad**<br>
 | | | |
 |-|-|-|
-|0<br>Trigger|8<br>Up|-|
+|0<br>Trigger|8<br>Up|.<br>Trigger 2|
 |4<br>Left|-|6<br>Right|
 |-|2<br>Down|-|
 
@@ -194,7 +200,7 @@ USB Mouse as c1351 Mouse emulation.
 
 or Dualshock2 Gamepad as Paddle. OSD: **DS2 Paddle**<br>
 Dualshock 2 Sticks in analog mode as VC-1312 Paddle emulation.<br>
-Left **L1 / L2**  and Right **R1 / R2** shoulder Button as Trigger<br>
+**square** , **cross**, **circle** and **triangle** used as 4 Trigger buttons<br>
 You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the **Joystick** mode again and set OSD: **DualShock**<br>
 
 or USB Paddle. OSD: **USB #1 Padd** or **USB #2 Padd** <br>
@@ -203,7 +209,7 @@ Button **1 / 2** as Trigger<br>
 
 ## Keyboard 
  ![Layout](\.assets/keymap.gif)
- Tape Play not implemented.
+ PAGE UP (Tape Play) Key or the Tang S1 Button swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.
 
 ## LED UI
 
@@ -265,11 +271,11 @@ see pin configuration in .cst configuration file
 | 2 |1| J6 9  | 28 | DOWN |
 | 3 |4| J6 12 | 29 | LEFT |
 | 4 |3| J5 11 | 26 | RIGHT |
-| 5 |-| - | - | POT Y | - |
+| 5 |-| - | - | POT Y/ TRIGGER 3| - |
 | 6 |0| J5 8 | 27 | TRIGGER|
 | 7 |-| n.c | n.c | 5V | - |
 | 8 |-| J5 20 | - | GND | - |
-| 9 |-| - | - | POT X | - |
+| 9 |-| - | MiSTeryNano shield only | POT X/ TRIGGER 2| |
 
 **Pinmap Dualshock 2 Controller Interface** <br>
 <img src="./.assets/controller-pinout.jpg" alt="image" width="30%" height="auto">
