@@ -123,16 +123,16 @@ reg  force_ultimax;
 
 // 0018 - EXROM line status
 // 0019 - GAME line status
-
-
-
+	reg        init_n;
+	reg        allow_freeze;
+	reg        saved_d6;
 always @(posedge clk32) begin
 	reg [15:0] count;
 	reg        count_ena;
 	reg [15:0] old_id;
-	reg        init_n;
-	reg        allow_freeze;
-	reg        saved_d6;
+	init_n <= 1'b0;
+	allow_freeze <= 1'b0;
+	saved_d6 <= 1'b0;;
 
 	old_freeze <= freeze_key;
 	if(freeze_req & (allow_freeze | mod_key)) nmi <= 1;
