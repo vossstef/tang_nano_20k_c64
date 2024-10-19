@@ -212,6 +212,7 @@ Button **1 / 2** as Trigger<br>
  ![Layout](\.assets/keymap.gif)
  PAGE UP (Tape Play) Key or the Tang S1 Button swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.
 
+ F11 (RESTORE) Key typically used by Freezer Cards like Action Replay, Snappy Rom etc. 
 ## LED UI
 
 | LED | function | TN20K | TP25K | TM138K |
@@ -248,8 +249,6 @@ OSD selection allows to change in between TANG USB-C port or external HW pin int
 | TM138k Pro |H15     | H14  | J24-6 J24-5, share M0S Dock PMOD |
 
 Remember that in + out to be crossed to connect to external device. Level are 3V3 tolerant.
-
-A future release will add [Swiftlink](https://www.commodoreserver.com/BlogEntryView.asp?EID=FA5AE758474345A9A0A7208C7F408538) [6551](https://en.wikipedia.org/wiki/MOS_Technology_6551) UART support @ $DE00, $DF00 and $D700, NMI.<br>
 ## Powering
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis

@@ -232,7 +232,6 @@ signal reu_ram_addr   : std_logic_vector(24 downto 0);
 signal reu_ram_dout   : std_logic_vector(7 downto 0);
 signal reu_ram_we     : std_logic;
 signal reu_irq        : std_logic;
-signal IO7            : std_logic;
 signal IOE            : std_logic;
 signal IOF            : std_logic;
 signal reu_dout       : std_logic_vector(7 downto 0);
@@ -396,13 +395,6 @@ signal sid_fc_offset   : std_logic_vector(2 downto 0);
 signal sid_fc_lr       : std_logic_vector(12 downto 0);
 signal sid_filter      : std_logic_vector(2 downto 0);
 signal georam          : std_logic;
-signal uart_data       : unsigned(7 downto 0) := (others =>'0');
-signal uart_oe         : std_logic;
-signal uart_en         : std_logic;
-signal tx_6551         : std_logic;
-signal uart_irq        : std_logic := '0';
-signal uart_cs         : std_logic;
-signal CLK_6551_EN     : std_logic;
 signal phi2_p, phi2_n  : std_logic;
 signal sid_ld_addr     : std_logic_vector(11 downto 0) := (others =>'0');
 signal sid_ld_data     : std_logic_vector(15 downto 0) := (others =>'0');
@@ -427,7 +419,6 @@ signal joyswap         : std_logic;
 signal user_d          : std_logic := '0';
 signal system_joyswap  : std_logic;
 signal pd1,pd2,pd3,pd4 : std_logic_vector(7 downto 0);
-signal cs_uart         : std_logic_vector(1 downto 0);
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -1172,12 +1163,8 @@ begin
   end if;
 end process;
 
-uart_en <= '1' when ((system_up9600(2) = '1' or system_up9600(1) = '1') 
-                  and (sid_mode = 0 or sid_mode = 2)) else '0';  -- D400 or D420
-uart_oe <= not ram_we and uart_cs and uart_en;
 io_data <=  unsigned(cart_data) when cart_oe = '1' else
             unsigned(midi_data) when midi_oe = '1' else
-            uart_data when uart_oe = '1' else
             unsigned(reu_dout);
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
 sid_fc_lr <= 13x"0600" - (3x"0" & sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
@@ -1230,16 +1217,14 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => game,
   exrom        => exrom,
   io_rom       => io_rom,
-  io_ext       => (reu_oe or cart_oe or midi_oe or uart_oe),
-  io7_data     => unsigned(uart_data), -- $D700
+  io_ext       => reu_oe or cart_oe or midi_oe,
   io_data      => io_data,
   irq_n        => midi_irq_n,
-  nmi_n        => (not nmi and midi_nmi_n and not (uart_irq and uart_en)),
+  nmi_n        => not nmi and midi_nmi_n,
   nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,
   UMAXromH     => UMAXromH,
-  IO7          => IO7,
   IOE          => IOE,
   IOF          => IOF,
   freeze_key   => open,
@@ -1754,7 +1739,6 @@ begin
   drive_stb_i <= '1';
   uart_tx <= '1';
   flag2_n_i <= '1';
-  uart_cs <= '0';
   if ext_en = '1' and disk_access = '1' then
    -- c1541 parallel bus
    drive_par_i <= pb_o;
@@ -1800,51 +1784,12 @@ begin
    --pb_i(6) <= pb_o(1);  -- RTS > CTS
    --pb_i(4) <= pb_o(2);  -- DTR > DCD
   elsif system_up9600 = 2 then
-    uart_tx <= tx_6551;
-    uart_cs <= IOE;
+    uart_tx <= '1';
   elsif system_up9600 = 3 then
-    uart_tx <= tx_6551;
-    uart_cs <= IOF;
-  elsif system_up9600 = 4 then
-    uart_tx <= tx_6551;
-    uart_cs <= IO7;
-  end if;
+    uart_tx <= '1';
+    elsif system_up9600 = 4 then
+    uart_tx <= '1';
+    end if;
 end process;
-
---  3.686.400Hz clock enable derived from 315 Mhz clock
---baudgen_inst: entity work.BaudRate
---port map(
---   i_CLOCK	=> clk_pixel_x10,
---   o_serialEn	=> CLK_6551_EN
---);
-
--- | SwiftLink       $DE00/$DF00/$D700/NMI (300-38400 baud)
--- | Turbo-232 only: $DE07/56839/TURBO232+7  Enhanced-Speed Register
--- https://gglabs.us/node/2057
-
---cs_uart <= not uart_en & uart_cs;
-
---uart_inst : entity work.glb6551
---port map (
---  RESET_N     => reset_n,
---  CLK         => clk32,
---  RX_CLK      => open,
---  RX_CLK_IN   => CLK_6551_EN,
---  XTAL_CLK_IN => CLK_6551_EN,
---  PH_2        => phi2_p,
---  DI          => c64_data_out,
---  DO          => uart_data,
---  IRQ         => uart_irq,
---  CS          => cs_uart,
---  RW_N        => not (ram_we and uart_cs),
---  RS          => c64_addr(1 downto 0),
---  TXDATA_OUT  => tx_6551,
---  RXDATA_IN   => uart_rx_filtered,
---  RTS         => open,
---  CTS         => '1',
---  DCD         => '1',
---  DTR         => open,
---  DSR         => '1'
---  );
 
 end Behavioral_top;
