@@ -36,6 +36,7 @@ Features:
 * On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN/TAP/FLT)<br>
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 * RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode to Tang onboard USB-C serial port or external hw pin.
+* Freeze support (e.g. Action Replay)
 <br>
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
@@ -79,6 +80,9 @@ Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cart
 Prevent the cartridge load at boot by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
 > [!TIP]
 **Detach Cartridge** by OSD CRT selection **No Disk** and System **Cold Boot**.<br>
+
+> [!IMPORTANT]
+> Be aware that most Freezer Card CRT require to use the standard C64 Kernal and the standard C1541 CBM DOS. Buildin DolphinDOS Speedloader isn't compatible.
 
 ## BASIC Program Loader (.PRG)
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
@@ -214,7 +218,7 @@ Button **1 / 2** as Trigger<br>
  ![Layout](\.assets/keymap.gif)
  PAGE UP (Tape Play) Key or the Tang S1 Button swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.
 
- F11 (RESTORE) Key typically used by Freezer Cards like Action Replay, Snappy Rom etc. 
+ F11 (RESTORE) Key as ``FREEZE``. Typically used by Freezer Cards like Action Replay, Snappy Rom etc. 
 ## LED UI
 
 | LED | function | TN20K | TP25K | TM138K |
