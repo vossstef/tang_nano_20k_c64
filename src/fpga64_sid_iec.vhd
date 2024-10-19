@@ -94,6 +94,7 @@ port  (
 	io_rom      : in  std_logic;
 	io_ext      : in  std_logic;
 	io_data     : in  unsigned(7 downto 0);
+	io7_data    : in  unsigned(7 downto 0);
 	irq_n       : in  std_logic;
 	nmi_n       : in  std_logic;
 	nmi_ack     : out std_logic;
@@ -472,6 +473,7 @@ port map (
 	cia1Data => cia1Do,
 	cia2Data => cia2Do,
 	lastVicData => lastVicDi,
+	io7Data => io7_data,
 
 	systemWe => systemWe,
 	systemAddr => systemAddr,

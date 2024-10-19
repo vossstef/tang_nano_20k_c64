@@ -59,6 +59,7 @@ entity fpga64_buslogic is
 		cia1Data    : in unsigned(7 downto 0);
 		cia2Data    : in unsigned(7 downto 0);
 		lastVicData : in unsigned(7 downto 0);
+		io7Data     : in unsigned(7 downto 0);
 
 		io_enable   : in std_logic;
 
@@ -175,7 +176,7 @@ begin
 romData <= romData_Kernal when cpuAddr(14) = '1' else romData_Basic;
 
 	--begin
-	process(ramData, vicData, sidData, colorData,
+	process(ramData, vicData, sidData, io7Data, colorData,
               cia1Data, cia2Data, charData, romData,
 		      cs_romHLoc, cs_romLLoc, cs_romLoc, cs_CharLoc,
 			  cs_ramLoc, cs_vicLoc, cs_sidLoc, cs_colorLoc,
@@ -196,6 +197,8 @@ romData <= romData_Kernal when cpuAddr(14) = '1' else romData_Basic;
 			dataToCpu <= vicData;
 		elsif cs_sidLoc = '1' then
 			dataToCpu <= sidData;
+		elsif cs_io7Loc = '1' then
+			dataToCpu <= io7Data;
 		elsif cs_colorLoc = '1' then
 			dataToCpu(3 downto 0) <= colorData;
 		elsif cs_cia1Loc = '1' then
@@ -206,15 +209,11 @@ romData <= romData_Kernal when cpuAddr(14) = '1' else romData_Basic;
 			dataToCpu <= ramData;
 		elsif cs_romHLoc = '1' then
 			dataToCpu <= ramData;
-		elsif cs_io7Loc = '1' and io_rom = '1' then
-			dataToCpu <= ramData;
 		elsif cs_ioELoc = '1' and io_rom = '1' then
 			dataToCpu <= ramData;
 		elsif cs_ioFLoc = '1' and io_rom = '1' then
 			dataToCpu <= ramData;
 		elsif cs_ioELoc = '1' and io_ext = '1' then
-			dataToCpu <= io_data;
-		elsif cs_io7Loc = '1' and io_ext = '1' then
 			dataToCpu <= io_data;
 		elsif cs_ioFLoc = '1' and io_ext = '1' then
 			dataToCpu <= io_data;
@@ -269,9 +268,9 @@ romData <= romData_Kernal when cpuAddr(14) = '1' else romData_Basic;
 					case cpuAddr(11 downto 8) is
 						when X"0" | X"1" | X"2" | X"3" =>
 							cs_vicLoc <= '1';
-						when X"4" | X"5" | X"6" =>
+						when X"4" | X"5" | X"6" => -- $D700 addr space removed
 							cs_sidLoc <= '1';
-						when X"7" =>
+						when X"7" => -- $D700 for SwiftlinkUART
 							cs_io7Loc <= '1';
 						when X"8" | X"9" | X"A" | X"B" =>
 							cs_colorLoc <= '1';

@@ -396,7 +396,7 @@ signal sid_fc_offset   : std_logic_vector(2 downto 0);
 signal sid_fc_lr       : std_logic_vector(12 downto 0);
 signal sid_filter      : std_logic_vector(2 downto 0);
 signal georam          : std_logic;
-signal uart_data       : unsigned(7 downto 0);
+signal uart_data       : unsigned(7 downto 0) := (others =>'0');
 signal uart_oe         : std_logic;
 signal uart_en         : std_logic;
 signal tx_6551         : std_logic;
@@ -1231,6 +1231,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   exrom        => exrom,
   io_rom       => io_rom,
   io_ext       => (reu_oe or cart_oe or midi_oe or uart_oe),
+  io7_data     => unsigned(uart_data), -- $D700
   io_data      => io_data,
   irq_n        => midi_irq_n,
   nmi_n        => (not nmi and midi_nmi_n and not (uart_irq and uart_en)),
@@ -1821,7 +1822,7 @@ end process;
 -- | Turbo-232 only: $DE07/56839/TURBO232+7  Enhanced-Speed Register
 -- https://gglabs.us/node/2057
 
-cs_uart <= not uart_en & uart_cs;
+--cs_uart <= not uart_en & uart_cs;
 
 --uart_inst : entity work.glb6551
 --port map (
