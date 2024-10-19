@@ -120,9 +120,9 @@ reg  reu_map;
 reg  clock_port;
 reg  rom_kbb;
 reg  force_ultimax;
-reg  init_n;
-reg  allow_freeze;
-reg  saved_d6;
+reg  init_n = 1;
+reg  allow_freeze = 0;
+reg  saved_d6 = 0;
 
 // 0018 - EXROM line status
 // 0019 - GAME line status
