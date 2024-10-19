@@ -73,9 +73,5 @@
         <File path="src/video_vicII_656x.vhd" type="file.vhdl" enable="1"/>
         <File path="src/tang_nano_20k_c64_top_138k.cst" type="file.cst" enable="1"/>
         <File path="src/tang_nano_20k_c64_top_138k.sdc" type="file.sdc" enable="1"/>
-        <File path="src/uart_6551/BaudRate.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/uart_6551/6551rx.v" type="file.verilog" enable="1"/>
-        <File path="src/uart_6551/6551tx.v" type="file.verilog" enable="1"/>
-        <File path="src/uart_6551/uart_6551.v" type="file.verilog" enable="1"/>
     </FileList>
 </Project>

@@ -77,7 +77,6 @@ entity fpga64_buslogic is
 		-- To catridge port
 		cs_ioE      : out std_logic;
 		cs_ioF      : out std_logic;
-		cs_io7      : out std_logic;
 		cs_romL     : out std_logic;
 		cs_romH     : out std_logic;
 		cs_UMAXromH : out std_logic
@@ -112,7 +111,6 @@ architecture rtl of fpga64_buslogic is
 	signal cs_cia1Loc     : std_logic;
 	signal cs_cia2Loc     : std_logic;
 	signal cs_ioELoc      : std_logic;
-	signal cs_io7Loc      : std_logic;
 	signal cs_ioFLoc      : std_logic;
 	signal cs_romLLoc     : std_logic;
 	signal cs_romHLoc     : std_logic;
@@ -180,7 +178,7 @@ romData <= romData_Kernal when cpuAddr(14) = '1' else romData_Basic;
 		      cs_romHLoc, cs_romLLoc, cs_romLoc, cs_CharLoc,
 			  cs_ramLoc, cs_vicLoc, cs_sidLoc, cs_colorLoc,
 			  cs_cia1Loc, cs_cia2Loc, lastVicData,
-			  cs_ioELoc, cs_io7Loc, cs_ioFLoc,
+			  cs_ioELoc, cs_ioFLoc,
 			  io_rom, io_ext, io_data)
 	begin
 		-- If no hardware is addressed the bus is floating.
@@ -206,15 +204,11 @@ romData <= romData_Kernal when cpuAddr(14) = '1' else romData_Basic;
 			dataToCpu <= ramData;
 		elsif cs_romHLoc = '1' then
 			dataToCpu <= ramData;
-		elsif cs_io7Loc = '1' and io_rom = '1' then
-			dataToCpu <= ramData;
 		elsif cs_ioELoc = '1' and io_rom = '1' then
 			dataToCpu <= ramData;
 		elsif cs_ioFLoc = '1' and io_rom = '1' then
 			dataToCpu <= ramData;
 		elsif cs_ioELoc = '1' and io_ext = '1' then
-			dataToCpu <= io_data;
-		elsif cs_io7Loc = '1' and io_ext = '1' then
 			dataToCpu <= io_data;
 		elsif cs_ioFLoc = '1' and io_ext = '1' then
 			dataToCpu <= io_data;
@@ -237,7 +231,6 @@ romData <= romData_Kernal when cpuAddr(14) = '1' else romData_Basic;
 		cs_cia1Loc <= '0';
 		cs_cia2Loc <= '0';
 		cs_ioELoc <= '0';
-		cs_io7Loc <= '0';
 		cs_ioFLoc <= '0';
 		cs_romLLoc <= '0';
 		cs_romHLoc <= '0';
@@ -269,10 +262,8 @@ romData <= romData_Kernal when cpuAddr(14) = '1' else romData_Basic;
 					case cpuAddr(11 downto 8) is
 						when X"0" | X"1" | X"2" | X"3" =>
 							cs_vicLoc <= '1';
-						when X"4" | X"5" | X"6" =>
+						when X"4" | X"5" | X"6" | X"7" =>
 							cs_sidLoc <= '1';
-						when X"7" =>
-							cs_io7Loc <= '1';
 						when X"8" | X"9" | X"A" | X"B" =>
 							cs_colorLoc <= '1';
 						when X"C" =>
@@ -354,7 +345,6 @@ romData <= romData_Kernal when cpuAddr(14) = '1' else romData_Basic;
 	cs_color <= cs_colorLoc and io_enable;
 	cs_cia1 <= cs_cia1Loc and io_enable;
 	cs_cia2 <= cs_cia2Loc and io_enable;
-	cs_io7 <= cs_io7Loc and io_enable;
 	cs_ioE <= cs_ioELoc and io_enable;
 	cs_ioF <= cs_ioFLoc and io_enable;
 	cs_romL <= cs_romLLoc;

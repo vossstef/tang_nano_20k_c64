@@ -1,13 +1,15 @@
 # C64Nano
 The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wiki) and 
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
-[C64 FPGA core ](https://en.wikipedia.org/wiki/Commodore_64) for the 
-[Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) with a new VHDL top level and HDMI Video and Audio Output.<br>It has also been ported to the [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) and [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html) ([Gowin GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/)) too.<br>
+[C64](https://en.wikipedia.org/wiki/Commodore_64) for the 
+[Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) with a new VHDL top level.<br>It has also been ported to the [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) and [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html) ([Gowin GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/)) too.<br>
 Be aware that the [VIC20](https://en.wikipedia.org/wiki/VIC-20) had been ported too in similar manner ([VIC20Nano](https://github.com/vossstef/VIC20Nano)).<br>
 Also the [Atari 2600 VCS](https://en.wikipedia.org/wiki/Atari_2600) had been ported ([A2600Nano](https://github.com/vossstef/A2600Nano)).<br>
 <br>
+This project relies on a [M0S Dock µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) being connected to the Tang Nano 20K.<br> Alternately you can use a [Raspberry Pi Pico](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html) or [esp32-s2](https://www.espressif.com/en/products/socs/esp32-s2)/[s3](https://www.espressif.com/en/products/socs/esp32-s3) and use the [FPGA companion firmware](http://github.com/harbaum/FPGA-Companion).
+
 Original C64 core by Peter Wendrich<br>
-All HID components and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by Till Harbaum<br>
+All HID components and µC firmware by Till Harbaum<br>
 c1541 by https://github.com/darfpga<br>
 
 Features:
@@ -34,6 +36,7 @@ Features:
 * On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN/TAP/FLT)<br>
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 * RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode to Tang onboard USB-C serial port or external hw pin.
+* Freeze support (e.g. Action Replay)
 <br>
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
@@ -77,6 +80,9 @@ Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cart
 Prevent the cartridge load at boot by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
 > [!TIP]
 **Detach Cartridge** by OSD CRT selection **No Disk** and System **Cold Boot**.<br>
+
+> [!IMPORTANT]
+> Be aware that most Freezer Card CRT require to use the standard C64 Kernal and the standard C1541 CBM DOS. Buildin DolphinDOS Speedloader isn't compatible.
 
 ## BASIC Program Loader (.PRG)
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
@@ -212,6 +218,7 @@ Button **1 / 2** as Trigger<br>
  ![Layout](\.assets/keymap.gif)
  PAGE UP (Tape Play) Key or the Tang S1 Button swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.
 
+ F11 (RESTORE) Key as ``FREEZE``. Typically used by Freezer Cards like Action Replay, Snappy Rom etc. 
 ## LED UI
 
 | LED | function | TN20K | TP25K | TM138K |
@@ -248,8 +255,6 @@ OSD selection allows to change in between TANG USB-C port or external HW pin int
 | TM138k Pro |H15     | H14  | J24-6 J24-5, share M0S Dock PMOD |
 
 Remember that in + out to be crossed to connect to external device. Level are 3V3 tolerant.
-
-A future release will add [Swiftlink](https://www.commodoreserver.com/BlogEntryView.asp?EID=FA5AE758474345A9A0A7208C7F408538) [6551](https://en.wikipedia.org/wiki/MOS_Technology_6551) UART support @ $DE00, $DF00 and $D700, NMI.<br>
 ## Powering
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis

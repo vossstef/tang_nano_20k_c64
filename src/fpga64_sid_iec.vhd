@@ -100,7 +100,6 @@ port  (
 	romL        : out std_logic;
 	romH        : out std_logic;
 	UMAXromH 	: out std_logic;
-	IO7			: out std_logic;
 	IOE			: out std_logic;
 	IOF			: out std_logic;
 	freeze_key  : out std_logic;
@@ -255,7 +254,6 @@ signal cpuDo        : unsigned(7 downto 0);
 signal cpuDo_pre    : unsigned(7 downto 0);
 signal cpuIO        : unsigned(7 downto 0);
 signal io_data_i    : unsigned(7 downto 0);
-signal io7_i        : std_logic;
 signal ioe_i        : std_logic;
 signal iof_i        : std_logic;
 
@@ -488,7 +486,6 @@ port map (
 	cs_ram => cs_ram,
 	cs_ioE => ioe_i,
 	cs_ioF => iof_i,
-	cs_io7 => io7_i,
 	cs_romL => romL,
 	cs_romH => romH,
 	cs_UMAXromH => UMAXromH,
@@ -498,7 +495,6 @@ port map (
 	c64rom_wr => c64rom_wr
 );
 
-IO7 <= io7_i;
 IOE <= ioe_i;
 IOF <= iof_i;
 

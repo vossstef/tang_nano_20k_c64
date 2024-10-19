@@ -68,10 +68,6 @@ add_file src/sid/sid_filter.sv
 add_file src/sid/sid_tables.sv
 add_file src/sid/sid_top.sv
 add_file src/sid/sid_voice.sv
-add_file src/uart_6551/6551rx.v
-add_file src/uart_6551/6551tx.v
-add_file src/uart_6551/uart_6551.v
-add_file src/uart_6551/BaudRate.vhd
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name tang_nano_20k_c64_138k

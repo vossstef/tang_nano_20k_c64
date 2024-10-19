@@ -1154,7 +1154,6 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   romL         => romL,
   romH         => romH,
   UMAXromH     => UMAXromH,
-  IO7          => IO7,
   IOE          => IOE,
   IOF          => IOF,
   freeze_key   => open,
