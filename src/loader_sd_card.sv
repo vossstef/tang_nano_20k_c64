@@ -87,7 +87,7 @@ reg [1:0] system_resetD;
 		sd_wr <= 5'd0; 
 	end
 
-	if(system_reset[1])
+	if(system_reset[0])
 	begin
 		sd_rd <= 5'd0;
 		sd_wr <= 5'd0;
