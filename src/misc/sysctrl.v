@@ -8,22 +8,22 @@
 */
 
 module sysctrl (
-  input		    clk,
-  input		    reset,
+  input             clk,
+  input             reset,
 
-  input		    data_in_strobe,
-  input		    data_in_start,
+  input             data_in_strobe,
+  input             data_in_start,
   input [7:0]	    data_in,
   output reg [7:0]  data_out,
 
   // interrupt interface
-  output	    int_out_n,
-  input [7:0]	    int_in,
+  output            int_out_n,
+  input [7:0]       int_in,
   output reg [7:0]  int_ack,
 
-  input [1:0]	    buttons, // S0 and S1 buttons on Tang Nano 20k
+  input [1:0]       buttons, // S0 and S1 buttons on Tang Nano 20k
 
-  output reg [1:0]  leds, // two leds can be controlled from the MCU
+  output reg [1:0]  leds,  // two leds can be controlled from the MCU
   output reg [23:0] color, // a 24bit color to e.g. be used to drive the ws2812
 
   // values that can be configured by the user
@@ -53,7 +53,8 @@ module sysctrl (
   output reg [2:0]  system_sid_fc_offset,
   output reg        system_georam,
   output reg [1:0]  system_uart,
-  output reg        system_joyswap
+  output reg        system_joyswap,
+  output reg        system_detach_reset
 );
 
 reg [3:0] state;
@@ -65,23 +66,38 @@ wire [7:0] data_in_rev = { data_in[0], data_in[1], data_in[2], data_in[3],
                            data_in[4], data_in[5], data_in[6], data_in[7] };
 
 reg coldboot = 1'b1;
-   
-assign int_out_n = (int_in != 8'h00 || coldboot)?1'b0:1'b1;
+reg sys_int = 1'b1;
 
+// the system control interrupt or any other interrupt (e,g sdc, hid, ...)
+// activates the interrupt line to the MCU by pulling it low
+assign int_out_n = (int_in != 8'h00 || sys_int)?1'b0:1'b1;
+
+// by default system is in reset
+reg main_reset = 2'd3;
+reg c1541reset = 1'b1;
+assign system_reset = main_reset;
+assign system_1541_reset = c1541reset;
+
+reg [31:0] main_reset_timeout;
+   
 // process mouse events
-always @(posedge clk) begin
+always @(posedge clk) begin  
    if(reset) begin
       state <= 4'd0;      
       leds <= 2'b00;        // after reset leds are off
       color <= 24'h000000;  // color black -> rgb led off
 
+      // stay in reset for about 3 seconds or until MCU releases reset
+      main_reset <= 2'd3;
+      c1541reset <= 1'b1;
+      main_reset_timeout <= 32'd80_000_000;
+
       int_ack <= 8'h00;
       coldboot = 1'b1;      // reset is actually the power-on-reset
+      sys_int = 1'b1;       // coldboot interrupt
 
       // OSD value defaults. These should be sane defaults, but the MCU
       // will very likely override these early
-      system_reset <= 2'b00;
-      system_1541_reset <= 1'b0;
       system_reu_cfg <= 1'b0;
       system_scanlines <= 2'b00;
       system_volume <= 2'b10;
@@ -107,14 +123,28 @@ always @(posedge clk) begin
       system_georam <= 1'b0;
       system_uart <= 2'b00;
       system_joyswap <= 1'b0;
+      system_detach_reset <= 1'b0;
 
    end else begin
+
+      // release main reset after timeout
+      if(main_reset_timeout) begin
+        main_reset_timeout <= main_reset_timeout - 32'd1;
+
+        if(main_reset_timeout == 32'd1) begin
+        main_reset <= 2'd0;
+        c1541reset <= 1'b0;
+        // BRG LED yellow if no MCU has responded
+        color <= 24'h000202;
+        end
+      end
+
       int_ack <= 8'h00;
 
       // iack bit 0 acknowledges the coldboot notification
-      if(int_ack[0]) coldboot <= 1'b0;      
+      if(int_ack[0]) sys_int <= 1'b0;
       
-      if(data_in_strobe) begin      
+      if(data_in_strobe) begin
         if(data_in_start) begin
             state <= 4'd1;
             command <= data_in;
@@ -149,14 +179,18 @@ always @(posedge clk) begin
 
             // CMD 4: config values (e.g. set by user via OSD)
             if(command == 8'd4) begin
-                // second byte can be any character which identifies the variable to set 
-                if(state == 4'd1) id <= data_in;
+               // second byte can be any character which identifies the variable to set 
+               if(state == 4'd1) id <= data_in;
 
                 if(state == 4'd2) begin
                     // Value "V": REU cfg: off, on
                     if(id == "V") system_reu_cfg <= data_in[0];
                     // Value "R": coldboot(3), reset(1) or run(0)
-                    if(id == "R") system_reset <= data_in[1:0];
+                    if(id == "R") begin
+                      main_reset <= data_in[1:0];
+                      // cancel out-timeout if MCU is active
+                      main_reset_timeout <= 32'd0;
+                    end
                     // Value "S": scanlines none(0), 25%(1), 50%(2) or 75%(3)
                     if(id == "S") system_scanlines <= data_in[1:0];
                     // Value "A": volume mute(0), 33%(1), 66%(2) or 100%(3)
@@ -172,7 +206,7 @@ always @(posedge clk) begin
                     // DOS system
                     if(id == "D") system_dos_sel <= data_in[1:0];
                     // c1541 reset
-                    if(id == "Z") system_1541_reset <= data_in[0];
+                    if(id == "Z") c1541reset  <= data_in[0];
                     // sid audio filter
                     if(id == "U") system_sid_digifix <= data_in[0];
                     // turbo mode
@@ -207,6 +241,8 @@ always @(posedge clk) begin
                     if(id == "*") system_uart <= data_in[1:0];
                     // Joystick swap port
                     if(id == "&") system_joyswap <= data_in[0];
+                    // cartridge detach
+                    if(id == "F") system_detach_reset <= data_in[0];
                 end
             end
 
@@ -215,13 +251,22 @@ always @(posedge clk) begin
                 // second byte acknowleges the interrupts
                 if(state == 4'd1) int_ack <= data_in;
 
-	        // interrupt[0] notifies the MCU of a FPGA cold boot e.g. if
+            // interrupt[0] notifies the MCU of a FPGA cold boot e.g. if
                 // the FPGA has been loaded via USB
-                data_out <= { int_in[7:1], coldboot };
+                data_out <= { int_in[7:1], sys_int };
+            end
+
+            // CMD 6: read system interrupt source
+            if(command == 8'd6) begin
+                // bit[0]: coldboot flag
+                // bit[1]: port data is available
+                data_out <= { 7'b0000000, coldboot };
+                // reading the interrupt source acknowledges the coldboot notification
+                if(state == 4'd1) coldboot <= 1'b0;
             end
          end
       end
    end
 end
-    
+
 endmodule
