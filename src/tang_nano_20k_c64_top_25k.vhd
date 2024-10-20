@@ -424,6 +424,9 @@ signal joyswap         : std_logic;
 signal user_d          : std_logic := '0';
 signal system_joyswap  : std_logic;
 signal pd1,pd2,pd3,pd4 : std_logic_vector(7 downto 0);
+signal detach_reset_d  : std_logic;
+signal detach_reset    : std_logic;
+signal detach          : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -991,6 +994,7 @@ hid_inst: entity work.hid
   system_georam       => georam,
   system_uart         => system_uart,
   system_joyswap      => system_joyswap,
+  system_detach_reset => detach_reset,
   int_out_n           => m0s(4),
   int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & "0" & hid_int & "0")),
   int_ack             => int_ack,
@@ -1314,6 +1318,8 @@ port map (
 process(clk32)
 begin
   if rising_edge(clk32) then
+    detach_reset_d <= detach_reset;
+    detach <= '0';
     old_download <= ioctl_download;
     io_cycleD <= io_cycle;
     cart_hdr_wr <= '0';
@@ -1445,8 +1451,9 @@ begin
 
       old_meminit <= inj_meminit;
 
-      if  system_reset(1) = '1' then
+      if detach_reset_d = '0' and detach_reset = '1' then
         cart_attached <= '0';
+        detach <= '1';
       end if;
 
       -- start RAM erasing
@@ -1471,13 +1478,13 @@ begin
     end if;
 end process;
 
-por <= system_reset(0) or not pll_locked;
+por <= system_reset(0) or detach or not pll_locked;
 
 process(clk32, por)
 variable reset_counter : integer;
   begin
     if por = '1' then
-          reset_counter := 100000;
+          reset_counter := 1000000;
           do_erase <= '1';
           reset_n <= '0';
           reset_wait <= '0';
