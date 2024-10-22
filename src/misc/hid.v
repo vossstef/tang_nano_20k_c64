@@ -59,6 +59,7 @@ reg [7:0] command;
 reg [7:0] device;   // used for joystick
 reg irq_enable;
 reg [5:0] db9_portD;
+reg [5:0] db9_portD2;
      
 // process mouse events
 always @(posedge clk) begin
@@ -78,10 +79,12 @@ always @(posedge clk) begin
       keyboard[ 6] <= 8'hff; keyboard[ 7] <= 8'hff; 
 
    end else begin
+        db9_portD <= db9_port;
+        db9_portD2 <= db9_portD;
+
       // monitor db9 port for changes and raise interrupt
       if(irq_enable) begin
-        db9_portD <= db9_port;
-        if(db9_portD != db9_port) begin
+        if(db9_portD2 != db9_portD) begin
             // irq_enable prevents further interrupts until
             // the db9 state has actually been read by the MCU
             irq <= 1'b1;
@@ -90,6 +93,7 @@ always @(posedge clk) begin
       end
 
       if(iack) irq <= 1'b0;      // iack clears interrupt
+
       mouse_strobe <=1'b0;
       joystick_strobe <=1'b0; 
       if(data_in_strobe) begin      
@@ -152,7 +156,7 @@ always @(posedge clk) begin
             // CMD 4: send digital joystick data to MCU
             if(command == 8'd4) begin
                 if(state == 4'd1) irq_enable <= 1'b1;    // (re-)enable interrupt
-                data_out <= {2'b00, db9_port };               
+                data_out <= {2'b00, db9_portD };               
             end
         end
       end

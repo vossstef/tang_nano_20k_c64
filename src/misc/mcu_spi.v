@@ -77,10 +77,10 @@ assign mcu_osd_strobe = spi_in_strobe && spi_target == 8'd2;
 assign mcu_sdc_strobe = spi_in_strobe && spi_target == 8'd3; 
 
 reg [7:0] spi_in_data;
+assign mcu_start = spi_in_cnt == 2;  
 assign mcu_dout = spi_in_data;
      
 reg [3:0] spi_in_cnt;
-assign mcu_start = spi_in_cnt == 2; 
 
 always @(posedge clk) begin
    reg [1:0] spi_data_in_readyD;
