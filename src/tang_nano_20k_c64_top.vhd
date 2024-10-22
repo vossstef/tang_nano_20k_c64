@@ -574,8 +574,8 @@ gamepad: entity work.dualshock2
 led_ws2812: entity work.ws2812
   port map
   (
-   clk    => clk32,
-   reset  => not pll_locked,
+   clk    => clk32 and pll_locked,
+   reset  => '0',
    color  => ws2812_color,
    data   => ws2812
   );
