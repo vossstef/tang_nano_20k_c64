@@ -66,6 +66,15 @@ end;
 
 architecture Behavioral_top of tang_nano_20k_c64_top is
 
+type states is (
+  IDLE,
+  READY,
+  INIT,
+  BUSY,
+  DONE
+  );
+
+signal state          : states;
 signal clk64          : std_logic;
 signal clk32          : std_logic;
 signal pll_locked     : std_logic;
@@ -426,6 +435,8 @@ signal detach_reset    : std_logic;
 signal detach          : std_logic;
 signal coldboot        : std_logic;
 signal c1541gcr        : std_logic;
+signal clk64pll        : std_logic;
+signal clksel          : std_logic_vector(3 downto 0) := "0000";
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -801,6 +812,23 @@ dram_inst: entity work.sdram8
 -- IDIV_SEL              2 / 4
 -- FBDIV_SEL            34 / 60
 
+fsm_inst: process (flash_clk, coldboot)
+begin
+	if rising_edge(flash_clk) then
+		if coldboot = '1' then
+			state <= IDLE;
+      clksel <= "0000";
+		else
+			case state is
+				when IDLE =>
+
+				when others => 
+
+			end case;
+		end if;
+	end if;
+end process;
+
 process(flash_clk)
 begin
   if rising_edge(flash_clk) then
@@ -811,6 +839,21 @@ begin
     FBDSEL <= "011101" when ntscModeD2 = '0' else "000011";
   end if;
 end process;
+
+dcs_inst: DCS
+       generic map (
+		DCS_MODE =>"RISING"
+    --CLK0,CLK1,CLK2,CLK3,GND,VCC,RISING,FALLING,CLK0_GND,CLK0_VCC,CLK1_GND,CLK1_VCC,CLK2_GND,CLK2_VCC,CLK3_GND,CLK3_VCC
+	)
+        port map (
+		CLK0     => clk64,     -- main pll incl video
+		CLK1     => flash_clk, -- back-up clock
+		CLK2     => '0',
+    CLK3     => '0',
+		CLKSEL   => clksel,
+		SELFORCE => '0', -- glitch less mode
+		CLKOUT   => clk64 -- switched clock
+	);
 
 mainclock: rPLL
         generic map (
@@ -861,7 +904,7 @@ generic map(
     GSREN    => "false"
 )
 port map(
-    CLKOUT => clk64,
+    CLKOUT => clk64pll,
     HCLKIN => clk_pixel_x10,
     RESETN => pll_locked,
     CALIB  => '0'
@@ -875,7 +918,7 @@ generic map(
 port map(
     CLKOUT => clk32,
     HCLKIN => clk64,
-    RESETN => pll_locked,
+    RESETN => '1',
     CALIB  => '0'
 );
 
