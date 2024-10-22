@@ -67,17 +67,20 @@ end;
 architecture Behavioral_top of tang_nano_20k_c64_top is
 
 type states is (
-  IDLE,
-  READY,
-  INIT,
-  BUSY,
-  DONE
+  FSM_IDLE,
+  FSM_READY,
+  FSM_INIT,
+  FSM_SWITCH,
+  FSM_BUSY,
+  FSM_PAL,
+  FSM_NTSC,
+  FSM_DONE
   );
 
 signal state          : states;
 signal clk64          : std_logic;
 signal clk32          : std_logic;
-signal pll_locked     : std_logic;
+signal pll_locked     : std_logic := '0';
 signal clk_pixel_x10  : std_logic;
 signal clk_pixel_x5   : std_logic;
 attribute syn_keep : integer;
@@ -434,9 +437,11 @@ signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
 signal coldboot        : std_logic;
-signal c1541gcr        : std_logic;
 signal clk64pll        : std_logic;
-signal clksel          : std_logic_vector(3 downto 0) := "0000";
+signal clksel          : std_logic_vector(3 downto 0) := "0001";
+signal pll_locked_i    : std_logic;
+signal pll_locked_d    : std_logic;
+signal pll_locked_d1   : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -597,10 +602,9 @@ end process;
 disk_reset <= c1541_osd_reset or not reset_n or c1541_reset or not flash_lock;
 
 -- rising edge sd_change triggers detection of new disk
-c1541gcr <= pll_locked; -- or not coldboot;
-process(clk32, c1541gcr)
+process(clk32, pll_locked)
   begin
-  if c1541gcr = '0' then
+  if pll_locked = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
     disk_g64_d <= '0';
@@ -812,44 +816,66 @@ dram_inst: entity work.sdram8
 -- IDIV_SEL              2 / 4
 -- FBDIV_SEL            34 / 60
 
-fsm_inst: process (flash_clk, coldboot)
+fsm_inst: process (flash_clk, flash_lock)
 begin
 	if rising_edge(flash_clk) then
-		if coldboot = '1' then
-			state <= IDLE;
-      clksel <= "0000";
-		else
-			case state is
-				when IDLE =>
+    ntscModeD <= ntscMode;
+    ntscModeD1 <= ntscModeD;
+    ntscModeD2 <= ntscModeD1;
+    pll_locked_d <= pll_locked_i;
+    pll_locked_d1 <= pll_locked_d;
 
-				when others => 
-
+    if flash_lock = '0' then
+			  state <= FSM_IDLE;
+        clksel <= "0001"; -- select CLK1
+        pll_locked <= '0';
+      else
+      case state is
+        when FSM_IDLE =>
+          if pll_locked_d1 = '1' then 
+              state <= FSM_INIT;
+              pll_locked <= '1';
+              clksel <= "0001";  -- re-select CLK1
+          end if;
+        when FSM_INIT =>
+          if ntscModeD2 = '0' and ntscModeD1 = '1' then -- rising edge  NTSC
+              clksel <= "0010"; -- select CLK2 as back-up
+              state <= FSM_NTSC;
+          elsif ntscModeD2 = '1' and ntscModeD1 = '0' then -- falling edge PAL
+              clksel <= "0010"; -- select CLK2 as back-up
+              state <= FSM_PAL;
+          end if;
+        when FSM_NTSC =>
+            IDSEL <= "111011"; -- NTSC
+            FBDSEL <= "000011";
+            state <= FSM_READY;
+        when FSM_PAL =>
+            IDSEL <= "111101"; -- PAL
+            FBDSEL <= "011101";
+            state <= FSM_READY;
+        when FSM_READY =>
+              state <= FSM_DONE;
+        when FSM_DONE =>
+          if pll_locked_d1 = '1' then
+            state <= FSM_IDLE;
+          end if;
+        when others =>
+            null;
 			end case;
 		end if;
 	end if;
 end process;
 
-process(flash_clk)
-begin
-  if rising_edge(flash_clk) then
-    ntscModeD <= ntscMode;
-    ntscModeD1 <= ntscModeD;
-    ntscModeD2 <= ntscModeD1;
-    IDSEL  <= "111101" when ntscModeD2 = '0' else "111011";
-    FBDSEL <= "011101" when ntscModeD2 = '0' else "000011";
-  end if;
-end process;
-
 dcs_inst: DCS
-       generic map (
+	generic map (
 		DCS_MODE =>"RISING"
-    --CLK0,CLK1,CLK2,CLK3,GND,VCC,RISING,FALLING,CLK0_GND,CLK0_VCC,CLK1_GND,CLK1_VCC,CLK2_GND,CLK2_VCC,CLK3_GND,CLK3_VCC
+	--CLK0,CLK1,CLK2,CLK3,GND,VCC,RISING,FALLING,CLK0_GND,CLK0_VCC,CLK1_GND,CLK1_VCC,CLK2_GND,CLK2_VCC,CLK3_GND,CLK3_VCC
 	)
-        port map (
-		CLK0     => clk64,     -- main pll incl video
+	port map (
+		CLK0     => clk64pll,  -- main pll incl video
 		CLK1     => flash_clk, -- back-up clock
 		CLK2     => '0',
-    CLK3     => '0',
+		CLK3     => '0',
 		CLKSEL   => clksel,
 		SELFORCE => '0', -- glitch less mode
 		CLKOUT   => clk64 -- switched clock
@@ -882,7 +908,7 @@ mainclock: rPLL
         )
         port map (
             CLKOUT   => clk_pixel_x10,
-            LOCK     => pll_locked,
+            LOCK     => pll_locked_i,
             CLKOUTP  => open,
             CLKOUTD  => clk_pixel_x5,
             CLKOUTD3 => open,
@@ -1104,7 +1130,7 @@ end process;
 mcu_spi_inst: entity work.mcu_spi 
 port map (
   clk            => clk32,
-  reset          => not pll_locked and coldboot,
+  reset          => not pll_locked,
   -- SPI interface to BL616 MCU
   spi_io_ss      => spi_io_ss,      -- SPI CSn
   spi_io_clk     => spi_io_clk,     -- SPI SCLK
@@ -1128,7 +1154,7 @@ hid_inst: entity work.hid
  port map 
  (
   clk             => clk32,
-  reset           => not pll_locked and coldboot,
+  reset           => not pll_locked,
   -- interface to receive user data from MCU (mouse, kbd, ...)
   data_in_strobe  => mcu_hid_strobe,
   data_in_start   => mcu_start,
@@ -1165,7 +1191,7 @@ hid_inst: entity work.hid
  port map 
  (
   clk                 => clk32,
-  reset               => not pll_locked and coldboot,
+  reset               => not pll_locked,
 --
   data_in_strobe      => mcu_sys_strobe,
   data_in_start       => mcu_start,
