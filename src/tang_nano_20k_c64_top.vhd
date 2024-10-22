@@ -190,11 +190,10 @@ signal mouse_x        : signed(7 downto 0);
 signal mouse_y        : signed(7 downto 0);
 signal mouse_strobe   : std_logic;
 signal freeze         : std_logic;
-
 signal c64_pause      : std_logic;
 signal old_sync       : std_logic;
 signal osd_status     : std_logic;
-signal ws2812_color   : std_logic_vector(23 downto 0);
+signal ws2812_color   : std_logic_vector(23 downto 0) := (others => '0');
 signal system_reset   : std_logic_vector(1 downto 0);
 signal disk_reset     : std_logic;
 signal disk_chg_trg   : std_logic;
@@ -576,6 +575,7 @@ led_ws2812: entity work.ws2812
   port map
   (
    clk    => clk32,
+   reset  => not pll_locked,
    color  => ws2812_color,
    data   => ws2812
   );
