@@ -54,7 +54,8 @@ module sysctrl (
   output reg        system_georam,
   output reg [1:0]  system_uart,
   output reg        system_joyswap,
-  output reg        system_detach_reset
+  output reg        system_detach_reset,
+  output reg        cold_boot
 );
 
 reg [3:0] state;
@@ -77,6 +78,7 @@ reg main_reset = 2'd3;
 reg c1541reset = 1'b1;
 assign system_reset = main_reset;
 assign system_1541_reset = c1541reset;
+assign cold_boot = coldboot;
 
 reg [31:0] main_reset_timeout;
    

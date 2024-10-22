@@ -307,6 +307,8 @@ signal key_select      : std_logic;
 signal IDSEL           : std_logic_vector(5 downto 0);
 signal FBDSEL          : std_logic_vector(5 downto 0);
 signal ntscModeD       : std_logic;
+signal ntscModeD1      : std_logic;
+signal ntscModeD2      : std_logic;
 signal audio_div       : unsigned(8 downto 0);
 signal flash_clk       : std_logic;
 signal flash_lock      : std_logic;
@@ -422,6 +424,8 @@ signal pd1,pd2,pd3,pd4 : std_logic_vector(7 downto 0);
 signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
+signal coldboot        : std_logic;
+signal c1541gcr        : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -486,6 +490,22 @@ component rPLL
         FDLY: in std_logic_vector(3 downto 0)
     );
 end component;
+
+COMPONENT DCS
+    GENERIC (
+		DCS_MODE : string := "RISING"
+    --CLK0,CLK1,CLK2,CLK3,GND,VCC,RISING,FALLING,CLK0_GND,CLK0_VCC,CLK1_GND,CLK1_VCC,CLK2_GND,CLK2_VCC,CLK3_GND,CLK3_VCC
+	);
+	PORT (
+		CLK0 : IN std_logic;
+		CLK1 : IN std_logic;
+		CLK2 : IN std_logic;
+		CLK3 : IN std_logic;
+		CLKSEL : IN std_logic_vector(3 downto 0);
+		SELFORCE : IN std_logic;
+		CLKOUT : OUT std_logic
+	);
+end COMPONENT;
 
 begin
   spi_io_din  <= m0s(1);
@@ -566,9 +586,10 @@ end process;
 disk_reset <= c1541_osd_reset or not reset_n or c1541_reset or not flash_lock;
 
 -- rising edge sd_change triggers detection of new disk
-process(clk32, pll_locked)
+c1541gcr <= pll_locked; -- or not coldboot;
+process(clk32, c1541gcr)
   begin
-  if pll_locked = '0' then
+  if c1541gcr = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
     disk_g64_d <= '0';
@@ -780,12 +801,14 @@ dram_inst: entity work.sdram8
 -- IDIV_SEL              2 / 4
 -- FBDIV_SEL            34 / 60
 
-process(clk32)
+process(flash_clk)
 begin
-  if rising_edge(clk32) then
+  if rising_edge(flash_clk) then
     ntscModeD <= ntscMode;
-    IDSEL  <= "111101" when ntscModeD = '0' else "111011";
-    FBDSEL <= "011101" when ntscModeD = '0' else "000011";
+    ntscModeD1 <= ntscModeD;
+    ntscModeD2 <= ntscModeD1;
+    IDSEL  <= "111101" when ntscModeD2 = '0' else "111011";
+    FBDSEL <= "011101" when ntscModeD2 = '0' else "000011";
   end if;
 end process;
 
@@ -919,7 +942,6 @@ joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 -- send external DB9 joystick port to µC
 db9_joy <= not(io(5) & io(0), io(2), io(1), io(4), io(3));
 
--- http://wiki.icomp.de/wiki/DE-9_Joystick:de
 process(clk32)
 begin
 	if rising_edge(clk32) then
@@ -1039,7 +1061,7 @@ end process;
 mcu_spi_inst: entity work.mcu_spi 
 port map (
   clk            => clk32,
-  reset          => not pll_locked,
+  reset          => not pll_locked and coldboot,
   -- SPI interface to BL616 MCU
   spi_io_ss      => spi_io_ss,      -- SPI CSn
   spi_io_clk     => spi_io_clk,     -- SPI SCLK
@@ -1063,7 +1085,7 @@ hid_inst: entity work.hid
  port map 
  (
   clk             => clk32,
-  reset           => not pll_locked,
+  reset           => not pll_locked and coldboot,
   -- interface to receive user data from MCU (mouse, kbd, ...)
   data_in_strobe  => mcu_hid_strobe,
   data_in_start   => mcu_start,
@@ -1100,7 +1122,7 @@ hid_inst: entity work.hid
  port map 
  (
   clk                 => clk32,
-  reset               => not pll_locked,
+  reset               => not pll_locked and coldboot,
 --
   data_in_strobe      => mcu_sys_strobe,
   data_in_start       => mcu_start,
@@ -1136,6 +1158,9 @@ hid_inst: entity work.hid
   system_uart         => system_uart,
   system_joyswap      => system_joyswap,
   system_detach_reset => detach_reset,
+
+  cold_boot           => coldboot,
+
   int_out_n           => m0s(4),
   int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & "0" & hid_int & "0")),
   int_ack             => int_ack,
