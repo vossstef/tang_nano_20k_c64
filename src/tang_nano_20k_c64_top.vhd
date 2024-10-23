@@ -67,24 +67,24 @@ end;
 architecture Behavioral_top of tang_nano_20k_c64_top is
 
 type states is (
-  FSM_IDLE,
-  FSM_READY,
   FSM_INIT,
-  FSM_SWITCH,
-  FSM_BUSY,
+  FSM_WAIT4SWITCH,
   FSM_PAL,
   FSM_NTSC,
-  FSM_DONE
-  );
+  FSM_SWITCHED,
+  FSM_WAIT_LOCK
+);
 
 signal state          : states;
 signal clk64          : std_logic;
+signal clk64pll       : std_logic;
 signal clk32          : std_logic;
 signal pll_locked     : std_logic := '0';
 signal clk_pixel_x10  : std_logic;
 signal clk_pixel_x5   : std_logic;
 attribute syn_keep : integer;
 attribute syn_keep of clk64         : signal is 1;
+attribute syn_keep of clk64pll      : signal is 1;
 attribute syn_keep of clk32         : signal is 1;
 attribute syn_keep of clk_pixel_x10 : signal is 1;
 attribute syn_keep of clk_pixel_x5  : signal is 1;
@@ -193,7 +193,7 @@ signal freeze         : std_logic;
 signal c64_pause      : std_logic;
 signal old_sync       : std_logic;
 signal osd_status     : std_logic;
-signal ws2812_color   : std_logic_vector(23 downto 0) := (others => '0');
+signal ws2812_color   : std_logic_vector(23 downto 0);
 signal system_reset   : std_logic_vector(1 downto 0);
 signal disk_reset     : std_logic;
 signal disk_chg_trg   : std_logic;
@@ -436,7 +436,6 @@ signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
 signal coldboot        : std_logic;
-signal clk64pll        : std_logic;
 signal clksel          : std_logic_vector(3 downto 0) := "0001";
 signal pll_locked_i    : std_logic;
 signal pll_locked_d    : std_logic;
@@ -574,8 +573,8 @@ gamepad: entity work.dualshock2
 led_ws2812: entity work.ws2812
   port map
   (
-   clk    => clk32 and pll_locked,
-   reset  => '0',
+   clk    => clk32,
+   reset  => coldboot,
    color  => ws2812_color,
    data   => ws2812
   );
@@ -826,18 +825,18 @@ begin
     pll_locked_d1 <= pll_locked_d;
 
     if flash_lock = '0' then
-			  state <= FSM_IDLE;
+			  state <= FSM_INIT;
         clksel <= "0001"; -- select CLK1
         pll_locked <= '0';
       else
       case state is
-        when FSM_IDLE =>
+        when FSM_INIT =>
           if pll_locked_d1 = '1' then 
-              state <= FSM_INIT;
+              state <= FSM_WAIT4SWITCH;
               pll_locked <= '1';
               clksel <= "0001";  -- re-select CLK1
           end if;
-        when FSM_INIT =>
+        when FSM_WAIT4SWITCH =>
           if ntscModeD2 = '0' and ntscModeD1 = '1' then -- rising edge  NTSC
               clksel <= "0010"; -- select CLK2 as back-up
               state <= FSM_NTSC;
@@ -848,16 +847,16 @@ begin
         when FSM_NTSC =>
             IDSEL <= "111011"; -- NTSC
             FBDSEL <= "000011";
-            state <= FSM_READY;
+            state <= FSM_SWITCHED;
         when FSM_PAL =>
             IDSEL <= "111101"; -- PAL
             FBDSEL <= "011101";
-            state <= FSM_READY;
-        when FSM_READY =>
-              state <= FSM_DONE;
-        when FSM_DONE =>
+            state <= FSM_SWITCHED;
+        when FSM_SWITCHED =>
+              state <= FSM_WAIT_LOCK;
+        when FSM_WAIT_LOCK =>
           if pll_locked_d1 = '1' then
-            state <= FSM_IDLE;
+            state <= FSM_INIT;
           end if;
         when others =>
             null;
