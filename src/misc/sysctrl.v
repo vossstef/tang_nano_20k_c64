@@ -19,16 +19,16 @@ module sysctrl (
   // interrupt interface
   output            int_out_n,
   input [7:0]       int_in,
-  output reg [7:0]  int_ack,
+  output [7:0]      int_ack,
 
   input [1:0]       buttons, // S0 and S1 buttons on Tang Nano 20k
 
   output reg [1:0]  leds,  // two leds can be controlled from the MCU
-  output reg [23:0] color, // a 24bit color to e.g. be used to drive the ws2812
+  output [23:0]     color, // a 24bit color to e.g. be used to drive the ws2812
 
   // values that can be configured by the user
   output reg        system_reu_cfg,
-  output reg [1:0]  system_reset,
+  output     [1:0]  system_reset,
   output reg [1:0]  system_scanlines,
   output reg [1:0]  system_volume,
   output reg	    system_wide_screen,
@@ -36,7 +36,7 @@ module sysctrl (
   output reg [3:0]  system_port_1,
   output reg [3:0]  system_port_2,
   output reg [1:0]  system_dos_sel,
-  output reg        system_1541_reset,
+  output            system_1541_reset,
   output reg        system_sid_digifix,
   output reg [1:0]  system_turbo_mode,
   output reg [1:0]  system_turbo_speed,
@@ -54,11 +54,12 @@ module sysctrl (
   output reg        system_georam,
   output reg [1:0]  system_uart,
   output reg        system_joyswap,
-  output reg        system_detach_reset
+  output reg        system_detach_reset,
+  output reg        cold_boot
 );
 
-reg [3:0] state;
-reg [7:0] command;
+reg [3:0] state = 4'd0;
+reg [7:0] command = 8'd0;
 reg [7:0] id;
    
 // reverse data byte for rgb   
@@ -73,26 +74,30 @@ reg sys_int = 1'b1;
 assign int_out_n = (int_in != 8'h00 || sys_int)?1'b0:1'b1;
 
 // by default system is in reset
-reg main_reset = 2'd3;
+reg [1:0] main_reset = 2'd3;
+reg [31:0] main_reset_timeout = 32'd80_000_000;
 reg c1541reset = 1'b1;
+reg [23:0] color_i = 24'h000000;
+reg [7:0] int_ack_i = 8'h00;
 assign system_reset = main_reset;
 assign system_1541_reset = c1541reset;
+assign cold_boot = coldboot;
+assign color = color_i;
+assign int_ack = int_ack_i;
 
-reg [31:0] main_reset_timeout;
-   
 // process mouse events
 always @(posedge clk) begin  
    if(reset) begin
       state <= 4'd0;      
       leds <= 2'b00;        // after reset leds are off
-      color <= 24'h000000;  // color black -> rgb led off
+      color_i <= 24'h000000;  // color black -> rgb led off
 
       // stay in reset for about 3 seconds or until MCU releases reset
       main_reset <= 2'd3;
       c1541reset <= 1'b1;
       main_reset_timeout <= 32'd80_000_000;
 
-      int_ack <= 8'h00;
+      int_ack_i <= 8'h00;
       coldboot = 1'b1;      // reset is actually the power-on-reset
       sys_int = 1'b1;       // coldboot interrupt
 
@@ -135,14 +140,14 @@ always @(posedge clk) begin
         main_reset <= 2'd0;
         c1541reset <= 1'b0;
         // BRG LED yellow if no MCU has responded
-        color <= 24'h000202;
+        color_i <= 24'h000202;
         end
       end
 
-      int_ack <= 8'h00;
+      int_ack_i <= 8'h00;
 
       // iack bit 0 acknowledges the coldboot notification
-      if(int_ack[0]) sys_int <= 1'b0;
+      if(int_ack_i[0]) sys_int <= 1'b0;
       
       if(data_in_strobe) begin
         if(data_in_start) begin
@@ -167,9 +172,9 @@ always @(posedge clk) begin
 
             // CMD 2: a 24 color value to be mapped e.g. onto the ws2812
             if(command == 8'd2) begin
-                if(state == 4'd1) color[15: 8] <= data_in_rev;
-                if(state == 4'd2) color[ 7: 0] <= data_in_rev;
-                if(state == 4'd3) color[23:16] <= data_in_rev;
+                if(state == 4'd1) color_i[15: 8] <= data_in_rev;
+                if(state == 4'd2) color_i[ 7: 0] <= data_in_rev;
+                if(state == 4'd3) color_i[23:16] <= data_in_rev;
             end
 
             // CMD 3: return button state
@@ -249,7 +254,7 @@ always @(posedge clk) begin
             // CMD 5: interrupt control
             if(command == 8'd5) begin
                 // second byte acknowleges the interrupts
-                if(state == 4'd1) int_ack <= data_in;
+                if(state == 4'd1) int_ack_i <= data_in;
 
             // interrupt[0] notifies the MCU of a FPGA cold boot e.g. if
                 // the FPGA has been loaded via USB

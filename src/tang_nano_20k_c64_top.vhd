@@ -66,13 +66,25 @@ end;
 
 architecture Behavioral_top of tang_nano_20k_c64_top is
 
+type states is (
+  FSM_RESET,
+  FSM_WAIT4SWITCH,
+  FSM_PAL,
+  FSM_NTSC,
+  FSM_SWITCHED,
+  FSM_WAIT_LOCK
+);
+
+signal state          : states;
 signal clk64          : std_logic;
+signal clk64pll       : std_logic;
 signal clk32          : std_logic;
-signal pll_locked     : std_logic;
+signal pll_locked     : std_logic := '0';
 signal clk_pixel_x10  : std_logic;
 signal clk_pixel_x5   : std_logic;
 attribute syn_keep : integer;
 attribute syn_keep of clk64         : signal is 1;
+attribute syn_keep of clk64pll      : signal is 1;
 attribute syn_keep of clk32         : signal is 1;
 attribute syn_keep of clk_pixel_x10 : signal is 1;
 attribute syn_keep of clk_pixel_x5  : signal is 1;
@@ -178,11 +190,10 @@ signal mouse_x        : signed(7 downto 0);
 signal mouse_y        : signed(7 downto 0);
 signal mouse_strobe   : std_logic;
 signal freeze         : std_logic;
-
 signal c64_pause      : std_logic;
 signal old_sync       : std_logic;
 signal osd_status     : std_logic;
-signal ws2812_color   : std_logic_vector(23 downto 0);
+signal ws2812_color   : std_logic_vector(23 downto 0) := 24x"000000";
 signal system_reset   : std_logic_vector(1 downto 0);
 signal disk_reset     : std_logic;
 signal disk_chg_trg   : std_logic;
@@ -307,6 +318,8 @@ signal key_select      : std_logic;
 signal IDSEL           : std_logic_vector(5 downto 0);
 signal FBDSEL          : std_logic_vector(5 downto 0);
 signal ntscModeD       : std_logic;
+signal ntscModeD1      : std_logic;
+signal ntscModeD2      : std_logic;
 signal audio_div       : unsigned(8 downto 0);
 signal flash_clk       : std_logic;
 signal flash_lock      : std_logic;
@@ -422,6 +435,11 @@ signal pd1,pd2,pd3,pd4 : std_logic_vector(7 downto 0);
 signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
+signal coldboot        : std_logic;
+signal clksel          : std_logic_vector(3 downto 0) := "0001";
+signal pll_locked_i    : std_logic;
+signal pll_locked_d    : std_logic;
+signal pll_locked_d1   : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -487,6 +505,22 @@ component rPLL
     );
 end component;
 
+COMPONENT DCS
+    GENERIC (
+		DCS_MODE : string := "RISING"
+    --CLK0,CLK1,CLK2,CLK3,GND,VCC,RISING,FALLING,CLK0_GND,CLK0_VCC,CLK1_GND,CLK1_VCC,CLK2_GND,CLK2_VCC,CLK3_GND,CLK3_VCC
+	);
+	PORT (
+		CLK0 : IN std_logic;
+		CLK1 : IN std_logic;
+		CLK2 : IN std_logic;
+		CLK3 : IN std_logic;
+		CLKSEL : IN std_logic_vector(3 downto 0);
+		SELFORCE : IN std_logic;
+		CLKOUT : OUT std_logic
+	);
+end COMPONENT;
+
 begin
   spi_io_din  <= m0s(1);
   spi_io_ss   <= m0s(2);
@@ -536,12 +570,23 @@ gamepad: entity work.dualshock2
     debug2        => open
     );
 
-led_ws2812: entity work.ws2812
-  port map
-  (
-   clk    => clk32,
-   color  => ws2812_color,
-   data   => ws2812
+  led_ws2812: entity work.ws2812
+  generic map (
+    clk_freq => 31500000,
+    fps => 5,
+    used_led  => 1,
+    independent_led_ctrl => "false"
+  )
+  port map (
+    sys_clk     => clk32,
+    rst_n       => pll_locked,
+    do          => ws2812,
+    pixel_addr  => x"00",
+    pixel_Red   => ws2812_color(15 downto 8),
+    pixel_Green => ws2812_color(7 downto 0),
+    pixel_Blue  => ws2812_color(23 downto 16),
+    pixel_valid => '1',
+    te          => open
   );
 
 	process(clk32, disk_reset)
@@ -780,14 +825,68 @@ dram_inst: entity work.sdram8
 -- IDIV_SEL              2 / 4
 -- FBDIV_SEL            34 / 60
 
-process(clk32)
+fsm_inst: process (all)
 begin
-  if rising_edge(clk32) then
-    ntscModeD <= ntscMode;
-    IDSEL  <= "111101" when ntscModeD = '0' else "111011";
-    FBDSEL <= "011101" when ntscModeD = '0' else "000011";
-  end if;
+  ntscModeD <= ntscMode;
+  ntscModeD1 <= ntscModeD;
+  ntscModeD2 <= ntscModeD1;
+  pll_locked_d <= pll_locked_i;
+  pll_locked_d1 <= pll_locked_d;
+
+  if rising_edge(flash_clk) then
+    if flash_lock = '0' then
+      state <= FSM_RESET;
+    else
+    case state is
+        when FSM_RESET => 
+          clksel <= "0001"; -- select CLK1
+          pll_locked <= '0';
+          state <= FSM_WAIT_LOCK;
+        when FSM_WAIT_LOCK =>
+          if pll_locked_d1 = '1' then 
+              state <= FSM_WAIT4SWITCH;
+              pll_locked <= '1';
+              clksel <= "0001";  -- re-select CLK1
+          end if;
+        when FSM_WAIT4SWITCH =>
+          if ntscModeD2 = '0' and ntscModeD1 = '1' then -- rising edge  NTSC
+              clksel <= "0010"; -- select CLK2 as back-up
+              state <= FSM_NTSC;
+          elsif ntscModeD2 = '1' and ntscModeD1 = '0' then -- falling edge PAL
+              clksel <= "0010"; -- select CLK2 as back-up
+              state <= FSM_PAL;
+          end if;
+        when FSM_NTSC =>
+            IDSEL <= "111011"; -- NTSC
+            FBDSEL <= "000011";
+            state <= FSM_SWITCHED;
+        when FSM_PAL =>
+            IDSEL <= "111101"; -- PAL
+            FBDSEL <= "011101";
+            state <= FSM_SWITCHED;
+        when FSM_SWITCHED =>
+              state <= FSM_WAIT_LOCK;
+        when others =>
+            null;
+			end case;
+		end if;
+	end if;
 end process;
+
+dcs_inst: DCS
+	generic map (
+		DCS_MODE => "RISING"
+	--CLK0,CLK1,CLK2,CLK3,GND,VCC,RISING,FALLING,CLK0_GND,CLK0_VCC,CLK1_GND,CLK1_VCC,CLK2_GND,CLK2_VCC,CLK3_GND,CLK3_VCC
+	)
+	port map (
+		CLK0     => clk64pll,  -- main pll incl video
+		CLK1     => flash_clk, -- back-up clock
+		CLK2     => '0',
+		CLK3     => '0',
+		CLKSEL   => clksel,
+		SELFORCE => '0', -- glitch less mode
+		CLKOUT   => clk64 -- switched clock
+	);
 
 mainclock: rPLL
         generic map (
@@ -816,7 +915,7 @@ mainclock: rPLL
         )
         port map (
             CLKOUT   => clk_pixel_x10,
-            LOCK     => pll_locked,
+            LOCK     => pll_locked_i,
             CLKOUTP  => open,
             CLKOUTD  => clk_pixel_x5,
             CLKOUTD3 => open,
@@ -838,9 +937,9 @@ generic map(
     GSREN    => "false"
 )
 port map(
-    CLKOUT => clk64,
+    CLKOUT => clk64pll,
     HCLKIN => clk_pixel_x10,
-    RESETN => pll_locked,
+    RESETN => pll_locked_i,
     CALIB  => '0'
 );
 
@@ -852,7 +951,7 @@ generic map(
 port map(
     CLKOUT => clk32,
     HCLKIN => clk64,
-    RESETN => pll_locked,
+    RESETN => '1',
     CALIB  => '0'
 );
 
@@ -919,7 +1018,6 @@ joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 -- send external DB9 joystick port to µC
 db9_joy <= not(io(5) & io(0), io(2), io(1), io(4), io(3));
 
--- http://wiki.icomp.de/wiki/DE-9_Joystick:de
 process(clk32)
 begin
 	if rising_edge(clk32) then
@@ -1136,11 +1234,14 @@ hid_inst: entity work.hid
   system_uart         => system_uart,
   system_joyswap      => system_joyswap,
   system_detach_reset => detach_reset,
+
+  cold_boot           => coldboot,
+
   int_out_n           => m0s(4),
-  int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & "0" & hid_int & "0")),
+  int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
   int_ack             => int_ack,
 
-  buttons             => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
+  buttons             => unsigned'(reset & user), -- S0 and S1 buttons on Tang Nano 20k
   leds                => system_leds,         -- two leds can be controlled from the MCU
   color               => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );

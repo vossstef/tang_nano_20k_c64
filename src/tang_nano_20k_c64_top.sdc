@@ -6,6 +6,7 @@
 create_clock -name clk32 -period 31.746 -waveform {0 5} [get_nets {clk32}]
 create_clock -name flash_clk -period 15.595 -waveform {0 5} [get_nets {flash_clk}]
 create_clock -name clk64 -period 15.873 -waveform {0 5} [get_nets {clk64}]
+create_clock -name clk64pll -period 15.873 -waveform {0 5} [get_nets {clk64pll}]
 create_clock -name ds2_clk -period 8000 -waveform {0 5} [get_nets {gamepad/clk_spi}]
 create_clock -name clk_pixel_x10 -period 3.175 -waveform {0 1.587} [get_nets {clk_pixel_x10}]
 create_clock -name joymiso -period 8000 -waveform {0 20} [get_ports {joystick_miso}]

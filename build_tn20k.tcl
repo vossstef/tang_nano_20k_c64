@@ -78,6 +78,11 @@ set_option -show_all_warn 0
 set_option -rw_check_on_ram 0
 set_option -user_code 00000001
 set_option -bit_security 0
+set_option -rpt_auto_place_io_info 1
+#set_option -timing_driven 1
+#set_option -route_option 0
+#set_option -place_option 0
+#add_file -type gao -disable "src/test.gao"
 
 #run syn
 run all

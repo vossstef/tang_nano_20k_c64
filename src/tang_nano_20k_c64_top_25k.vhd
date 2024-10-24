@@ -61,16 +61,16 @@ architecture Behavioral_top of tang_nano_20k_c64_top_25k is
 
 signal clk64          : std_logic;
 signal clk32          : std_logic;
-signal pll_locked     : std_logic;
+signal pll_locked     : std_logic := '0';
 signal clk_pixel_x5   : std_logic;
 signal mspi_clk_x5    : std_logic;
 signal clk64_ntsc     : std_logic;
 signal clk32_ntsc     : std_logic;
-signal pll_locked_ntsc: std_logic;
+signal pll_locked_ntsc: std_logic := '0';
 signal clk_pixel_x5_ntsc  : std_logic;
 signal clk64_pal      : std_logic;
 signal clk32_pal      : std_logic;
-signal pll_locked_pal : std_logic;
+signal pll_locked_pal : std_logic := '0';
 signal clk_pixel_x5_pal   : std_logic;
 attribute syn_keep : integer;
 attribute syn_keep of clk64             : signal is 1;
@@ -183,11 +183,10 @@ signal mouse_x        : signed(7 downto 0);
 signal mouse_y        : signed(7 downto 0);
 signal mouse_strobe   : std_logic;
 signal freeze         : std_logic;
-
 signal c64_pause      : std_logic;
 signal old_sync       : std_logic;
 signal osd_status     : std_logic;
-signal ws2812_color   : std_logic_vector(23 downto 0);
+signal ws2812_color   : std_logic_vector(23 downto 0) := 24x"000000";
 signal system_reset   : std_logic_vector(1 downto 0);
 signal disk_reset     : std_logic;
 signal disk_chg_trg   : std_logic;
@@ -309,12 +308,12 @@ signal key_left        : std_logic;
 signal key_right       : std_logic;
 signal key_start       : std_logic;
 signal key_select      : std_logic;
+signal ntscModeD       : std_logic;
+signal ntscModeD1      : std_logic;
 signal audio_div       : unsigned(8 downto 0);
 signal flash_clk       : std_logic;
 signal flash_lock      : std_logic;
 signal dcsclksel       : std_logic_vector(3 downto 0);
-signal ntscModeD       : std_logic;
-signal ntscModeD1      : std_logic;
 signal ioctl_download  : std_logic := '0';
 signal ioctl_load_addr : std_logic_vector(22 downto 0);
 signal ioctl_req_wr    : std_logic := '0';
@@ -427,6 +426,7 @@ signal pd1,pd2,pd3,pd4 : std_logic_vector(7 downto 0);
 signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
+signal coldboot        : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -434,6 +434,19 @@ signal detach          : std_logic;
 constant CRT_MEM_START : std_logic_vector(22 downto 0) := 23x"100000";
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 constant REU_ADDR      : std_logic_vector(22 downto 0) := 23x"400000";
+
+component CLKDIV
+    generic (
+        DIV_MODE : STRING := "2"
+    );
+    port (
+        CLKOUT: out std_logic;
+        HCLKIN: in std_logic;
+        RESETN: in std_logic;
+        CALIB: in std_logic
+    );
+end component;
+
 component DCS
     generic (
         DCS_MODE : STRING := "RISING"
@@ -697,6 +710,20 @@ port map(
 -- dram         63000000 /  65000000
 -- core /pixel  31500000 /  32500000
 
+clk_switch_2: DCS
+	generic map (
+		DCS_MODE => "RISING"
+	)
+	port map (
+		CLKIN0   => clk64_pal,  -- main pll 1
+		CLKIN1   => clk64_ntsc, -- main pll 2
+		CLKIN2   => '0',
+		CLKIN3   => '0',
+		CLKSEL   => dcsclksel,
+		SELFORCE => '0', -- glitch less mode
+		CLKOUT   => clk64 -- switched clock
+	);
+  
 pll_locked <= pll_locked_pal and pll_locked_ntsc;
 dcsclksel <= "0001" when ntscMode = '0' else "0010";
 
@@ -714,21 +741,16 @@ port map (
     SELFORCE => '1'
 );
 
-clk_switch_2: DCS
-generic map (
-    DCS_MODE => "RISING"
+div_inst: CLKDIV
+generic map(
+  DIV_MODE => "2"
 )
-port map (
-    CLKOUT => clk64,
-    CLKSEL => dcsclksel,
-    CLKIN0 => clk64_pal,
-    CLKIN1 => clk64_ntsc,
-    CLKIN2 => '0',
-    CLKIN3 => '0',
-    SELFORCE => '1'
+port map(
+    CLKOUT => clk32,
+    HCLKIN => clk64,
+    RESETN => '1',
+    CALIB  => '0'
 );
-
-clk32 <= clk32_pal when ntscMode = '0' else clk32_ntsc;
 
 mainclock_pal: entity work.Gowin_PLL_pal
 port map (
@@ -736,7 +758,7 @@ port map (
     clkout0 => open,
     clkout1 => clk_pixel_x5_pal,
     clkout2 => clk64_pal,
-    clkout3 => clk32_pal,
+    clkout3 => open,
     clkin => clk
 );
 
@@ -746,7 +768,7 @@ port map (
     clkout0 => open,
     clkout1 => clk_pixel_x5_ntsc,
     clkout2 => clk64_ntsc,
-    clkout3 => clk32_ntsc,
+    clkout3 => open,
     clkin => clk
 );
 
@@ -995,11 +1017,14 @@ hid_inst: entity work.hid
   system_uart         => system_uart,
   system_joyswap      => system_joyswap,
   system_detach_reset => detach_reset,
+
+  cold_boot           => coldboot,
+
   int_out_n           => m0s(4),
-  int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & "0" & hid_int & "0")),
+  int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
   int_ack             => int_ack,
 
-  buttons             => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
+  buttons             => unsigned'(reset & user), -- S0 and S1 buttons on Tang Nano 20k
   leds                => system_leds,         -- two leds can be controlled from the MCU
   color               => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
