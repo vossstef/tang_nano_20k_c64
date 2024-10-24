@@ -92,7 +92,7 @@ Prevent the cartridge load at boot by OSD CRT selection **No Disk** , **Save set
 ```permanent``` **No Disk**, **Save settings** and System **Cold Boot**.<br>
 
 > [!IMPORTANT]
-> Be aware that most Freezer Card CRT require to use the standard C64 Kernal and the standard C1541 CBM DOS. Buildin DolphinDOS Speedloader isn't compatible.
+> Be aware that some Freezer Card CRT require to use the standard C64 Kernal and the standard C1541 CBM DOS. Buildin DolphinDOS Speedloader isn't compatible.
 
 ## BASIC Program Loader (.PRG)
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>

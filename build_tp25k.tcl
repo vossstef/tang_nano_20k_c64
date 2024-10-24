@@ -84,6 +84,7 @@ set_option -show_all_warn 0
 set_option -rw_check_on_ram 0
 set_option -user_code 00000001
 set_option -bit_security 0
+set_option -rpt_auto_place_io_info 1
 
 #run syn
 run all
