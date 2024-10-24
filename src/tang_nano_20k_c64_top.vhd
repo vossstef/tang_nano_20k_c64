@@ -573,7 +573,7 @@ gamepad: entity work.dualshock2
   led_ws2812: entity work.ws2812
   generic map (
     clk_freq => 31500000,
-    fps => 50,
+    fps => 5,
     used_led  => 1,
     independent_led_ctrl => "false"
   )

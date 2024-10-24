@@ -191,13 +191,15 @@ invoke by F12 keypress<br>
 
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: **Retro D9**<br>
-Atari ST type of Joystick 2nd button supported using a MiSTeryNano shield.
+Atari ST type of Joystick 2nd button supported using a MiSTeryNano shield.  
+Don't configure configure e.g. [ArcadeR](https://retroradionics.com) for C64 mode rather than<br> normal digital 2nd button mode (2nd trigger button connect signal to ground)
 
 or<br>
 USB Joystick(s). OSD: **USB #1 Joy** or **USB #2 Joy** <br>
+Also [RII Mini Keyboard i8](http://www.riitek.com/product/220.html) left Multimedia Keys are active if **USB #1 Joy** selected. 
+
 or<br>
 Gamepad Stick as Joystick. OSD: **DualShock 2**
-
 <br>left **stick digital** for Move and **square** , **cross**  and **circle** Button for 3 Trigger buttons  
 or following **Pad** controls:<br>
 | Buttons | - | - |

@@ -72,11 +72,11 @@ signal clk_pixel_x5   : std_logic;
 signal mspi_clk_x5    : std_logic;
 signal clk64_ntsc     : std_logic;
 signal clk32_ntsc     : std_logic;
-signal pll_locked_ntsc: std_logic;
+signal pll_locked_ntsc: std_logic := '0';
 signal clk_pixel_x5_ntsc  : std_logic;
 signal clk64_pal      : std_logic;
 signal clk32_pal      : std_logic;
-signal pll_locked_pal : std_logic;
+signal pll_locked_pal : std_logic := '0';
 signal clk_pixel_x5_pal   : std_logic;
 attribute syn_keep : integer;
 attribute syn_keep of clk64             : signal is 1;
@@ -189,11 +189,10 @@ signal mouse_x        : signed(7 downto 0);
 signal mouse_y        : signed(7 downto 0);
 signal mouse_strobe   : std_logic;
 signal freeze         : std_logic;
-
 signal c64_pause      : std_logic;
 signal old_sync       : std_logic;
 signal osd_status     : std_logic;
-signal ws2812_color   : std_logic_vector(23 downto 0);
+signal ws2812_color   : std_logic_vector(23 downto 0) := 24x"000000";
 signal system_reset   : std_logic_vector(1 downto 0);
 signal disk_reset     : std_logic;
 signal disk_chg_trg   : std_logic;
@@ -431,6 +430,7 @@ signal pd1,pd2,pd3,pd4 : std_logic_vector(7 downto 0);
 signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
+signal coldboot        : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -438,6 +438,18 @@ signal detach          : std_logic;
 constant CRT_MEM_START : std_logic_vector(22 downto 0) := 23x"100000";
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 constant REU_ADDR      : std_logic_vector(22 downto 0) := 23x"400000";
+
+component CLKDIV
+    generic (
+        DIV_MODE : STRING := "2"
+    );
+    port (
+        CLKOUT: out std_logic;
+        HCLKIN: in std_logic;
+        RESETN: in std_logic;
+        CALIB: in std_logic
+    );
+end component;
 
 component DCS
     generic (
@@ -503,12 +515,23 @@ gamepad: entity work.dualshock2
     debug2        => open
     );
 
-led_ws2812: entity work.ws2812
-  port map
-  (
-   clk    => clk32,
-   color  => ws2812_color,
-   data   => ws2812
+  led_ws2812: entity work.ws2812
+  generic map (
+    clk_freq => 31500000,
+    fps => 5,
+    used_led  => 1,
+    independent_led_ctrl => "false"
+  )
+  port map (
+    sys_clk     => clk32,
+    rst_n       => pll_locked,
+    do          => ws2812,
+    pixel_addr  => x"00",
+    pixel_Red   => ws2812_color(15 downto 8),
+    pixel_Green => ws2812_color(7 downto 0),
+    pixel_Blue  => ws2812_color(23 downto 16),
+    pixel_valid => '1',
+    te          => open
   );
 
 	process(clk32, disk_reset)
@@ -753,6 +776,20 @@ port map(
 -- dram         63000000 /  65000000
 -- core /pixel  31500000 /  32500000
 
+clk_switch_2: DCS
+	generic map (
+		DCS_MODE => "RISING"
+	)
+	port map (
+		CLKIN0   => clk64_pal,  -- main pll 1
+		CLKIN1   => clk64_ntsc, -- main pll 2
+		CLKIN2   => '0',
+		CLKIN3   => '0',
+		CLKSEL   => dcsclksel,
+		SELFORCE => '0', -- glitch less mode
+		CLKOUT   => clk64 -- switched clock
+	);
+  
 pll_locked <= pll_locked_pal and pll_locked_ntsc;
 dcsclksel <= "0001" when ntscMode = '0' else "0010";
 
@@ -770,21 +807,16 @@ port map (
     SELFORCE => '1'
 );
 
-clk_switch_2: DCS
-generic map (
-    DCS_MODE => "RISING"
+div_inst: CLKDIV
+generic map(
+  DIV_MODE => "2"
 )
-port map (
-    CLKOUT => clk64,
-    CLKSEL => dcsclksel,
-    CLKIN0 => clk64_pal,
-    CLKIN1 => clk64_ntsc,
-    CLKIN2 => '0',
-    CLKIN3 => '0',
-    SELFORCE => '1'
+port map(
+    CLKOUT => clk32,
+    HCLKIN => clk64,
+    RESETN => '1',
+    CALIB  => '0'
 );
-
-clk32 <= clk32_pal when ntscMode = '0' else clk32_ntsc;
 
 mainclock_pal: entity work.Gowin_PLL_138k_pal
 port map (
@@ -792,7 +824,7 @@ port map (
     clkout0 => open,
     clkout1 => clk_pixel_x5_pal,
     clkout2 => clk64_pal,
-    clkout3 => clk32_pal,
+    clkout3 => open,
     clkin => clk
 );
 
@@ -802,7 +834,7 @@ port map (
     clkout0 => open,
     clkout1 => clk_pixel_x5_ntsc,
     clkout2 => clk64_ntsc,
-    clkout3 => clk32_ntsc,
+    clkout3 => open,
     clkin => clk
 );
 
@@ -835,7 +867,6 @@ joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 -- send external DB9 joystick port to µC
 db9_joy <= not(io(5) & io(0), io(2), io(1), io(4), io(3));
 
--- http://wiki.icomp.de/wiki/DE-9_Joystick:de
 process(clk32)
 begin
 	if rising_edge(clk32) then
@@ -1052,11 +1083,14 @@ hid_inst: entity work.hid
   system_uart         => system_uart,
   system_joyswap      => system_joyswap,
   system_detach_reset => detach_reset,
+
+  cold_boot           => coldboot,
+
   int_out_n           => m0s(4),
-  int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & "0" & hid_int & "0")),
+  int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
   int_ack             => int_ack,
 
-  buttons             => std_logic_vector(unsigned'(not reset & not user)), -- S0 and S1 buttons on Tang Nano 20k
+  buttons             => unsigned'(not reset & not user), -- S0 and S1 buttons on Tang Nano 20k
   leds                => system_leds,         -- two leds can be controlled from the MCU
   color               => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
