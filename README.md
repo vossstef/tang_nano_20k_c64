@@ -30,7 +30,7 @@ Features:
 * Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys & Stick as Joystick<br>
 * [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation (analog mode)<br>
-* Emulation of C64GS Cheetah Annihilator joystick 2nd Trigger Button (Pot X/Y)
+* Emulation of [C64GS Cheetah Annihilator](https://en.wikipedia.org/wiki/Commodore_64_Games_System) joystick 2nd Trigger Button (Pot X/Y)
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with parallel bus [Speedloader Dolphin DOS 2](https://rr.pokefinder.org/wiki/Dolphin_DOS). [GER manual](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
 * c1541 DOS ROM selection
 * Cartridge ROM (*.CRT) loader
@@ -44,7 +44,7 @@ Features:
 * On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN/TAP/FLT)<br>
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 * RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode to Tang onboard USB-C serial port or external hw pin.
-* Freeze support (e.g. Action Replay)
+* Freezer support (e.g. Action Replay)
 <br>
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
@@ -87,12 +87,12 @@ Cartridge ROM can be loaded via OSD file selection.<br>
 Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge ROM.<br>
 Prevent the cartridge load at boot by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
 > [!TIP]
-**Detach Cartridge** by OSD CRT selection :<br>
+**Detach Cartridge** by OSD :<br>
 ```temporary``` **Cartridge unload & Reset**  
 ```permanent``` **No Disk**, **Save settings** and System **Cold Boot**.<br>
 
 > [!IMPORTANT]
-> Be aware that some Freezer Card CRT require to use the standard C64 Kernal and the standard C1541 CBM DOS. Buildin DolphinDOS Speedloader isn't compatible.
+> Be aware that some Freezer Card CRT might require to use the standard C64 Kernal and the standard C1541 CBM DOS.
 
 ## BASIC Program Loader (.PRG)
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
@@ -192,7 +192,7 @@ invoke by F12 keypress<br>
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: **Retro D9**<br>
 Atari ST type of Joystick 2nd button supported using a MiSTeryNano shield.  
-Don't configure configure e.g. [ArcadeR](https://retroradionics.com) for C64 mode rather than<br> normal digital 2nd button mode (2nd trigger button connect signal to ground)
+Don't configure e.g. [ArcadeR](https://retroradionics.com) for C64 mode rather than<br> normal digital 2nd button mode (2nd trigger button connect signal to ground)
 
 or<br>
 USB Joystick(s). OSD: **USB #1 Joy** or **USB #2 Joy** <br>
@@ -218,10 +218,10 @@ or Keyboard Numpad. OSD: **Numpad**<br>
 or Mouse. OSD: **Mouse**<br>
 USB Mouse as c1351 Mouse emulation.
 
-or Dualshock2 Gamepad as Paddle. OSD: **DS2 Paddle**<br>
+or Dualshock2 Gamepad as Paddle. OSD: **DualShock Paddle**<br>
 Dualshock 2 Sticks in analog mode as VC-1312 Paddle emulation.<br>
 **square** , **cross**, **circle** and **triangle** used as 4 Trigger buttons<br>
-You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the **Joystick** mode again and set OSD: **DualShock**<br>
+You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the **Joystick** mode again and set OSD: **DualShock 2**<br>
 
 or USB Paddle. OSD: **USB #1 Padd** or **USB #2 Padd** <br>
 Left Stick in X / Y analog mode as VC-1312 Paddle emulation.<br>
