@@ -7,7 +7,7 @@ The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wi
 | ---        |        -   | -     |-|
 | [Tang Nano 20k](https://wiki.sipeed.com/nano20k)     | [GW2AR](https://www.gowinsemi.com/en/product/detail/38/)  | X |- |
 | [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)  | X |no Dualshock 2, no Retro DB9 Joystick |
-| [Tang Mega 60k](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/)| planned |- |
+| [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/)| planned |- |
 | [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | X |- |
 
 
@@ -87,7 +87,9 @@ Cartridge ROM can be loaded via OSD file selection.<br>
 Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge ROM.<br>
 Prevent the cartridge load at boot by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
 > [!TIP]
-**Detach Cartridge** by OSD CRT selection **No Disk** and System **Cold Boot**.<br>
+**Detach Cartridge** by OSD CRT selection :<br>
+```temporary``` **Cartridge unload & Reset**  
+```permanent``` **No Disk**, **Save settings** and System **Cold Boot**.<br>
 
 > [!IMPORTANT]
 > Be aware that most Freezer Card CRT require to use the standard C64 Kernal and the standard C1541 CBM DOS. Buildin DolphinDOS Speedloader isn't compatible.
@@ -185,6 +187,7 @@ invoke by F12 keypress<br>
 * geoRAM activation
 * Loader (CRT/PRG/BIN/TAP/FLT) file selection<br>
 * Joystick Port Swap
+* Cartridge unload
 
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: **Retro D9**<br>

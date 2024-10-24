@@ -67,7 +67,7 @@ end;
 architecture Behavioral_top of tang_nano_20k_c64_top is
 
 type states is (
-  FSM_INIT,
+  FSM_RESET,
   FSM_WAIT4SWITCH,
   FSM_PAL,
   FSM_NTSC,
@@ -193,7 +193,7 @@ signal freeze         : std_logic;
 signal c64_pause      : std_logic;
 signal old_sync       : std_logic;
 signal osd_status     : std_logic;
-signal ws2812_color   : std_logic_vector(23 downto 0);
+signal ws2812_color   : std_logic_vector(23 downto 0) := 24x"000000";
 signal system_reset   : std_logic_vector(1 downto 0);
 signal disk_reset     : std_logic;
 signal disk_chg_trg   : std_logic;
@@ -570,13 +570,23 @@ gamepad: entity work.dualshock2
     debug2        => open
     );
 
-led_ws2812: entity work.ws2812
-  port map
-  (
-   clk    => clk32,
-   reset  => coldboot,
-   color  => ws2812_color,
-   data   => ws2812
+  led_ws2812: entity work.ws2812
+  generic map (
+    clk_freq => 31500000,
+    fps => 50,
+    used_led  => 1,
+    independent_led_ctrl => "false"
+  )
+  port map (
+    sys_clk     => clk32,
+    rst_n       => pll_locked,
+    do          => ws2812,
+    pixel_addr  => x"00",
+    pixel_Red   => ws2812_color(15 downto 8),
+    pixel_Green => ws2812_color(7 downto 0),
+    pixel_Blue  => ws2812_color(23 downto 16),
+    pixel_valid => '1',
+    te          => open
   );
 
 	process(clk32, disk_reset)
@@ -815,22 +825,24 @@ dram_inst: entity work.sdram8
 -- IDIV_SEL              2 / 4
 -- FBDIV_SEL            34 / 60
 
-fsm_inst: process (flash_clk, flash_lock)
+fsm_inst: process (all)
 begin
-	if rising_edge(flash_clk) then
-    ntscModeD <= ntscMode;
-    ntscModeD1 <= ntscModeD;
-    ntscModeD2 <= ntscModeD1;
-    pll_locked_d <= pll_locked_i;
-    pll_locked_d1 <= pll_locked_d;
+  ntscModeD <= ntscMode;
+  ntscModeD1 <= ntscModeD;
+  ntscModeD2 <= ntscModeD1;
+  pll_locked_d <= pll_locked_i;
+  pll_locked_d1 <= pll_locked_d;
 
+  if rising_edge(flash_clk) then
     if flash_lock = '0' then
-			  state <= FSM_INIT;
-        clksel <= "0001"; -- select CLK1
-        pll_locked <= '0';
-      else
-      case state is
-        when FSM_INIT =>
+      state <= FSM_RESET;
+    else
+    case state is
+        when FSM_RESET => 
+          clksel <= "0001"; -- select CLK1
+          pll_locked <= '0';
+          state <= FSM_WAIT_LOCK;
+        when FSM_WAIT_LOCK =>
           if pll_locked_d1 = '1' then 
               state <= FSM_WAIT4SWITCH;
               pll_locked <= '1';
@@ -854,10 +866,6 @@ begin
             state <= FSM_SWITCHED;
         when FSM_SWITCHED =>
               state <= FSM_WAIT_LOCK;
-        when FSM_WAIT_LOCK =>
-          if pll_locked_d1 = '1' then
-            state <= FSM_INIT;
-          end if;
         when others =>
             null;
 			end case;
@@ -867,7 +875,7 @@ end process;
 
 dcs_inst: DCS
 	generic map (
-		DCS_MODE =>"RISING"
+		DCS_MODE => "RISING"
 	--CLK0,CLK1,CLK2,CLK3,GND,VCC,RISING,FALLING,CLK0_GND,CLK0_VCC,CLK1_GND,CLK1_VCC,CLK2_GND,CLK2_VCC,CLK3_GND,CLK3_VCC
 	)
 	port map (
@@ -931,7 +939,7 @@ generic map(
 port map(
     CLKOUT => clk64pll,
     HCLKIN => clk_pixel_x10,
-    RESETN => pll_locked,
+    RESETN => pll_locked_i,
     CALIB  => '0'
 );
 

@@ -28,7 +28,7 @@ module sysctrl (
 
   // values that can be configured by the user
   output reg        system_reu_cfg,
-  output reg [1:0]  system_reset,
+  output     [1:0]  system_reset,
   output reg [1:0]  system_scanlines,
   output reg [1:0]  system_volume,
   output reg	    system_wide_screen,
@@ -36,7 +36,7 @@ module sysctrl (
   output reg [3:0]  system_port_1,
   output reg [3:0]  system_port_2,
   output reg [1:0]  system_dos_sel,
-  output reg        system_1541_reset,
+  output            system_1541_reset,
   output reg        system_sid_digifix,
   output reg [1:0]  system_turbo_mode,
   output reg [1:0]  system_turbo_speed,
@@ -58,8 +58,8 @@ module sysctrl (
   output reg        cold_boot
 );
 
-reg [3:0] state;
-reg [7:0] command;
+reg [3:0] state = 4'd0;
+reg [7:0] command = 8'd0;
 reg [7:0] id;
    
 // reverse data byte for rgb   
@@ -75,7 +75,7 @@ assign int_out_n = (int_in != 8'h00 || sys_int)?1'b0:1'b1;
 
 // by default system is in reset
 reg [1:0] main_reset = 2'd3;
-reg [31:0] main_reset_timeout;
+reg [31:0] main_reset_timeout = 32'd80_000_000;
 reg c1541reset = 1'b1;
 reg [23:0] color_i = 24'h000000;
 reg [7:0] int_ack_i = 8'h00;
