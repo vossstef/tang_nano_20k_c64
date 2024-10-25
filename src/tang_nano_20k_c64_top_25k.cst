@@ -71,19 +71,35 @@ IO_PORT "user" IO_TYPE=LVCMOS33 PULL_MODE=DOWN DRIVE=OFF BANK_VCCIO=3.3;
 IO_LOC "clk" E2;        // 50Mhz
 IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=OFF BANK_VCCIO=3.3;
 
-// SDCard
-IO_LOC "sd_clk" D10;
-IO_PORT "sd_clk" PULL_MODE=UP IO_TYPE=LVCMOS33; 
+// SDCard sipeed PMOD TFCARD v2 (newer)
+IO_LOC "sd_clk" C11;
+IO_PORT "sd_clk" PULL_MODE=NONE IO_TYPE=LVCMOS33; 
 IO_LOC "sd_cmd" D11;        // MOSI
-IO_PORT "sd_cmd" PULL_MODE=UP IO_TYPE=LVCMOS33;
-IO_LOC "sd_dat[0]" B11;       // MISO
+IO_PORT "sd_cmd" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "sd_dat[0]" B11;       // MISO or SD card DO, needs pull-up
 IO_PORT "sd_dat[0]" PULL_MODE=UP IO_TYPE=LVCMOS33;
-IO_LOC "sd_dat[1]" C11;
-IO_PORT "sd_dat[1]" PULL_MODE=UP IO_TYPE=LVCMOS33;
-IO_LOC "sd_dat[2]" G11;
-IO_PORT "sd_dat[2]" PULL_MODE=UP IO_TYPE=LVCMOS33;
-IO_LOC "sd_dat[3]" G10;
-IO_PORT "sd_dat[3]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "sd_dat[1]" G10;       // 1
+IO_PORT "sd_dat[1]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "sd_dat[2]" D10;       // 1
+IO_PORT "sd_dat[2]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "sd_dat[3]" G11;       // 1
+IO_PORT "sd_dat[3]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+
+// SDCard Sipeed PMOD TFCARD v1  (old outdated version)
+// not working !
+//
+//IO_LOC "sd_clk" D10;
+//IO_PORT "sd_clk" PULL_MODE=NONE IO_TYPE=LVCMOS33; 
+//IO_LOC "sd_cmd" D11;          // MOSI
+//IO_PORT "sd_cmd" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+//IO_LOC "sd_dat[0]" B11;       // MISO or SD card DO, needs pull-up
+//IO_PORT "sd_dat[0]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+//IO_LOC "sd_dat[1]" C11;
+//IO_PORT "sd_dat[1]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+//IO_LOC "sd_dat[2]" G11;
+//IO_PORT "sd_dat[2]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+//IO_LOC "sd_dat[3]" G10;
+//IO_PORT "sd_dat[3]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
 // Mister SDRAM v3.0 connected through 40-pin port
 IO_LOC "IO_sdram_dq[0]" K2;

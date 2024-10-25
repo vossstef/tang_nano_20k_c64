@@ -314,7 +314,7 @@ signal ntscModeD1      : std_logic;
 signal audio_div       : unsigned(8 downto 0);
 signal flash_clk       : std_logic;
 signal flash_lock      : std_logic;
-signal dcsclksel       : std_logic_vector(3 downto 0);
+signal dcsclksel       : std_logic_vector(3 downto 0) := "0001";
 signal ioctl_download  : std_logic := '0';
 signal ioctl_load_addr : std_logic_vector(22 downto 0);
 signal ioctl_req_wr    : std_logic := '0';
