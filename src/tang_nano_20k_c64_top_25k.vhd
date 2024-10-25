@@ -61,16 +61,16 @@ architecture Behavioral_top of tang_nano_20k_c64_top_25k is
 
 signal clk64          : std_logic;
 signal clk32          : std_logic;
-signal pll_locked     : std_logic := '0';
+signal pll_locked     : std_logic;
 signal clk_pixel_x5   : std_logic;
 signal mspi_clk_x5    : std_logic;
 signal clk64_ntsc     : std_logic;
 signal clk32_ntsc     : std_logic;
-signal pll_locked_ntsc: std_logic := '0';
+signal pll_locked_ntsc: std_logic;
 signal clk_pixel_x5_ntsc  : std_logic;
 signal clk64_pal      : std_logic;
 signal clk32_pal      : std_logic;
-signal pll_locked_pal : std_logic := '0';
+signal pll_locked_pal : std_logic;
 signal clk_pixel_x5_pal   : std_logic;
 attribute syn_keep : integer;
 attribute syn_keep of clk64             : signal is 1;
@@ -81,6 +81,7 @@ attribute syn_keep of clk32_ntsc        : signal is 1;
 attribute syn_keep of clk32_pal         : signal is 1;
 attribute syn_keep of clk_pixel_x5_pal  : signal is 1;
 attribute syn_keep of mspi_clk_x5       : signal is 1;
+attribute syn_keep of m0s               : signal is 1;
 
 signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
@@ -186,7 +187,7 @@ signal freeze         : std_logic;
 signal c64_pause      : std_logic;
 signal old_sync       : std_logic;
 signal osd_status     : std_logic;
-signal ws2812_color   : std_logic_vector(23 downto 0) := 24x"000000";
+signal ws2812_color   : std_logic_vector(23 downto 0);
 signal system_reset   : std_logic_vector(1 downto 0);
 signal disk_reset     : std_logic;
 signal disk_chg_trg   : std_logic;

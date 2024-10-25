@@ -225,7 +225,7 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
 
 or USB Paddle. OSD: **USB #1 Padd** or **USB #2 Padd** <br>
 Left Stick in X / Y analog mode as VC-1312 Paddle emulation.<br>
-Button **1 / 2** as Trigger<br>
+Button **cross / square** as Trigger<br>
 
 ## Keyboard 
  ![Layout](\.assets/keymap.gif)
@@ -273,9 +273,7 @@ Remember that in + out to be crossed to connect to external device. Level are 3V
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
-Alternatively use the command line build script **gw_sh.exe** build_tn20k.tcl, build_tp25k.tcl or build_tm138k.tcl<br>
-## Pin mapping 
-see pin configuration in .cst configuration file
+Alternatively use the command line build script **gw_sh.exe / gw_sh.sh** [build_tn20k.tcl](build_tn20k.tcl) , [build_tp25k.tcl](build_tp25k.tcl) or [build_tm138k.tcl](build_tm138k.tcl)<br>
 ## HW circuit considerations
 **Pinmap TN20k Interfaces** <br>
  Sipeed M0S Dock, digital Joystick D9 and DualShock Gamepad connection.<br>
@@ -295,7 +293,7 @@ see pin configuration in .cst configuration file
 | 6 |0| J5 8 | 27 | TRIGGER|
 | 7 |-| n.c | n.c | 5V | - |
 | 8 |-| J5 20 | - | GND | - |
-| 9 |-| - | MiSTeryNano shield only | POT X/ TRIGGER 2| |
+| 9 |-| - | 30 | TRIGGER 2| |
 
 **Pinmap Dualshock 2 Controller Interface** <br>
 <img src="./.assets/controller-pinout.jpg" alt="image" width="30%" height="auto">
