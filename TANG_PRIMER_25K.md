@@ -6,7 +6,7 @@ the MiSTeryNano was initially developed for.<br> Unlike the TN20K, the
 TP25k's FPGA does not come with an internal SDRAM. Nor does the board
 come with HDMI or an SD card slot.
 
-Some SDRAM can be added in the form of the [Tang SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM), HDMI can be added via the [PMOD DVI](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DVI) and the SD card is installed using the [PMOD TF-CARD](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_TF-CARD).<br> All three add-ons need to carefully be mounted with the SDRAM's "THIS SIDE FACES OUTWARD" pointing to the boards edge. The HDMI needs to be mounted to the leftmost PMOD slot andf the SD card to the rightmost.
+Some SDRAM can be added in the form of the [Tang SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM), HDMI can be added via the [PMOD DVI](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DVI) and the SD card is installed using the [PMOD TF-CARD V2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_TF-CARD).<br> All three add-ons need to carefully be mounted with the SDRAM's "THIS SIDE FACES OUTWARD" pointing to the boards edge. The HDMI needs to be mounted to the leftmost PMOD slot andf the SD card to the rightmost.
 
 The M0S required to control the MiSTeryNano is to be mounted in the middle PMOD with the help of the [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md).
 
