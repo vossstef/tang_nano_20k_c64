@@ -68,14 +68,15 @@ architecture Behavioral_top of tang_nano_20k_c64_top is
 
 type states is (
   FSM_RESET,
+  FSM_WAIT_LOCK,
+  FSM_LOCKED,
   FSM_WAIT4SWITCH,
   FSM_PAL,
   FSM_NTSC,
-  FSM_SWITCHED,
-  FSM_WAIT_LOCK
+  FSM_SWITCHED
 );
 
-signal state          : states;
+signal state          : states := FSM_RESET;
 signal clk64          : std_logic;
 signal clk64pll       : std_logic;
 signal clk32          : std_logic;
@@ -437,7 +438,7 @@ signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
 signal coldboot        : std_logic;
-signal clksel          : std_logic_vector(3 downto 0) := "0001";
+signal clksel          : std_logic_vector(3 downto 0) := "0010";
 signal pll_locked_i    : std_logic;
 signal pll_locked_d    : std_logic;
 signal pll_locked_d1   : std_logic;
@@ -656,7 +657,7 @@ port map
  (
     clk32         => clk32,
     reset         => disk_reset,
-    pause         => c64_pause or loader_busy,
+    pause         => loader_busy,
     ce            => '0',
 
     disk_num      => (others =>'0'),
@@ -743,8 +744,6 @@ generic map (
     outaddr         => sd_byte_index,     -- outaddr from 0 to 511, because the sector size is 512
     outbyte         => sd_rd_data         -- a byte of sector content
 );
-
-freeze <= '0';
 
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
 
@@ -836,19 +835,22 @@ begin
 
   if rising_edge(flash_clk) then
     if flash_lock = '0' then
+      pll_locked <= '0';
       state <= FSM_RESET;
     else
     case state is
         when FSM_RESET => 
-          clksel <= "0001"; -- select CLK1
+          clksel <= "0010"; -- select back-up clock
           pll_locked <= '0';
           state <= FSM_WAIT_LOCK;
         when FSM_WAIT_LOCK =>
           if pll_locked_d1 = '1' then 
-              state <= FSM_WAIT4SWITCH;
-              pll_locked <= '1';
-              clksel <= "0001";  -- re-select CLK1
+              state <= FSM_LOCKED;
+              clksel <= "0001";  -- select CLK1
           end if;
+        when FSM_LOCKED =>
+          pll_locked <= '1';
+          state <= FSM_WAIT4SWITCH;
         when FSM_WAIT4SWITCH =>
           if ntscModeD2 = '0' and ntscModeD1 = '1' then -- rising edge  NTSC
               clksel <= "0010"; -- select CLK2 as back-up
@@ -866,9 +868,9 @@ begin
             FBDSEL <= "011101";
             state <= FSM_SWITCHED;
         when FSM_SWITCHED =>
-              state <= FSM_WAIT_LOCK;
+            state <= FSM_WAIT_LOCK;
         when others =>
-            null;
+              null;
 			end case;
 		end if;
 	end if;
@@ -1284,7 +1286,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   clk32        => clk32,
   reset_n      => reset_n and pll_locked and ram_ready,
   bios         => "00",
-  pause        => freeze,
+  pause        => '0',
   pause_out    => c64_pause,
   -- keyboard interface
   keyboard_matrix_out => keyboard_matrix_out,
