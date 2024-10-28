@@ -317,8 +317,8 @@ signal key_left        : std_logic;
 signal key_right       : std_logic;
 signal key_start       : std_logic;
 signal key_select      : std_logic;
-signal IDSEL           : std_logic_vector(5 downto 0);
-signal FBDSEL          : std_logic_vector(5 downto 0);
+signal IDSEL           : std_logic_vector(5 downto 0) := "111101"; -- PAL;
+signal FBDSEL          : std_logic_vector(5 downto 0) := "011101";
 signal ntscModeD       : std_logic;
 signal ntscModeD1      : std_logic;
 signal ntscModeD2      : std_logic;
@@ -662,7 +662,7 @@ port map
 
     disk_num      => (others =>'0'),
     disk_change   => sd_change, 
-    disk_mount    => img_present,
+    disk_mount    => img_present, --  '1',
     disk_readonly => system_floppy_wprot(0),
     disk_g64      => disk_g64,
 
@@ -837,14 +837,18 @@ begin
     if flash_lock = '0' then
       pll_locked <= '0';
       state <= FSM_RESET;
+      IDSEL <= "111101"; -- PAL
+      FBDSEL <= "011101";
     else
     case state is
         when FSM_RESET => 
           clksel <= "0010"; -- select back-up clock
           pll_locked <= '0';
+          IDSEL <= "111101"; -- PAL
+          FBDSEL <= "011101";
           state <= FSM_WAIT_LOCK;
         when FSM_WAIT_LOCK =>
-          if pll_locked_d1 = '1' then 
+          if pll_locked_d1 = '1' and pll_locked_d = '1' then
               state <= FSM_LOCKED;
               clksel <= "0001";  -- select CLK1
           end if;
