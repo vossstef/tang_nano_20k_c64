@@ -68,24 +68,29 @@ architecture Behavioral_top of tang_nano_20k_c64_top is
 
 type states is (
   FSM_RESET,
+  FSM_WAIT_LOCK,
+  FSM_LOCKED,
   FSM_WAIT4SWITCH,
   FSM_PAL,
   FSM_NTSC,
-  FSM_SWITCHED,
-  FSM_WAIT_LOCK
+  FSM_SWITCHED
 );
 
-signal state          : states;
+signal state          : states := FSM_RESET;
 signal clk64          : std_logic;
 signal clk64pll       : std_logic;
+signal clk64switched  : std_logic;
 signal clk32          : std_logic;
+signal clk32_hid       : std_logic;
 signal pll_locked     : std_logic;
+signal pll_locked_hid : std_logic;
 signal clk_pixel_x10  : std_logic;
 signal clk_pixel_x5   : std_logic;
 attribute syn_keep : integer;
 attribute syn_keep of clk64         : signal is 1;
 attribute syn_keep of clk64pll      : signal is 1;
 attribute syn_keep of clk32         : signal is 1;
+attribute syn_keep of clk32_hid      : signal is 1;
 attribute syn_keep of clk_pixel_x10 : signal is 1;
 attribute syn_keep of clk_pixel_x5  : signal is 1;
 attribute syn_keep of m0s           : signal is 1;
@@ -316,8 +321,8 @@ signal key_left        : std_logic;
 signal key_right       : std_logic;
 signal key_start       : std_logic;
 signal key_select      : std_logic;
-signal IDSEL           : std_logic_vector(5 downto 0);
-signal FBDSEL          : std_logic_vector(5 downto 0);
+signal IDSEL           : std_logic_vector(5 downto 0) := "111101"; -- PAL;
+signal FBDSEL          : std_logic_vector(5 downto 0) := "011101";
 signal ntscModeD       : std_logic;
 signal ntscModeD1      : std_logic;
 signal ntscModeD2      : std_logic;
@@ -437,7 +442,7 @@ signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
 signal coldboot        : std_logic;
-signal clksel          : std_logic_vector(3 downto 0) := "0001";
+signal clksel          : std_logic_vector(3 downto 0) := "0010";
 signal pll_locked_i    : std_logic;
 signal pll_locked_d    : std_logic;
 signal pll_locked_d1   : std_logic;
@@ -656,12 +661,12 @@ port map
  (
     clk32         => clk32,
     reset         => disk_reset,
-    pause         => c64_pause or loader_busy,
+    pause         => loader_busy,
     ce            => '0',
 
     disk_num      => (others =>'0'),
     disk_change   => sd_change, 
-    disk_mount    => img_present,
+    disk_mount    => img_present, --  '1',
     disk_readonly => system_floppy_wprot(0),
     disk_g64      => disk_g64,
 
@@ -707,8 +712,8 @@ generic map (
     CLK_DIV  => 1
   )
     port map (
-    rstn            => pll_locked, 
-    clk             => clk32,
+    rstn            => pll_locked_hid, 
+    clk             => clk32_hid,
   
     -- SD card signals
     sdclk           => sd_clk,
@@ -743,8 +748,6 @@ generic map (
     outaddr         => sd_byte_index,     -- outaddr from 0 to 511, because the sector size is 512
     outbyte         => sd_rd_data         -- a byte of sector content
 );
-
-freeze <= '0';
 
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
 
@@ -831,24 +834,31 @@ begin
   ntscModeD <= ntscMode;
   ntscModeD1 <= ntscModeD;
   ntscModeD2 <= ntscModeD1;
-  pll_locked_d <= pll_locked_i;
+  pll_locked_d <= pll_locked;
   pll_locked_d1 <= pll_locked_d;
 
   if rising_edge(flash_clk) then
     if flash_lock = '0' then
+      pll_locked_hid <= '0';
       state <= FSM_RESET;
+      IDSEL <= "111101"; -- PAL
+      FBDSEL <= "011101";
     else
     case state is
         when FSM_RESET => 
-          clksel <= "0001"; -- select CLK1
-          pll_locked <= '0';
+          clksel <= "0010"; -- select back-up clock
+          pll_locked_hid <= '0';
+          IDSEL <= "111101"; -- PAL
+          FBDSEL <= "011101";
           state <= FSM_WAIT_LOCK;
         when FSM_WAIT_LOCK =>
-          if pll_locked_d1 = '1' then 
-              state <= FSM_WAIT4SWITCH;
-              pll_locked <= '1';
-              clksel <= "0001";  -- re-select CLK1
+          if pll_locked_d1 = '1' and pll_locked_d = '1' then
+              state <= FSM_LOCKED;
+              clksel <= "0001";  -- select CLK1
           end if;
+        when FSM_LOCKED =>
+          pll_locked_hid <= '1';
+          state <= FSM_WAIT4SWITCH;
         when FSM_WAIT4SWITCH =>
           if ntscModeD2 = '0' and ntscModeD1 = '1' then -- rising edge  NTSC
               clksel <= "0010"; -- select CLK2 as back-up
@@ -866,9 +876,9 @@ begin
             FBDSEL <= "011101";
             state <= FSM_SWITCHED;
         when FSM_SWITCHED =>
-              state <= FSM_WAIT_LOCK;
+            state <= FSM_WAIT_LOCK;
         when others =>
-            null;
+              null;
 			end case;
 		end if;
 	end if;
@@ -880,13 +890,13 @@ dcs_inst: DCS
 	--CLK0,CLK1,CLK2,CLK3,GND,VCC,RISING,FALLING,CLK0_GND,CLK0_VCC,CLK1_GND,CLK1_VCC,CLK2_GND,CLK2_VCC,CLK3_GND,CLK3_VCC
 	)
 	port map (
-		CLK0     => clk64pll,  -- main pll incl video
+		CLK0     => clk64, -- main pll incl video
 		CLK1     => flash_clk, -- back-up clock
 		CLK2     => '0',
 		CLK3     => '0',
 		CLKSEL   => clksel,
 		SELFORCE => '0', -- glitch less mode
-		CLKOUT   => clk64 -- switched clock
+		CLKOUT   => clk64switched -- switched clock
 	);
 
 mainclock: rPLL
@@ -916,7 +926,7 @@ mainclock: rPLL
         )
         port map (
             CLKOUT   => clk_pixel_x10,
-            LOCK     => pll_locked_i,
+            LOCK     => pll_locked,
             CLKOUTP  => open,
             CLKOUTD  => clk_pixel_x5,
             CLKOUTD3 => open,
@@ -938,9 +948,9 @@ generic map(
     GSREN    => "false"
 )
 port map(
-    CLKOUT => clk64pll,
+    CLKOUT => clk64,
     HCLKIN => clk_pixel_x10,
-    RESETN => pll_locked_i,
+    RESETN => pll_locked,
     CALIB  => '0'
 );
 
@@ -952,6 +962,18 @@ generic map(
 port map(
     CLKOUT => clk32,
     HCLKIN => clk64,
+    RESETN => pll_locked,
+    CALIB  => '0'
+);
+
+div3_inst: CLKDIV
+generic map(
+  DIV_MODE => "2",
+  GSREN    => "false"
+)
+port map(
+    CLKOUT => clk32_hid,
+    HCLKIN => clk64switched,
     RESETN => '1',
     CALIB  => '0'
 );
@@ -1137,8 +1159,8 @@ end process;
 
 mcu_spi_inst: entity work.mcu_spi 
 port map (
-  clk            => clk32,
-  reset          => not pll_locked,
+  clk            => clk32_hid,
+  reset          => not pll_locked_hid,
   -- SPI interface to BL616 MCU
   spi_io_ss      => spi_io_ss,      -- SPI CSn
   spi_io_clk     => spi_io_clk,     -- SPI SCLK
@@ -1161,8 +1183,8 @@ port map (
 hid_inst: entity work.hid
  port map 
  (
-  clk             => clk32,
-  reset           => not pll_locked,
+  clk             => clk32_hid,
+  reset           => not pll_locked_hid,
   -- interface to receive user data from MCU (mouse, kbd, ...)
   data_in_strobe  => mcu_hid_strobe,
   data_in_start   => mcu_start,
@@ -1198,8 +1220,8 @@ hid_inst: entity work.hid
  module_inst: entity work.sysctrl 
  port map 
  (
-  clk                 => clk32,
-  reset               => not pll_locked,
+  clk                 => clk32_hid,
+  reset               => not pll_locked_hid,
 --
   data_in_strobe      => mcu_sys_strobe,
   data_in_start       => mcu_start,
@@ -1282,9 +1304,9 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
   clk32        => clk32,
-  reset_n      => reset_n and pll_locked and ram_ready,
+  reset_n      => reset_n,
   bios         => "00",
-  pause        => freeze,
+  pause        => '0',
   pause_out    => c64_pause,
   -- keyboard interface
   keyboard_matrix_out => keyboard_matrix_out,
@@ -1721,7 +1743,7 @@ begin
     end if;
 end process;
 
-por <= system_reset(0) or detach or not pll_locked;
+por <= system_reset(0) or detach or not pll_locked or not ram_ready;
 
 process(clk32, por)
 variable reset_counter : integer;
