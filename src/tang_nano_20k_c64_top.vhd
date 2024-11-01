@@ -656,7 +656,7 @@ port map
 
     disk_num      => (others =>'0'),
     disk_change   => sd_change, 
-    disk_mount    => img_present, --  '1',
+    disk_mount    => img_present,
     disk_readonly => system_floppy_wprot(0),
     disk_g64      => disk_g64,
 
@@ -1886,9 +1886,9 @@ begin
    flag2_n_i <= uart_rx_filtered;
    pb_i(0) <= uart_rx_filtered;
    -- Zeromodem
-     pb_i(6) <= not pb_o(1);  -- RTS > CTS
-     pb_i(4) <= not pb_o(2);  -- DTR > DCD
-     pb_i(7) <= not pb_o(2);  -- DTR > DSR
+     --pb_i(6) <= not pb_o(1);  -- RTS > CTS
+     --pb_i(4) <= not pb_o(2);  -- DTR > DCD
+     --pb_i(7) <= not pb_o(2);  -- DTR > DSR
    elsif system_up9600 = 1 then 
    -- UART UP9600
    -- https://www.pagetable.com/?p=1656

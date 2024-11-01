@@ -8,10 +8,10 @@ This has been tested on Windows 11. It should work on older versions too.
 
 Software needed:
 
-  - [Gowin V1.9.9.03](https://www.gowinsemi.com/en/support/home/) **to synthesize the core**
+  - [Gowin V1.9.10.03](https://www.gowinsemi.com/en/support/home/) **to synthesize the core**
   - [BouffaloLabDevCube](https://dev.bouffalolab.com/download) **to flash the BL616**
   - [Latest release](https://github.com/vossstef/tang_nano_20k_c64/releases/latest) of C64Nano **FPGA** bitstream
-  - [Latest release](https://github.com/harbaum/MiSTeryNano/releases/latest) of MiSTeryNano **BL616 µC firmware** (if not otherwise stated in the release note.)
+  - [Latest release](http://github.com/harbaum/FPGA-Companion) of FPGA-Companion **BL616 µC firmware** (if not otherwise stated in the release note.)
 
 In order to use the SD card for disks:
 
@@ -96,11 +96,11 @@ These DOS for the c1541 emulation can later be selected from the on-screen-displ
 **shell / command line Programming alternative**
 
 Windows shell and Gowin Programmer<br>
-```programmer_cli  -r 36 --fsFile tang_nano_20k_c64.fs --spiaddr 0x000000 --cable-index 1 --d GW2ANR-18C```<br>
+```programmer_cli  -r 36 --fsFile tang_nano_20k_c64.fs --spiaddr 0x000000 --cable-index 1 --d GW2AR-18C```<br>
 ```programmer_cli  -r 36 --fsFile tang_nano_20k_c64_25k.fs --spiaddr 0x000000 --cable-index 1 --d GW5A-25A```<br>
 ```programmer_cli  -r 36 --fsFile tang_nano_20k_c64_138k.fs --spiaddr 0x000000 --cable-index 1 --d GW5AST-138B```<br>
 
-```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW2ANR-18C```<br>
+```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW2AR-18C```<br>
 ```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW5A-25A```<br>
 ```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0xA00000 --cable-index 1 --d GW5AST-138B```<br><br>
 Linux shell and [openFPGAloader](https://github.com/trabucayre/openFPGALoader).<br>
