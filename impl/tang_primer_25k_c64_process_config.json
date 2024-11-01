@@ -32,6 +32,8 @@
  "HOTBOOT" : false,
  "I2C" : true,
  "I2C_SLAVE_ADDR" : "00",
+ "INCREMENTAL_PLACE_AND_ROUTING" : "0",
+ "INCREMENTAL_PLACE_ONLY" : "0",
  "IncludePath" : [
 
  ],

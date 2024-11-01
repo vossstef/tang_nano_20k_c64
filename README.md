@@ -61,7 +61,7 @@ The installation of C64 Nano on the Tang Nano 20k board can be done using a Linu
 [(Instruction)](INSTALLATION_WINDOWS.md).<br>
 
 ## c64 Nano on Tang Primer 25K
-See [Tang Primer 25K](TANG_PRIMER_25K.md)
+See [Tang Primer 25K](TANG_PRIMER_25K.md). PMOD TF-CARD V2 is required !
 
 ## c64 Nano on Tang Mega 138k Pro
 See [Tang Mega 138K](TANG_MEGA_138K.md)
