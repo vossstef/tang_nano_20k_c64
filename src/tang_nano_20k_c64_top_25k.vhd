@@ -15,8 +15,9 @@ use IEEE.numeric_std.ALL;
 entity tang_nano_20k_c64_top_25k is
   generic
   (
-   DUAL  : integer := 1 -- 0:no, 1:yes dual SID build option
-  );
+   DUAL  : integer := 1; -- 0:no, 1:yes dual SID build option
+   MIDI  : integer := 1 -- 0:no, 1:yes optional MIDI Interface
+   );
   port
   (
     clk         : in std_logic;
@@ -279,11 +280,11 @@ signal frz_vs          : std_logic;
 signal hbl_out         : std_logic; 
 signal vbl_out         : std_logic;
 signal midi_data       : std_logic_vector(7 downto 0) := (others =>'0');
-signal midi_oe         : std_logic;
+signal midi_oe         : std_logic := '0';
 signal midi_irq_n      : std_logic := '1';
-signal midi_nmi_n      : std_logic;
+signal midi_nmi_n      : std_logic := '1';
 signal midi_rx         : std_logic;
-signal midi_tx         : std_logic;
+signal midi_tx         : std_logic := 'Z';
 signal st_midi         : std_logic_vector(2 downto 0);
 signal phi             : std_logic;
 signal joystick_cs_i   : std_logic;
@@ -496,8 +497,10 @@ process(clk32, pll_locked)
   if pll_locked = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
-    disk_g64_d <= '0';
-    elsif rising_edge(clk32) then
+    sd_img_size_d <= (others => '0');
+    disk_chg_trg_d <= '0';
+    img_present <= '0';
+  elsif rising_edge(clk32) then
       sd_img_mounted_d <= sd_img_mounted(0);
       disk_chg_trg_d <= disk_chg_trg;
       disk_g64_d <= disk_g64;
@@ -508,24 +511,25 @@ process(clk32, pll_locked)
 
       if sd_img_mounted_d = '0' and sd_img_mounted(0) = '1' then
         sd_img_size_d <= sd_img_size;
-      else 
-        sd_img_size_d <= (others => '0'); 
       end if;
 
-      if (sd_img_mounted(0) /= sd_img_mounted_d) or (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
+      if (sd_img_mounted(0) /= sd_img_mounted_d) or
+         (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
           sd_change  <= '1';
           else
           sd_change  <= '0';
+      end if;
+
       if sd_img_size_d >= 333744 then  -- g64 disk selected
         disk_g64 <= '1';
       else
         disk_g64 <= '0';
       end if;
+
       if (disk_g64 /= disk_g64_d) then
         c1541_reset  <= '1'; -- reset needed after G64 change
-        else
+      else
         c1541_reset  <= '0';
-        end if;
       end if;
   end if;
 end process;
@@ -622,8 +626,6 @@ generic map (
     outaddr         => sd_byte_index,     -- outaddr from 0 to 511, because the sector size is 512
     outbyte         => sd_rd_data         -- a byte of sector content
 );
-
-freeze <= '0';
 
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
 
@@ -788,8 +790,8 @@ leds(0) <= led1541;
 leds(1) <= system_leds(0); 
 
 -- 4 3 2 1 0 digital c64
-joyDS2     <=    (others => '0');
-joyDigital <=    (others => '0');
+joyDS2     <= (others => '0');
+joyDigital <= (others => '0');
 joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3);
 joyUsb2    <= joystick2(6 downto 4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3);
 joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
@@ -800,7 +802,7 @@ joyUsb1A   <= "00" & '0' & joystick1(5) & joystick1(4) & "00"; -- Y,X button
 joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 
 -- send external DB9 joystick port to µC
-db9_joy <= "000000";
+db9_joy <= (others => '0');
 
 process(clk32)
 begin
@@ -1067,7 +1069,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   clk32        => clk32,
   reset_n      => reset_n and pll_locked and ram_ready,
   bios         => "00",
-  pause        => freeze,
+  pause        => '0',
   pause_out    => c64_pause,
   -- keyboard interface
   keyboard_matrix_out => keyboard_matrix_out,
@@ -1288,6 +1290,8 @@ port map
     nmi_ack     => nmi_ack
   );
 
+
+yes_midi: if MIDI /= 0 generate
   midi_inst : entity work.c64_midi
   port map (
     clk32   => clk32,
@@ -1306,6 +1310,7 @@ port map
     RX      => midi_rx,
     TX      => midi_tx
   );
+end generate;
 
 crt_inst : entity work.loader_sd_card
 port map (
@@ -1504,7 +1509,7 @@ begin
     end if;
 end process;
 
-por <= system_reset(0) or detach or not pll_locked;
+por <= system_reset(0) or detach or not pll_locked or not ram_ready;
 
 process(clk32, por)
 variable reset_counter : integer;
@@ -1632,56 +1637,55 @@ begin
   uart_tx <= '1';
   flag2_n_i <= '1';
   if ext_en = '1' and disk_access = '1' then
-   -- c1541 parallel bus
-   drive_par_i <= pb_o;
-   drive_stb_i <= pc2_n_o;
-   pb_i <= drive_par_o;
-   flag2_n_i <= drive_stb_o;
- elsif system_up9600 = 0 then
-   -- UART 
-   -- https://www.pagetable.com/?p=1656
-   -- FLAG2 RXD
-   -- PB0 RXD in
-   -- PB1 RTS out
-   -- PB2 DTR out
-   -- PB3 RI in
-   -- PB4 DCD in
-   -- PB5
-   -- PB6 CTS in
-   -- PB7 DSR in
-   -- PA2 TXD out
-   uart_tx <= pa2_o;
-   flag2_n_i <= uart_rx_filtered;
-   pb_i(0) <= uart_rx_filtered;
-   -- Zeromodem
-   --pb_i(6) <= pb_o(1);  -- RTS > CTS
-   --pb_i(4) <= pb_o(2);  -- DTR > DCD
-   --pb_i(7) <= pb_o(2);  -- DTR > DSR
-   elsif system_up9600 = 1 then 
-   -- UART UP9600
-   -- https://www.pagetable.com/?p=1656
-   -- SP1 TXD
-   -- PA2 TXD
-   -- PB0 RXD
-   -- SP2 RXD
-   -- FLAG2 RXD
-   -- PB7 to CNT2 
-   pb_i(7) <= cnt2_o;
-   cnt2_i <= pb_o(7);
-   uart_tx <= pa2_o and sp1_o;
-   sp2_i <= uart_rx_filtered;
-   flag2_n_i <= uart_rx_filtered;
-   pb_i(0) <= uart_rx_filtered;
-   -- Zeromodem
-   --pb_i(6) <= pb_o(1);  -- RTS > CTS
-   --pb_i(4) <= pb_o(2);  -- DTR > DCD
-  elsif system_up9600 = 2 then
-    uart_tx <= '1';
-  elsif system_up9600 = 3 then
-    uart_tx <= '1';
+    -- c1541 parallel bus
+    drive_par_i <= pb_o;
+    drive_stb_i <= pc2_n_o;
+    pb_i <= drive_par_o;
+    flag2_n_i <= drive_stb_o;
+  else
+    if system_up9600 = 0 then
+      -- UART 
+      -- https://www.pagetable.com/?p=1656
+      -- FLAG2 RXD
+      -- PB0 RXD in
+      -- PB1 RTS out
+      -- PB2 DTR out
+      -- PB3 RI in
+      -- PB4 DCD in
+      -- PB5
+      -- PB6 CTS in
+      -- PB7 DSR in
+      -- PA2 TXD out
+      uart_tx <= pa2_o;
+      flag2_n_i <= uart_rx_filtered;
+      pb_i(0) <= uart_rx_filtered;
+      -- Zeromodem
+      pb_i(6) <= not pb_o(1);  -- RTS > CTS
+      pb_i(4) <= not pb_o(2);  -- DTR > DCD
+      pb_i(7) <= not pb_o(2);  -- DTR > DSR
+    elsif system_up9600 = 1 then 
+      -- UART UP9600
+      -- https://www.pagetable.com/?p=1656
+      -- SP1 TXD
+      -- PA2 TXD
+      -- PB0 RXD
+      -- SP2 RXD
+      -- FLAG2 RXD
+      -- PB7 to CNT2 
+      pb_i(7) <= cnt2_o;
+      cnt2_i <= pb_o(7);
+      uart_tx <= pa2_o and sp1_o;
+      sp2_i <= uart_rx_filtered;
+      flag2_n_i <= uart_rx_filtered;
+      pb_i(0) <= uart_rx_filtered;
+    elsif system_up9600 = 2 then
+      uart_tx <= '1';
+    elsif system_up9600 = 3 then
+      uart_tx <= '1';
     elsif system_up9600 = 4 then
-    uart_tx <= '1';
+      uart_tx <= '1';
     end if;
+  end if;
 end process;
 
 end Behavioral_top;

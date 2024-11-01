@@ -322,7 +322,7 @@ signal key_left        : std_logic;
 signal key_right       : std_logic;
 signal key_start       : std_logic;
 signal key_select      : std_logic;
-signal IDSEL           : std_logic_vector(5 downto 0) := "111101"; -- PAL;
+signal IDSEL           : std_logic_vector(5 downto 0) := "111101";
 signal FBDSEL          : std_logic_vector(5 downto 0) := "011101";
 signal ntscModeD       : std_logic;
 signal ntscModeD1      : std_logic;
@@ -607,13 +607,15 @@ end process;
 disk_reset <= c1541_osd_reset or not reset_n or c1541_reset or not flash_lock;
 
 -- rising edge sd_change triggers detection of new disk
-process(clk32, pll_locked)
+process(clk32, pll_locked_hid)
   begin
-  if pll_locked = '0' then
+  if pll_locked_hid = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
-    disk_g64_d <= '0';
-    elsif rising_edge(clk32) then
+    sd_img_size_d <= (others => '0');
+    disk_chg_trg_d <= '0';
+    img_present <= '0';
+  elsif rising_edge(clk32) then
       sd_img_mounted_d <= sd_img_mounted(0);
       disk_chg_trg_d <= disk_chg_trg;
       disk_g64_d <= disk_g64;
@@ -624,24 +626,25 @@ process(clk32, pll_locked)
 
       if sd_img_mounted_d = '0' and sd_img_mounted(0) = '1' then
         sd_img_size_d <= sd_img_size;
-      else 
-        sd_img_size_d <= (others => '0'); 
       end if;
 
-      if (sd_img_mounted(0) /= sd_img_mounted_d) or (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
+      if (sd_img_mounted(0) /= sd_img_mounted_d) or
+         (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
           sd_change  <= '1';
           else
           sd_change  <= '0';
+      end if;
+
       if sd_img_size_d >= 333744 then  -- g64 disk selected
         disk_g64 <= '1';
       else
         disk_g64 <= '0';
       end if;
+
       if (disk_g64 /= disk_g64_d) then
         c1541_reset  <= '1'; -- reset needed after G64 change
-        else
+      else
         c1541_reset  <= '0';
-        end if;
       end if;
   end if;
 end process;
@@ -1864,56 +1867,55 @@ begin
   uart_tx <= '1';
   flag2_n_i <= '1';
   if ext_en = '1' and disk_access = '1' then
-   -- c1541 parallel bus
-   drive_par_i <= pb_o;
-   drive_stb_i <= pc2_n_o;
-   pb_i <= drive_par_o;
-   flag2_n_i <= drive_stb_o;
- elsif system_up9600 = 0 then
-   -- UART 
-   -- https://www.pagetable.com/?p=1656
-   -- FLAG2 RXD
-   -- PB0 RXD in
-   -- PB1 RTS out
-   -- PB2 DTR out
-   -- PB3 RI in
-   -- PB4 DCD in
-   -- PB5
-   -- PB6 CTS in
-   -- PB7 DSR in
-   -- PA2 TXD out
-   uart_tx <= pa2_o;
-   flag2_n_i <= uart_rx_filtered;
-   pb_i(0) <= uart_rx_filtered;
-   -- Zeromodem
-     --pb_i(6) <= not pb_o(1);  -- RTS > CTS
-     --pb_i(4) <= not pb_o(2);  -- DTR > DCD
-     --pb_i(7) <= not pb_o(2);  -- DTR > DSR
-   elsif system_up9600 = 1 then 
-   -- UART UP9600
-   -- https://www.pagetable.com/?p=1656
-   -- SP1 TXD
-   -- PA2 TXD
-   -- PB0 RXD
-   -- SP2 RXD
-   -- FLAG2 RXD
-   -- PB7 to CNT2 
-   pb_i(7) <= cnt2_o;
-   cnt2_i <= pb_o(7);
-   uart_tx <= pa2_o and sp1_o;
-   sp2_i <= uart_rx_filtered;
-   flag2_n_i <= uart_rx_filtered;
-   pb_i(0) <= uart_rx_filtered;
-   -- Zeromodem
-   --pb_i(6) <= pb_o(1);  -- RTS > CTS
-   --pb_i(4) <= pb_o(2);  -- DTR > DCD
-  elsif system_up9600 = 2 then
-    uart_tx <= '1';
-  elsif system_up9600 = 3 then
-    uart_tx <= '1';
+    -- c1541 parallel bus
+    drive_par_i <= pb_o;
+    drive_stb_i <= pc2_n_o;
+    pb_i <= drive_par_o;
+    flag2_n_i <= drive_stb_o;
+  else
+    if system_up9600 = 0 then
+      -- UART 
+      -- https://www.pagetable.com/?p=1656
+      -- FLAG2 RXD
+      -- PB0 RXD in
+      -- PB1 RTS out
+      -- PB2 DTR out
+      -- PB3 RI in
+      -- PB4 DCD in
+      -- PB5
+      -- PB6 CTS in
+      -- PB7 DSR in
+      -- PA2 TXD out
+      uart_tx <= pa2_o;
+      flag2_n_i <= uart_rx_filtered;
+      pb_i(0) <= uart_rx_filtered;
+      -- Zeromodem
+      pb_i(6) <= not pb_o(1);  -- RTS > CTS
+      pb_i(4) <= not pb_o(2);  -- DTR > DCD
+      pb_i(7) <= not pb_o(2);  -- DTR > DSR
+    elsif system_up9600 = 1 then 
+      -- UART UP9600
+      -- https://www.pagetable.com/?p=1656
+      -- SP1 TXD
+      -- PA2 TXD
+      -- PB0 RXD
+      -- SP2 RXD
+      -- FLAG2 RXD
+      -- PB7 to CNT2 
+      pb_i(7) <= cnt2_o;
+      cnt2_i <= pb_o(7);
+      uart_tx <= pa2_o and sp1_o;
+      sp2_i <= uart_rx_filtered;
+      flag2_n_i <= uart_rx_filtered;
+      pb_i(0) <= uart_rx_filtered;
+    elsif system_up9600 = 2 then
+      uart_tx <= '1';
+    elsif system_up9600 = 3 then
+      uart_tx <= '1';
     elsif system_up9600 = 4 then
-    uart_tx <= '1';
+      uart_tx <= '1';
     end if;
+  end if;
 end process;
 
 end Behavioral_top;
