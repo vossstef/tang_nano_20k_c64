@@ -32,6 +32,8 @@
  "HOTBOOT" : false,
  "I2C" : false,
  "I2C_SLAVE_ADDR" : "00",
+ "INCREMENTAL_PLACE_AND_ROUTING" : "0",
+ "INCREMENTAL_PLACE_ONLY" : "0",
  "IncludePath" : [
 
  ],
@@ -67,7 +69,7 @@
  "Route_Option" : "0",
  "Run_Timing_Driven" : true,
  "SECURE_MODE" : false,
- "SECURITY_BIT" : false,
+ "SECURITY_BIT" : true,
  "SEU_HANDLER" : false,
  "SEU_HANDLER_CHECKSUM" : false,
  "SEU_HANDLER_MODE" : "auto",

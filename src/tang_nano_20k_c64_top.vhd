@@ -15,8 +15,9 @@ use IEEE.numeric_std.ALL;
 entity tang_nano_20k_c64_top is
   generic
   (
-   DUAL  : integer := 1 -- 0:no, 1:yes dual SID build option
-  );
+   DUAL  : integer := 1; -- 0:no, 1:yes dual SID build option
+   MIDI  : integer := 1 -- 0:no, 1:yes optional MIDI Interface
+   );
   port
   (
     clk         : in std_logic;
@@ -291,11 +292,11 @@ signal frz_vs          : std_logic;
 signal hbl_out         : std_logic; 
 signal vbl_out         : std_logic;
 signal midi_data       : std_logic_vector(7 downto 0) := (others =>'0');
-signal midi_oe         : std_logic;
+signal midi_oe         : std_logic := '0';
 signal midi_irq_n      : std_logic := '1';
-signal midi_nmi_n      : std_logic;
+signal midi_nmi_n      : std_logic := '1';
 signal midi_rx         : std_logic;
-signal midi_tx         : std_logic;
+signal midi_tx         : std_logic := 'Z';
 signal st_midi         : std_logic_vector(2 downto 0);
 signal phi             : std_logic;
 signal joystick_cs_i   : std_logic;
@@ -576,24 +577,13 @@ gamepad: entity work.dualshock2
     debug2        => open
     );
 
-  led_ws2812: entity work.ws2812
-  generic map (
-    clk_freq => 31500000,
-    fps => 5,
-    used_led  => 1,
-    independent_led_ctrl => "false"
-  )
-  port map (
-    sys_clk     => clk32,
-    rst_n       => pll_locked,
-    do          => ws2812,
-    pixel_addr  => x"00",
-    pixel_Red   => ws2812_color(15 downto 8),
-    pixel_Green => ws2812_color(7 downto 0),
-    pixel_Blue  => ws2812_color(23 downto 16),
-    pixel_valid => '1',
-    te          => open
-  );
+    led_ws2812: entity work.ws2812
+    port map
+    (
+     clk    => clk32,
+     color  => ws2812_color,
+     data   => ws2812
+    );
 
 	process(clk32, disk_reset)
     variable reset_cnt : integer range 0 to 2147483647;
@@ -661,7 +651,7 @@ port map
  (
     clk32         => clk32,
     reset         => disk_reset,
-    pause         => loader_busy,
+    pause         => c64_pause or loader_busy,
     ce            => '0',
 
     disk_num      => (others =>'0'),
@@ -1304,7 +1294,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
   clk32        => clk32,
-  reset_n      => reset_n,
+  reset_n      => reset_n and pll_locked and ram_ready,
   bios         => "00",
   pause        => '0',
   pause_out    => c64_pause,
@@ -1527,6 +1517,8 @@ port map
     nmi_ack     => nmi_ack
   );
 
+
+yes_midi: if MIDI /= 0 generate
   midi_inst : entity work.c64_midi
   port map (
     clk32   => clk32,
@@ -1545,6 +1537,7 @@ port map
     RX      => midi_rx,
     TX      => midi_tx
   );
+end generate;
 
 crt_inst : entity work.loader_sd_card
 port map (
@@ -1893,9 +1886,9 @@ begin
    flag2_n_i <= uart_rx_filtered;
    pb_i(0) <= uart_rx_filtered;
    -- Zeromodem
-   --pb_i(6) <= pb_o(1);  -- RTS > CTS
-   --pb_i(4) <= pb_o(2);  -- DTR > DCD
-   --pb_i(7) <= pb_o(2);  -- DTR > DSR
+     pb_i(6) <= not pb_o(1);  -- RTS > CTS
+     pb_i(4) <= not pb_o(2);  -- DTR > DCD
+     pb_i(7) <= not pb_o(2);  -- DTR > DSR
    elsif system_up9600 = 1 then 
    -- UART UP9600
    -- https://www.pagetable.com/?p=1656
