@@ -79,19 +79,14 @@ type states is (
 
 signal state          : states := FSM_RESET;
 signal clk64          : std_logic;
-signal clk64pll       : std_logic;
-signal clk64switched  : std_logic;
 signal clk32          : std_logic;
-signal clk32_hid       : std_logic;
 signal pll_locked     : std_logic;
 signal pll_locked_hid : std_logic;
 signal clk_pixel_x10  : std_logic;
 signal clk_pixel_x5   : std_logic;
 attribute syn_keep : integer;
 attribute syn_keep of clk64         : signal is 1;
-attribute syn_keep of clk64pll      : signal is 1;
 attribute syn_keep of clk32         : signal is 1;
-attribute syn_keep of clk32_hid      : signal is 1;
 attribute syn_keep of clk_pixel_x10 : signal is 1;
 attribute syn_keep of clk_pixel_x5  : signal is 1;
 attribute syn_keep of m0s           : signal is 1;
@@ -443,7 +438,6 @@ signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
 signal coldboot        : std_logic;
-signal clksel          : std_logic_vector(3 downto 0) := "0010";
 signal pll_locked_i    : std_logic;
 signal pll_locked_d    : std_logic;
 signal pll_locked_d1   : std_logic;
@@ -512,22 +506,6 @@ component rPLL
     );
 end component;
 
-COMPONENT DCS
-    GENERIC (
-		DCS_MODE : string := "RISING"
-    --CLK0,CLK1,CLK2,CLK3,GND,VCC,RISING,FALLING,CLK0_GND,CLK0_VCC,CLK1_GND,CLK1_VCC,CLK2_GND,CLK2_VCC,CLK3_GND,CLK3_VCC
-	);
-	PORT (
-		CLK0 : IN std_logic;
-		CLK1 : IN std_logic;
-		CLK2 : IN std_logic;
-		CLK3 : IN std_logic;
-		CLKSEL : IN std_logic_vector(3 downto 0);
-		SELFORCE : IN std_logic;
-		CLKOUT : OUT std_logic
-	);
-end COMPONENT;
-
 begin
   spi_io_din  <= m0s(1);
   spi_io_ss   <= m0s(2);
@@ -590,7 +568,7 @@ gamepad: entity work.dualshock2
     begin
 		if disk_reset = '1' then
       disk_chg_trg <= '0';
-			reset_cnt := 64000000;
+			reset_cnt := 14000000;
       elsif rising_edge(clk32) then
 			if reset_cnt /= 0 then
 				reset_cnt := reset_cnt - 1;
@@ -706,7 +684,7 @@ generic map (
   )
     port map (
     rstn            => pll_locked_hid, 
-    clk             => clk32_hid,
+    clk             => clk32,
   
     -- SD card signals
     sdclk           => sd_clk,
@@ -839,7 +817,6 @@ begin
     else
     case state is
         when FSM_RESET => 
-          clksel <= "0010"; -- select back-up clock
           pll_locked_hid <= '0';
           IDSEL <= "111101"; -- PAL
           FBDSEL <= "011101";
@@ -847,17 +824,14 @@ begin
         when FSM_WAIT_LOCK =>
           if pll_locked_d1 = '1' and pll_locked_d = '1' then
               state <= FSM_LOCKED;
-              clksel <= "0001";  -- select CLK1
           end if;
         when FSM_LOCKED =>
           pll_locked_hid <= '1';
           state <= FSM_WAIT4SWITCH;
         when FSM_WAIT4SWITCH =>
           if ntscModeD2 = '0' and ntscModeD1 = '1' then -- rising edge  NTSC
-              clksel <= "0010"; -- select CLK2 as back-up
               state <= FSM_NTSC;
           elsif ntscModeD2 = '1' and ntscModeD1 = '0' then -- falling edge PAL
-              clksel <= "0010"; -- select CLK2 as back-up
               state <= FSM_PAL;
           end if;
         when FSM_NTSC =>
@@ -877,20 +851,6 @@ begin
 	end if;
 end process;
 
-dcs_inst: DCS
-	generic map (
-		DCS_MODE => "RISING"
-	--CLK0,CLK1,CLK2,CLK3,GND,VCC,RISING,FALLING,CLK0_GND,CLK0_VCC,CLK1_GND,CLK1_VCC,CLK2_GND,CLK2_VCC,CLK3_GND,CLK3_VCC
-	)
-	port map (
-		CLK0     => clk64, -- main pll incl video
-		CLK1     => flash_clk, -- back-up clock
-		CLK2     => '0',
-		CLK3     => '0',
-		CLKSEL   => clksel,
-		SELFORCE => '0', -- glitch less mode
-		CLKOUT   => clk64switched -- switched clock
-	);
 
 mainclock: rPLL
         generic map (
@@ -956,18 +916,6 @@ port map(
     CLKOUT => clk32,
     HCLKIN => clk64,
     RESETN => pll_locked,
-    CALIB  => '0'
-);
-
-div3_inst: CLKDIV
-generic map(
-  DIV_MODE => "2",
-  GSREN    => "false"
-)
-port map(
-    CLKOUT => clk32_hid,
-    HCLKIN => clk64switched,
-    RESETN => '1',
     CALIB  => '0'
 );
 
@@ -1152,7 +1100,7 @@ end process;
 
 mcu_spi_inst: entity work.mcu_spi 
 port map (
-  clk            => clk32_hid,
+  clk            => clk32,
   reset          => not pll_locked_hid,
   -- SPI interface to BL616 MCU
   spi_io_ss      => spi_io_ss,      -- SPI CSn
@@ -1176,7 +1124,7 @@ port map (
 hid_inst: entity work.hid
  port map 
  (
-  clk             => clk32_hid,
+  clk             => clk32,
   reset           => not pll_locked_hid,
   -- interface to receive user data from MCU (mouse, kbd, ...)
   data_in_strobe  => mcu_hid_strobe,
@@ -1213,7 +1161,7 @@ hid_inst: entity work.hid
  module_inst: entity work.sysctrl 
  port map 
  (
-  clk                 => clk32_hid,
+  clk                 => clk32,
   reset               => not pll_locked_hid,
 --
   data_in_strobe      => mcu_sys_strobe,
@@ -1872,8 +1820,8 @@ begin
     drive_stb_i <= pc2_n_o;
     pb_i <= drive_par_o;
     flag2_n_i <= drive_stb_o;
-  else
-    if system_up9600 = 0 then
+  elsif (system_up9600(0) = '0' and disk_access = '0')
+     or (system_up9600(0) = '0' and ext_en = '0') then
       -- UART 
       -- https://www.pagetable.com/?p=1656
       -- FLAG2 RXD
@@ -1893,7 +1841,8 @@ begin
       pb_i(6) <= not pb_o(1);  -- RTS > CTS
       pb_i(4) <= not pb_o(2);  -- DTR > DCD
       pb_i(7) <= not pb_o(2);  -- DTR > DSR
-    elsif system_up9600 = 1 then 
+    elsif (system_up9600(0) = '1' and disk_access = '0')
+       or (system_up9600(0) = '1' and ext_en = '0') then
       -- UART UP9600
       -- https://www.pagetable.com/?p=1656
       -- SP1 TXD
@@ -1903,18 +1852,13 @@ begin
       -- FLAG2 RXD
       -- PB7 to CNT2 
       pb_i(7) <= cnt2_o;
+      -- pb_i(6) <= not pb_o(1);  -- RTS > CTS
+      -- pb_i(4) <= not pb_o(2);  -- DTR > DCD
       cnt2_i <= pb_o(7);
       uart_tx <= pa2_o and sp1_o;
       sp2_i <= uart_rx_filtered;
       flag2_n_i <= uart_rx_filtered;
       pb_i(0) <= uart_rx_filtered;
-    elsif system_up9600 = 2 then
-      uart_tx <= '1';
-    elsif system_up9600 = 3 then
-      uart_tx <= '1';
-    elsif system_up9600 = 4 then
-      uart_tx <= '1';
-    end if;
   end if;
 end process;
 
