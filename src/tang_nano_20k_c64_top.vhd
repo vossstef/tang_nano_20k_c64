@@ -568,7 +568,7 @@ gamepad: entity work.dualshock2
     begin
 		if disk_reset = '1' then
       disk_chg_trg <= '0';
-			reset_cnt := 14000000;
+      reset_cnt := 64000000;
       elsif rising_edge(clk32) then
 			if reset_cnt /= 0 then
 				reset_cnt := reset_cnt - 1;
