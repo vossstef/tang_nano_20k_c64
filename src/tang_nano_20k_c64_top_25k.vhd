@@ -1631,7 +1631,7 @@ begin
   pa2_i <= pa2_o;
   cnt2_i <= '1';
   sp2_i <= '1';
-  pb_i <= pb_o;
+  pb_i <= (others => '1');
   drive_par_i <= (others => '1');
   drive_stb_i <= '1';
   uart_tx <= '1';
@@ -1642,8 +1642,7 @@ begin
     drive_stb_i <= pc2_n_o;
     pb_i <= drive_par_o;
     flag2_n_i <= drive_stb_o;
-  else
-    if system_up9600 = 0 then
+  elsif system_up9600(0) = '0' and (disk_access = '0' or ext_en = '0') then
       -- UART 
       -- https://www.pagetable.com/?p=1656
       -- FLAG2 RXD
@@ -1663,7 +1662,7 @@ begin
       pb_i(6) <= not pb_o(1);  -- RTS > CTS
       pb_i(4) <= not pb_o(2);  -- DTR > DCD
       pb_i(7) <= not pb_o(2);  -- DTR > DSR
-    elsif system_up9600 = 1 then 
+    elsif system_up9600(0) = '1' and (disk_access = '0' or ext_en = '0') then
       -- UART UP9600
       -- https://www.pagetable.com/?p=1656
       -- SP1 TXD
@@ -1673,18 +1672,13 @@ begin
       -- FLAG2 RXD
       -- PB7 to CNT2 
       pb_i(7) <= cnt2_o;
+      -- pb_i(6) <= not pb_o(1);  -- RTS > CTS
+      -- pb_i(4) <= not pb_o(2);  -- DTR > DCD
       cnt2_i <= pb_o(7);
       uart_tx <= pa2_o and sp1_o;
       sp2_i <= uart_rx_filtered;
       flag2_n_i <= uart_rx_filtered;
       pb_i(0) <= uart_rx_filtered;
-    elsif system_up9600 = 2 then
-      uart_tx <= '1';
-    elsif system_up9600 = 3 then
-      uart_tx <= '1';
-    elsif system_up9600 = 4 then
-      uart_tx <= '1';
-    end if;
   end if;
 end process;
 
