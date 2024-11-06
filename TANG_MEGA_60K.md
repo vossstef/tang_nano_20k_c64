@@ -10,7 +10,9 @@ DDR3-SDRAM, it also comes with a slot for the [Tang
 SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM). Using this board allows to use the same SDR-SDRAM memory access methods.<br> The capacitors on my TANG_SDRAM are a bit too lange and touching the 60k SOM plug module. Use duct tape to cover the capacitors avoiding shortcuts.
 
 The M0S required to control the C64 Nano is to be mounted in the
-right PMOD close to the HDMI connector with the help of the [M0S PMOD adapter](board/m0s_pmod).
+**right PMOD** close to the HDMI connector with the help of the [M0S PMOD adapter](board/m0s_pmod).
+
+Plug the optional Dualshock [DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2) Interface into the **edge PMOD** slot.<br>
 
 The whole setup will look like this:
 

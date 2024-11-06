@@ -79,12 +79,15 @@ set_option -use_sspi_as_gpio 1
 set_option -use_done_as_gpio 1
 set_option -use_cpu_as_gpio 1
 set_option -use_ready_as_gpio 1
-set_option -print_all_synthesis_warning 1
-set_option -show_all_warn 0
+set_option -use_sspi_as_gpio 1
+set_option -use_i2c_as_gpio 1
+set_option -print_all_synthesis_warning 0
+set_option -show_all_warn 1
 set_option -rw_check_on_ram 0
 set_option -user_code 00000001
-
-# missing VCCX 1.8 !!!!
+set_option -bit_compress 1
+set_option -vccx 1.8
+set_option -vcc 0.9
 
 #run syn
 run all

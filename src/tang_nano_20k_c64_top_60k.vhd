@@ -911,7 +911,7 @@ begin
     if vsync = '1' then
       user_d <= user;
       numpad_d <= numpad;
-      if (user = '0' and user_d = '1') or
+      if (user = '1' and user_d = '0') or  -- polarity tm60k
          (numpad(7) = '1' and numpad_d(7) = '0') then
         joyswap <= not joyswap; -- toggle mode
         elsif system_joyswap = '1' then -- OSD fixed setting mode
