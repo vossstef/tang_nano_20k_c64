@@ -845,7 +845,7 @@ flashclock: entity work.Gowin_PLL_60k_flash
         clkin => clk
     );
 
-leds_n(1 downto 0) <=  not leds(1 downto 0);
+leds_n(1 downto 0) <= leds(1 downto 0);
 leds(0) <= led1541;
 
 --                    6   5  4  3  2  1  0
@@ -1297,7 +1297,7 @@ port map(
     resetn    => flash_lock,
     ready     => open,
     busy      => open,
-    address   => (X"A" & "000" & dos_sel & c1541rom_addr),
+    address   => (X"2" & "000" & dos_sel & c1541rom_addr),
     cs        => c1541rom_cs,
     dout      => c1541rom_data,
     mspi_cs   => mspi_cs,
