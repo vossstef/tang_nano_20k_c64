@@ -7,7 +7,7 @@ which some can be used in the area of retro computing as well.
 
 Although the Tang Mega 60K comes with a significant ammount of
 DDR3-SDRAM, it also comes with a slot for the [Tang
-SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM). Using this board allows to use the same SDR-SDRAM memory access methods.<br> The capacitors on my TANG_SDRAM are a bit too lange and touching the 60k SOM plug module. Use duct tape to cover the capacitors avoiding shortcuts.
+SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM). Using this board allows to use the same SDR-SDRAM memory access methods.<br> 
 
 The M0S required to control the C64 Nano is to be mounted in the
 **right PMOD** close to the HDMI connector with the help of the [M0S PMOD adapter](board/m0s_pmod).
@@ -25,6 +25,12 @@ On the software side the setup is very simuilar to the original Tang Nano 20K ba
 for the different FPGA of the Tang Primer using either the [TCL script with the GoWin command line interface](build_tm60k.tcl) or the
 [project file for the graphical GoWin IDE](tang_mega_60k_c64.gprj). The resulting bitstream is flashed to the TM60K as usual needing latest Gowin Programmer GUI 1.9.10.03 or newer.
 
-Since the Tang Mega 60K needs a bigger portion of the available flash
-memory space, the DOS ROMs need to be flashed to a different memory location
-on the TM60K.
+
+**HW modification**  
+[Tang SDRAM Module](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM) V1.2 modification to fit on the TM60k NEO dock.<br>
+The capacitors are a bit too lange and touching the 60k FPGA plug-module.  
+Use duct tape to cover the capacitors avoiding shortcuts or unsolder three that are blocking.  
+There is a also newer Version 1.3 of the TANG_SDRAM available (90° angle) that likely fit. 
+![parts](./.assets/sdram_mod.png)
+
+
