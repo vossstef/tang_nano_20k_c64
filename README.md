@@ -164,11 +164,13 @@ Enable REU, and load the PRG.<br>
 Playing around with [GEOS](https://en.wikipedia.org/wiki/GEOS_(8-bit_operating_system))<br>
 Enable REU, select c1541 CBM DOS ROM and load the PRG.<br>
 
-## Push Button utilization
-* S2 keep pressed during power-up for FLASH programming of FPGA bitstream<br>
+## Push Button / DIP Switch utilization
+* Nano 20k S2 keep pressed during power-up for FLASH programming of FPGA bitstream<br>
+* Mega 60k NEO ```SW1 ON``` ```SW6 ON``` + Press & Hold ```RECONFIG``` + Power the Board + connect USB programmer cable + release ```RECONFIG``` and perform programming.
 > [!CAUTION]
 A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
 * S1 swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.<br>
+
 
 ## OSD
 invoke by F12 keypress<br>
