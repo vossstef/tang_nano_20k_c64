@@ -88,17 +88,16 @@ IO_LOC "mspi_clk" L12;
 IO_PORT "mspi_clk" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
 // PMOD 0
-// DualShock 2 P0
-IO_LOC "joystick_clk" R18;
-IO_PORT "joystick_clk" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
-IO_LOC "joystick_miso" P16;
-IO_PORT "joystick_miso" PULL_MODE=UP IO_TYPE=LVCMOS33;
-IO_LOC "joystick_mosi" T21;
-IO_PORT "joystick_mosi" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
-IO_LOC "joystick_cs"  P19;
-IO_PORT "joystick_cs" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
-
-// Dualshock 2 P1
+// DualShock 2 P1
+IO_LOC "ds_clk" R18;
+IO_PORT "ds_clk" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
+IO_LOC "ds_miso" P16;
+IO_PORT "ds_miso" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "ds_mosi" T21;
+IO_PORT "ds_mosi" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
+IO_LOC "ds_cs"  P19;
+IO_PORT "ds_cs" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33;
+// Dualshock 2 P2
 IO_LOC "ds2_clk" T18;
 IO_PORT "ds2_clk" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 IO_LOC "ds2_miso" R17;
@@ -121,14 +120,18 @@ IO_PORT "m0s[3]" PULL_MODE=UP IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
 IO_LOC "m0s[4]" AA21; // IO14 IRQn 4
 IO_PORT "m0s[4]" PULL_MODE=UP IO_TYPE=LVCMOS33 BANK_VCCIO=3.3;
 //IO_LOC xyz "AA20"
-
-// UART ext pins
-// RX
+// UART ext RX
 IO_LOC  "io[6]"  AB20;
 IO_PORT "io[6]"   IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
-// TX
+// UART ext TX
 IO_LOC  "io[7]" AA19;
 IO_PORT "io[7]"   IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3;
+
+// MIDI
+IO_LOC "midi_rx" W11; // PCIe_RST (temporary)
+IO_PORT "midi_rx" PULL_MODE=UP IO_TYPE=LVCMOS15 BANK_VCCIO=1.5;
+IO_LOC "midi_tx" Y14 // testpoint located on the bottom side of the dock board.
+IO_PORT "midi_tx" IO_TYPE=LVCMOS15 PULL_MODE=NONE BANK_VCCIO=1.5;
 
 // SDRAM
 IO_LOC "IO_sdram_dq[0]" E14;

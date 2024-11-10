@@ -67,7 +67,7 @@ See [Tang Primer 25K](TANG_PRIMER_25K.md). PMOD TF-CARD V2 is required !
 See [Tang Mega 60K NEO](TANG_MEGA_60K.md)
 
 ## c64 Nano on Tang Mega 138k Pro
-See [Tang Mega 138K Pro](TANG_MEGA_138K.md)
+See [Tang Mega 138K Pro](TANG_MEGA_138Kpro.md)
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS 2.0.<br>
@@ -204,7 +204,7 @@ USB Joystick(s). OSD: **USB #1 Joy** or **USB #2 Joy** <br>
 Also [RII Mini Keyboard i8](http://www.riitek.com/product/220.html) left Multimedia Keys are active if **USB #1 Joy** selected. 
 
 or<br>
-Gamepad Stick as Joystick. OSD: **DualShock 2**
+Gamepad Stick as Joystick. OSD: **DS #1 Joy** or **DS #2 Joy**
 <br>left **stick digital** for Move and **square** , **cross**  and **circle** Button for 3 Trigger buttons  
 or following **Pad** controls:<br>
 | Buttons | - | - |
@@ -223,10 +223,10 @@ or Keyboard Numpad. OSD: **Numpad**<br>
 or Mouse. OSD: **Mouse**<br>
 USB Mouse as c1351 Mouse emulation.
 
-or Dualshock2 Gamepad as Paddle. OSD: **DualShock Paddle**<br>
+or Dualshock2 Gamepad as Paddle. OSD: **DS #1 Paddle** or **DS #2 Paddle**<br>
 Dualshock 2 Sticks in analog mode as VC-1312 Paddle emulation.<br>
 **square** , **cross**, **circle** and **triangle** used as 4 Trigger buttons<br>
-You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the **Joystick** mode again and set OSD: **DualShock 2**<br>
+You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the **Joystick** mode again and set OSD: **DS #1 Joy**<br>
 
 or USB Paddle. OSD: **USB #1 Padd** or **USB #2 Padd** <br>
 Left Stick in X / Y analog mode as VC-1312 Paddle emulation.<br>
@@ -327,7 +327,7 @@ and [PMOD DVI](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html
 and [PMOD TF-CARD V2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_TF-CARD)<br>
 and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)
- or ad hoc wiring + soldering.<br>
+or ad hoc wiring + soldering.<br>
 or [Sipeed Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)<br>
 and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
 and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)<br>

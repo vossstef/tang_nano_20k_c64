@@ -52,17 +52,18 @@ entity tang_nano_20k_c64_top_60k is
     O_sdram_ba      : out std_logic_vector(1 downto 0); -- two banks
     O_sdram_dqm     : out std_logic_vector(1 downto 0); -- 16/2
     -- Gamepad Dualshock P0
-    joystick_clk  : out std_logic;
-    joystick_mosi : out std_logic;
-    joystick_miso : inout std_logic; -- midi_out
-    joystick_cs   : inout std_logic; -- midi_in
+    ds_clk          : out std_logic;
+    ds_mosi         : out std_logic;
+    ds_miso         : in std_logic;
+    ds_cs           : out std_logic;
     -- Gamepad DualShock P1
     ds2_clk       : out std_logic;
     ds2_mosi      : out std_logic;
     ds2_miso      : in std_logic;
     ds2_cs        : out std_logic;
     -- MIDI
-
+    midi_rx       : in std_logic;
+    midi_tx       : out std_logic;
     -- spi flash interface
     mspi_cs       : out std_logic;
     mspi_clk      : out std_logic;
@@ -136,11 +137,11 @@ signal joyUsb2A     : std_logic_vector(6 downto 0);
 signal joyDigital   : std_logic_vector(6 downto 0);
 signal joyNumpad    : std_logic_vector(6 downto 0);
 signal joyMouse     : std_logic_vector(6 downto 0);
-signal joyDS2A_p0    : std_logic_vector(6 downto 0); 
-signal joyDS2A_p1 : std_logic_vector(6 downto 0); 
+signal joyDS2A_p0   : std_logic_vector(6 downto 0); 
+signal joyDS2A_p1   : std_logic_vector(6 downto 0); 
 signal numpad       : std_logic_vector(7 downto 0);
 signal numpad_d     : std_logic_vector(7 downto 0);
-signal joyDS2_p0       : std_logic_vector(6 downto 0);
+signal joyDS2_p0    : std_logic_vector(6 downto 0);
 signal joyDS2_p1    : std_logic_vector(6 downto 0);
 -- joystick interface
 signal joyA        : std_logic_vector(6 downto 0);
@@ -299,12 +300,8 @@ signal midi_data       : std_logic_vector(7 downto 0) := (others =>'0');
 signal midi_oe         : std_logic := '0';
 signal midi_irq_n      : std_logic := '1';
 signal midi_nmi_n      : std_logic := '1';
-signal midi_rx         : std_logic;
-signal midi_tx         : std_logic := 'Z';
 signal st_midi         : std_logic_vector(2 downto 0);
 signal phi             : std_logic;
-signal joystick_cs_i   : std_logic;
-signal joystick_miso_i : std_logic;
 signal frz_hbl         : std_logic;
 signal frz_vbl         : std_logic;
 signal system_pause    : std_logic;
@@ -501,24 +498,18 @@ begin
   spi_io_clk  <= m0s(3);
   m0s(0)      <= spi_io_dout;
 
--- mux overlapping DS2 and MIDI signals to IO pin
-joystick_cs     <= joystick_cs_i when st_midi = "000" else 'Z';
-midi_rx         <= joystick_cs when st_midi /= "000" else '1';
-joystick_miso   <= midi_tx when st_midi /= "000" else 'Z';
-joystick_miso_i <= joystick_miso when st_midi = "000" else '1';
-
 -- https://store.curiousinventor.com/guides/PS2/
 -- https://hackaday.io/project/170365-blueretro/log/186471-playstation-playstation-2-spi-interface
 
-gamepad_p0: entity work.dualshock2
+gamepad_p1: entity work.dualshock2
     port map (
     clk           => clk32,
     rst           => not reset_n,
     vsync         => vsync,
-    ds2_dat       => joystick_miso_i,
-    ds2_cmd       => joystick_mosi,
-    ds2_att       => joystick_cs_i,
-    ds2_clk       => joystick_clk,
+    ds2_dat       => ds_miso,
+    ds2_cmd       => ds_mosi,
+    ds2_att       => ds_cs,
+    ds2_clk       => ds_clk,
     ds2_ack       => '0',
     stick_lx      => paddle_1,
     stick_ly      => paddle_2,
@@ -544,7 +535,7 @@ gamepad_p0: entity work.dualshock2
     debug2        => open
     );
 
-gamepad_p1: entity work.dualshock2
+gamepad_p2: entity work.dualshock2
     port map (
     clk           => clk32,
     rst           => not reset_n,
@@ -1359,14 +1350,14 @@ port map(
 -- TM138k Winbond 25Q128BVEA
 -- TM60k  Winbond 25Q64JVIQ
 -- phase shift 135° TN, TP and 270° TM
--- offset in spi flash TN20K, TP25K $200000, TM138K $A00000
+-- offset in spi flash TN20K, TP25K $200000, TM138K $A00000, TM60k $700000
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
     resetn    => flash_lock,
     ready     => open,
     busy      => open,
-    address   => (X"2" & "000" & dos_sel & c1541rom_addr),
+    address   => (X"7" & "000" & dos_sel & c1541rom_addr),
     cs        => c1541rom_cs,
     dout      => c1541rom_data,
     mspi_cs   => mspi_cs,
