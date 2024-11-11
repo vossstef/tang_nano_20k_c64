@@ -38,7 +38,7 @@ There is no D9 digital Joystick interface PMOD Adapter known and adhoc wiring ne
 
 The whole setup will look like this:
 
-![MiSTeryNano on TM138K Pro](./.assets/m0s_pmod_tm138kpro.jpg)
+![MiSTeryNano on TM138K Pro](./.assets/ds2_m0s_pmod_tm138kpro.png)
 
 The firmware for the M0S Dock is the [same version as for the Tang
 Nano 20K](firmware/misterynano_fw/).
