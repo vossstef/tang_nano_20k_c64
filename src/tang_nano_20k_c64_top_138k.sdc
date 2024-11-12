@@ -1,3 +1,5 @@
+create_clock -name ds_clk -period 500.000 -waveform {0 250} [get_nets {gamepad_p1/clk_spi}] -add
+create_clock -name ds2_clk -period 500.000 -waveform {0 250} [get_nets {gamepad_p2/clk_spi}] -add
 create_clock -name flash_clk -period 15.595 -waveform {0 5} [get_nets {flash_clk}]
 create_clock -name clk -period 20 -waveform {0 5} [get_ports {clk}]
 create_clock -name clk32 -period 31.746 -waveform {0 5} [get_nets {clk32}]

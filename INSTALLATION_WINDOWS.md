@@ -88,10 +88,10 @@ These DOS for the c1541 emulation can later be selected from the on-screen-displ
 | Type | TN20k | TP25k | TM60k |TM138k |
 | FPGA bitstream            | 0x000000 | 0x000000 | 0x000000 | 0x000000 |ROM size |
 | reserved for Atari ST ROM | 0x100000 | 0x100000 | 0x100000 | 0x900000 | - |
-| c1541 Dolphin DOS 2       | 0x200000 | 0x200000 | 0x200000 | 0xA00000 |32k|
-| c1541 CBM DOS 2.6         | 0x20C000 | 0x20C000 | 0x20C000 | 0xA0C000 |16k|
-| c1541 Speed DOS Plus      | 0x214000 | 0x214000 | 0x214000 | 0xA14000 |16k|
-| c1541 Jiffy DOS           | 0x21C000 | 0x21C000 | 0x21C000 | 0xA1C000 |16k|
+| c1541 Dolphin DOS 2       | 0x200000 | 0x200000 | 0x700000 | 0xA00000 |32k|
+| c1541 CBM DOS 2.6         | 0x20C000 | 0x20C000 | 0x70C000 | 0xA0C000 |16k|
+| c1541 Speed DOS Plus      | 0x214000 | 0x214000 | 0x714000 | 0xA14000 |16k|
+| c1541 Jiffy DOS           | 0x21C000 | 0x21C000 | 0x71C000 | 0xA1C000 |16k|
 
 **shell / command line Programming alternative**
 
@@ -103,7 +103,7 @@ Windows shell and Gowin Programmer<br>
 
 ```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW2AR-18C```<br>
 ```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW5A-25A```<br>
-```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW5AT-60B```<br>
+```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x700000 --cable-index 1 --d GW5AT-60B```<br>
 ```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0xA00000 --cable-index 1 --d GW5AST-138B```<br><br>
 Linux shell and [openFPGAloader](https://github.com/trabucayre/openFPGALoader).<br>
 [Please read here if you run into trouble when using openFPGAloader under Linux](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-Doc/flash-in-linux.html).<br>
