@@ -14,6 +14,24 @@ The M0S required to control the C64 Nano is to be mounted in the
 
 Plug the optional Dualshock [DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2) Interface into the **edge PMOD** slot.<br>
 
+The **SDRAM 1** slot is allocated for a digital retro Joystick interface.  
+A 40 pole 2.54mm pinheader need to be soldered into the Meag 60k NEO.
+An 40 pole receptable to be used connecting the 7 signals to the D9 connector.
+> [!WARNING]
+> Joystick interface is 3.3V tolerant and therefore the Joystick 5V supply pin has to be left floating when no level shifters are in use!<br>
+
+|Bus|Signal    | D9   |40-pol| Name     |FPGA pin |
+| - |------    |------| ---- |----------| ------- |
+| 0 | Button 0 | 6    |  36  |SDRAM1_A10|  U17    |
+| 1 | Down     | 2    |  35  |SDRAM1_BA1|  U18    |
+| 2 | Up       | 1    |  10  |SDRAM1_D14|  V17    |
+| 3 | Right    | 4    |   9  |SDRAM1_D15|  W17    |
+| 4 | Left     | 3    |  32  |SDRAM1_RAS|  Y18    |
+| 5 |Button 1 X| 9    |  31  |SDRAM1_CAS|  Y19    |
+| - |POT Y     | 5    |  -   |          |  n.c.   |
+| - | GND      | -    |  12  |GND       |  GND    |
+| - | +5V      |!!! n.c.|11  |          |  n.c.   |
+
 The whole setup will look like this:
 
 ![MiSTeryNano on TM60K NEO](./.assets/mega60k.png)

@@ -26,15 +26,20 @@ The M0S required to control the C64 Nano is to be mounted in the
 
 The **right PMOD** slot is allocated for a digital retro Joystick interface.
 There is no D9 digital Joystick interface PMOD Adapter known and adhoc wiring needed.
+> [!WARNING]
+> Joystick interface is 3.3V tolerant and therefore the Joystick 5V supply pin has to be left floating when no level shifters are in use!<br>
 
-|Bus|Signal| D9  |Primer PMOD| FPGA Signal    |
-| - |------|-------------------|-|-------|
-| 0 | Trigger | -    |12|  B11      |
-| 1 | Down    | -    |11|  A11      |
-| 2 | Up      | -    |19|  D11      |
-| 3 | Right   | -    | 9|  N6      |
-| 4 | Left    | -    | 8|  N7      |
-| - | GND     | -    | 3|  GND      |
+|Bus|D9 Signal |D9 pin|PMOD  |FPGA pin |
+| - |------    |------| ---- | ------- |
+| 0 | Button 0 | 6    |  12  | B21     |
+| 1 | Down     | 2    |  11  | C21     |
+| 2 | Up       | 1    |  10  | A20     |
+| 3 | Right    | 4    |   9  | B20     |
+| 4 | Left     | 3    |   8  | A19     |
+| 5 |Button 1 X| 9    |   7  | B19     |
+| - |POT Y     | 5    |   6  | n.c.    |
+| - | GND      | -    |   3  | GND     |
+| - | +5V      |!!! n.c.|    | n.c.    |
 
 The whole setup will look like this:
 

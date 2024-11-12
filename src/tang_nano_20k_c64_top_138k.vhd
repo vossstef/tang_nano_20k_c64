@@ -24,9 +24,13 @@ entity tang_nano_20k_c64_top_138k is
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
     leds_n      : out std_logic_vector(5 downto 0);
-    io          : inout std_logic_vector(7 downto 0); -- TX RX TR2 TR1 RI LE DN UP
+    io          : in std_logic_vector(5 downto 0); -- TR2 TR1 RI LE DN UP
+    -- USB-C BL616 UART
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
+   -- external hw pin UART
+    uart_ext_rx : in std_logic;
+    uart_ext_tx : out std_logic;
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(4 downto 0);
     --
@@ -1725,9 +1729,8 @@ port map (
 );
 
 -- external HW pin UART interface
--- IO7(O) IO6(I)
-uart_rx_muxed <= uart_rx when system_uart = "00" else io(6) when system_uart = "01" else '1';
-io(7) <= uart_tx;
+uart_rx_muxed <= uart_rx when system_uart = "00" else uart_ext_rx when system_uart = "01" else '1';
+uart_ext_tx <= uart_tx;
 
 -- UART_RX synchronizer
 process(clk32)
