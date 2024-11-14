@@ -1,6 +1,6 @@
 {
  "BACKGROUND_PROGRAMMING" : "off",
- "COMPRESS" : false,
+ "COMPRESS" : true,
  "CPU" : true,
  "CRC_CHECK" : true,
  "Clock_Route_Order" : 0,

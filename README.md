@@ -166,7 +166,7 @@ Enable REU, select c1541 CBM DOS ROM and load the PRG.<br>
 
 ## Push Button / DIP Switch utilization
 * Nano 20k S2 keep pressed during power-up for FLASH programming of FPGA bitstream<br>
-* Mega 60k NEO ```SW1 ON``` ```SW6 ON``` + Press & Hold ```RECONFIG``` + Power the Board + connect USB programmer cable + release ```RECONFIG``` and perform programming.
+* Mega 60k NEO ```SW1 ON``` ```SW6 ON``` + Press & **Hold** ```RECONFIG``` + Power the Board + connect USB programmer cable + release ```RECONFIG``` and perform programming.
 > [!CAUTION]
 A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
 * S1 swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.<br>
@@ -195,16 +195,19 @@ invoke by F12 keypress<br>
 * Cartridge unload
 
 ## Gamecontrol support
-legacy single D9 Digital Joystick. OSD: **Retro D9**<br>
+<u>legacy single D9 Digital Joystick.</u>  
+OSD: **Retro D9**<br>
 Atari ST type of Joystick 2nd button supported using a MiSTeryNano shield.  
 Don't configure e.g. [ArcadeR](https://retroradionics.com) for C64 mode rather than<br> normal digital 2nd button mode (2nd trigger button connect signal to ground)
 
 or<br>
-USB Joystick(s). OSD: **USB #1 Joy** or **USB #2 Joy** <br>
+<u>USB Joystick(s)</u>.  
+OSD: **USB #1 Joy** or **USB #2 Joy** <br>
 Also [RII Mini Keyboard i8](http://www.riitek.com/product/220.html) left Multimedia Keys are active if **USB #1 Joy** selected. 
 
 or<br>
-Gamepad Stick as Joystick. OSD: **DS #1 Joy** or **DS #2 Joy**
+<u>Gamepad Stick as Joystick.</u>  
+OSD: **DS #1 Joy** or **DS #2 Joy**
 <br>left **stick digital** for Move and **square** , **cross**  and **circle** Button for 3 Trigger buttons  
 or following **Pad** controls:<br>
 | Buttons | - | - |
@@ -213,22 +216,26 @@ or following **Pad** controls:<br>
 | Left | - | Right |
 | - | Down | circle<br>Trigger 3 |<br>
 
-or Keyboard Numpad. OSD: **Numpad**<br>
+or Keyboard <u>Numpad.</u>  
+OSD: **Numpad**<br>
 | | | |
 |-|-|-|
 |0<br>Trigger|8<br>Up|.<br>Trigger 2|
 |4<br>Left|-|6<br>Right|
 |-|2<br>Down|-|
 
-or Mouse. OSD: **Mouse**<br>
+or <u>Mouse.</u>  
+OSD: **Mouse**<br>
 USB Mouse as c1351 Mouse emulation.
 
-or Dualshock2 Gamepad as Paddle. OSD: **DS #1 Paddle** or **DS #2 Paddle**<br>
+or <u>Dualshock2 Gamepad</u> as Paddle.  
+OSD: **DS #1 Paddle** or **DS #2 Paddle**<br>
 Dualshock 2 Sticks in analog mode as VC-1312 Paddle emulation.<br>
 **square** , **cross**, **circle** and **triangle** used as 4 Trigger buttons<br>
 You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the **Joystick** mode again and set OSD: **DS #1 Joy**<br>
 
-or USB Paddle. OSD: **USB #1 Padd** or **USB #2 Padd** <br>
+or <u>USB Paddle</u>.  
+OSD: **USB #1 Padd** or **USB #2 Padd** <br>
 Left Stick in X / Y analog mode as VC-1312 Paddle emulation.<br>
 Button **cross / square** as Trigger<br>
 
@@ -260,15 +267,15 @@ Solid **<font color="red">red</font>** of the c1541 led after power-up indicates
 ## MIDI-IN and OUT
 Type of MIDI interface can be selected from OSD.<br> There is support for Sequential Inc., Passport/Sentech, DATEL/SIEL/JMS/C-LAB and Namesoft<br>
 You can use a [MiSTeryNano MIDI shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) to interface to a Keyboard.<br>
+
 ## RS232 Serial Interface 
 The Tang onboard USB-C serial port can be used for communication with the C64 Userport Serial port in [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode.<br>
 Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal rather than default DolphinDOS.<br> For a first start use UP9600 mode and a Terminal program like [ccgms](https://github.com/mist64/ccgmsterm) and on the PC side [Putty](https://www.putty.org) with 2400 Baud.<br>
 
 OSD selection allows to change in between TANG USB-C port or external HW pin interface.<br>
 
-|            |        |      |     |
-|  -         |   -    |   -  | -   |
 | Board      |RX (I) FPGA |TX (O) FPGA|Note|
+|  -         |   -    |   -  | -   |
 | TN20k      |31      | 77   |[pinmap](https://wiki.sipeed.com/hardware/en/tang/tang-nano-20k/nano-20k.html#Pin-diagram), misterynano io(6) / io(7)|
 | TP25k      |K5      | L5   | J4-6  J4-5, share M0S Dock PMOD|
 | TM60k NEO  |AB20    | AA19 | J24-6 J24-5, share M0S Dock PMOD |
@@ -340,11 +347,11 @@ microSD or microSDHC card FAT32 formatted<br>
 TFT Monitor with HDMI Input and Speaker<br>
 <br>
 
-| HID and Gamecontrol Hardware option | TN20k needs | alternative option |Primer 25K|Mega 138K|
-| ----------- | --- | ---  | ---| -|
-| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  |x|x|
-| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH) | - |x|x|
-| USB Mouse   | [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  | -  |x|x|
-| USB Gamepad |[4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  | -  |x|x|
-| Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|-|
-| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) respectively<br> PMOD DS2x2 | breadboard to wire everything up and some jumper wires |-|x|
+| HID and Gamecontrol Hardware option | TN20k needs | alternative option |Primer 25K|Mega 60K|Mega 138K|
+| -----------                         | ---         | ---                | ---      | -      | -       |
+| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  |x|x|x|
+| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH) | - |x|x|x|
+| USB Mouse   | [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  | -  |x|x|x|
+| USB Gamepad |[4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  | -  |x|x|x|
+| Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|adhoc SDRAM1 Joy D9|adhoc PMOD Joy D9|
+| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) respectively<br> PMOD DS2x2 | breadboard to wire everything up and some jumper wires |-|PMOD DS2x2|PMOD DS2x2|
