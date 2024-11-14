@@ -25,29 +25,28 @@ architecture c64_tb of c64_tb is
  --
   signal reset            : std_logic;
   signal user             : std_logic;
-  signal btn              : std_logic_vector(4 downto 0);
-
  
   component tang_nano_20k_c64_top
-  generic (
-    sysclk_frequency : integer := 315 -- Sysclk frequency * 10 (31.5Mhz)
-    );
+  generic
+  (
+   DUAL  : integer := 1; -- 0:no, 1:yes dual SID build option
+   MIDI  : integer := 1 -- 0:no, 1:yes optional MIDI Interface
+   );
   port
   (
-    clk_27mhz   : in std_logic;
+    clk         : in std_logic;
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
     leds_n      : out std_logic_vector(5 downto 0);
-    btn         : in std_logic_vector(4 downto 0);
-
+    io          : in std_logic_vector(5 downto 0);
+    -- USB-C BL616 UART
+    uart_rx     : in std_logic;
+    uart_tx     : out std_logic;
+   -- external hw pin UART
+    uart_ext_rx : in std_logic;
+    uart_ext_tx : out std_logic;
     -- SPI interface Sipeed M0S Dock external BL616 uC
-    m0s         : inout std_logic_vector(5 downto 0);
-    -- SPI interface onboard BL616 uC
-    spi_csn     : in std_logic;
-    spi_sclk    : in std_logic;
-    spi_dat     : in std_logic;
-    spi_dir     : out std_logic; -- unusable due to hw bug / capacitor
-    jtag_tck    : out std_logic; -- replacement spi_dir
+    m0s         : inout std_logic_vector(4 downto 0);
     --
     tmds_clk_n  : out std_logic;
     tmds_clk_p  : out std_logic;
@@ -57,7 +56,6 @@ architecture c64_tb of c64_tb is
     sd_clk      : out std_logic;
     sd_cmd      : inout std_logic;
     sd_dat      : inout std_logic_vector(3 downto 0);
-    --  debug       : out std_logic_vector(4 downto 0);
     ws2812      : out std_logic;
     -- "Magic" port names that the gowin compiler connects to the on-chip SDRAM
     O_sdram_clk  : out std_logic;
@@ -73,8 +71,8 @@ architecture c64_tb of c64_tb is
     -- Gamepad
     joystick_clk  : out std_logic;
     joystick_mosi : out std_logic;
-    joystick_miso : in std_logic;
-    joystick_cs   : out std_logic;
+    joystick_miso : inout std_logic; -- midi_out
+    joystick_cs   : inout std_logic; -- midi_in
     -- spi flash interface
     mspi_cs       : out std_logic;
     mspi_clk      : out std_logic;
@@ -85,23 +83,33 @@ architecture c64_tb of c64_tb is
     );
   end component;
 
+  COMPONENT GSR 
+  PORT (
+       GSRI : in std_logic
+  );
+end COMPONENT;
+
 begin
+
+GSR_inst: work.GSR
+ port map (
+    GSRI <= '1'
+  ) ;
+
   u0 : tang_nano_20k_c64_top
     port map (
-      clk_27mhz   => I_CLK_REF,
-      reset       => reset,
-      user        => user,
-      leds_n      => open,
-      btn         => btn,
+    clk         => I_CLK_REF,
+    reset       => reset,
+    user        => user,
+    leds_n      => open,
+    io          => (others => '0'),
+    uart_rx       => '0',
+    uart_tx       => open,
+    uart_ext_rx   => '0',
+    uart_ext_tx   => open,
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s           => (others => '0'),
-    -- SPI interface onboard BL616 uC
-    spi_csn       => '0',
-    spi_sclk      =>'0',
-    spi_dat       =>'0',
-    spi_dir       => open,
-    jtag_tck      => open,
-    --
+
     tmds_clk_n    => tmds_clk_n,
     tmds_clk_p    => tmds_clk_p,
     tmds_d_n      => tmds_d_n,
@@ -126,7 +134,14 @@ begin
     joystick_clk  => open,
     joystick_mosi => open,
     joystick_miso => '0',
-    joystick_cs   => open
+    joystick_cs   => open,
+    -- spi flash interface
+    mspi_cs       => open,
+    mspi_clk      => open,
+    mspi_di       => '0',
+    mspi_hold     => '0',
+    mspi_wp       => '0',
+    mspi_do       => '0'
       );
 
   p_clk_27mhz  : process
@@ -146,7 +161,6 @@ begin
   end process;
 
   user <= '1';
-  btn  <= b"11111";
 
 end c64_tb;
 

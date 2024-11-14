@@ -10,8 +10,8 @@ create_clock -name mspi_clk -period 15.595 -waveform {0 7} [get_ports {mspi_clk}
 create_clock -name m0s[3] -period 50.000 -waveform {0 25} [get_ports {m0s[3]}] -add
 report_timing -hold -from_clock [get_clocks {clk*}] -to_clock [get_clocks {clk*}] -max_paths 25 -max_common_paths 1
 report_timing -setup -from_clock [get_clocks {clk*}] -to_clock [get_clocks {clk*}] -max_paths 25 -max_common_paths 1
-//create_generated_clock -name clk_tmds_5x -source [get_ports {clk}] -master_clock clk -divide_by 40  -multiply_by 297 [get_pins {mainclock_pal/PLLA_inst/CLKOUT1}]
-set_clock_groups -asynchronous -group [get_clocks {flash_clk}] 
-                               -group [get_clocks {clk64}] 
-                               -group [get_clocks {clk32}] 
-                               -group [get_clocks {clk_pixel_x5}] 
+set_clock_groups -asynchronous -group [get_clocks {flash_clk}]
+                               -group [get_clocks {clk_audio}]
+                               -group [get_clocks {clk64}]
+                               -group [get_clocks {clk32}]
+                               -group [get_clocks {clk_pixel_x5}]

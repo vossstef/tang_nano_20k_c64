@@ -4,12 +4,9 @@ cd ./sim
 if ![file exists "./sim.mpf"] {
 project new "." sim
 project addfile "./../../src/c1541/mist_sd_card.sv" 
-project addfile "./../../src/dualshock_controller.v" 
-project addfile "./../../src/gowin_clkdiv/gowin_clkdiv.v" 
 project addfile "./../../src/gowin_dpb/sector_dpram.v" 
 project addfile "./../../src/gowin_dpb/gowin_dpb_track_buffer_b.v" 
 project addfile "./../../src/gowin_dpb/gowin_dpb_trkbuf.v" 
-project addfile "./../../src/gowin_rpll/pll_160m.v" 
 project addfile "./../../src/hdmi/audio_clock_regeneration_packet.sv" 
 project addfile "./../../src/hdmi/audio_info_frame.sv" 
 project addfile "./../../src/hdmi/audio_sample_packet.sv" 
@@ -31,7 +28,7 @@ project addfile "./../../src/misc/sysctrl.v"
 project addfile "./../../src/misc/video.v" 
 project addfile "./../../src/misc/video_analyzer.v" 
 project addfile "./../../src/mos6526.v" 
-project addfile "./../../src/sdram.v" 
+project addfile "./../../src/sdram8.v" 
 project addfile "./../../src/misc/ws2812.v" 
 project addfile "./../../src/c1541/c1541_logic.vhd"
 project addfile "./../../src/c1541/c1541_sd.vhd"
@@ -42,23 +39,18 @@ project addfile "./../../src/fpga64_buslogic.vhd"
 project addfile "./../../src/fpga64_keyboard.vhd"
 project addfile "./../../src/fpga64_rgbcolor.vhd"
 project addfile "./../../src/fpga64_sid_iec.vhd"
-project addfile "./../../src/gowin_prom/gowin_prom_basic_kernal.vhd"
+project addfile "./../../src/gowin_prom/gowin_prom_basic.vhd"
 project addfile "./../../src/gowin_prom/gowin_prom_chargen.vhd"
-project addfile "./../../src/gowin_rpll/gowin_rpll.vhd"
+project addfile "./../../src/gowin_sdpb/gowin_sdpb_kernal_8k.vhd"
 project addfile "./../../src/gowin_sp/gowin_sp_2k.vhd"
 project addfile "./../../src/gowin_sp/gowin_sp_8k.vhd"
-project addfile "./../../src/sid6581/Q_table.vhd"
-project addfile "./../../src/sid6581/adsr_multi.vhd"
-project addfile "./../../src/sid6581/mult_acc.vhd"
-project addfile "./../../src/sid6581/my_math_pkg.vhd"
-project addfile "./../../src/sid6581/oscillator.vhd"
-project addfile "./../../src/sid6581/sid_ctrl.vhd"
-project addfile "./../../src/sid6581/sid_debug_pkg.vhd"
-project addfile "./../../src/sid6581/sid_filter.vhd"
-project addfile "./../../src/sid6581/sid_mixer.vhd"
-project addfile "./../../src/sid6581/sid_regs.vhd"
-project addfile "./../../src/sid6581/sid_top.vhd"
-project addfile "./../../src/sid6581/wave_map.vhd"
+project addfile "./../../src/sid/sid_dac.sv"
+project addfile "./../../src/sid/sid_envelope.sv"
+project addfile "./../../src/sid/sid_filter.sv"
+project addfile "./../../src/sid/sid_tables.sv"
+project addfile "./../../src/sid/sid_top.sv"
+project addfile "./../../src/sid/sid_voice.sv"
+project addfile "./../../src/c1530.vhd"
 project addfile "./../../src/t65/T65.vhd"
 project addfile "./../../src/t65/T65_ALU.vhd"
 project addfile "./../../src/t65/T65_MCode.vhd"
@@ -69,15 +61,16 @@ project addfile "./../../tb/c64_tb.vhd"
 project addfile "./../../src/gowin_sp/gowin_sp_cram.vhd"
 project addfile "./../../src/misc/flash_dspi.v"
 project addfile "./../../src/reu.v"
-project addfile "./../../src/cartridge.v"
-project addfile "./../../src/video_freezer.sv"
-project addfile "./../../src/video_sync.vhd"
 project addfile "./../../src/acia.v"
 project addfile "./../../src/c64_midi.vhd"
+project addfile "./../../src/dualshock2.v"
+project addfile "./../../src/loader_sd_card.sv"
+project addfile "./../../src/fifo_sc_hs/fifo_sc_hs.vhd"
 project addfile "./../../tb/prim_sim.v"
 project addfile "./../../tb/prim_sim.vhd"
+
 #project addfile "./../../tb/prim_syn.vhd"
-# project addfile "./../../tb/prim_tsim.v"
+#project addfile "./../../tb/prim_tsim.v"
 
  if [file exists work] {
     vdel -lib work -all
@@ -89,7 +82,6 @@ project addfile "./../../tb/prim_sim.vhd"
 
 vlib work
 vlib gw2a
-#vlib gw_std_cell_lib
 
 # Compile the GOWIN Standard Cells to Library std_cell_lib
 #vlog -incr -work gw_std_cell_lib "./../../tb/prim_sim.v" 
@@ -98,7 +90,11 @@ vcom -work gw2a -2008 -autoorder -explicit \
 "./../../tb/prim_sim.vhd" \
 "./../../tb/prim_syn.vhd"
 
-vlog -work work -sv -incr \
+vlog -incr -work work \
+-suppress 2388,13282,13294 \
+-sv \
+-sv17compat \
+-incr \
 "./../../src/c1541/mist_sd_card.sv" \
 "./../../src/hdmi/audio_clock_regeneration_packet.sv" \
 "./../../src/hdmi/audio_info_frame.sv" \
@@ -120,17 +116,23 @@ vlog -work work -sv -incr \
 "./../../src/misc/sd_rw.v" \
 "./../../src/misc/scandoubler.v" \
 "./../../src/mos6526.v" \
-"./../../src/sdram.v" \
+"./../../src/sdram8.v" \
 "./../../src/misc/flash_dspi.v" \
 "./../../src/reu.v" \
-"./../../src/gowin_clkdiv/gowin_clkdiv.v" \
 "./../../src/gowin_dpb/sector_dpram.v" \
 "./../../src/gowin_dpb/gowin_dpb_track_buffer_b.v" \
 "./../../src/gowin_dpb/gowin_dpb_trkbuf.v" \
-"./../../src/gowin_rpll/pll_160m.v" \
 "./../../src/cartridge.v" \
-"./../../src/video_freezer.sv" \
-"./../../src/acia.v"
+"./../../src/acia.v" \
+"./../../src/dualshock2.v" \
+"./../../src/loader_sd_card.sv" \
+"./../../src/sid/sid_dac.sv" \
+"./../../src/sid/sid_envelope.sv" \
+"./../../src/sid/sid_filter.sv" \
+"./../../src/sid/sid_tables.sv" \
+"./../../src/sid/sid_top.sv" \
+"./../../src/sid/sid_voice.sv" \
+
 #"./../../tb/prim_sim.v" 
 # "./../../tb/prim_tsim.v"
 
@@ -151,38 +153,24 @@ vcom -work work -suppress 1583 -2008 -autoorder -explicit \
 "./../../src/fpga64_keyboard.vhd" \
 "./../../src/fpga64_rgbcolor.vhd" \
 "./../../src/fpga64_sid_iec.vhd" \
-"./../../src/gowin_prom/gowin_prom_basic_kernal.vhd" \
+"./../../src/gowin_sdpb/gowin_sdpb_kernal_8k.vhd" \
 "./../../src/gowin_prom/gowin_prom_chargen.vhd" \
-"./../../src/gowin_rpll/gowin_rpll.vhd" \
+"./../../src/gowin_prom/gowin_prom_basic.vhd" \
 "./../../src/gowin_sp/gowin_sp_2k.vhd" \
 "./../../src/gowin_sp/gowin_sp_8k.vhd" \
-"./../../src/sid6581/Q_table.vhd" \
-"./../../src/sid6581/adsr_multi.vhd" \
-"./../../src/sid6581/mult_acc.vhd" \
-"./../../src/sid6581/my_math_pkg.vhd" \
-"./../../src/sid6581/oscillator.vhd" \
-"./../../src/sid6581/sid_ctrl.vhd" \
-"./../../src/sid6581/sid_debug_pkg.vhd" \
-"./../../src/sid6581/sid_filter.vhd" \
-"./../../src/sid6581/sid_mixer.vhd" \
-"./../../src/sid6581/sid_regs.vhd" \
-"./../../src/sid6581/sid_top.vhd" \
-"./../../src/sid6581/wave_map.vhd" \
 "./../../src/t65/T65.vhd" \
 "./../../src/t65/T65_ALU.vhd" \
 "./../../src/t65/T65_MCode.vhd" \
 "./../../src/t65/T65_Pack.vhd" \
 "./../../src/tang_nano_20k_c64_top.vhd" \
 "./../../src/video_vicII_656x.vhd" \
-"./../../src/video_sync.vhd" \
-"./../../src/c64_midi.vhd"
+"./../../src/c64_midi.vhd" \
 } else {
  project open "./sim"
  project compileoutofdate
 }
 
 vsim -voptargs=+acc -gui -L gw2a work.c64_tb
-#vsim -voptargs=+acc -gui -L gw_std_cell_lib work.c64_tb
 view wave
 
 add wave -divider "Input Signals"
