@@ -73,8 +73,6 @@ set_option -vhdl_std vhd2008
 set_option -top_module tang_nano_20k_c64_top
 set_option -use_mspi_as_gpio 1
 set_option -use_sspi_as_gpio 1
-set_option -print_all_synthesis_warning 1
-set_option -show_all_warn 0
 set_option -rw_check_on_ram 0
 set_option -user_code 00000001
 #add_file -type gao -disable "src/test.gao"

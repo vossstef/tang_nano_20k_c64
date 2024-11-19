@@ -57,7 +57,7 @@ add_file src/video_vicII_656x.vhd
 add_file src/gowin_pll/gowin_pll_138k_pal.vhd
 add_file src/gowin_pll/gowin_pll_138k_ntsc.vhd
 add_file src/gowin_pll/gowin_pll_138k_flash.vhd
-add_file src/tang_nano_20k_c64_top_138k.cst
+add_file src/tang_nano_20k_c64_top_138kpro.cst
 add_file src/tang_nano_20k_c64_top_138k.sdc
 add_file src/loader_sd_card.sv
 add_file src/fifo_sc_hs/FIFO_SC_HS_Top_gw5a.vhd
@@ -79,8 +79,6 @@ set_option -use_sspi_as_gpio 1
 set_option -use_done_as_gpio 1
 set_option -use_cpu_as_gpio 1
 set_option -use_ready_as_gpio 1
-set_option -print_all_synthesis_warning 1
-set_option -show_all_warn 0
 set_option -rw_check_on_ram 0
 set_option -user_code 00000001
 set_option -bit_compress 1

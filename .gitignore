@@ -5,3 +5,4 @@ simulation/sim/**
 simulation/transcript
 impl/pnr/device.cfg
 *.user
+*.bak
