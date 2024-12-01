@@ -1,11 +1,3 @@
-//Copyright (C)2014-2023 Gowin Semiconductor Corporation.
-//All rights reserved. 
-//File Title: Physical Constraints file
-//GOWIN Version: 1.9.8.11 Education
-//Part Number: GW2AR-LV18QN88C8/I7
-//Device: GW2AR-18
-//Device Version: C
-//Created Time: Wed 10 25 23:26:16 2023
 
 // tang onboard bl616 µc uart
 IO_LOC "uart_rx" B3;
@@ -45,13 +37,13 @@ IO_PORT "mspi_clk" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 
 // M0S PMOD
 IO_LOC "m0s[0]"  A10;
-IO_PORT "m0s[0]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_PORT "m0s[0]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 IO_LOC "m0s[1]"  A11;
-IO_PORT "m0s[1]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_PORT "m0s[1]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 IO_LOC "m0s[2]" E10;
-IO_PORT "m0s[2]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_PORT "m0s[2]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 IO_LOC "m0s[3]" E11;
-IO_PORT "m0s[3]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_PORT "m0s[3]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 IO_LOC "m0s[4]" L11;
 IO_PORT "m0s[4]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 //IO_LOC "m0s[5]" K11; // spare
@@ -73,33 +65,33 @@ IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=OFF BANK_VCCIO=3.3;
 
 // SDCard sipeed PMOD TFCARD v2 (newer)
 IO_LOC "sd_clk" C11;
-IO_PORT "sd_clk" PULL_MODE=NONE IO_TYPE=LVCMOS33; 
-IO_LOC "sd_cmd" D11;        // MOSI
-IO_PORT "sd_cmd" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-IO_LOC "sd_dat[0]" B11;       // MISO or SD card DO, needs pull-up
+IO_PORT "sd_clk" PULL_MODE=UP IO_TYPE=LVCMOS33; 
+IO_LOC "sd_cmd" D11;
+IO_PORT "sd_cmd" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "sd_dat[0]" B11;
 IO_PORT "sd_dat[0]" PULL_MODE=UP IO_TYPE=LVCMOS33;
-IO_LOC "sd_dat[1]" G10;       // 1
-IO_PORT "sd_dat[1]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-IO_LOC "sd_dat[2]" D10;       // 1
-IO_PORT "sd_dat[2]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-IO_LOC "sd_dat[3]" G11;       // 1
-IO_PORT "sd_dat[3]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+IO_LOC "sd_dat[1]" G10;
+IO_PORT "sd_dat[1]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "sd_dat[2]" D10;
+IO_PORT "sd_dat[2]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+IO_LOC "sd_dat[3]" G11;
+IO_PORT "sd_dat[3]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 
 // SDCard Sipeed PMOD TFCARD v1  (old outdated version)
 // not working !
 //
 //IO_LOC "sd_clk" D10;
-//IO_PORT "sd_clk" PULL_MODE=NONE IO_TYPE=LVCMOS33; 
-//IO_LOC "sd_cmd" D11;          // MOSI
-//IO_PORT "sd_cmd" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "sd_dat[0]" B11;       // MISO or SD card DO, needs pull-up
+//IO_PORT "sd_clk" PULL_MODE=UP IO_TYPE=LVCMOS33; 
+//IO_LOC "sd_cmd" D11;
+//IO_PORT "sd_cmd" PULL_MODE=UP IO_TYPE=LVCMOS33;
+//IO_LOC "sd_dat[0]" B11;
 //IO_PORT "sd_dat[0]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 //IO_LOC "sd_dat[1]" C11;
-//IO_PORT "sd_dat[1]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+//IO_PORT "sd_dat[1]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 //IO_LOC "sd_dat[2]" G11;
-//IO_PORT "sd_dat[2]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+//IO_PORT "sd_dat[2]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 //IO_LOC "sd_dat[3]" G10;
-//IO_PORT "sd_dat[3]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
+//IO_PORT "sd_dat[3]" PULL_MODE=UP IO_TYPE=LVCMOS33;
 
 // Mister SDRAM v3.0 connected through 40-pin port
 IO_LOC "IO_sdram_dq[0]" K2;
