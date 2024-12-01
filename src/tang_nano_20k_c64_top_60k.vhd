@@ -458,6 +458,7 @@ signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
 signal coldboot        : std_logic;
+signal disk_pause      : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -600,7 +601,27 @@ gamepad_p2: entity work.dualshock2
   end if;
 end process;
 
-disk_reset <= c1541_osd_reset or not reset_n or c1541_reset or not flash_lock;
+-- delay disk start to keep loader at power-up intact
+process(clk32, por)
+variable pause_cnt : integer range 0 to 2147483647;
+  begin
+  if por = '1' then
+    disk_pause <= '1';
+    pause_cnt := 34000000;
+    elsif rising_edge(clk32) then
+    if pause_cnt /= 0 then
+      pause_cnt := pause_cnt - 1;
+    end if;
+  end if;
+
+  if pause_cnt = 0 then 
+    disk_pause <= '0';
+  else
+    disk_pause <= '1';
+  end if;
+end process;
+
+disk_reset <= '1' when disk_pause or c1541_osd_reset or not reset_n or por or c1541_reset else '0';
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
@@ -650,7 +671,7 @@ port map
  (
     clk32         => clk32,
     reset         => disk_reset,
-    pause         => c64_pause or loader_busy,
+    pause         => loader_busy,
     ce            => '0',
 
     disk_num      => (others =>'0'),
@@ -690,9 +711,9 @@ port map
     c1541rom_data => c1541rom_data
 );
 
-sd_lba <= loader_lba when loader_busy = '1' else loader_lba when img_present = '0' else disk_lba;
-sd_rd(0) <= c1541_sd_rd when img_present = '1' else '0';
-sd_wr(0) <= c1541_sd_wr when img_present = '1' else '0';
+sd_lba <= loader_lba when loader_busy = '1' else disk_lba;
+sd_rd(0) <= c1541_sd_rd;
+sd_wr(0) <= c1541_sd_wr;
 ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphindos, speeddos
 sdc_iack <= int_ack(3);
 
@@ -838,7 +859,7 @@ clk_switch_2: DCS
 		CLKOUT   => clk64 -- switched clock
 	);
   
-pll_locked <= pll_locked_pal and pll_locked_ntsc;
+pll_locked <= pll_locked_pal and pll_locked_ntsc and flash_lock;
 dcsclksel <= "0001" when ntscMode = '0' else "0010";
 
 clk_switch_1: DCS
@@ -989,28 +1010,28 @@ pot4 <= pd2 when joyswap = '1' else pd4;
 
 -- paddle - mouse - GS controller 2nd button and 3rd button
 pd1 <=    not paddle_1 when port_1_sel = "0110" else
-          not paddle_1 when port_1_sel = "1011" else
+          not paddle_3 when port_1_sel = "1011" else
           joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else
           ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_1_sel = "0101" else
           x"ff" when unsigned(port_1_sel) < 5 and joyA(5) = '1' else
           x"ff" when unsigned(port_1_sel) = "1010" and joyA(5) = '1' else
           x"00";
 pd2 <=    not paddle_2 when port_1_sel = "0110" else
-          not paddle_2 when port_1_sel = "1011" else
+          not paddle_4 when port_1_sel = "1011" else
           joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else
           ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_1_sel = "0101" else
           x"ff" when unsigned(port_1_sel) < 5 and joyA(6) = '1' else
           x"ff" when unsigned(port_1_sel) = "1010" and joyA(6) = '1' else
           x"00";
 pd3 <=    not paddle_3 when port_2_sel = "1011" else
-          not paddle_3 when port_2_sel = "0110" else
+          not paddle_1 when port_2_sel = "0110" else
           joystick2_x_pos(7 downto 0) when port_2_sel = "1000" else 
           ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_2_sel = "0101" else
           x"ff" when unsigned(port_2_sel) < 5 and joyB(5) = '1' else
           x"ff" when unsigned(port_2_sel) = "1010" and joyB(5) = '1' else
           x"00";
 pd4 <=    not paddle_4 when port_2_sel = "1011" else
-          not paddle_4 when port_2_sel = "0110" else
+          not paddle_2 when port_2_sel = "0110" else
           joystick2_y_pos(7 downto 0) when port_2_sel = "1000" else
           ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_2_sel = "0101" else
           x"ff" when unsigned(port_2_sel) < 5 and joyB(6) = '1' else
@@ -1191,7 +1212,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
   clk32        => clk32,
-  reset_n      => reset_n and pll_locked and ram_ready,
+  reset_n      => reset_n,
   bios         => "00",
   pause        => '0',
   pause_out    => c64_pause,
@@ -1440,7 +1461,7 @@ end generate;
 crt_inst : entity work.loader_sd_card
 port map (
   clk               => clk32,
-  system_reset      => system_reset,
+  system_reset      => unsigned'(por & por),
 
   sd_lba            => loader_lba,
   sd_rd             => sd_rd(5 downto 1),
@@ -1461,7 +1482,7 @@ port map (
   load_flt          => load_flt,
   sd_img_size       => sd_img_size,
   leds              => leds(5 downto 1),
-  img_select        => img_select,
+  img_select        => open,
 
   ioctl_download    => ioctl_download,
   ioctl_addr        => ioctl_addr,
