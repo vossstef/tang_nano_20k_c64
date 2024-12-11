@@ -22,7 +22,7 @@ vlog -sv -incr -work work \
  project compileoutofdate
 }
 
-vsim -voptargs="+acc" -t 1ps -gui -L work work.top_tb
+vsim -t 1ps -gui -L work -voptargs="+acc" work.top_tb
 
 view wave
 add wave -divider "Input Signals"
@@ -39,6 +39,7 @@ add wave -divider "Result Interface"
 
 #add wave -noupdate /ds_tb/key_up
 
+log -r /*
 add wave -r /*
 
 onerror {resume}

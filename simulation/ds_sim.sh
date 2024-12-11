@@ -16,5 +16,6 @@ then
 fi
 
 vsim -do sim_dualshock.do
+#vsim -do sim_vlg_dualshock.do
 
 

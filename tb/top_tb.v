@@ -1,4 +1,3 @@
-//
 `timescale 1ps / 1ps
 
 module top_tb;
@@ -10,12 +9,13 @@ module top_tb;
 reg clk;
 reg rst;
 reg vsync;
+reg ds2_dat;
 
 dualshock2 dut(
     .clk(clk),
     .rst(rst),
     .vsync(vsync),
-    .ds2_dat(1'b0),
+    .ds2_dat(ds2_dat),
     .ds2_ack(1'b0),
 
     .ds2_cmd(),
@@ -45,37 +45,42 @@ dualshock2 dut(
     .debug2()
     );
 
-	///////////////////////////////////////////////////////////////////////////
-	// Set everything going
-	///////////////////////////////////////////////////////////////////////////
-   	initial
-       	begin
+///////////////////////////////////////////////////////////////////////////
+// Set everything going
+///////////////////////////////////////////////////////////////////////////
+initial
+  begin
                 
-            	clk 	= 1'b0;
-				rst		= 1'b1;
-//				dut.led	<= 0;
+         clk = 1'b0;
+         rst = 1'b0;
+         vsync = 1'b0;
+         ds2_dat = 1'b0;
 
-		#20000
-			rst		= 1'b1;
-		#10000
-			rst		= 1'b0;
+          #20000
+          rst <= 1'b1;
+          #10000
+          rst <= 1'b0;
+          #100000000
+          $stop;
+          end
 
-		
-		#60000000
-			$stop;
-		end
-
-	///////////////////////////////////////////////////////////////////////////
-	// Toggle the clock indefinitely
-	///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+// Toggle the clock indefinitely
+///////////////////////////////////////////////////////////////////////////
     always 
-	    begin
-        	#17		clk = ~clk;
-	    end
+    begin
+         #17 clk <= ~clk;
+    end
 
     always 
-	    begin
-        	#1000		vsync = ~vsync;
-	    end
+    begin
+         #2000000 vsync <= ~vsync;
+    end
 
- endmodule
+    always 
+    begin
+         #4000000 ds2_dat <= ~ds2_dat;
+  end
+
+
+endmodule

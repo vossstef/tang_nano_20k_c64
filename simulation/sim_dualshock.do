@@ -13,8 +13,7 @@ project addfile "./../../src/dualshock2.v"
 vlib work
 vmap work work
 
-vlog -work work -sv -incr -mfcu "+incdir+" -mixedsvvh \
-"./../../src/dualshock2.v"
+vlog -work work -sv -mixedsvvh "./../../src/dualshock2.v"
 
 vcom -work work -2008 \
 "./../../tb/ds_tb.vhd" \
@@ -24,24 +23,29 @@ vcom -work work -2008 \
  project compileoutofdate
 }
 
-vsim -voptargs=+acc -gui -t ps work.ds_tb
+vsim -voptargs=+acc -gui -t ps -L work work.ds_tb
 view wave
 
 add wave -divider "Input Signals"
 add wave -noupdate /ds_tb/clk
 add wave -noupdate /ds_tb/reset
 add wave -noupdate /ds_tb/vsync
-add wave -noupdate /ds_tb/u0/ds2_dat
-add wave -noupdate /ds_tb/u0/ds2_ack
 
 add wave -divider "Result Interface"
-add wave -noupdate /ds_tb/ds2_cmd
-add wave -noupdate /ds_tb/ds2_att
-add wave -noupdate /ds_tb/ds2_clk
+#add wave -noupdate /ds_tb/ds2_cmd
+#add wave -noupdate /ds_tb/ds2_att
+#add wave -noupdate /ds_tb/ds2_clk
+#add wave -noupdate /ds_tb/tb_stat
 
-add wave -noupdate /ds_tb/key_up
+#add wave -divider "Result Block"
+#add wave -noupdate /ds_tb/u0/ds2_dat
+#add wave -noupdate /ds_tb/u0/ds2_ack
+#add wave -noupdate /ds_tb/u0/clk_spi
+#add wave -noupdate /ds_tb/u0/clk_cnt
+#add wave -noupdate /ds_tb/u0/rst
+#add wave -noupdate /ds_tb/u0/state
 
-#add wave -r /*
+add wave -r /*
 
 onerror {resume}
 quietly WaveActivateNextPane {} 0
