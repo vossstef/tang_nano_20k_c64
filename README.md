@@ -288,9 +288,15 @@ Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC o
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
 Alternatively use the command line build script **gw_sh.exe / gw_sh.sh** [build_tn20k.tcl](build_tn20k.tcl) , [build_tp25k.tcl](build_tp25k.tcl) or [build_tm138k.tcl](build_tm138k.tcl)<br>
 ## HW circuit considerations
-**Pinmap TN20k Interfaces** <br>
+
+**Pinmap TN20k Interfaces HDMI** <br>
  Sipeed M0S Dock, digital Joystick D9 and DualShock Gamepad connection.<br>
  ![wiring](\.assets/wiring_spi_irq.png)
+<br>
+
+**Pinmap TN20k Interfaces LCD variant**<br>
+ Sipeed M0S Dock, LCD, Speaker<br>
+ ![wiring](\.assets/wiring_tn20k_lcd.png)
 
 **Pinmap D-SUB 9 Joystick Interface** <br>
 - Joystick interface is 3.3V tolerant. Joystick 5V supply pin has to be left floating !<br>
