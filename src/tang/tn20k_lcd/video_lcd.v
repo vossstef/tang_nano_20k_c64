@@ -2,7 +2,6 @@
 
 module video (
    input    clk_pixel,
-   input    clk_pixel_x5,
    input    pll_lock,
    input [8:0] audio_div,
 
@@ -89,10 +88,6 @@ scandoubler #(11) scandoubler (
         .g_out(sd_g),
         .b_out(sd_b)
 );
-
-wire [5:0] osd_r;
-wire [5:0] osd_g;
-wire [5:0] osd_b;  
 
 osd_u8g2 osd_u8g2 (
         .clk(clk_pixel),

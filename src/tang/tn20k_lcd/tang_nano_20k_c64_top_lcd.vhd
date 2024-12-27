@@ -15,7 +15,7 @@ use IEEE.numeric_std.ALL;
 entity tang_nano_20k_c64_top is
   generic
   (
-   DUAL  : integer := 1; -- 0:no, 1:yes dual SID build option
+   DUAL  : integer := 0; -- 0:no, 1:yes dual SID build option
    MIDI  : integer := 0 -- 0:no, 1:yes optional MIDI Interface
    );
   port
@@ -94,13 +94,10 @@ signal clk64          : std_logic;
 signal clk32          : std_logic;
 signal pll_locked     : std_logic;
 signal pll_locked_hid : std_logic;
-signal clk_pixel_x10  : std_logic;
-signal clk_pixel_x5   : std_logic;
+
 attribute syn_keep : integer;
 attribute syn_keep of clk64         : signal is 1;
 attribute syn_keep of clk32         : signal is 1;
-attribute syn_keep of clk_pixel_x10 : signal is 1;
-attribute syn_keep of clk_pixel_x5  : signal is 1;
 attribute syn_keep of m0s           : signal is 1;
 
 signal audio_data_l  : std_logic_vector(17 downto 0);
@@ -748,7 +745,6 @@ video_inst: entity work.video
 port map(
       pll_lock     => pll_locked,
       clk_pixel    => clk32,
-      clk_pixel_x5 => clk_pixel_x5, -- unused
       audio_div    => audio_div,
 
       ntscmode  => ntscMode,
@@ -877,61 +873,12 @@ begin
 	end if;
 end process;
 
-
-mainclock: rPLL
-        generic map (
-            FCLKIN => "27",
-            DEVICE => "GW2AR-18C",
-            DYN_IDIV_SEL => "true",
-            IDIV_SEL => 2,
-            DYN_FBDIV_SEL => "true",
-            FBDIV_SEL => 34,
-            DYN_ODIV_SEL => "false",
-            ODIV_SEL => 2,
-            PSDA_SEL => "0110",   
-            DYN_DA_EN => "false", 
-            DUTYDA_SEL => "1000",
-            CLKOUT_FT_DIR => '1',
-            CLKOUTP_FT_DIR => '1',
-            CLKOUT_DLY_STEP => 0,
-            CLKOUTP_DLY_STEP => 0,
-            CLKFB_SEL => "internal",
-            CLKOUT_BYPASS => "false",
-            CLKOUTP_BYPASS => "false",
-            CLKOUTD_BYPASS => "false",
-            DYN_SDIV_SEL => 2,
-            CLKOUTD_SRC => "CLKOUT",
-            CLKOUTD3_SRC => "CLKOUT"
-        )
-        port map (
-            CLKOUT   => clk_pixel_x10,
-            LOCK     => pll_locked,
-            CLKOUTP  => open,
-            CLKOUTD  => clk_pixel_x5,
-            CLKOUTD3 => open,
-            RESET    => '0',
-            RESET_P  => '0',
-            CLKIN    => clk,
-            CLKFB    => '0',
-            FBDSEL   => FBDSEL,
-            IDSEL    => IDSEL,
-            ODSEL    => (others => '0'),
-            PSDA     => (others => '0'),
-            DUTYDA   => (others => '0'),
-            FDLY     => (others => '1')
-        );
-
-div1_inst: CLKDIV
-generic map(
-    DIV_MODE => "5",
-    GSREN    => "false"
-)
-port map(
-    CLKOUT => clk64,
-    HCLKIN => clk_pixel_x10,
-    RESETN => pll_locked,
-    CALIB  => '0'
-);
+mainclock: entity work.Gowin_rPLL
+    port map (
+        clkout => clk64,
+        lock => pll_locked,
+        clkin => clk
+    );
 
 div2_inst: CLKDIV
 generic map(
