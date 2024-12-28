@@ -159,7 +159,12 @@ module dualshock2(
     `define SYSTEM_CLOCK 31500000
     reg [8:0] clk_cnt;
     reg clk_spi;
-    always @(posedge clk) begin
+    always @(posedge clk or posedge rst)
+    if(rst) begin
+        clk_cnt <= 9'd0;
+        clk_spi <= 1'b0;
+        end 
+    else begin
         if(clk_cnt < `SYSTEM_CLOCK / 125000 / 2 -1)
             clk_cnt <= clk_cnt + 9'd1;
         else begin
@@ -196,7 +201,7 @@ module dualshock2(
         endcase
     end
     
-    always @(posedge clk_spi) begin
+    always @(posedge clk_spi or posedge rst)
         if (rst) begin
             state <= S_IDLE;
             state_counter <= 5'd0;
@@ -210,9 +215,8 @@ module dualshock2(
             else
                 state_counter <= state_counter + 1'b1;
         end
-    end
     
-    always @(posedge clk_spi) begin
+    always @(posedge clk_spi or posedge rst)
         if (rst) begin
             // When reset, we want the first command to be 0x42
             bytes_count <= 4'd0;
@@ -267,6 +271,5 @@ module dualshock2(
                 end
             endcase 
         end
-    end
 
 endmodule

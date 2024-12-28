@@ -119,8 +119,10 @@ begin
 
   p_rst : process
   begin
+    reset <= '0';
+    wait for 500 ns;
     reset <= '1';
-    wait for 1 ms;
+    wait for 1000 ns;
     reset <= '0';
     wait;
   end process;
