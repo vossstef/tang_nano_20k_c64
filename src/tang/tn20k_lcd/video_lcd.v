@@ -1,11 +1,12 @@
 // video.v
 
 module video (
-   input    clk_pixel,
+   input    clk,
+   input    clk_pixel_x5,
    input    pll_lock,
    input [8:0] audio_div,
 
-   input    ntscmode,
+   input   ntscmode,
    input   vs_in_n,
    input   hs_in_n,
 
@@ -23,9 +24,6 @@ module video (
    input   mcu_osd_strobe,
    input [7:0]  mcu_data,
 
-   output       vreset,
-   output [1:0] vmode,
-
    // values that can be configure by the user via osd          
    input [1:0]  system_scanlines,
    input [1:0]  system_volume,
@@ -39,6 +37,7 @@ module video (
    output [5:0] lcd_r,
    output [5:0] lcd_g,
    output [5:0] lcd_b,
+   output lcd_bl,
 
    // audio
    output hp_bck,
@@ -47,18 +46,8 @@ module video (
    output pa_en
 );
    
-/* -------------------- HDMI video and audio -------------------- */
 
-video_analyzer video_analyzer (
-   .clk(clk_pixel),
-   .vs(vs_in_n),
-   .hs(hs_in_n),
-   .de(1'b1),
-   .ntscmode(ntscmode),
-   .mode(vmode),
-   .vreset(vreset)
-);  
-
+assign lcd_bl = pll_lock;
 wire sd_hs_n, sd_vs_n; 
 wire [5:0] sd_r;
 wire [5:0] sd_g;
@@ -66,7 +55,7 @@ wire [5:0] sd_b;
 
 scandoubler #(11) scandoubler (
         // system interface
-        .clk_sys(clk_pixel),
+        .clk_sys(clk),
         .bypass(1'b0),
         .ce_divider(1'b1),
         .pixel_ena(),
@@ -90,7 +79,7 @@ scandoubler #(11) scandoubler (
 );
 
 osd_u8g2 osd_u8g2 (
-        .clk(clk_pixel),
+        .clk(clk),
         .reset(!pll_lock),
 
         .data_in_strobe(mcu_osd_strobe),
@@ -121,7 +110,7 @@ assign pa_en = pll_lock;   // enable amplifier
 
 reg clk_audio;
 reg [7:0] aclk_cnt;
-always @(posedge clk_pixel) begin
+always @(posedge clk) begin
     if(aclk_cnt < 31500000 / (24000*32) / 2 - 1)
 //  if(aclk_cnt < audio_div)
         aclk_cnt <= aclk_cnt + 8'd1;
@@ -148,7 +137,7 @@ end
 
 // Audio c64 core specific
 reg [15:0] alo,aro;
-always @(posedge clk_pixel) begin
+always @(posedge clk) begin
 	reg [16:0] alm,arm;
 
 	arm <= {audio_r[17],audio_r[17:2]};
@@ -170,50 +159,41 @@ wire [15:0] audio_vol_r =
     (system_volume == 2'd2)?{ aro[15], aro[15:1] }:
     aro;
 
-assign lcd_clk = clk_pixel;
+assign lcd_clk = clk;
 assign lcd_hs_n = sd_hs_n;
 assign lcd_vs_n = sd_vs_n;
 
-reg [10:0] hcnt;  // 
-reg [9:0] vcnt;   // max 626
+reg [11:0] hcnt; // max 1040
+reg [9:0] vcnt;  // max 624
 
 // generate lcd de signal
-// this needs adjustment for each ST video mode
-localparam XNTSC = 11'd920;
-localparam YNTSC = 10'd990;
-localparam XPAL  = 11'd920;
-localparam YPAL  = 10'd930;
-localparam XHIGH = 11'd955;
-localparam YHIGH = 10'd0;
+localparam XNTSC = 12'd1040; // 920
+localparam YNTSC = 10'd526; // 990  526
+localparam XPAL  = 12'd1008; // 920
+localparam YPAL  = 10'd624; // 930   624
 
-assign lcd_de = (hcnt < 11'd800) && (vcnt < 10'd480);
+assign lcd_de = (hcnt < 12'd800) && (vcnt < 10'd480);
 
 // after scandoubler (with dim lines), ste video is 3*6 bits
 // lcd r and b are only 5 bits, so there may be some color
 // offset
-   
-always @(posedge clk_pixel) begin
-   reg 	     last_vs_n, last_hs_n;
 
-   last_hs_n <= lcd_hs_n;   
+always @(posedge clk) begin
+   reg last_vs_n, last_hs_n;
+
+   last_hs_n <= lcd_hs_n;
 
    // rising edge/end of hsync
    if(lcd_hs_n && !last_hs_n) begin
-      hcnt <= 
-        (vmode == 2'd0)?XNTSC:
-        (vmode == 2'd1)?XPAL:
-                        XHIGH;
+      hcnt <= (ntscmode)?XNTSC:XPAL;
       
-      last_vs_n <= lcd_vs_n;   
+      last_vs_n <= lcd_vs_n;
       if(lcd_vs_n && !last_vs_n) begin
-        vcnt <=
-        (vmode == 2'd0)?YNTSC:
-        (vmode == 2'd1)?YPAL:
-                        YHIGH;
+        vcnt <= (ntscmode)?YNTSC:YPAL;
       end else
-	vcnt <= vcnt + 10'd1;    
+	vcnt <= vcnt + 10'd1;
    end else
-      hcnt <= hcnt + 11'd1;    
+      hcnt <= hcnt + 12'd1;
 end
 
 endmodule
