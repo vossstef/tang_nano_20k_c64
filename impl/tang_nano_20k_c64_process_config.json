@@ -19,7 +19,7 @@
  "EXTERNAL_MASTER_CONFIG_CLOCK" : false,
  "Enable_DSRM" : false,
  "FORMAT" : "binary",
- "FREQUENCY_DIVIDER" : "",
+ "FREQUENCY_DIVIDER" : "1",
  "Generate_Constraint_File_of_Ports" : false,
  "Generate_IBIS_File" : false,
  "Generate_Plain_Text_Timing_Report" : false,

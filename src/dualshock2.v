@@ -54,6 +54,9 @@
 //      |  04  | 00                          | 00         |  
 //      |  05  | 00                          | 00         |  
 //      |  06  | 00                          | 00         |           
+//
+//  12 / 2024 Stefan Voss mode configuration analog / digital added
+//
 //////////////////////////////////////////////////////////////////////////////////
 module dualshock2(
     input clk,
@@ -64,6 +67,7 @@ module dualshock2(
     output reg ds2_att,
     output reg ds2_clk,
     input ds2_ack,
+    input analog,  // select analog left stick or digital DPad mode
     output [7:0] stick_lx,
     output [7:0] stick_ly,
     output [7:0] stick_rx,
@@ -88,7 +92,17 @@ module dualshock2(
     output [7:0] debug1,
     output [7:0] debug2
     );
-    
+
+    // states of FSM
+    localparam [2:0]    FSM_DIGITAL     = 3'd0,
+                        FSM_ANALOG      = 3'd1,
+                        FSM_POLLING     = 3'd2,
+                        FSM_CFG_EXIT    = 3'd3,
+                        FSM_WAIT4CHANGE = 3'd4,
+                        FSM_DS2CFG      = 3'd5,
+                        FSM_CFG_ENTER   = 3'd6,
+                        FSM_DS2CFG_ALL  = 3'd7;
+
     localparam S_IDLE      = 5'd0;
     localparam S_ATT       = 5'd1;
     localparam S_TX        = 5'd2;
@@ -120,9 +134,17 @@ module dualshock2(
     reg [7:0] tx_buffer [0:8]; // TX buffer, constant
     reg [7:0] rx_buffer [0:8]; // RX buffer
     reg [7:0] rx_byte;
-    reg ready = 0; // Indicate if the data could be sent
     reg [1:0] status;
-    
+    reg ready = 1'b0;
+
+    reg last_vsync = 1'b0;
+    reg mode = 1'b0;
+    reg [11:0] core_wait_cnt = 12'd0;
+    reg [2:0] io_state;
+    reg analog_d;
+    reg [8:0] clk_cnt;
+    reg clk_spi;
+
     assign debug1 = rx_buffer[3];
     assign debug2 = rx_buffer[4];
     
@@ -133,10 +155,10 @@ module dualshock2(
     wire [7:0] rx_b4 = rx_buffer[7];
     wire [7:0] rx_b5 = rx_buffer[8];
     
-    assign key_select  = ~rx_b0[0];
+    assign key_select  = ~rx_b0[0] && ready;
     assign key_rstick  = ~rx_b0[1];
     assign key_lstick  = ~rx_b0[2];
-    assign key_start   = ~rx_b0[3];
+    assign key_start   = ~rx_b0[3] && ready;
     assign key_up      = ~rx_b0[4];
     assign key_right   = ~rx_b0[5];
     assign key_down    = ~rx_b0[6];
@@ -145,21 +167,24 @@ module dualshock2(
     assign key_r2      = ~rx_b1[1];
     assign key_l1      = ~rx_b1[2];
     assign key_r1      = ~rx_b1[3];
-    assign key_triangle= ~rx_b1[4];
-    assign key_circle  = ~rx_b1[5];
-    assign key_cross   = ~rx_b1[6];
-    assign key_square  = ~rx_b1[7];
+    assign key_triangle= ~rx_b1[4] && ready;
+    assign key_circle  = ~rx_b1[5] && ready;
+    assign key_cross   = ~rx_b1[6] && ready;
+    assign key_square  = ~rx_b1[7] && ready;
     assign stick_rx    = ~rx_b2;
     assign stick_ry    = ~rx_b3;
     assign stick_lx    = ~rx_b4;
     assign stick_ly    = ~rx_b5;
     
-    reg last_vsync = 0;
+    `define SYSTEM_CLOCK 28800000
 
-    `define SYSTEM_CLOCK 31500000
-    reg [8:0] clk_cnt;
-    reg clk_spi;
-    always @(posedge clk) begin
+
+    always @(posedge clk or posedge rst)
+    if(rst) begin
+        clk_cnt <= 9'd0;
+        clk_spi <= 1'b0;
+        end 
+    else begin
         if(clk_cnt < `SYSTEM_CLOCK / 125000 / 2 -1)
             clk_cnt <= clk_cnt + 9'd1;
         else begin
@@ -195,8 +220,8 @@ module dualshock2(
                 next_state = S_IDLE;//Error recovery
         endcase
     end
-    
-    always @(posedge clk_spi) begin
+
+    always @(posedge clk_spi or posedge rst)
         if (rst) begin
             state <= S_IDLE;
             state_counter <= 5'd0;
@@ -210,25 +235,207 @@ module dualshock2(
             else
                 state_counter <= state_counter + 1'b1;
         end
+
+    always @(posedge clk_spi or posedge rst)
+	if(rst) begin
+        tx_buffer[0] <= 8'h01; 
+        tx_buffer[1] <= 8'h42; // Polling cmd 01 42 00 00 00 00 00 00 00
+        tx_buffer[2] <= 8'h00; // Buttons(L D R U St R3 L3 Se □ X O △ R1 L1 R2 L2)
+        tx_buffer[3] <= 8'h00; // Axes(RX RY LX LY)
+        tx_buffer[4] <= 8'h00; // Buttons are active low
+        tx_buffer[5] <= 8'h00;
+        tx_buffer[6] <= 8'h00;
+        tx_buffer[7] <= 8'h00;
+        tx_buffer[8] <= 8'h00;
+
+        io_state <= FSM_DS2CFG;
+        core_wait_cnt <= 12'd0;
+        ready <= 1'b0;
     end
+    else begin
+        analog_d <= analog;
+
+        case(io_state)
+            FSM_DS2CFG_ALL:
+                begin
+                    // Dualshock2: Set ReplyProtocol
+                    // Digital buttons + analog sticks
+                    // TX: 01h 4fh 00h 3Fh 00h 00h 00h 00h 00h
+                    // Digital buttons
+                    // TX: 01h 4fh 00h 03h 00h 00h 00h 00h 00h
+                    // Enable all 18 input bytes
+                    // TX: 01h 4fh 00h FFh FFh 03h 00h 00h 00h
+                    if(state == S_IDLE) begin
+                        tx_buffer[0] <= 8'h01;
+                        tx_buffer[1] <= 8'h4f;
+                        tx_buffer[2] <= 8'h00;
+                        tx_buffer[3] <= 8'h03; // cfg value 1
+                        tx_buffer[4] <= 8'h00; // cfg value 2
+                        tx_buffer[5] <= 8'h00; // cfg value 3
+                        tx_buffer[6] <= 8'h00;
+                        tx_buffer[7] <= 8'h00;
+                        tx_buffer[8] <= 8'h00;
+
+                        core_wait_cnt <= core_wait_cnt + 1'd1;
+                        if(&core_wait_cnt) begin
+                                core_wait_cnt <= 12'd0;
+                                io_state <= FSM_CFG_EXIT; // cfg exit
+                        end
+                    end
+                end
+            FSM_DS2CFG:
+                    if(state == S_IDLE) begin
+                        begin
+                            core_wait_cnt <= core_wait_cnt + 1'd1;
+                            if(&core_wait_cnt) begin
+                                if (analog)
+                                    mode <= 1'b1; 
+                                else 
+                                    mode <= 1'b0;
+                                io_state <= FSM_CFG_ENTER;
+                                core_wait_cnt <= 12'd0;
+                            end
+                        end
+                    end
+            FSM_WAIT4CHANGE:
+                begin
+                    ready <= 1'b1;
+                    if(analog != analog_d) begin
+                        if (analog) 
+                            mode <= 1'b1; 
+                         else 
+                            mode <= 1'b0;
+                        io_state <= FSM_CFG_ENTER;
+                        core_wait_cnt <= 12'd0;
+                    end 
+                end
+            FSM_CFG_ENTER:
+                begin
+                    ready <= 1'b0;
+                    // 0x43 Config mode cmd ENTER
+                    // TX: 01 43 00 01 00 00 00 00 00  enter cfg
+                    if(state == S_IDLE) begin
+                        tx_buffer[0] <= 8'h01; 
+                        tx_buffer[1] <= 8'h43; // control cmd cfg
+                        tx_buffer[2] <= 8'h00; 
+                        tx_buffer[3] <= 8'h01; // configure FSM_CFG_ENTER
+                        tx_buffer[4] <= 8'h00;
+                        tx_buffer[5] <= 8'h00;
+                        tx_buffer[6] <= 8'h00;
+                        tx_buffer[7] <= 8'h00;
+                        tx_buffer[8] <= 8'h00;
+
+                        core_wait_cnt <= core_wait_cnt + 1'd1;
+                        if(&core_wait_cnt && mode) begin
+                            core_wait_cnt <= 12'd0;
+                            io_state <= FSM_ANALOG; // analog
+                        end 
+                        else if (&core_wait_cnt && ~mode) begin
+                            core_wait_cnt <= 12'd0;
+                            io_state <= FSM_DIGITAL; // digital
+                //          io_state <= FSM_DS2CFG_ALL; // digital buttons alternative
+                        end
+                    end
+                end
+            FSM_DIGITAL:
+                begin
+                    // 0x44 Enable analog cmd
+                    // Require to be in config mode
+                    // TX: 01 44 00 00 03 00 00 00 00  digital
+                    // digital mode
+                    if(state == S_IDLE) begin
+                        tx_buffer[0] <= 8'h01; 
+                        tx_buffer[1] <= 8'h44; // control cmd
+                        tx_buffer[2] <= 8'h00; 
+                        tx_buffer[3] <= 8'h00;  // digital mode
+                        tx_buffer[4] <= 8'h03;  // lock key
+                        tx_buffer[5] <= 8'h00;
+                        tx_buffer[6] <= 8'h00;
+                        tx_buffer[7] <= 8'h00;
+                        tx_buffer[8] <= 8'h00;
+
+                        core_wait_cnt <= core_wait_cnt + 1'd1;
+                        if(&core_wait_cnt) begin
+                                core_wait_cnt <= 12'd0;
+                                io_state <= FSM_CFG_EXIT; // cfg exit
+                        end
+                    end
+                end
+            FSM_ANALOG: 
+                begin
+                    // analog mode
+                    // TX: 01 44 00 01 03 00 00 00 00  analog
+                    if(state == S_IDLE) begin
+                        tx_buffer[0] <= 8'h01; 
+                        tx_buffer[1] <= 8'h44; // control cmd 
+                        tx_buffer[2] <= 8'h00; 
+                        tx_buffer[3] <= 8'h01; // analog mode
+                        tx_buffer[4] <= 8'h03; // lock key
+                        tx_buffer[5] <= 8'h00;
+                        tx_buffer[6] <= 8'h00;
+                        tx_buffer[7] <= 8'h00;
+                        tx_buffer[8] <= 8'h00;
+
+                        core_wait_cnt <= core_wait_cnt + 1'd1;
+                        if(&core_wait_cnt) begin
+                                core_wait_cnt <= 12'd0;
+                                io_state <= FSM_CFG_EXIT; // cfg exit
+                        end
+                    end
+                end
+            FSM_CFG_EXIT: 
+                begin
+
+                    // 0x43 Config mode cmd EXIT
+                    // TX: 01 43 00 00 5A 5A 5A 5A 5A  exit cfg
+                    if(state == S_IDLE) begin
+                        tx_buffer[0] <= 8'h01; 
+                        tx_buffer[1] <= 8'h43; // control cmd cfg
+                        tx_buffer[2] <= 8'h00; 
+                        tx_buffer[3] <= 8'h00; // configure exit
+                        tx_buffer[4] <= 8'h5A;
+                        tx_buffer[5] <= 8'h5A;
+                        tx_buffer[6] <= 8'h5A;
+                        tx_buffer[7] <= 8'h5A;
+                        tx_buffer[8] <= 8'h5A;
+
+                        core_wait_cnt <= core_wait_cnt + 1'd1;
+                        if(&core_wait_cnt) begin
+                                core_wait_cnt <= 12'd0;
+                                io_state <= FSM_POLLING;  // polling
+                        end
+                    end
+                end
+            FSM_POLLING:
+                begin
+                    // Polling
+                    if(state == S_IDLE) begin
+                        tx_buffer[0] <= 8'h01; 
+                        tx_buffer[1] <= 8'h42; // Polling cmd 01 42 00 00 00 00 00 00 00
+                        tx_buffer[2] <= 8'h00; // Buttons(L D R U St R3 L3 Se □ X O △ R1 L1 R2 L2)
+                        tx_buffer[3] <= 8'h00; // Axes(RX RY LX LY)
+                        tx_buffer[4] <= 8'h00; // Buttons are active low
+                        tx_buffer[5] <= 8'h00;
+                        tx_buffer[6] <= 8'h00;
+                        tx_buffer[7] <= 8'h00;
+                        tx_buffer[8] <= 8'h00;
+                        core_wait_cnt <= core_wait_cnt + 1'd1;
+                        if(&core_wait_cnt) begin
+                                core_wait_cnt <= 12'd0;
+                                io_state <= FSM_WAIT4CHANGE; // wait for mode change
+                        end
+                    end
+                end
+            default: ;
+        endcase
+    end //  else: if(rst)
     
-    always @(posedge clk_spi) begin
+    always @(posedge clk_spi or posedge rst)
         if (rst) begin
-            // When reset, we want the first command to be 0x42
             bytes_count <= 4'd0;
             bits_count <= 4'd0;
-            tx_buffer[0] <= 8'h01; 
-            tx_buffer[1] <= 8'h42; // Polling cmd 01 42 00 00 00 00 00 00 00
-            tx_buffer[2] <= 8'h00; // Buttons(L D R U St R3 L3 Se □ X O △ R1 L1 R2 L2)
-            tx_buffer[3] <= 8'h00; // Axes(RX RY LX LY)
-            tx_buffer[4] <= 8'h00; // Buttons are active low
-            tx_buffer[5] <= 8'h00;
-            tx_buffer[6] <= 8'h00;
-            tx_buffer[7] <= 8'h00;
-            tx_buffer[8] <= 8'h00;
             rx_byte <= 8'hff;
             status <= STATUS_OK;
-            ready <= 1;
             ds2_clk <= 1'b1;
             ds2_att <= 1'b1;
             ds2_cmd <= 1'b1;
@@ -267,6 +474,5 @@ module dualshock2(
                 end
             endcase 
         end
-    end
 
 endmodule
