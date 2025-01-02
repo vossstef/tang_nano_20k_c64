@@ -2,7 +2,6 @@
 
 module video (
    input    clk,
-   input    clk_pixel_x5,
    input    pll_lock,
    input [8:0] audio_div,
 
@@ -163,16 +162,16 @@ assign lcd_clk = clk;
 assign lcd_hs_n = sd_hs_n;
 assign lcd_vs_n = sd_vs_n;
 
-reg [11:0] hcnt; // max 1040
+reg [10:0] hcnt; // max 1040
 reg [9:0] vcnt;  // max 624
 
 // generate lcd de signal
-localparam XNTSC = 12'd1040; // 920
+localparam XNTSC = 11'd1040; // 920
 localparam YNTSC = 10'd526; // 990  526
-localparam XPAL  = 12'd1008; // 920
+localparam XPAL  = 11'd1008; // 920
 localparam YPAL  = 10'd624; // 930   624
 
-assign lcd_de = (hcnt < 12'd800) && (vcnt < 10'd480);
+assign lcd_de = (hcnt < 11'd800) && (vcnt < 10'd480);
 
 // after scandoubler (with dim lines), ste video is 3*6 bits
 // lcd r and b are only 5 bits, so there may be some color
@@ -193,7 +192,7 @@ always @(posedge clk) begin
       end else
 	vcnt <= vcnt + 10'd1;
    end else
-      hcnt <= hcnt + 12'd1;
+      hcnt <= hcnt + 11'd1;
 end
 
 endmodule
