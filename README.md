@@ -5,7 +5,7 @@ The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wi
 
 | Board      | FPGA       | support |Note|
 | ---        |        -   | -     |-|
-| [Tang Nano 20k](https://wiki.sipeed.com/nano20k)     | [GW2AR](https://www.gowinsemi.com/en/product/detail/38/)  | X |twin Dualshock<br> MiSTeryShield20k spare header + Joy to DIP |
+| [Tang Nano 20k](https://wiki.sipeed.com/nano20k)     | [GW2AR](https://www.gowinsemi.com/en/product/detail/38/)  | X |Dualshock via MiSTeryShield20k spare header **or** Joy to DIP |
 | [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)  | X |no Dualshock, no Retro D9 Joystick |
 | [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/)| X | twin Dualshock|
 | [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | X |twin Dualshock |
@@ -67,6 +67,9 @@ See [Tang Mega 60K NEO](TANG_MEGA_60K.md)
 
 ## c64 Nano on Tang Mega 138k Pro
 See [Tang Mega 138K Pro](TANG_MEGA_138Kpro.md)
+
+## c64 Nano on Tang Nano 20k with LCD
+See [Tang Nano 20k LCD](TANG_NANO_20k_LCD.md)
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS 2.0.<br>
@@ -230,11 +233,12 @@ or <u>Mouse.</u>
 OSD: **Mouse**<br>
 USB Mouse as c1351 Mouse emulation.
 
-or <u>Dualshock2 Gamepad</u> as Paddle.  
+or <u>Dualshock 2 Gamepad</u> as Paddle.  
 OSD: **DS #1 Paddle** or **DS #2 Paddle**<br>
-Dualshock 2 Sticks in analog mode as VC-1312 Paddle emulation.<br>
+Dualshock left Stick in analog mode as VC-1312 Paddle emulation.<br>
+For TN20k 4 Paddles mapped to a single Gamepad (X/Y) and both Sticks.
 **square** , **cross**, **circle** and **triangle** used as 4 Trigger buttons<br>
-ANALOG Paddle mode will be indicated by DS2 red light indicator.
+ANALOG Paddle mode will be indicated by DS 2 red light indicator.
 
 or <u>USB Paddle</u>.  
 OSD: **USB #1 Padd** or **USB #2 Padd** <br>
@@ -291,16 +295,10 @@ Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or 
 Alternatively use the command line build script **gw_sh.exe / gw_sh.sh** [build_tn20k.tcl](build_tn20k.tcl) , [build_tp25k.tcl](build_tp25k.tcl) or [build_tm138k.tcl](build_tm138k.tcl)<br>
 ## HW circuit considerations
 
-**Pinmap TN20k Interfaces HDMI Output** <br>
+**Pinmap TN20k Interfaces** <br>
  Sipeed M0S Dock, digital Joystick D9 and DualShock Gamepad connection.<br>
  ![wiring](\.assets/wiring_spi_irq.png)
 <br>
-
-**Pinmap TN20k Interfaces LCD Output**<br>
- Sipeed M0S Dock, LCD, Speaker<br>
-
-**Video output is adapted for a 5" TFT-LCD module 800x480 Type [SH500Q01Z](https://dl.sipeed.com/Accessories/LCD/500Q01Z-00%20spec.pdf) (Ilitek ILI6122)**
- ![wiring](\.assets/wiring_tn20k_lcd.png)
 
 **Pinmap D-SUB 9 Joystick Interface** <br>
 - Joystick interface is 3.3V tolerant. Joystick 5V supply pin has to be left floating !<br>
