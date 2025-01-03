@@ -166,10 +166,10 @@ reg [10:0] hcnt; // max 1040
 reg [9:0] vcnt;  // max 624
 
 // generate lcd de signal
-localparam XNTSC = 11'd1040; // 920
-localparam YNTSC = 10'd526; // 990  526
-localparam XPAL  = 11'd1008; // 920
-localparam YPAL  = 10'd624; // 930   624
+localparam XNTSC = 11'd1870;
+localparam YNTSC = 10'd980;
+localparam XPAL  = 11'd1890;
+localparam YPAL  = 10'd940;
 
 assign lcd_de = (hcnt < 11'd800) && (vcnt < 10'd480);
 
