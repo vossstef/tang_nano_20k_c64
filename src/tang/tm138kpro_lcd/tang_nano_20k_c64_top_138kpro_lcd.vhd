@@ -46,7 +46,7 @@ entity tang_nano_20k_c64_top_138k is
     hp_bck      : out std_logic;
     hp_ws       : out std_logic;
     hp_din      : out std_logic;
-  --pa_en       : out std_logic;
+    pa_en       : out std_logic;
     -- sd interface
     sd_clk      : out std_logic;
     sd_cmd      : inout std_logic;
@@ -320,6 +320,10 @@ signal paddle_1        : std_logic_vector(7 downto 0);
 signal paddle_2        : std_logic_vector(7 downto 0);
 signal paddle_3        : std_logic_vector(7 downto 0);
 signal paddle_4        : std_logic_vector(7 downto 0);
+signal paddle_12       : std_logic_vector(7 downto 0);
+signal paddle_22       : std_logic_vector(7 downto 0);
+signal paddle_32       : std_logic_vector(7 downto 0);
+signal paddle_42       : std_logic_vector(7 downto 0);
 signal key_r1          : std_logic;
 signal key_r2          : std_logic;
 signal key_l1          : std_logic;
@@ -466,6 +470,10 @@ signal detach_reset    : std_logic;
 signal detach          : std_logic;
 signal coldboot        : std_logic;
 signal disk_pause      : std_logic;
+signal paddle_1_analogA : std_logic;
+signal paddle_1_analogB : std_logic;
+signal paddle_2_analogA : std_logic;
+signal paddle_2_analogB : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -520,6 +528,7 @@ gamepad_p1: entity work.dualshock2
     ds2_att       => ds_cs,
     ds2_clk       => ds_clk,
     ds2_ack       => '0',
+    analog        => paddle_1_analogA or paddle_1_analogB,
     stick_lx      => paddle_1,
     stick_ly      => paddle_2,
     stick_rx      => open,
@@ -554,6 +563,7 @@ gamepad_p2: entity work.dualshock2
     ds2_att       => ds2_cs,
     ds2_clk       => ds2_clk,
     ds2_ack       => '0',
+    analog        => paddle_2_analogA or paddle_2_analogB,
     stick_lx      => paddle_3,
     stick_ly      => paddle_4,
     stick_rx      => open,
@@ -769,12 +779,10 @@ cass_snd <= cass_read and not cass_run and  system_tape_sound   and not cass_fin
 audio_l <= audio_data_l or (5x"00" & cass_snd & 12x"00000");
 audio_r <= audio_data_r or (5x"00" & cass_snd & 12x"00000");
 
-
 video_inst: entity work.video 
 port map(
       pll_lock     => pll_locked,
       clk          => clk32,
-      clk_pixel_x5 => clk_pixel_x5,
       audio_div    => audio_div,
 
       ntscmode  => ntscMode,
@@ -809,7 +817,7 @@ port map(
       hp_bck   => hp_bck,
       hp_ws    => hp_ws,
       hp_din   => hp_din,
-      pa_en    => open
+      pa_en    => pa_en
       );
 
 addr <= io_cycle_addr when io_cycle ='1' else reu_ram_addr(22 downto 0) when ext_cycle = '1' else cart_addr;
@@ -959,34 +967,45 @@ begin
       when "0010"  => joyA <= joyUsb2;
       when "0011"  => joyA <= joyNumpad;
       when "0100"  => joyA <= joyDS2_p1;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0101"  => joyA <= joyMouse;
       when "0110"  => joyA <= joyDS2A_p1;
+        paddle_1_analogA <= '1';
+        paddle_2_analogA <= '0';
       when "0111"  => joyA <= joyUsb1A;
       when "1000"  => joyA <= joyUsb2A;
       when "1001"  => joyA <= (others => '0');
       when "1010"  => joyA <= joyDS2_p2;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "1011"  => joyA <= joyDS2A_p2;
+      paddle_1_analogA <= '0';
+      paddle_2_analogA <= '1';
       when others  => joyA <= (others => '0');
     end case;
-  end if;
-end process;
 
-process(clk32)
-begin
-	if rising_edge(clk32) then
     case port_2_sel is
       when "0000"  => joyB <= joyDigital;  -- 0 2nd button
       when "0001"  => joyB <= joyUsb1;     -- 1 2nd button
       when "0010"  => joyB <= joyUsb2;     -- 2 2nd button
       when "0011"  => joyB <= joyNumpad;   -- 3 2nd button
       when "0100"  => joyB <= joyDS2_p1;   -- 4 2nd button
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
       when "0101"  => joyB <= joyMouse;    -- 5
       when "0110"  => joyB <= joyDS2A_p1;  -- 6
+        paddle_1_analogB <= '1';
+        paddle_2_analogB <= '0';
       when "0111"  => joyB <= joyUsb1A;    -- 7
       when "1000"  => joyB <= joyUsb2A;    -- 8
       when "1001"  => joyB <= (others => '0');--9
       when "1010"  => joyB <= joyDS2_p2;   -- 10 2nd button
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
       when "1011"  => joyB <= joyDS2A_p2;  -- 11
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '1';
       when others  => joyB <= (others => '0');
       end case;
   end if;
