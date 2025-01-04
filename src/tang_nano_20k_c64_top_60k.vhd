@@ -952,50 +952,86 @@ begin
 	if rising_edge(clk32) then
     case port_1_sel is
       when "0000"  => joyA <= joyDigital;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';      
       when "0001"  => joyA <= joyUsb1;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0010"  => joyA <= joyUsb2;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0011"  => joyA <= joyNumpad;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0100"  => joyA <= joyDS2_p1;
         paddle_1_analogA <= '0';
         paddle_2_analogA <= '0';
       when "0101"  => joyA <= joyMouse;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0110"  => joyA <= joyDS2A_p1;
         paddle_1_analogA <= '1';
         paddle_2_analogA <= '0';
       when "0111"  => joyA <= joyUsb1A;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "1000"  => joyA <= joyUsb2A;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "1001"  => joyA <= (others => '0');
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "1010"  => joyA <= joyDS2_p2;
         paddle_1_analogA <= '0';
         paddle_2_analogA <= '0';
       when "1011"  => joyA <= joyDS2A_p2;
-      paddle_1_analogA <= '0';
-      paddle_2_analogA <= '1';
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '1';
       when others  => joyA <= (others => '0');
-    end case;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
+      end case;
 
     case port_2_sel is
-      when "0000"  => joyB <= joyDigital;  -- 0 2nd button
-      when "0001"  => joyB <= joyUsb1;     -- 1 2nd button
-      when "0010"  => joyB <= joyUsb2;     -- 2 2nd button
-      when "0011"  => joyB <= joyNumpad;   -- 3 2nd button
-      when "0100"  => joyB <= joyDS2_p1;   -- 4 2nd button
+      when "0000"  => joyB <= joyDigital;  -- 0
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
+      when "0001"  => joyB <= joyUsb1;     -- 1
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
+      when "0010"  => joyB <= joyUsb2;     -- 2
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
+      when "0011"  => joyB <= joyNumpad;   -- 3
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
+      when "0100"  => joyB <= joyDS2_p1;   -- 4
         paddle_1_analogB <= '0';
         paddle_2_analogB <= '0';
       when "0101"  => joyB <= joyMouse;    -- 5
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
       when "0110"  => joyB <= joyDS2A_p1;  -- 6
         paddle_1_analogB <= '1';
         paddle_2_analogB <= '0';
       when "0111"  => joyB <= joyUsb1A;    -- 7
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
       when "1000"  => joyB <= joyUsb2A;    -- 8
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
       when "1001"  => joyB <= (others => '0');--9
-      when "1010"  => joyB <= joyDS2_p2;   -- 10 2nd button
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
+      when "1010"  => joyB <= joyDS2_p2;   -- 10
         paddle_1_analogB <= '0';
         paddle_2_analogB <= '0';
       when "1011"  => joyB <= joyDS2A_p2;  -- 11
         paddle_1_analogB <= '0';
         paddle_2_analogB <= '1';
       when others  => joyB <= (others => '0');
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
       end case;
   end if;
 end process;
