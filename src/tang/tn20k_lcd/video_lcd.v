@@ -1,6 +1,10 @@
 // video.v
 
-module video (
+module video
+#(
+    parameter bit STEREO = 1'b0
+)
+ (
    input    clk,
    input    pll_lock,
    input [8:0] audio_div,
@@ -131,7 +135,7 @@ always @(posedge clk_audio) begin
 
    // latch data so it's stable during transmission
    if(audio_bit_cnt == 5'd31)
-	 audio <= 16'h8000 + audio_mixed; 
+   	 audio <= (STEREO)?hp_ws?{16'h8000 + audio_vol_l}:{16'h8000 + audio_vol_r}:16'h8000 + audio_mixed;
 end
 
 // Audio c64 core specific
