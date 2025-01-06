@@ -712,7 +712,10 @@ audio_r <= audio_data_r or (5x"00" & cass_snd & 12x"00000");
 lcd_r <= lcd_r_i(5 downto 1);
 lcd_b <= lcd_b_i(5 downto 1);
 
-video_inst: entity work.video 
+video_inst: entity work.video
+(
+ STEREO  => false
+)
 port map(
       pll_lock     => pll_locked,
       clk          => clk32,

@@ -780,9 +780,9 @@ audio_l <= audio_data_l or (5x"00" & cass_snd & 12x"00000");
 audio_r <= audio_data_r or (5x"00" & cass_snd & 12x"00000");
 
 video_inst: entity work.video 
-generic
+generic map
 (
- STEREO  : boolean := true
+ STEREO => true
 )
 port map(
       pll_lock     => pll_locked,
