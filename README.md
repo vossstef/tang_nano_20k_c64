@@ -68,8 +68,8 @@ See [Tang Mega 60K NEO](TANG_MEGA_60K.md)
 ## c64 Nano on Tang Mega 138k Pro
 See [Tang Mega 138K Pro](TANG_MEGA_138Kpro.md)
 
-## c64 Nano on Tang Nano 20k with LCD
-See [Tang Nano 20k LCD](TANG_NANO_20k_LCD.md)
+## c64 Nano with LCD and Speaker
+See [Tang Nano LCD](TANG_NANO_20k_LCD.md)
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS 2.0.<br>

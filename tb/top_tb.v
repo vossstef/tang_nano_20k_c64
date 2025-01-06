@@ -10,6 +10,7 @@ reg clk;
 reg rst;
 reg vsync;
 reg ds2_dat;
+reg analog;
 
 dualshock2 dut(
     .clk(clk),
@@ -17,6 +18,7 @@ dualshock2 dut(
     .vsync(vsync),
     .ds2_dat(ds2_dat),
     .ds2_ack(1'b0),
+    .analog(analog),
 
     .ds2_cmd(),
     .ds2_att(),
@@ -55,6 +57,7 @@ initial
          rst = 1'b0;
          vsync = 1'b0;
          ds2_dat = 1'b0;
+         analog = 1'b0;
 
           #20000
           rst <= 1'b1;
@@ -69,7 +72,7 @@ initial
 ///////////////////////////////////////////////////////////////////////////
     always 
     begin
-         #17 clk <= ~clk;
+         #17000 clk <= ~clk;
     end
 
     always 
@@ -80,7 +83,11 @@ initial
     always 
     begin
          #4000000 ds2_dat <= ~ds2_dat;
-  end
+    end
 
+    always 
+    begin
+         #3000000 analog <= 1'b1;
+    end
 
 endmodule
