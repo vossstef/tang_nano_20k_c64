@@ -703,8 +703,6 @@ generic map (
     outbyte         => sd_rd_data         -- a byte of sector content
 );
 
-audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
-
 cass_snd <= cass_read and not cass_run and  system_tape_sound   and not cass_finish;
 audio_l <= audio_data_l or (5x"00" & cass_snd & 12x"00000");
 audio_r <= audio_data_r or (5x"00" & cass_snd & 12x"00000");
@@ -713,13 +711,13 @@ lcd_r <= lcd_r_i(5 downto 1);
 lcd_b <= lcd_b_i(5 downto 1);
 
 video_inst: entity work.video
+generic map
 (
- STEREO  => false
+  STEREO  => false
 )
 port map(
       pll_lock     => pll_locked,
       clk          => clk32,
-      audio_div    => audio_div,
 
       ntscmode  => ntscMode,
       hs_in_n   => hsync,

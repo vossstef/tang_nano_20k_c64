@@ -7,7 +7,6 @@ module video
  (
    input    clk,
    input    pll_lock,
-   input [8:0] audio_div,
 
    input   ntscmode,
    input   vs_in_n,
@@ -102,41 +101,9 @@ osd_u8g2 osd_u8g2 (
         .osd_status(osd_status)
 );   
 
-// generate i2s signals
-assign hp_bck = !clk_audio;
-assign hp_ws = !pll_lock?1'b0:audio_bit_cnt[4];
-assign hp_din = !pll_lock?1'b0:audio[15-audio_bit_cnt[3:0]];
-
 /* ------------------- audio processing --------------- */
 
 assign pa_en = pll_lock;   // enable amplifier
-
-reg clk_audio;
-reg [7:0] aclk_cnt;
-always @(posedge clk) begin
-    if(aclk_cnt < 31500000 / (24000*32) / 2 - 1)
-//  if(aclk_cnt < audio_div)
-        aclk_cnt <= aclk_cnt + 8'd1;
-    else begin
-        aclk_cnt <= 8'd0;
-        clk_audio <= ~clk_audio;
-    end
-end
-
-// mix both stereo channels into one mono channel
-wire [15:0] audio_mixed = audio_vol_l + audio_vol_r;
-
-// count 32 bits
-reg [15:0] audio;
-reg [4:0] audio_bit_cnt;
-always @(posedge clk_audio) begin
-    if(!pll_lock) audio_bit_cnt <= 5'd0;
-    else    audio_bit_cnt <= audio_bit_cnt + 5'd1;
-
-   // latch data so it's stable during transmission
-   if(audio_bit_cnt == 5'd31)
-   	 audio <= (STEREO)?hp_ws?{16'h8000 + audio_vol_l}:{16'h8000 + audio_vol_r}:16'h8000 + audio_mixed;
-end
 
 // Audio c64 core specific
 reg [15:0] alo,aro;
@@ -161,6 +128,20 @@ wire [15:0] audio_vol_r =
     (system_volume == 2'd1)?{ {2{aro[15]}}, aro[15:2] }:
     (system_volume == 2'd2)?{ aro[15], aro[15:1] }:
     aro;
+
+// mix both stereo channels into one mono channel
+wire [15:0] audio_mixed = audio_vol_l + audio_vol_r;
+
+i2s i2s(
+    .clk(clk),
+    .reset(!pll_lock),
+    .clk_rate(ntscmode?32940000:31520000),
+    .sclk(hp_bck),
+    .lrclk(hp_ws),
+    .sdata(hp_din),
+    .left_chan(audio_vol_l),
+    .right_chan(audio_vol_r)
+);
 
 assign lcd_clk = clk;
 assign lcd_hs_n = sd_hs_n;
