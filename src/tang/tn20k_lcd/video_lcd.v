@@ -139,8 +139,8 @@ i2s i2s(
     .sclk(hp_bck),
     .lrclk(hp_ws),
     .sdata(hp_din),
-    .left_chan(audio_vol_l),
-    .right_chan(audio_vol_r)
+    .left_chan( (STEREO)?audio_vol_l:audio_mixed),
+    .right_chan((STEREO)?audio_vol_r:audio_mixed)
 );
 
 assign lcd_clk = clk;
