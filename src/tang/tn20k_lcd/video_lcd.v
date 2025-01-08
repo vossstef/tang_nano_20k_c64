@@ -129,19 +129,60 @@ wire [15:0] audio_vol_r =
     (system_volume == 2'd2)?{ aro[15], aro[15:1] }:
     aro;
 
+//wire [31:0] clk_div <= (ntscmode?325000000:31520000); // GW5A
+//wire clk_div <= (ntscmode?32940000:31520000); // TN20k
+
+reg i2s_clk;
+reg [7:0] i2s_clk_cnt;
+always @(posedge clk) begin
+    if(i2s_clk_cnt < (ntscmode?32940000:31520000) / (24000*32) / 2 - 1)
+        i2s_clk_cnt <= i2s_clk_cnt + 8'd1;
+    else begin
+        i2s_clk_cnt <= 8'd0;
+        i2s_clk <= ~i2s_clk;
+    end
+end
+
 // mix both stereo channels into one mono channel
 wire [15:0] audio_mixed = audio_vol_l + audio_vol_r;
 
-i2s i2s(
-    .clk(clk),
-    .reset(!pll_lock),
-    .clk_rate(ntscmode?32940000:31520000),
-    .sclk(hp_bck),
-    .lrclk(hp_ws),
-    .sdata(hp_din),
-    .left_chan( (STEREO)?audio_vol_l:audio_mixed),
-    .right_chan((STEREO)?audio_vol_r:audio_mixed)
-);
+// sign expand and add both channels
+wire [15:0] audio_mix = { audio_vol_l[14], audio_vol_l} + { audio_vol_r[14], audio_vol_r };
+
+// shift audio down to reduce amp output volume to a sane range
+localparam AUDIO_SHIFT = 2;   // 2 TM138k / TM60k
+//localparam AUDIO_SHIFT = 3;   // TN20k
+wire [15:0] audio_scaled = { { AUDIO_SHIFT+1{audio_mix[15]}}, audio_mix[14:AUDIO_SHIFT] };   
+ 
+// count 32 bits, 16 left and 16 right channel. MAX samples
+// on rising edge
+reg [15:0] audio;
+reg [4:0] audio_bit_cnt;
+always @(posedge i2s_clk) begin
+   if(!pll_lock) audio_bit_cnt <= 5'd0;
+   else          audio_bit_cnt <= audio_bit_cnt + 5'd1;
+
+   // latch data so it's stable during transmission
+   if(audio_bit_cnt == 5'd31)
+     audio <= audio_scaled;
+  //   audio <= 16'h8000 + audio_mixed;
+end
+
+// generate i2s signals
+assign hp_bck = !i2s_clk;
+assign hp_ws = !pll_lock?1'b0:audio_bit_cnt[4];
+assign hp_din = !pll_lock?1'b0:audio[15-audio_bit_cnt[3:0]];
+
+//i2s i2s(
+//    .clk(clk),
+//    .reset(!pll_lock),
+//    .clk_rate(ntscmode?32940000:31520000),
+//    .sclk(hp_bck),
+//    .lrclk(hp_ws),
+//    .sdata(hp_din),
+//    .left_chan( (STEREO)?audio_vol_l:audio_mixed),
+//    .right_chan((STEREO)?audio_vol_r:audio_mixed)
+//);
 
 assign lcd_clk = clk;
 assign lcd_hs_n = sd_hs_n;
