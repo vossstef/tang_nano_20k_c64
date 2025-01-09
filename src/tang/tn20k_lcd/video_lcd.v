@@ -103,7 +103,7 @@ osd_u8g2 osd_u8g2 (
 
 /* ------------------- audio processing --------------- */
 
-assign pa_en = pll_lock;   // enable amplifier
+assign pa_en = ~pll_lock;   // enable amplifier 0=on and 1= off
 
 // Audio c64 core specific
 reg [15:0] alo,aro;
@@ -134,16 +134,21 @@ wire [15:0] audio_vol_r =
 
 reg i2s_clk;
 reg [7:0] i2s_clk_cnt;
-always @(posedge clk) begin
-    if(i2s_clk_cnt < 21)
- //   if(i2s_clk_cnt < (ntscmode?32940000:31520000) / (24000*32) / 2 - 1)
-        i2s_clk_cnt <= i2s_clk_cnt + 8'd1;
-    else begin
+always @(posedge clk or negedge pll_lock) begin
+    if (~pll_lock) begin
         i2s_clk_cnt <= 8'd0;
-        i2s_clk <= ~i2s_clk;
+        i2s_clk <= 1'b0;
+        end
+    else begin
+    //    if(i2s_clk_cnt < 21)
+       if(i2s_clk_cnt < (ntscmode?32940000:31500000) / (24000*32) / 2 - 1)
+            i2s_clk_cnt <= i2s_clk_cnt + 8'd1;
+        else begin
+            i2s_clk_cnt <= 8'd0;
+            i2s_clk <= ~i2s_clk;
+        end
     end
 end
-
 // mix both stereo channels into one mono channel
 wire [15:0] audio_mixed = audio_vol_l + audio_vol_r;
 
@@ -166,13 +171,12 @@ always @(posedge i2s_clk) begin
     // latch data so it's stable during transmission
     if(audio_bit_cnt == 5'd31)
      audio <= audio_scaled;
-    //   audio <= 16'h8000 + audio_mixed;
 end
 
 // generate i2s signals
-//assign hp_bck = !i2s_clk;
-//assign hp_ws = !pll_lock?1'b0:audio_bit_cnt[4];
-//assign hp_din = !pll_lock?1'b0:audio[15-audio_bit_cnt[3:0]];
+assign hp_bck = !i2s_clk;
+assign hp_ws = !pll_lock?1'b0:audio_bit_cnt[4];
+assign hp_din = !pll_lock?1'b0:audio[15-audio_bit_cnt[3:0]];
 
 //i2s i2s(
 //    .clk(clk),
@@ -188,12 +192,12 @@ end
 audio_drive audio_drive(
     .clk_1p536m(i2s_clk),
     .rst_n(pll_lock),
-    .idata(~audio_mixed + 16'd1), //(~audio_mixed \+ 1'b1),
-    .req(),
+    .idata(~audio_mixed + 1'b1), //(~audio_mixed \+ 1'b1),
+    .req()
 
-    .HP_BCK(hp_bck),
-    .HP_WS(hp_ws),
-    .HP_DIN(hp_din)
+//    .HP_BCK(hp_bck),
+//    .HP_WS(hp_ws),
+//    .HP_DIN(hp_din)
 );
 
 assign lcd_clk = clk;
