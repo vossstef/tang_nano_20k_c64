@@ -135,7 +135,8 @@ wire [15:0] audio_vol_r =
 reg i2s_clk;
 reg [7:0] i2s_clk_cnt;
 always @(posedge clk) begin
-    if(i2s_clk_cnt < (ntscmode?32940000:31520000) / (24000*32) / 2 - 1)
+    if(i2s_clk_cnt < 21)
+ //   if(i2s_clk_cnt < (ntscmode?32940000:31520000) / (24000*32) / 2 - 1)
         i2s_clk_cnt <= i2s_clk_cnt + 8'd1;
     else begin
         i2s_clk_cnt <= 8'd0;
@@ -152,7 +153,7 @@ wire [15:0] audio_mix = { audio_vol_l[14], audio_vol_l} + { audio_vol_r[14], aud
 // shift audio down to reduce amp output volume to a sane range
 localparam AUDIO_SHIFT = 2;   // 2 TM138k / TM60k
 //localparam AUDIO_SHIFT = 3;   // TN20k
-wire [15:0] audio_scaled = { { AUDIO_SHIFT+1{audio_mix[15]}}, audio_mix[14:AUDIO_SHIFT] };   
+wire [15:0] audio_scaled = { { AUDIO_SHIFT+1{audio_mix[15]}}, audio_mix[14:AUDIO_SHIFT] };
  
 // count 32 bits, 16 left and 16 right channel. MAX samples
 // on rising edge
@@ -162,16 +163,16 @@ always @(posedge i2s_clk) begin
    if(!pll_lock) audio_bit_cnt <= 5'd0;
    else          audio_bit_cnt <= audio_bit_cnt + 5'd1;
 
-   // latch data so it's stable during transmission
-   if(audio_bit_cnt == 5'd31)
+    // latch data so it's stable during transmission
+    if(audio_bit_cnt == 5'd31)
      audio <= audio_scaled;
-  //   audio <= 16'h8000 + audio_mixed;
+    //   audio <= 16'h8000 + audio_mixed;
 end
 
 // generate i2s signals
-assign hp_bck = !i2s_clk;
-assign hp_ws = !pll_lock?1'b0:audio_bit_cnt[4];
-assign hp_din = !pll_lock?1'b0:audio[15-audio_bit_cnt[3:0]];
+//assign hp_bck = !i2s_clk;
+//assign hp_ws = !pll_lock?1'b0:audio_bit_cnt[4];
+//assign hp_din = !pll_lock?1'b0:audio[15-audio_bit_cnt[3:0]];
 
 //i2s i2s(
 //    .clk(clk),
@@ -183,6 +184,17 @@ assign hp_din = !pll_lock?1'b0:audio[15-audio_bit_cnt[3:0]];
 //    .left_chan( (STEREO)?audio_vol_l:audio_mixed),
 //    .right_chan((STEREO)?audio_vol_r:audio_mixed)
 //);
+
+audio_drive audio_drive(
+    .clk_1p536m(i2s_clk),
+    .rst_n(pll_lock),
+    .idata(~audio_mixed + 16'd1), //(~audio_mixed \+ 1'b1),
+    .req(),
+
+    .HP_BCK(hp_bck),
+    .HP_WS(hp_ws),
+    .HP_DIN(hp_din)
+);
 
 assign lcd_clk = clk;
 assign lcd_hs_n = sd_hs_n;

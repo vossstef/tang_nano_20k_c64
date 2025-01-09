@@ -887,19 +887,19 @@ clk_switch_2: DCS
 pll_locked <= pll_locked_pal and pll_locked_ntsc and flash_lock;
 dcsclksel <= "0001" when ntscMode = '0' else "0010";
 
-clk_switch_1: DCS
-generic map (
-    DCS_MODE => "RISING"
-)
-port map (
-    CLKOUT => clk_pixel_x5,
-    CLKSEL => dcsclksel,
-    CLKIN0 => clk_pixel_x5_pal,
-    CLKIN1 => clk_pixel_x5_ntsc,
-    CLKIN2 => '0',
-    CLKIN3 => '0',
-    SELFORCE => '1'
-);
+--clk_switch_1: DCS
+--generic map (
+--    DCS_MODE => "RISING"
+--)
+--port map (
+--    CLKOUT => clk_pixel_x5,
+--    CLKSEL => dcsclksel,
+--    CLKIN0 => clk_pixel_x5_pal,
+--    CLKIN1 => clk_pixel_x5_ntsc,
+--    CLKIN2 => '0',
+--    CLKIN3 => '0',
+--    SELFORCE => '1'
+--);
 
 div_inst: CLKDIV
 generic map(
