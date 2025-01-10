@@ -773,8 +773,6 @@ generic map (
     outbyte         => sd_rd_data         -- a byte of sector content
 );
 
-audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(327,9);
-
 cass_snd <= cass_read and not cass_run and  system_tape_sound   and not cass_finish;
 audio_l <= audio_data_l or (5x"00" & cass_snd & 12x"00000");
 audio_r <= audio_data_r or (5x"00" & cass_snd & 12x"00000");

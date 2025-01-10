@@ -788,10 +788,10 @@ dram_inst: entity work.sdram8
   );
 
 -- Clock tree and all frequencies in Hz
--- pll         315000000 / 329400000
--- serdes      157500000 / 164700000
--- dram         63000000 /  65880000
--- core /pixel  31500000 /  32940000
+-- pll         31500000 / 329400000
+-- serdes      15750000 / 164700000
+-- dram        63000000 / 65880000
+-- core /pixel 31500000 / 32940000
 -- IDIV_SEL              2 / 4
 -- FBDIV_SEL            34 / 60
 

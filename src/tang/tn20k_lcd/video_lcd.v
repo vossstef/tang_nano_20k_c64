@@ -103,7 +103,7 @@ osd_u8g2 osd_u8g2 (
 
 /* ------------------- audio processing --------------- */
 
-assign pa_en = ~pll_lock;   // enable amplifier 0=on and 1= off
+assign pa_en = (STEREO)?~pll_lock:pll_lock; // TM138/60k enable amplifier 0=on and 1= off, TN20k vice versa
 
 // Audio c64 core specific
 reg [15:0] alo,aro;
@@ -129,8 +129,8 @@ wire [15:0] audio_vol_r =
     (system_volume == 2'd2)?{ aro[15], aro[15:1] }:
     aro;
 
-// clk_div <= (ntscmode?325000000:31500000); // GW5A
-// clk_div <= (ntscmode?32940000:31520000);  // TN20k
+// clk_div <= (ntscmode?32500000:31500000); // GW5A
+// clk_div <= (ntscmode?32940000:31500000); // TN20k
 reg i2s_clk;
 reg [7:0] i2s_clk_cnt;
 always @(posedge clk or negedge pll_lock) begin
@@ -152,8 +152,7 @@ end
 wire [15:0] audio_mix = { audio_vol_l[14], audio_vol_l} + { audio_vol_r[14], audio_vol_r };
 
 // shift audio down to reduce amp output volume to a sane range
-localparam AUDIO_SHIFT = 2;   // 2 TM138k / TM60k
-//localparam AUDIO_SHIFT = 3;   // TN20k
+localparam AUDIO_SHIFT = (STEREO)?2:3;   // 2 TM138k / TM60k and 3 // TN20k
 wire [15:0] audio_scaled = { { AUDIO_SHIFT+1{audio_mix[15]}}, audio_mix[14:AUDIO_SHIFT] };
  
 // count 32 bits, 16 left and 16 right channel. MAX samples
