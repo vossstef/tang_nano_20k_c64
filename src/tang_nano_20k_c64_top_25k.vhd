@@ -16,7 +16,7 @@ entity tang_nano_20k_c64_top_25k is
   generic
   (
    DUAL  : integer := 1; -- 0:no, 1:yes dual SID build option
-   MIDI  : integer := 1 -- 0:no, 1:yes optional MIDI Interface
+   MIDI  : integer := 0 -- 0:no, 1:yes optional MIDI Interface
    );
   port
   (
@@ -24,7 +24,6 @@ entity tang_nano_20k_c64_top_25k is
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
     leds_n      : out std_logic_vector(1 downto 0);
-  --io          : in std_logic_vector(5 downto 0); -- TR2 TR1 RI LE DN UP
     -- USB-C BL616 UART
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
@@ -292,8 +291,6 @@ signal midi_rx         : std_logic;
 signal midi_tx         : std_logic := 'Z';
 signal st_midi         : std_logic_vector(2 downto 0);
 signal phi             : std_logic;
-signal joystick_cs_i   : std_logic;
-signal joystick_miso_i : std_logic;
 signal frz_hbl         : std_logic;
 signal frz_vbl         : std_logic;
 signal system_pause    : std_logic;
@@ -452,6 +449,7 @@ signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
 signal coldboot        : std_logic;
+signal disk_pause      : std_logic;
 signal paddle_1_analogA : std_logic;
 signal paddle_1_analogB : std_logic;
 signal paddle_2_analogA : std_logic;
@@ -516,7 +514,27 @@ begin
   end if;
 end process;
 
-disk_reset <= c1541_osd_reset or not reset_n or c1541_reset or not flash_lock;
+-- delay disk start to keep loader at power-up intact
+process(clk32, por)
+variable pause_cnt : integer range 0 to 2147483647;
+  begin
+  if por = '1' then
+    disk_pause <= '1';
+    pause_cnt := 34000000;
+    elsif rising_edge(clk32) then
+    if pause_cnt /= 0 then
+      pause_cnt := pause_cnt - 1;
+    end if;
+  end if;
+
+  if pause_cnt = 0 then 
+    disk_pause <= '0';
+  else
+    disk_pause <= '1';
+  end if;
+end process;
+
+disk_reset <= '1' when disk_pause or c1541_osd_reset or not reset_n or por or c1541_reset else '0';
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
@@ -1154,7 +1172,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
   clk32        => clk32,
-  reset_n      => reset_n and pll_locked and ram_ready,
+  reset_n      => reset_n,
   bios         => "00",
   pause        => '0',
   pause_out    => c64_pause,
@@ -1315,6 +1333,7 @@ port map(
 -- TN20k  Winbond 25Q64JVIQ
 -- TP25k  XTX XT25F64FWOIG
 -- TM138k Winbond 25Q128BVEA
+-- TM60k  Winbond 25Q64JVIQ
 -- phase shift 135° TN, TP and 270° TM
 -- offset in spi flash TN20K, TP25K $200000, TM138K $A00000
 flash_inst: entity work.flash 
@@ -1323,7 +1342,7 @@ port map(
     resetn    => flash_lock,
     ready     => open,
     busy      => open,
-    address   => ("0010" & "000" & dos_sel & c1541rom_addr),
+    address   => (X"2" & "000" & dos_sel & c1541rom_addr),
     cs        => c1541rom_cs,
     dout      => c1541rom_data,
     mspi_cs   => mspi_cs,
@@ -1423,7 +1442,7 @@ port map (
   load_flt          => load_flt,
   sd_img_size       => sd_img_size,
   leds              => leds(5 downto 1),
-  img_select        => img_select,
+  img_select        => open,
 
   ioctl_download    => ioctl_download,
   ioctl_addr        => ioctl_addr,

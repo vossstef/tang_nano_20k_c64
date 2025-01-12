@@ -1427,7 +1427,7 @@ port map(
 -- TM138k Winbond 25Q128BVEA
 -- TM60k  Winbond 25Q64JVIQ
 -- phase shift 135° TN, TP and 270° TM
--- offset in spi flash TN20K, TP25K $200000, TM138K $A00000
+-- offset in spi flash TN20K, TP25K $200000, TM138K $A00000, TM60k $700000
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,

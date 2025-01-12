@@ -16,7 +16,7 @@ entity tang_nano_20k_c64_top is
   generic
   (
    DUAL  : integer := 1; -- 0:no, 1:yes dual SID build option
-   MIDI  : integer := 1 -- 0:no, 1:yes optional MIDI Interface
+   MIDI  : integer := 0 -- 0:no, 1:yes optional MIDI Interface
    );
   port
   (
@@ -466,6 +466,7 @@ signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
 signal coldboot        : std_logic;
+signal disk_pause      : std_logic;
 signal pll_locked_i    : std_logic;
 signal pll_locked_d    : std_logic;
 signal pll_locked_d1   : std_logic;
@@ -650,7 +651,27 @@ gamepad_p2: entity work.dualshock2
   end if;
 end process;
 
-disk_reset <= c1541_osd_reset or not reset_n or c1541_reset or not flash_lock;
+-- delay disk start to keep loader at power-up intact
+process(clk32, por)
+variable pause_cnt : integer range 0 to 2147483647;
+  begin
+  if por = '1' then
+    disk_pause <= '1';
+    pause_cnt := 34000000;
+    elsif rising_edge(clk32) then
+    if pause_cnt /= 0 then
+      pause_cnt := pause_cnt - 1;
+    end if;
+  end if;
+
+  if pause_cnt = 0 then 
+    disk_pause <= '0';
+  else
+    disk_pause <= '1';
+  end if;
+end process;
+
+disk_reset <= '1' when disk_pause or c1541_osd_reset or not reset_n or por or c1541_reset else '0';
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked_hid)
@@ -861,10 +882,10 @@ dram_inst: entity work.sdram8
   );
 
 -- Clock tree and all frequencies in Hz
--- pll         315000000 / 329400000
--- serdes      157500000 / 164700000
--- dram         63000000 /  65880000
--- core /pixel  31500000 /  32940000
+-- pll         31500000 / 329400000
+-- serdes      15750000 / 164700000
+-- dram        63000000 / 65880000
+-- core /pixel 31500000 / 32940000
 -- IDIV_SEL              2 / 4
 -- FBDIV_SEL            34 / 60
 
@@ -1043,8 +1064,12 @@ joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2)
 joyUsb2    <= joystick2(6 downto 4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3);
 joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <= "00" & mouse_btns(0) & "000" & mouse_btns(1);
-joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00"; -- DS2 left stick
-joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00"; 
+joyDS2A_p1 <= "00" & '0' & key_triangle2 & key_circle2 & "00" when port_2_sel = "1010" else   -- joyDS2A_p2
+              "00" & '0' & key_cross  & key_square  & "00";
+--joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00"; -- DS2 left stick
+--joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00"; 
+joyDS2A_p2 <= "00" & '0' & key_triangle & key_circle & "00" when port_1_sel = "0110" else -- joyDS2A_p1
+          "00" & '0' & key_cross2 & key_square2 & "00";
 joyUsb1A   <= "00" & '0' & joystick1(5) & joystick1(4) & "00"; -- Y,X button
 joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 
@@ -1361,7 +1386,7 @@ begin
 end process;
 
 io_data <=  unsigned(cart_data) when cart_oe = '1' else
-            unsigned(midi_data) when midi_oe = '1' else
+            -- unsigned(midi_data) when midi_oe = '1' else
             unsigned(reu_dout);
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
 sid_fc_lr <= 13x"0600" - (3x"0" & sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
@@ -1373,7 +1398,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
   clk32        => clk32,
-  reset_n      => reset_n and pll_locked and ram_ready,
+  reset_n      => reset_n,
   bios         => "00",
   pause        => '0',
   pause_out    => c64_pause,
@@ -1414,10 +1439,10 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => game,
   exrom        => exrom,
   io_rom       => io_rom,
-  io_ext       => reu_oe or cart_oe or midi_oe,
+  io_ext       => reu_oe or cart_oe, --  or midi_oe,
   io_data      => io_data,
-  irq_n        => midi_irq_n,
-  nmi_n        => not nmi and midi_nmi_n,
+  irq_n        => '1', --midi_irq_n,
+  nmi_n        => not nmi, -- and midi_nmi_n,
   nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,
@@ -1643,7 +1668,7 @@ port map (
   load_flt          => load_flt,
   sd_img_size       => sd_img_size,
   leds              => leds(5 downto 1),
-  img_select        => img_select,
+  img_select        => open,
 
   ioctl_download    => ioctl_download,
   ioctl_addr        => ioctl_addr,
