@@ -632,25 +632,27 @@ gamepad_p2: entity work.dualshock2
      data   => ws2812
     );
 
-	process(clk32, disk_reset)
-  variable reset_cnt : integer range 0 to 2147483647;
+process(clk32, disk_reset)
+variable reset_cnt : integer range 0 to 2147483647;
   begin
-		if disk_reset = '1' then
-      disk_chg_trg <= '0';
-      reset_cnt := 64000000;
-    elsif rising_edge(clk32) then
-      disk_chg_trg <= '0';
-      if reset_cnt /= 0 then
-        reset_cnt := reset_cnt - 1;
-      elsif reset_cnt = 0 then
-        disk_chg_trg <= '1';
-      end if;
+  if disk_reset = '1' then
+    disk_chg_trg <= '0';
+    reset_cnt := 64000000;
+  elsif rising_edge(clk32) then
+    if reset_cnt /= 0 then
+      reset_cnt := reset_cnt - 1;
     end if;
+    if reset_cnt = 0 then
+      disk_chg_trg <= '1';
+    else 
+      disk_chg_trg <= '0';
+    end if;
+  end if;
 end process;
 
 -- delay disk start to keep loader at power-up intact
 process(clk32, por)
-variable pause_cnt : integer range 0 to 2147483647;
+  variable pause_cnt : integer range 0 to 2147483647;
   begin
   if por = '1' then
     disk_pause <= '1';
@@ -658,7 +660,8 @@ variable pause_cnt : integer range 0 to 2147483647;
   elsif rising_edge(clk32) then
     if pause_cnt /= 0 then
       pause_cnt := pause_cnt - 1;
-    elsif pause_cnt = 0 then 
+    end if;
+    if pause_cnt = 0 then 
       disk_pause <= '0';
     end if;
   end if;
@@ -1059,12 +1062,14 @@ joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & num
 joyMouse   <= "00" & mouse_btns(0) & "000" & mouse_btns(1);
 --joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00";
 --joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00";
-joyDS2A_p1 <= "00" & '0' & key_triangle2 & key_circle2 & "00" when port_2_sel = "1011" else   -- joyDS2A_p2
-              "00" & '0' & key_triangle2 & key_circle2 & "00" when port_2_sel = "0110" else   -- joyDS2A_p1
-              "00" & '0' & key_cross  & key_square  & "00";
-joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00" when port_1_sel = "1011" else -- joyDS2A_p2
-              "00" & '0' & key_cross2 & key_square2 & "00" when port_1_sel = "0110" else -- joyDS2A_p1
-              "00" & '0' & key_triangle & key_circle & "00";  -- joyDS2A_p1
+joyDS2A_p1 <= --"00" & '0' & key_triangle & key_circle & "00" when port_1_sel = "1011" else   -- joyDS2A_p2
+           --   "00" & '0' & key_triangle & key_circle & "00" when port_2_sel = "0110" else   -- joyDS2A_p1
+              "00" & '0' & key_triangle & key_circle  & "00";
+
+joyDS2A_p2 <= --"00" & '0' & key_cross & key_square & "00"   when port_2_sel = "1011" else -- joyDS2A_p2
+              "00" & '0' & key_cross & key_square & "00"; -- when port_2_sel = "0110" else -- joyDS2A_p1
+          --    "00" & '0' & key_cross2 & key_square2 & "00";
+
 joyUsb1A   <= "00" & '0' & joystick1(5) & joystick1(4) & "00"; -- Y,X button
 joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 
@@ -1189,6 +1194,9 @@ pot2 <= pd4 when joyswap = '1' else pd2;
 pot3 <= pd1 when joyswap = '1' else pd3;
 pot4 <= pd2 when joyswap = '1' else pd4;
 
+-- "0110"  => joyB <= joyDS2A_p1;
+-- "1011"  => joyB <= joyDS2A_p2;
+
 -- paddle - mouse - GS controller 2nd button and 3rd button
 pd1 <=    not paddle_1 when port_1_sel = "0110" else  -- J2D TN20k single DS2 mode
           not paddle_12 when port_1_sel = "1011" else -- MS20k cable
@@ -1204,15 +1212,15 @@ pd2 <=    not paddle_2 when port_1_sel = "0110" else
           x"ff" when unsigned(port_1_sel) < 5 and joyA(6) = '1' else
           x"ff" when unsigned(port_1_sel) = "1010" and joyA(6) = '1' else
           x"00";
-pd3 <=    not paddle_32 when port_2_sel = "1011" else 
-          not paddle_3 when port_2_sel = "0110" else 
+pd3 <=    not paddle_3 when port_2_sel = "1011" else 
+          not paddle_32 when port_2_sel = "0110" else 
           joystick2_x_pos(7 downto 0) when port_2_sel = "1000" else 
           ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_2_sel = "0101" else
           x"ff" when unsigned(port_2_sel) < 5 and joyB(5) = '1' else
           x"ff" when unsigned(port_2_sel) = "1010" and joyB(5) = '1' else
           x"00";
-pd4 <=    not paddle_42 when port_2_sel = "1011" else
-          not paddle_4 when port_2_sel = "0110" else 
+pd4 <=    not paddle_4 when port_2_sel = "1011" else
+          not paddle_42 when port_2_sel = "0110" else 
           joystick2_y_pos(7 downto 0) when port_2_sel = "1000" else
           ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_2_sel = "0101" else
           x"ff" when unsigned(port_2_sel) < 5 and joyB(6) = '1' else
