@@ -639,13 +639,11 @@ gamepad_p2: entity work.dualshock2
       disk_chg_trg <= '0';
       reset_cnt := 64000000;
     elsif rising_edge(clk32) then
+      disk_chg_trg <= '0';
       if reset_cnt /= 0 then
         reset_cnt := reset_cnt - 1;
-      end if;
-      if reset_cnt = 0 then
+      elsif reset_cnt = 0 then
         disk_chg_trg <= '1';
-      else 
-        disk_chg_trg <= '0';
       end if;
     end if;
 end process;
@@ -660,12 +658,8 @@ variable pause_cnt : integer range 0 to 2147483647;
   elsif rising_edge(clk32) then
     if pause_cnt /= 0 then
       pause_cnt := pause_cnt - 1;
-    end if;
-
-    if pause_cnt = 0 then 
+    elsif pause_cnt = 0 then 
       disk_pause <= '0';
-    else
-      disk_pause <= '1';
     end if;
   end if;
 end process;
@@ -1063,11 +1057,13 @@ joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2)
 joyUsb2    <= joystick2(6 downto 4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3);
 joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <= "00" & mouse_btns(0) & "000" & mouse_btns(1);
+--joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00";
+--joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00";
 joyDS2A_p1 <= "00" & '0' & key_triangle2 & key_circle2 & "00" when port_2_sel = "1011" else   -- joyDS2A_p2
+              "00" & '0' & key_triangle2 & key_circle2 & "00" when port_2_sel = "0110" else   -- joyDS2A_p1
               "00" & '0' & key_cross  & key_square  & "00";
---joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00"; -- DS2 left stick
---joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00"; 
-joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00" when port_1_sel = "1011" else
+joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00" when port_1_sel = "1011" else -- joyDS2A_p2
+              "00" & '0' & key_cross2 & key_square2 & "00" when port_1_sel = "0110" else -- joyDS2A_p1
               "00" & '0' & key_triangle & key_circle & "00";  -- joyDS2A_p1
 joyUsb1A   <= "00" & '0' & joystick1(5) & joystick1(4) & "00"; -- Y,X button
 joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
