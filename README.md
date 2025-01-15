@@ -46,6 +46,7 @@ Features:
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 * RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode to Tang onboard USB-C serial port or external hw pin.
 * Freezer support (e.g. Action Replay)
+* Native LCD panel / Speaker support for TN20k, TM60k, TM138k Pro
 <br>
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
