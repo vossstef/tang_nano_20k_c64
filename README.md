@@ -28,7 +28,7 @@ Features:
 * [USB Gamepad](https://en.wikipedia.org/wiki/Gamepad) Stick via µC as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation<br>
 * [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type) [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 * Joystick emulation on Keyboard Numpad<br>
-* [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) for [MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) via spare [pinheader](shield_ds_cable.md)
+* [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) for [MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) via spare [pinheader](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md)
 * [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) DPad / left Stick as Joystick<br>
 * [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation (analog mode)<br>
 * Emulation of [C64GS Cheetah Annihilator](https://en.wikipedia.org/wiki/Commodore_64_Games_System) joystick 2nd Trigger Button (Pot X/Y)
@@ -208,18 +208,18 @@ OSD: **USB #1 Joy** or **USB #2 Joy** <br>
 Also [RII Mini Keyboard i8](http://www.riitek.com/product/220.html) left Multimedia Keys are active if **USB #1 Joy** selected. 
 
 or<br>
-<u>Dualshock 2 Gamepad</u> Stick or Dpad as Joystick. OSD: **DS #1 Joy** or **DS #2 Joy**<br>
+Dualshock 2 Gamepad Stick or Dpad as Joystick. OSD: **DS #1 Joy** or **DS #2 Joy**<br>
 At the moment Dpad only for original Pad. Some clone devices support at the same time Dpad and left stick simultaniously.
-<br>**square** , **cross**  and **circle** Button as 3 Trigger buttons  
+<br>```circle and cross``` Buttons as Trigger:<br>
 
 > [!IMPORTANT]
 > In a [MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k) configuration Dualshock is supported via the internal ``spare J8`` pinheader. <br>
-> See MiSTeryShield20k [DS Adapter Cable](shield_ds_cable.md) for further information.<br>
+> See [MiSTeryShield20k DS2 Adapter / Cable](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md) for further information.<br>
 
 > [!NOTE]
-> TN20k: You have to select OSD "DS2 **#2** Joy" for a ``MiSTeryShield20k`` configuration.<br>
-> TN20k: You have to select OSD "DS2 **#1** Joy" if you use the ``Sipeed Joy to DIP`` adapter.<br>
-Both DS interface ports can be active at the same time meaning twin Dualshock support if the MiSTeryShield20k MIDI interface is not populated (Resistor R9 and IC U3 removed).  
+> TN20k: You have to select OSD **DS2 #2 Joy** or **DS #2 Paddle** for a ``MiSTeryShield20k`` configuration.<br>
+> TN20k: You have to select OSD **DS2 #1 Joy** or **DS #1 Paddle** if you use the ``Sipeed Joy to DIP`` adapter.<br>
+Single DS interface active at the same time!
 
 or Keyboard <u>Numpad.</u>  
 OSD: **Numpad**<br>
