@@ -16,7 +16,7 @@ entity tang_nano_20k_c64_top is
   generic
   (
    DUAL  : integer := 1; -- 0:no, 1:yes dual SID build option
-   MIDI  : integer := 0 -- 0:no, 1:yes optional MIDI Interface
+   MIDI  : integer := 1  -- 0:no, 1:yes optional MIDI Interface
    );
   port
   (
@@ -641,11 +641,9 @@ variable reset_cnt : integer range 0 to 2147483647;
   elsif rising_edge(clk32) then
     if reset_cnt /= 0 then
       reset_cnt := reset_cnt - 1;
-    end if;
-    if reset_cnt = 0 then
-      disk_chg_trg <= '1';
-    else 
       disk_chg_trg <= '0';
+    elsif reset_cnt = 0 then
+      disk_chg_trg <= '1';
     end if;
   end if;
 end process;
@@ -1010,12 +1008,12 @@ flashclock: rPLL
           FCLKIN => "27",
           DEVICE => "GW2AR-18C",
           DYN_IDIV_SEL => "false",
-          IDIV_SEL => 7,
+          IDIV_SEL => 6,
           DYN_FBDIV_SEL => "false",
-          FBDIV_SEL => 18,
+          FBDIV_SEL => 25,
           DYN_ODIV_SEL => "false",
           ODIV_SEL => 8,
-          PSDA_SEL => "0110", -- phase shift 135°
+          PSDA_SEL => "1111",
           DYN_DA_EN => "false",
           DUTYDA_SEL => "1000",
           CLKOUT_FT_DIR => '1',
@@ -1060,16 +1058,10 @@ joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2)
 joyUsb2    <= joystick2(6 downto 4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3);
 joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <= "00" & mouse_btns(0) & "000" & mouse_btns(1);
---joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00";
---joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00";
-joyDS2A_p1 <= --"00" & '0' & key_triangle & key_circle & "00" when port_1_sel = "1011" else   -- joyDS2A_p2
-           --   "00" & '0' & key_triangle & key_circle & "00" when port_2_sel = "0110" else   -- joyDS2A_p1
-              "00" & '0' & key_triangle & key_circle  & "00";
-
-joyDS2A_p2 <= --"00" & '0' & key_cross & key_square & "00"   when port_2_sel = "1011" else -- joyDS2A_p2
-              "00" & '0' & key_cross & key_square & "00"; -- when port_2_sel = "0110" else -- joyDS2A_p1
-          --    "00" & '0' & key_cross2 & key_square2 & "00";
-
+joyDS2A_p1 <= "00" & '0' & key_cross & key_square      & "00" when (port_1_sel = "0110" or port_2_sel = "0110") else
+              "00" & '0' & key_cross2 & key_square2    & "00";
+joyDS2A_p2 <= "00" & '0' & key_triangle & key_circle   & "00" when (port_2_sel = "0110" or port_1_sel = "0110") else
+              "00" & '0' & key_triangle2 & key_circle2 & "00";
 joyUsb1A   <= "00" & '0' & joystick1(5) & joystick1(4) & "00"; -- Y,X button
 joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 
@@ -1098,7 +1090,7 @@ begin
       when "0101"  => joyA <= joyMouse;
         paddle_1_analogA <= '0';
         paddle_2_analogA <= '0';
-      when "0110"  => joyA <= joyDS2A_p1;
+      when "0110"  => joyA <= joyDS2A_p1 when port_2_sel = "0110" else joyDS2A_p2;
         paddle_1_analogA <= '1';
         paddle_2_analogA <= '0';
       when "0111"  => joyA <= joyUsb1A;
@@ -1113,7 +1105,7 @@ begin
       when "1010"  => joyA <= joyDS2_p2;
         paddle_1_analogA <= '0';
         paddle_2_analogA <= '0';
-      when "1011"  => joyA <= joyDS2A_p2;
+      when "1011"  => joyA <= joyDS2A_p1 when port_2_sel = "1011" else joyDS2A_p2;
         paddle_1_analogA <= '0';
         paddle_2_analogA <= '1';
       when others  => joyA <= (others => '0');
@@ -1140,7 +1132,7 @@ begin
       when "0101"  => joyB <= joyMouse;    -- 5
         paddle_1_analogB <= '0';
         paddle_2_analogB <= '0';
-      when "0110"  => joyB <= joyDS2A_p1;  -- 6
+      when "0110"  => joyB <= joyDS2A_p2 when port_1_sel = "0110" else joyDS2A_p1;  -- 6
         paddle_1_analogB <= '1';
         paddle_2_analogB <= '0';
       when "0111"  => joyB <= joyUsb1A;    -- 7
@@ -1155,7 +1147,7 @@ begin
       when "1010"  => joyB <= joyDS2_p2;   -- 10
         paddle_1_analogB <= '0';
         paddle_2_analogB <= '0';
-      when "1011"  => joyB <= joyDS2A_p2;  -- 11
+      when "1011"  => joyB <= joyDS2A_p2 when port_1_sel = "1011" else joyDS2A_p1;  -- 11
         paddle_1_analogB <= '0';
         paddle_2_analogB <= '1';
       when others  => joyB <= (others => '0');
@@ -1194,9 +1186,6 @@ pot2 <= pd4 when joyswap = '1' else pd2;
 pot3 <= pd1 when joyswap = '1' else pd3;
 pot4 <= pd2 when joyswap = '1' else pd4;
 
--- "0110"  => joyB <= joyDS2A_p1;
--- "1011"  => joyB <= joyDS2A_p2;
-
 -- paddle - mouse - GS controller 2nd button and 3rd button
 pd1 <=    not paddle_1 when port_1_sel = "0110" else  -- J2D TN20k single DS2 mode
           not paddle_12 when port_1_sel = "1011" else -- MS20k cable
@@ -1212,15 +1201,15 @@ pd2 <=    not paddle_2 when port_1_sel = "0110" else
           x"ff" when unsigned(port_1_sel) < 5 and joyA(6) = '1' else
           x"ff" when unsigned(port_1_sel) = "1010" and joyA(6) = '1' else
           x"00";
-pd3 <=    not paddle_3 when port_2_sel = "1011" else 
-          not paddle_32 when port_2_sel = "0110" else 
+pd3 <=    not paddle_3 when port_2_sel = "0110" else
+          not paddle_32 when port_2_sel = "1011" else
           joystick2_x_pos(7 downto 0) when port_2_sel = "1000" else 
           ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_2_sel = "0101" else
           x"ff" when unsigned(port_2_sel) < 5 and joyB(5) = '1' else
           x"ff" when unsigned(port_2_sel) = "1010" and joyB(5) = '1' else
           x"00";
-pd4 <=    not paddle_4 when port_2_sel = "1011" else
-          not paddle_42 when port_2_sel = "0110" else 
+pd4 <=    not paddle_4 when port_2_sel = "0110" else
+          not paddle_42 when port_2_sel = "1011" else
           joystick2_y_pos(7 downto 0) when port_2_sel = "1000" else
           ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_2_sel = "0101" else
           x"ff" when unsigned(port_2_sel) < 5 and joyB(6) = '1' else
@@ -1389,7 +1378,7 @@ begin
 end process;
 
 io_data <=  unsigned(cart_data) when cart_oe = '1' else
-            -- unsigned(midi_data) when midi_oe = '1' else
+            unsigned(midi_data) when midi_oe = '1' else
             unsigned(reu_dout);
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
 sid_fc_lr <= 13x"0600" - (3x"0" & sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
@@ -1442,10 +1431,10 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => game,
   exrom        => exrom,
   io_rom       => io_rom,
-  io_ext       => reu_oe or cart_oe, --  or midi_oe,
+  io_ext       => reu_oe or cart_oe or midi_oe,
   io_data      => io_data,
-  irq_n        => '1', --midi_irq_n,
-  nmi_n        => not nmi, -- and midi_nmi_n,
+  irq_n        => midi_irq_n,
+  nmi_n        => not nmi and midi_nmi_n,
   nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,

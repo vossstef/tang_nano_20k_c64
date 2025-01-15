@@ -458,6 +458,7 @@ signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
 signal coldboot        : std_logic;
+signal disk_pause      : std_logic;
 signal pll_locked_i    : std_logic;
 signal pll_locked_d    : std_logic;
 signal pll_locked_d1   : std_logic;
@@ -546,26 +547,40 @@ begin
      data   => ws2812
     );
 
-	process(clk32, disk_reset)
-    variable reset_cnt : integer range 0 to 2147483647;
-    begin
-		if disk_reset = '1' then
-      disk_chg_trg <= '0';
-      reset_cnt := 64000000;
-      elsif rising_edge(clk32) then
-			if reset_cnt /= 0 then
-				reset_cnt := reset_cnt - 1;
-			end if;
-		end if;
-
-  if reset_cnt = 0 then
-    disk_chg_trg <= '1';
-  else 
+process(clk32, disk_reset)
+variable reset_cnt : integer range 0 to 2147483647;
+  begin
+  if disk_reset = '1' then
     disk_chg_trg <= '0';
+    reset_cnt := 64000000;
+  elsif rising_edge(clk32) then
+    if reset_cnt /= 0 then
+      reset_cnt := reset_cnt - 1;
+      disk_chg_trg <= '0';
+    elsif reset_cnt = 0 then
+      disk_chg_trg <= '1';
+    end if;
   end if;
 end process;
 
-disk_reset <= c1541_osd_reset or not reset_n or c1541_reset or not flash_lock;
+-- delay disk start to keep loader at power-up intact
+process(clk32, por)
+  variable pause_cnt : integer range 0 to 2147483647;
+  begin
+  if por = '1' then
+    disk_pause <= '1';
+    pause_cnt := 34000000;
+  elsif rising_edge(clk32) then
+    if pause_cnt /= 0 then
+      pause_cnt := pause_cnt - 1;
+    end if;
+    if pause_cnt = 0 then 
+      disk_pause <= '0';
+    end if;
+  end if;
+end process;
+
+disk_reset <= '1' when disk_pause or c1541_osd_reset or not reset_n or por or c1541_reset else '0';
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked_hid)
@@ -920,12 +935,12 @@ flashclock: rPLL
           FCLKIN => "27",
           DEVICE => "GW2AR-18C",
           DYN_IDIV_SEL => "false",
-          IDIV_SEL => 7,
+          IDIV_SEL => 6,
           DYN_FBDIV_SEL => "false",
-          FBDIV_SEL => 18,
+          FBDIV_SEL => 25,
           DYN_ODIV_SEL => "false",
           ODIV_SEL => 8,
-          PSDA_SEL => "0110", -- phase shift 135°
+          PSDA_SEL => "1111",
           DYN_DA_EN => "false",
           DUTYDA_SEL => "1000",
           CLKOUT_FT_DIR => '1',
@@ -1299,7 +1314,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   port map
   (
   clk32        => clk32,
-  reset_n      => reset_n and pll_locked and ram_ready,
+  reset_n      => reset_n,
   bios         => "00",
   pause        => '0',
   pause_out    => c64_pause,
@@ -1547,7 +1562,7 @@ port map (
   load_flt          => load_flt,
   sd_img_size       => sd_img_size,
   leds              => leds(5 downto 1),
-  img_select        => img_select,
+  img_select        => open,
 
   ioctl_download    => ioctl_download,
   ioctl_addr        => ioctl_addr,
