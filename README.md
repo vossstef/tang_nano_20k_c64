@@ -5,10 +5,10 @@ The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wi
 
 | Board      | FPGA       | support |Note|
 | ---        |        -   | -     |-|
-| [Tang Nano 20k](https://wiki.sipeed.com/nano20k)     | [GW2AR](https://www.gowinsemi.com/en/product/detail/38/)  | X |- |
-| [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)  | X |no Dualshock 2, no Retro D9 Joystick |
-| [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/)| X | dual Dualshock|
-| [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | X |dual Dualshock |
+| [Tang Nano 20k](https://wiki.sipeed.com/nano20k)     | [GW2AR](https://www.gowinsemi.com/en/product/detail/38/)  | X |Dualshock via MiSTeryShield20k spare header **or** Joy to DIP |
+| [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)  | X |no Dualshock, no Retro D9 Joystick |
+| [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/)| X | twin Dualshock|
+| [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | X |twin Dualshock |
 
 
 Be aware that the [VIC20](https://en.wikipedia.org/wiki/VIC-20) had been ported too in similar manner ([VIC20Nano](https://github.com/vossstef/VIC20Nano)).<br>
@@ -28,7 +28,8 @@ Features:
 * [USB Gamepad](https://en.wikipedia.org/wiki/Gamepad) Stick via µC as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation<br>
 * [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type) [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 * Joystick emulation on Keyboard Numpad<br>
-* [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys & Stick as Joystick<br>
+* [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) for [MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) via spare [pinheader](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md). Adapter by [venice1200](https://github.com/venice1200)
+* [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) DPad / left Stick as Joystick<br>
 * [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation (analog mode)<br>
 * Emulation of [C64GS Cheetah Annihilator](https://en.wikipedia.org/wiki/Commodore_64_Games_System) joystick 2nd Trigger Button (Pot X/Y)
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with parallel bus [Speedloader Dolphin DOS 2](https://rr.pokefinder.org/wiki/Dolphin_DOS). [GER manual](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
@@ -45,16 +46,15 @@ Features:
 * Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 * RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode to Tang onboard USB-C serial port or external hw pin.
 * Freezer support (e.g. Action Replay)
+* Native LCD panel / Speaker support for TN20k, TM60k, TM138k Pro
 <br>
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
 <br>
 
-HID interfaces aligned in pinmap and control to match [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/misterynano_fw)
-respectively [FPGA-Companion](https://github.com/harbaum/FPGA-Companion)<br>
-Basically a µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
+This project relies on a [M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) being connected to the Tang Nano 20K.  
+Alternately you can use a [Raspberry Pi Pico](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html) or [esp32-s2](https://www.espressif.com/en/products/socs/esp32-s2)/[s3](https://www.espressif.com/en/products/socs/esp32-s3) and use the [FPGA companion firmware](http://github.com/harbaum/FPGA-Companion). Basically a µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
 
-**Note** PROJECT IS STILL WORK IN PROGRESS
-<br>
+
 ## Installation
 
 The installation of C64 Nano on the Tang Nano 20k board can be done using a Linux PC or a Windows PC
@@ -68,6 +68,9 @@ See [Tang Mega 60K NEO](TANG_MEGA_60K.md)
 
 ## c64 Nano on Tang Mega 138k Pro
 See [Tang Mega 138K Pro](TANG_MEGA_138Kpro.md)
+
+## c64 Nano with LCD and Speaker
+See [Tang Nano LCD](TANG_NANO_20k_LCD.md)
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS 2.0.<br>
@@ -206,19 +209,22 @@ OSD: **USB #1 Joy** or **USB #2 Joy** <br>
 Also [RII Mini Keyboard i8](http://www.riitek.com/product/220.html) left Multimedia Keys are active if **USB #1 Joy** selected. 
 
 or<br>
-<u>Gamepad Stick as Joystick.</u>  
-OSD: **DS #1 Joy** or **DS #2 Joy**
-<br>left **stick digital** for Move and **square** , **cross**  and **circle** Button for 3 Trigger buttons  
-or following **Pad** controls:<br>
-| Buttons | - | - |
-| - | - | -  |
-| square<br>Trigger | Up  | cross<br>Trigger 2 |
-| Left | - | Right |
-| - | Down | circle<br>Trigger 3 |<br>
+Dualshock 2 Gamepad Stick or Dpad as Joystick. OSD: **DS #1 Joy** or **DS #2 Joy**<br>
+At the moment Dpad only for original Pad. Some clone devices support at the same time Dpad and left stick simultaniously.
+<br>```circle and cross``` Buttons as Trigger:<br>
+
+> [!IMPORTANT]
+> In a [MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k) configuration Dualshock is supported via the internal ``spare J8`` pinheader. <br>
+> See [MiSTeryShield20k DS2 Adapter / Cable](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md) for further information. Thx [venice1200](https://github.com/venice1200) !<br>
+
+> [!NOTE]
+> TN20k: You have to select OSD **DS2 #2 Joy** or **DS #2 Paddle** for a ``MiSTeryShield20k`` configuration.<br>
+> TN20k: You have to select OSD **DS2 #1 Joy** or **DS #1 Paddle** if you use the ``Sipeed Joy to DIP`` adapter.<br>
+Single DS interface active at the same time!
 
 or Keyboard <u>Numpad.</u>  
 OSD: **Numpad**<br>
-| | | |
+|Numpad| |Numpad|
 |-|-|-|
 |0<br>Trigger|8<br>Up|.<br>Trigger 2|
 |4<br>Left|-|6<br>Right|
@@ -228,11 +234,12 @@ or <u>Mouse.</u>
 OSD: **Mouse**<br>
 USB Mouse as c1351 Mouse emulation.
 
-or <u>Dualshock2 Gamepad</u> as Paddle.  
+or <u>Dualshock 2 Gamepad</u> as Paddle.  
 OSD: **DS #1 Paddle** or **DS #2 Paddle**<br>
-Dualshock 2 Sticks in analog mode as VC-1312 Paddle emulation.<br>
+Dualshock left Stick in analog mode as VC-1312 Paddle emulation.<br>
+For TN20k 4 Paddles mapped to a single Gamepad (X/Y) and both Sticks.
 **square** , **cross**, **circle** and **triangle** used as 4 Trigger buttons<br>
-You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the **Joystick** mode again and set OSD: **DS #1 Joy**<br>
+ANALOG Paddle mode will be indicated by DS 2 red light indicator.
 
 or <u>USB Paddle</u>.  
 OSD: **USB #1 Padd** or **USB #2 Padd** <br>
@@ -247,9 +254,9 @@ Button **cross / square** as Trigger<br>
 ## LED UI
 
 | LED | function    | TN20K | TP25K |TM60K|TM138K Pro|
-| --- |           - | -     | -     | -    |-    |
-| 0 | c1541 activity| x     | x     | x done  |x  |
-| 1 | D64 selected  | x     | -     | x ready |x  |
+| --- |           - | -     | -     | -    |-  |
+| 0 | c1541 activity| x     | x     | x    |x  |
+| 1 | D64 selected  | x     | -     | x    |x  |
 | 2 | CRT seleced   | x     | -     |   -  |x  |
 | 3 | PRG selected  | x     | -     |   -  |x  |
 | 4 |Kernal selected| x     | -     |   -  |x  |
@@ -276,7 +283,7 @@ OSD selection allows to change in between TANG USB-C port or external HW pin int
 
 | Board      |RX (I) FPGA |TX (O) FPGA|Note|
 |  -         |   -    |   -  | -   |
-| TN20k      |31      | 77   |[pinmap](https://wiki.sipeed.com/hardware/en/tang/tang-nano-20k/nano-20k.html#Pin-diagram), misterynano io(6) / io(7)|
+| TN20k      |75      | 76   | |
 | TP25k      |K5      | L5   | J4-6  J4-5, share M0S Dock PMOD|
 | TM60k NEO  |AB20    | AA19 | J24-6 J24-5, share M0S Dock PMOD |
 | TM138k Pro |H15     | H14  | J24-6 J24-5, share M0S Dock PMOD |
@@ -288,9 +295,11 @@ Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC o
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
 Alternatively use the command line build script **gw_sh.exe / gw_sh.sh** [build_tn20k.tcl](build_tn20k.tcl) , [build_tp25k.tcl](build_tp25k.tcl) or [build_tm138k.tcl](build_tm138k.tcl)<br>
 ## HW circuit considerations
+
 **Pinmap TN20k Interfaces** <br>
  Sipeed M0S Dock, digital Joystick D9 and DualShock Gamepad connection.<br>
  ![wiring](\.assets/wiring_spi_irq.png)
+<br>
 
 **Pinmap D-SUB 9 Joystick Interface** <br>
 - Joystick interface is 3.3V tolerant. Joystick 5V supply pin has to be left floating !<br>

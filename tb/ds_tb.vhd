@@ -23,6 +23,7 @@ component ds_top
     ds2_att         : out std_logic;
     ds2_clk         : out std_logic;
     ds2_ack         : in std_logic;
+    analog          : in std_logic;
 
     stick_lx        : out std_logic_vector(7 downto 0);
     stick_ly        : out std_logic_vector(7 downto 0);
@@ -61,6 +62,7 @@ end component;
   signal ds2_dat          : std_logic;
   signal ds2_att          : std_logic;
   signal ds2_clk          : std_logic;
+  signal analog           : std_logic;
 
   signal key_up           : std_logic;
 
@@ -76,6 +78,7 @@ begin
     ds2_att     => ds2_att,
     ds2_clk     => ds2_clk,
     ds2_ack     => '0',
+    analog      => analog,
     stick_lx    => open,
     stick_ly    => open,
     stick_rx    => open,
@@ -119,10 +122,8 @@ begin
 
   p_rst : process
   begin
-    reset <= '0';
-    wait for 500 ns;
     reset <= '1';
-    wait for 1000 ns;
+    wait for 1 ms;
     reset <= '0';
     wait;
   end process;
@@ -133,6 +134,14 @@ begin
     wait for CLKPERIOD_dat / 2;
     ds2_dat <= '1';
     wait for CLKPERIOD_dat - (CLKPERIOD_dat / 2);
+  end process;
+
+  p_mode_sw : process
+  begin
+    analog <= '0';
+    wait for 30 ms;
+    analog <= '1';
+    wait;
   end process;
 
 end behavior;

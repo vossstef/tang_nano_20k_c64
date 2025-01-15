@@ -313,6 +313,10 @@ signal paddle_1        : std_logic_vector(7 downto 0);
 signal paddle_2        : std_logic_vector(7 downto 0);
 signal paddle_3        : std_logic_vector(7 downto 0);
 signal paddle_4        : std_logic_vector(7 downto 0);
+signal paddle_12       : std_logic_vector(7 downto 0);
+signal paddle_22       : std_logic_vector(7 downto 0);
+signal paddle_32       : std_logic_vector(7 downto 0);
+signal paddle_42       : std_logic_vector(7 downto 0);
 signal key_r1          : std_logic;
 signal key_r2          : std_logic;
 signal key_l1          : std_logic;
@@ -459,6 +463,10 @@ signal detach_reset    : std_logic;
 signal detach          : std_logic;
 signal coldboot        : std_logic;
 signal disk_pause      : std_logic;
+signal paddle_1_analogA : std_logic;
+signal paddle_1_analogB : std_logic;
+signal paddle_2_analogA : std_logic;
+signal paddle_2_analogB : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -516,6 +524,7 @@ gamepad_p1: entity work.dualshock2
     ds2_att       => ds_cs,
     ds2_clk       => ds_clk,
     ds2_ack       => '0',
+    analog        => paddle_1_analogA or paddle_1_analogB,
     stick_lx      => paddle_1,
     stick_ly      => paddle_2,
     stick_rx      => open,
@@ -550,6 +559,7 @@ gamepad_p2: entity work.dualshock2
     ds2_att       => ds2_cs,
     ds2_clk       => ds2_clk,
     ds2_ack       => '0',
+    analog        => paddle_2_analogA or paddle_2_analogB,
     stick_lx      => paddle_3,
     stick_ly      => paddle_4,
     stick_rx      => open,
@@ -582,42 +592,36 @@ gamepad_p2: entity work.dualshock2
      data   => ws2812
     );
 
-	process(clk32, disk_reset)
-    variable reset_cnt : integer range 0 to 2147483647;
-    begin
-		if disk_reset = '1' then
-      disk_chg_trg <= '0';
-			reset_cnt := 64000000;
-      elsif rising_edge(clk32) then
-			if reset_cnt /= 0 then
-				reset_cnt := reset_cnt - 1;
-			end if;
-		end if;
-
-  if reset_cnt = 0 then
-    disk_chg_trg <= '1';
-  else 
+process(clk32, disk_reset)
+variable reset_cnt : integer range 0 to 2147483647;
+  begin
+  if disk_reset = '1' then
     disk_chg_trg <= '0';
+    reset_cnt := 64000000;
+  elsif rising_edge(clk32) then
+    if reset_cnt /= 0 then
+      reset_cnt := reset_cnt - 1;
+      disk_chg_trg <= '0';
+    elsif reset_cnt = 0 then
+      disk_chg_trg <= '1';
+    end if;
   end if;
 end process;
 
 -- delay disk start to keep loader at power-up intact
 process(clk32, por)
-variable pause_cnt : integer range 0 to 2147483647;
+  variable pause_cnt : integer range 0 to 2147483647;
   begin
   if por = '1' then
     disk_pause <= '1';
     pause_cnt := 34000000;
-    elsif rising_edge(clk32) then
+  elsif rising_edge(clk32) then
     if pause_cnt /= 0 then
       pause_cnt := pause_cnt - 1;
     end if;
-  end if;
-
-  if pause_cnt = 0 then 
-    disk_pause <= '0';
-  else
-    disk_pause <= '1';
+    if pause_cnt = 0 then 
+      disk_pause <= '0';
+    end if;
   end if;
 end process;
 
@@ -942,39 +946,86 @@ begin
 	if rising_edge(clk32) then
     case port_1_sel is
       when "0000"  => joyA <= joyDigital;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';      
       when "0001"  => joyA <= joyUsb1;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0010"  => joyA <= joyUsb2;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0011"  => joyA <= joyNumpad;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0100"  => joyA <= joyDS2_p1;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0101"  => joyA <= joyMouse;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0110"  => joyA <= joyDS2A_p1;
+        paddle_1_analogA <= '1';
+        paddle_2_analogA <= '0';
       when "0111"  => joyA <= joyUsb1A;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "1000"  => joyA <= joyUsb2A;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "1001"  => joyA <= (others => '0');
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "1010"  => joyA <= joyDS2_p2;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "1011"  => joyA <= joyDS2A_p2;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '1';
       when others  => joyA <= (others => '0');
-    end case;
-  end if;
-end process;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
+      end case;
 
-process(clk32)
-begin
-	if rising_edge(clk32) then
     case port_2_sel is
-      when "0000"  => joyB <= joyDigital;  -- 0 2nd button
-      when "0001"  => joyB <= joyUsb1;     -- 1 2nd button
-      when "0010"  => joyB <= joyUsb2;     -- 2 2nd button
-      when "0011"  => joyB <= joyNumpad;   -- 3 2nd button
-      when "0100"  => joyB <= joyDS2_p1;   -- 4 2nd button
+      when "0000"  => joyB <= joyDigital;  -- 0
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
+      when "0001"  => joyB <= joyUsb1;     -- 1
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
+      when "0010"  => joyB <= joyUsb2;     -- 2
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
+      when "0011"  => joyB <= joyNumpad;   -- 3
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
+      when "0100"  => joyB <= joyDS2_p1;   -- 4
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
       when "0101"  => joyB <= joyMouse;    -- 5
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
       when "0110"  => joyB <= joyDS2A_p1;  -- 6
+        paddle_1_analogB <= '1';
+        paddle_2_analogB <= '0';
       when "0111"  => joyB <= joyUsb1A;    -- 7
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
       when "1000"  => joyB <= joyUsb2A;    -- 8
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
       when "1001"  => joyB <= (others => '0');--9
-      when "1010"  => joyB <= joyDS2_p2;   -- 10 2nd button
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
+      when "1010"  => joyB <= joyDS2_p2;   -- 10
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
       when "1011"  => joyB <= joyDS2A_p2;  -- 11
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '1';
       when others  => joyB <= (others => '0');
+        paddle_1_analogB <= '0';
+        paddle_2_analogB <= '0';
       end case;
   end if;
 end process;
