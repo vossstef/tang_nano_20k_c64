@@ -16,7 +16,7 @@ entity tang_nano_20k_c64_top_138k is
   generic
   (
    DUAL  : integer := 1; -- 0:no, 1:yes dual SID build option
-   MIDI  : integer := 0 -- 0:no, 1:yes optional MIDI Interface
+   MIDI  : integer := 1  -- 0:no, 1:yes optional MIDI Interface
    );
   port
   (
