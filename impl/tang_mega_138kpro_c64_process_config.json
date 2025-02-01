@@ -49,7 +49,7 @@
  "MULTIJUMP_ADDRESS_WIDTH" : "24",
  "MULTIJUMP_MODE" : "Normal",
  "MULTIJUMP_SPI_FLASH_ADDRESS" : "000000",
- "Multi_Boot" : false,
+ "Multi_Boot" : true,
  "OUTPUT_BASE_NAME" : "tang_nano_20k_c64_138k",
  "POWER_ON_RESET_MONITOR" : true,
  "PRINT_BSRAM_VALUE" : true,

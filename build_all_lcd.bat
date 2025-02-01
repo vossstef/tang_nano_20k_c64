@@ -5,7 +5,7 @@ set GWSH=C:\Gowin\Gowin_V1.9.10.03_x64\IDE\bin\gw_sh
 echo.
 echo ============ build mega138k pro LCD ===============
 echo.
-%GWSH% build_tm138k_pro_lcd.tcl
+%GWSH% build_tm138kpro_lcd.tcl
 echo.
 echo ============ build mega 60k LCD ===============
 echo.
