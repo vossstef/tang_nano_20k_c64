@@ -911,7 +911,6 @@ flashclock: entity work.Gowin_PLL_138k_flash
         lock => flash_lock,
         clkout0 => flash_clk,
         clkout1 => mspi_clk,
-        clkout2 => open, -- 32,0M
         clkin => clk
     );
 
@@ -1424,7 +1423,7 @@ port map(
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
-    resetn    => flash_lock,
+    resetn    => pll_locked,
     ready     => flash_ready,
     busy      => open,
     address   => (X"A" & "000" & dos_sel & c1541rom_addr),

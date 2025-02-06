@@ -1,11 +1,11 @@
 --Copyright (C)2014-2024 Gowin Semiconductor Corporation.
 --All rights reserved.
 --File Title: IP file
---Tool Version: V1.9.9.01
+--Tool Version: V1.9.10.03 (64-bit)
 --Part Number: GW5A-LV25MG121NC1/I0
 --Device: GW5A-25
 --Device Version: A
---Created Time: Sat Feb 24 19:16:26 2024
+--Created Time: Thu Feb  6 22:18:22 2025
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -15,13 +15,13 @@ entity Gowin_PLL_flash is
         lock: out std_logic;
         clkout0: out std_logic;
         clkout1: out std_logic;
-        clkout2: out std_logic;
         clkin: in std_logic
     );
 end Gowin_PLL_flash;
 
 architecture Behavioral of Gowin_PLL_flash is
 
+    signal clkout2: std_logic;
     signal clkout3: std_logic;
     signal clkout4: std_logic;
     signal clkout5: std_logic;
@@ -163,7 +163,7 @@ begin
             FBDIV_SEL => 1,
             ODIV0_SEL => 25,
             ODIV1_SEL => 25,
-            ODIV2_SEL => 50,
+            ODIV2_SEL => 8,
             ODIV3_SEL => 8,
             ODIV4_SEL => 8,
             ODIV5_SEL => 8,
@@ -173,7 +173,7 @@ begin
             ODIV0_FRAC_SEL => 0,
             CLKOUT0_EN => "TRUE",
             CLKOUT1_EN => "TRUE",
-            CLKOUT2_EN => "TRUE",
+            CLKOUT2_EN => "FALSE",
             CLKOUT3_EN => "FALSE",
             CLKOUT4_EN => "FALSE",
             CLKOUT5_EN => "FALSE",

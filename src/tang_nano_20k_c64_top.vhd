@@ -474,7 +474,8 @@ signal paddle_1_analogA : std_logic;
 signal paddle_1_analogB : std_logic;
 signal paddle_2_analogA : std_logic;
 signal paddle_2_analogB : std_logic;
-signal flash_ready     : std_logic;
+signal flash_ready      : std_logic;
+signal pll_locked_comb  : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -1045,6 +1046,7 @@ flashclock: rPLL
             FDLY     => (others => '1')
         );
 
+pll_locked_comb <= pll_locked_hid and flash_lock;
 leds_n <=  not leds;
 leds(0) <= led1541;
 
@@ -1556,7 +1558,7 @@ port map(
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
-    resetn    => flash_lock,
+    resetn    => pll_locked_comb,
     ready     => flash_ready,
     busy      => open,
     address   => (X"2" & "000" & dos_sel & c1541rom_addr),
