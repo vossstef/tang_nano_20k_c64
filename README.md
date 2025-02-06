@@ -14,8 +14,16 @@ The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wi
 Be aware that the [VIC20](https://en.wikipedia.org/wiki/VIC-20) had been ported too in similar manner ([VIC20Nano](https://github.com/vossstef/VIC20Nano)).<br>
 Also the [Atari 2600 VCS](https://en.wikipedia.org/wiki/Atari_2600) had been ported ([A2600Nano](https://github.com/vossstef/A2600Nano)).<br>
 <br>
-This project relies on a [M0S Dock µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) being connected to the Tang Nano 20K.<br> Alternately you can use a [Raspberry Pi Pico](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html) or [esp32-s2](https://www.espressif.com/en/products/socs/esp32-s2)/[s3](https://www.espressif.com/en/products/socs/esp32-s3) and use the [FPGA companion firmware](http://github.com/harbaum/FPGA-Companion).  
+This project relies on a [M0S Dock µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) being connected to the Tang Nano 20K. Alternately you can use a [Raspberry Pi Pico](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html) or [esp32-s2](https://www.espressif.com/en/products/socs/esp32-s2)/[s3](https://www.espressif.com/en/products/socs/esp32-s3) and use the [FPGA companion firmware](http://github.com/harbaum/FPGA-Companion).  
 Basically a µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
+For the M0S Dock (BL616 µC) based system there is a:
+* [Optional custom carrier board MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)
+* [Optional case](https://github.com/prcoder-1/MiSTeryNano-Case)
+
+<br>
+
+and for the Raspberry PiPico (RP2040 µC) there is a:
+* [Optional custom carrier board MiSTeryShield20k RPiPico](board\misteryshield20k_rpipico\README.md)
 
 Original C64 core by Peter Wendrich<br>
 All HID components and µC firmware by Till Harbaum<br>
@@ -28,7 +36,7 @@ Features:
 * [USB Joystick](https://en.wikipedia.org/wiki/Joystick) or [USB Gamepad](https://en.wikipedia.org/wiki/Gamepad)
 * [USB Mouse](https://en.wikipedia.org/wiki/Computer_mouse) as [c1351](https://en.wikipedia.org/wiki/Commodore_1351) Mouse emulation
 * [USB Gamepad](https://en.wikipedia.org/wiki/Gamepad) Stick as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation<br>
-* [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type) [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
+* [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)
 * Joystick emulation on Keyboard Numpad<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) for [MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) via spare [pinheader](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md). Adapter [venice1200](https://github.com/venice1200)
 * [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) DPad / left Stick as Joystick<br>
