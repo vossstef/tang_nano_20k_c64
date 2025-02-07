@@ -18,14 +18,14 @@ This project relies on an external µC being connected to the Tang Nano 20K. You
 Basically a µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).
 <br>
 
-For the [M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) based system there is a:
+For the [M0S Dock BL616](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) there is a:
 * [Optional custom carrier board MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)
 * [Optional case](https://github.com/prcoder-1/MiSTeryNano-Case)
 * [Dualshock Adapter / Cable](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md)
 <br>
 
 and for the Raspberry PiPico (RP2040 µC) there is a:
-* [Optional custom carrier board MiSTeryShield20k Raspberry PiPico](board\misteryshield20k_rpipico\README.md)
+* [Optional custom carrier board MiSTeryShield20k Raspberry PiPico](/board\misteryshield20k_rpipico\README.md)
 
 Original C64 core by Peter Wendrich and c1541 by [darfpga](https://github.com/darfpga)<br>
 All HID components and µC firmware by Till Harbaum<br>
