@@ -18,8 +18,8 @@ Features:
 * [CERN-OHL-S](https://cern-ohl.web.cern.ch/home) license
 
 PCBA production files for [JLCPCB](https://jlcpcb.com) are availble [here](Fabrication).<br>
-(Fully assembled boards can orderd based on BOM partlist, excluding the TN20k and PiPico)<br>
-Note: The DS2 connector need to be sourced separately and assembled/ soldered on your own.
+(Fully assembled boards can orderd based on BOM partlist, excluding the TN20k, PiPico and [Dualshock](/.assets/PS_connnector_female.png) connector)<br>
+Note: The [PS2 9 Pin 90 Degrees Female Socket Slot Connector For PlayStation 2 Game Controller](https://www.aliexpress.com) need to be sourced separately and assembled/ soldered on your own.
 
 The great PCB Layout work using [KiCad](https://www.kicad.org) had been done by [cantclosevi](https://github.com/cantclosevi). Thx Michal !
 
