@@ -25,7 +25,7 @@ For the [M0S Dock BL616](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.ht
 <br>
 
 and for the Raspberry PiPico (RP2040 µC) there is a:
-* [Optional custom carrier board MiSTeryShield20k Raspberry PiPico](/board\misteryshield20k_rpipico\README.md)
+* [Optional custom carrier board MiSTeryShield20k Raspberry PiPico](/board/misteryshield20k_rpipico/README.md)
 
 Original C64 core by Peter Wendrich and c1541 by [darfpga](https://github.com/darfpga)<br>
 All HID components and µC firmware by Till Harbaum<br>
