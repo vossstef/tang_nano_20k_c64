@@ -75,7 +75,8 @@ set_option -use_mspi_as_gpio 1
 set_option -use_sspi_as_gpio 1
 set_option -rw_check_on_ram 0
 set_option -user_code 00000001
-#add_file -type gao -disable "src/test.gao"
+set_option -multi_boot 1
+set_option -mspi_jump 0
 
 #run syn
 run all

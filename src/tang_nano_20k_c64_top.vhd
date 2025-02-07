@@ -474,6 +474,8 @@ signal paddle_1_analogA : std_logic;
 signal paddle_1_analogB : std_logic;
 signal paddle_2_analogA : std_logic;
 signal paddle_2_analogB : std_logic;
+signal flash_ready      : std_logic;
+signal pll_locked_comb  : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -641,7 +643,6 @@ variable reset_cnt : integer range 0 to 2147483647;
   elsif rising_edge(clk32) then
     if reset_cnt /= 0 then
       reset_cnt := reset_cnt - 1;
-      disk_chg_trg <= '0';
     elsif reset_cnt = 0 then
       disk_chg_trg <= '1';
     end if;
@@ -658,14 +659,13 @@ process(clk32, por)
   elsif rising_edge(clk32) then
     if pause_cnt /= 0 then
       pause_cnt := pause_cnt - 1;
-    end if;
-    if pause_cnt = 0 then 
+    elsif pause_cnt = 0 then 
       disk_pause <= '0';
     end if;
   end if;
 end process;
 
-disk_reset <= '1' when disk_pause or c1541_osd_reset or not reset_n or por or c1541_reset else '0';
+disk_reset <= '1' when not flash_ready or disk_pause or c1541_osd_reset or not reset_n or por or c1541_reset else '0';
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked_hid)
@@ -1046,6 +1046,7 @@ flashclock: rPLL
             FDLY     => (others => '1')
         );
 
+pll_locked_comb <= pll_locked_hid and flash_lock;
 leds_n <=  not leds;
 leds(0) <= led1541;
 
@@ -1557,8 +1558,8 @@ port map(
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
-    resetn    => flash_lock,
-    ready     => open,
+    resetn    => pll_locked_comb,
+    ready     => flash_ready,
     busy      => open,
     address   => (X"2" & "000" & dos_sel & c1541rom_addr),
     cs        => c1541rom_cs,
