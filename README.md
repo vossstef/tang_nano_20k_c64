@@ -1,5 +1,6 @@
 # C64Nano
-The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wiki) and 
+
+The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wiki) and
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) core components for the
 [C64](https://en.wikipedia.org/wiki/Commodore_64):
 
@@ -10,40 +11,39 @@ The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wi
 | [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/)| HDMI / LCD | twin Dualshock|
 | [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD |twin Dualshock |
 
+Be aware that the [VIC20](https://en.wikipedia.org/wiki/VIC-20) had been ported too in similar manner ([VIC20Nano](https://github.com/vossstef/VIC20Nano)).
+Also the [Atari 2600 VCS](https://en.wikipedia.org/wiki/Atari_2600) had been ported ([A2600Nano](https://github.com/vossstef/A2600Nano)).
 
-Be aware that the [VIC20](https://en.wikipedia.org/wiki/VIC-20) had been ported too in similar manner ([VIC20Nano](https://github.com/vossstef/VIC20Nano)).<br>
-Also the [Atari 2600 VCS](https://en.wikipedia.org/wiki/Atari_2600) had been ported ([A2600Nano](https://github.com/vossstef/A2600Nano)).<br>
-<br>
-This project relies on an external µC being connected to the Tang Nano 20K. You can use a [M0S Dock BL616](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html), [Raspberry Pi Pico](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html) or [esp32-s2](https://www.espressif.com/en/products/socs/esp32-s2)/[s3](https://www.espressif.com/en/products/socs/esp32-s3) and use the [FPGA companion firmware](http://github.com/harbaum/FPGA-Companion).  
-Basically a µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).
-<br>
+This project relies on an external µC being connected to the Tang Nano 20K. You can use a [M0S Dock BL616](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html), [Raspberry Pi Pico](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html) or [esp32-s2](https://www.espressif.com/en/products/socs/esp32-s2)/[s3](https://www.espressif.com/en/products/socs/esp32-s3) and use the [FPGA companion firmware](http://github.com/harbaum/FPGA-Companion). Basically a µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).
 
 For the [M0S Dock BL616](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) there is a:
+
 * [Optional custom carrier board MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)
 * [Optional case](https://github.com/prcoder-1/MiSTeryNano-Case)
 * [Dualshock Adapter / Cable](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md)
-<br>
 
 and for the Raspberry PiPico (RP2040 µC) there is a:
+
 * [Optional custom carrier board MiSTeryShield20k Raspberry PiPico](/board/misteryshield20k_rpipico/README.md)
 
-Original C64 core by Peter Wendrich and c1541 by [darfpga](https://github.com/darfpga)<br>
-All HID components and µC firmware by Till Harbaum<br>
+Original C64 core by Peter Wendrich and c1541 by [darfpga](https://github.com/darfpga).  f
+All HID components and µC firmware by Till Harbaum
 
 Features:
+
 * PAL 800x576p@50Hz or NTSC 800x480p@60Hz HDMI Video and Audio Output
 * TFT-LCD module 800x600 [SH500Q01Z](https://dl.sipeed.com/Accessories/LCD/500Q01Z-00%20spec.pdf) + Speaker support
 * USB Keyboard
 * [USB Joystick](https://en.wikipedia.org/wiki/Joystick) or [USB Gamepad](https://en.wikipedia.org/wiki/Gamepad)
 * [USB Mouse](https://en.wikipedia.org/wiki/Computer_mouse) as [c1351](https://en.wikipedia.org/wiki/Commodore_1351) Mouse emulation
-* [USB Gamepad](https://en.wikipedia.org/wiki/Gamepad) Stick as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation<br>
+* [USB Gamepad](https://en.wikipedia.org/wiki/Gamepad) Stick as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation
 * [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type)
-* Joystick emulation on Keyboard Numpad<br>
+* Joystick emulation on Keyboard Numpad
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) for [MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) via spare [pinheader](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md). Adapter [venice1200](https://github.com/venice1200)
-* [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) DPad / left Stick as Joystick<br>
-* [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation (analog mode)<br>
+* [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) DPad / left Stick as Joystick
+* [Dualshock 2 Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation (analog mode)
 * Emulation of [C64GS Cheetah Annihilator](https://en.wikipedia.org/wiki/Commodore_64_Games_System) Joystick 2nd Trigger Button (Pot X/Y)
-* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with parallel bus [Speedloader Dolphin DOS 2](https://rr.pokefinder.org/wiki/Dolphin_DOS). [GER manual](https://www.c64-wiki.de/wiki/Dolphin_DOS)<br>
+* emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card with parallel bus [Speedloader Dolphin DOS 2](https://rr.pokefinder.org/wiki/Dolphin_DOS). [GER manual](https://www.c64-wiki.de/wiki/Dolphin_DOS)
 * c1541 DOS ROM selection
 * Cartridge ROM (*.CRT) loader
 * Direct BASIC program (*.PRG) injection loader
@@ -52,219 +52,238 @@ Features:
 * [VIC-II](https://en.wikipedia.org/wiki/MOS_Technology_VIC-II) revision and [6526](https://en.wikipedia.org/wiki/MOS_Technology_CIA) / 8521 selection
 * [SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) revision 6581 or 8580 selectable
 * 2nd dual SID Option and loadable Filter curves
-* emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) or [GeoRAM](https://en.wikipedia.org/wiki/GeoRAM)<br>
-* On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN/TAP/FLT)<br>
-* Physical MIDI-IN and OUT<br>
+* emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) or [GeoRAM](https://en.wikipedia.org/wiki/GeoRAM)
+* On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN/TAP/FLT)
+* Physical MIDI-IN and OUT
 * RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode to Tang onboard USB-C serial port or external hw pin.
 * Freezer support (e.g. Action Replay)
-<br>
+
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
-<br>
 
 ## Installation
 
 The installation of C64 Nano on the Tang Nano 20k board can be done using a Linux PC or a Windows PC
-[(Instruction)](INSTALLATION_WINDOWS.md).<br>
+[(Instruction)](INSTALLATION_WINDOWS.md).
 
 ## c64 Nano on Tang Primer 25K
+
 See [Tang Primer 25K](TANG_PRIMER_25K.md). PMOD TF-CARD V2 is required !
 
 ## c64 Nano on Tang Mega 60k NEO
+
 See [Tang Mega 60K NEO](TANG_MEGA_60K.md)
 
 ## c64 Nano on Tang Mega 138k Pro
+
 See [Tang Mega 138K Pro](TANG_MEGA_138Kpro.md)
 
 ## c64 Nano with LCD and Speaker
+
 See [Tang Nano LCD](TANG_NANO_20k_LCD.md)
 
 ## emulated Diskdrive c1541
-Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS 2.0.<br>
-Copy a D64 Disk image to your sdcard and rename it to **disk8.d64** as default boot image.<br>
-Add further D64 or G64 images as you like and insert card in TN slot. LED 0 acts as Drive activity indicator.<br> 
-> [!TIP]
-Disk directory listing: [(or F7 keypress)](https://project64.c64.org/hw/dolphindos.txt)<br> 
-command: <br>
-LOAD"$",8<br>
-LIST<br> 
-Load first program from Disk: (or just LOAD if Dolphin Kernal active)<br> 
-LOAD"*",8<br>
-RUN<br>
 
-c1541 DOS ROM can be selected from OSD (default Dolphin DOS 2.0, CBM DOS, SpeedDos Plus or JiffyDOS)<br>
+Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS 2.0.
+Copy a D64 Disk image to your sdcard and rename it to **disk8.d64** as default boot image.
+Add further D64 or G64 images as you like and insert card in TN slot. LED 0 acts as Drive activity indicator.
+> [!TIP]
+Disk directory listing: [(or F7 keypress)](https://project64.c64.org/hw/dolphindos.txt)
+command:
+LOAD"$",8
+LIST
+Load first program from Disk: (or just LOAD if Dolphin Kernal active)
+LOAD"*",8
+RUN
+
+c1541 DOS ROM can be selected from OSD (default Dolphin DOS 2.0, CBM DOS, SpeedDos Plus or JiffyDOS)
 In case a program don't load correctly select via OSD the factory default CBM DOS an give it a try.
 
 ## Cartridge ROM Loader (.CRT)
-Cartridge ROM can be loaded via OSD file selection.<br>
-Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge ROM.<br>
-Prevent the cartridge load at boot by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
+
+Cartridge ROM can be loaded via OSD file selection.
+Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge ROM.
+Prevent the cartridge load at boot by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.
 > [!TIP]
-**Detach Cartridge** by OSD :<br>
+**Detach Cartridge** by OSD :
 ```temporary``` **Cartridge unload & Reset**  
-```permanent``` **No Disk**, **Save settings** and System **Cold Boot**.<br>
+```permanent``` **No Disk**, **Save settings** and System **Cold Boot**
 
 > [!IMPORTANT]
 > Be aware that some Freezer Card CRT might require to use the standard C64 Kernal and the standard C1541 CBM DOS.
 
 ## BASIC Program Loader (.PRG)
-A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
-Copy a *.PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program. Prevent the PRG load at boot by OSD PRG selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.<br>
+
+A BASIC Program *.PRG file can be loaded via OSD file selection.
+Copy a .PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program. Prevent the PRG load at boot by OSD PRG selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.
 > [!TIP]
-Check loaded file by command: **LIST**<br>
+Check loaded file by command: **LIST**
 
 > [!IMPORTANT]
-command: **RUN**<br>
+command: **RUN**
 
 ## Tape Image Loader (*.TAP)
-A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection<br>
-In order to start a tape download choose C64 CBM Kernal (mandatory as Dolphin DOS doesn't support Tape). Best to save Kernal OSD selection via **Save settings**.<br>
-> [!IMPORTANT]
-command: **LOAD**<br>
-___ Only if you have [Exbasic Level II](https://www.c64-wiki.de/index.php?title=Exbasic_Level_II&oldid=261004) .CRT Basic loaded then use command: **LOAD***<br>
-Screen will blank!<br>
 
-The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case ***no** TAP had been previously selected*.<br>
-As mentioned screen will blank for several seconds and then display briefly the filename of the to be loaded file. It will blank shortly afterwards again till load completed and take a lot of time...<br>
-Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default tape mountpoint.<br>
-For **Tape unload** use OSD TAP selection **No Disk** and **Reset** or System **Cold Boot**.<br>
+A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection
+In order to start a tape download choose C64 CBM Kernal (mandatory as Dolphin DOS doesn't support Tape). Best to save Kernal OSD selection via **Save settings**.
+> [!IMPORTANT]
+command: **LOAD**
+___ Only if you have [Exbasic Level II](https://www.c64-wiki.de/index.php?title=Exbasic_Level_II&oldid=261004) .CRT Basic loaded then use command: **LOAD***
+Screen will blank!
+
+The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case ***no** TAP had been previously selected*.
+As mentioned screen will blank for several seconds and then display briefly the filename of the to be loaded file. It will blank shortly afterwards again till load completed and take a lot of time...
+Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default tape mountpoint.
+For **Tape unload** use OSD TAP selection **No Disk** and **Reset** or System **Cold Boot**
 > [!WARNING]
-After board power-up or coldboot a TAP file will **not autoloaded** even if TAP file selection had been saved or c64tap.tap mountpoint available !<br>
-Unblock loader by OSD TAP selection **No Disk** or simply select again the desired TAP file to be loaded after you typed **LOAD**<br>
+After board power-up or coldboot a TAP file will **not autoloaded** even if TAP file selection had been saved or c64tap.tap mountpoint available !
+Unblock loader by OSD TAP selection **No Disk** or simply select again the desired TAP file to be loaded after you typed **LOAD**
 
 > [!TIP]
-Check loaded file by command: **LIST**<br>
+Check loaded file by command: **LIST**
 
 > [!IMPORTANT]
-command: **RUN**<br>
+command: **RUN**
 
 > [!NOTE]
-The available (muffled) Tape Sound audio can be disabled from OSD.<br>
+The available (muffled) Tape Sound audio can be disabled from OSD.
 
 ## Kernal Loader (.BIN)
+
 The build-in Dolphin Kernal is the power-up default C64 Kernal with an excellent C1541 speedloader.
 > [!TIP]
-If you are fine with that then there is no need to load another Kernal via OSD and just select OSD Kernal BIN selection **No Disk** and **Save settings**!<br>
+If you are fine with that then there is no need to load another Kernal via OSD and just select OSD Kernal BIN selection **No Disk** and **Save settings**!
 
-In general Kernal ROM files *.BIN can be loaded via OSD selection.<br>
-Copy a 8K C64 Kernal ROM *.BIN to your sdcard and rename it to **c64kernal.bin** as default boot Kernal.<br>
-Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings** and do a **power-cyle** of the board. In this case the build-in Dolphin Kernal will by default be used after next power cycle.<br>
+In general Kernal ROM files *.BIN can be loaded via OSD selection.
+Copy a 8K C64 Kernal ROM .BIN to your sdcard and rename it to **c64kernal.bin** as default boot Kernal.
+Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings** and do a **power-cyle** of the board. In this case the build-in Dolphin Kernal will by default be used after next power cycle.
 
 ## SID Filter Curve (.FLT)
-Custom Filters curves can optionally be loaded via OSD. 
+
+Custom Filters curves can optionally be loaded via OSD.
 > [!TIP]
 > This is in most cases not needed and build-in filters curves are already an optimum.
 
 > [!NOTE]
 Remember to select the 6581 chip, not the 8580.
-Select 'Custom 1' as the filter to activate it.<br> When a custom filter is loaded, there's no difference between custom options Custom 1, 2, and 3. Selecting 'Default' switches back to the built-in filter curve.<br>
+Select 'Custom 1' as the filter to activate it. When a custom filter is loaded, there's no difference between custom options Custom 1, 2, and 3. Selecting 'Default' switches back to the built-in filter curve.
 
-Prevent Filter curve load by OSD Kernal **FLT** selection **No Disk** and **Save settings** and **power-cyle** of the board.<br>
+Prevent Filter curve load by OSD Kernal **FLT** selection **No Disk** and **Save settings** and **power-cyle** of the board.
 
 ## Core Loader Sequencing
+
 The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order:
-> [!NOTE] 
-(1) BIN Kernal, (2) CRT ROM, (3) PRG Basic and finally (4) FLT.<br>
+
+> [!NOTE]
+(1) BIN Kernal, (2) CRT ROM, (3) PRG Basic and finally (4) FLT.
 
 ## emulated RAM Expansion Unit REU 1750
-For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.<br>
-<br>
-Playing [Sonic the Hedgehog V1.2](https://csdb.dk/release/?id=212523)<br>
-Enable REU, and load the PRG.<br>
-Playing around with [GEOS](https://en.wikipedia.org/wiki/GEOS_(8-bit_operating_system))<br>
-Enable REU, select c1541 CBM DOS ROM and load the PRG.<br>
+
+For those programs the require a [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) it can be activated by OSD on demand.
+
+Playing [Sonic the Hedgehog V1.2](https://csdb.dk/release/?id=212523)
+Enable REU, and load the PRG.  
+Playing around with [GEOS](https://en.wikipedia.org/wiki/GEOS_(8-bit_operating_system))
+Enable REU, select c1541 CBM DOS ROM and load the PRG.
 
 ## Push Button / DIP Switch utilization
-* Nano 20k S2 keep pressed during power-up for FLASH programming of FPGA bitstream<br>
+
+* Nano 20k S2 keep pressed during power-up for FLASH programming of FPGA bitstream
+
 * Mega 60k NEO ```SW1 ON``` ```SW6 ON``` + Unplug 12V Power + Unplug USB Programmer + Disconnect HDMI + Press & **Hold** ```RECONFIG``` + Power the Board + connect USB programmer cable + release ```RECONFIG``` and perform programming. + Reconnect cables.
+
 > [!CAUTION]
 A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
-* S1 swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.<br>
 
+* S1 swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.
 
 ## OSD
-invoke by F12 keypress<br>
-* Reset<br>
-* Cold Reset + memory scrubbing<br>
-* Audio Volume + / -<br>
-* Scanlines effect %<br>
-* Widescreen activation<br>
-* HID device selection for Joystick Port 1 and Port 2<br>
-* REU activation<br>
-* c1541 Drive disk image selection<br>
-* c1541 Disk write protetcion<br>
-* c1541 Reset<br>
-* c1541 DOS ROM selection<br>
-* MIDI configuration<br>
-* PAL / NTSC Video mode<br>
+
+invoke by F12 keypress
+
+* Reset
+* Cold Reset + memory scrubbing
+* Audio Volume + / -
+* Scanlines effect %
+* Widescreen activation
+* HID device selection for Joystick Port 1 and Port 2
+* REU activation
+* c1541 Drive disk image selection
+* c1541 Disk write protetcion
+* c1541 Reset
+* c1541 DOS ROM selection
+* MIDI configuration
+* PAL / NTSC Video mode
 * VIC-II revision, 6526 / 8521 and SID 6561/8580 selection
 * SID Filter selection
 * geoRAM activation
-* Loader (CRT/PRG/BIN/TAP/FLT) file selection<br>
+* Loader (CRT/PRG/BIN/TAP/FLT) file selection
 * Joystick Port Swap
 * Cartridge unload
 
 ## Gamecontrol support
+
 <u>legacy single D9 Digital Joystick.</u>  
-OSD: **Retro D9**<br>
+OSD: **Retro D9**
 Atari ST type of Joystick 2nd button supported using a MiSTeryNano shield.  
-Don't configure e.g. [ArcadeR](https://retroradionics.com) for C64 mode rather than<br> normal digital 2nd button mode (2nd trigger button connect signal to ground)
+Don't configure e.g. [ArcadeR](https://retroradionics.com) for C64 mode rather than normal digital 2nd button mode (2nd trigger button connect signal to ground)
 
-or<br>
 <u>USB Joystick(s)</u>.  
-OSD: **USB #1 Joy** or **USB #2 Joy** <br>
-Also [RII Mini Keyboard i8](http://www.riitek.com/product/220.html) left Multimedia Keys are active if **USB #1 Joy** selected. 
+OSD: **USB #1 Joy** or **USB #2 Joy**
+Also [RII Mini Keyboard i8](http://www.riitek.com/product/220.html) left Multimedia Keys are active if **USB #1 Joy** selected.
 
-or<br>
-Dualshock 2 Gamepad Stick or Dpad as Joystick. OSD: **DS #1 Joy** or **DS #2 Joy**<br>
-At the moment Dpad only for original Pad. Some clone devices support at the same time Dpad and left stick simultaniously.
-<br>```circle and cross``` Buttons as Trigger:<br>
+<u>Dualshock 2 Gamepad Stick or Dpad as Joystick.</u>.  
+OSD: **DS #1 Joy** or **DS #2 Joy**
+At the moment Dpad only for original Pad. Some clone devices support at the same time Dpad and left stick simultaniously. ```circle and cross``` Buttons as Trigger:
 
 > [!IMPORTANT]
-> In a [MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k) configuration Dualshock is supported via the internal ``spare J8`` pinheader. <br>
-> See [MiSTeryShield20k DS2 Adapter / Cable](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md) for further information. Thx [venice1200](https://github.com/venice1200) !<br>
+> In a [MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k) configuration Dualshock is supported via the internal ``spare J8`` pinheader.
+> See [MiSTeryShield20k DS2 Adapter / Cable](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md) for further information. Thx [venice1200](https://github.com/venice1200) !
 
 > [!NOTE]
-> TN20k: You have to select OSD **DS2 #2 Joy** or **DS #2 Paddle** for a ``MiSTeryShield20k`` configuration.<br>
-> TN20k: You have to select OSD **DS2 #1 Joy** or **DS #1 Paddle** if you use the ``Sipeed Joy to DIP`` adapter.<br>
+> TN20k: You have to select OSD **DS2 #2 Joy** or **DS #2 Paddle** for a ``MiSTeryShield20k`` configuration.
+> TN20k: You have to select OSD **DS2 #1 Joy** or **DS #1 Paddle** if you use the ``Sipeed Joy to DIP`` adapter.
 Single DS interface active at the same time!
 
-or Keyboard <u>Numpad.</u>  
-OSD: **Numpad**<br>
+<u>Keyboard Numpad.</u>  
+OSD: **Numpad**
+
 |Numpad| |Numpad|
 |-|-|-|
 |0<br>Trigger|8<br>Up|.<br>Trigger 2|
 |4<br>Left|-|6<br>Right|
 |-|2<br>Down|-|
 
-or <u>Mouse.</u>  
-OSD: **Mouse**<br>
+<u>Mouse.</u>  
+OSD: **Mouse**
 USB Mouse as c1351 Mouse emulation.
 
-or <u>Dualshock 2 Gamepad</u> as Paddle.  
-OSD: **DS #1 Paddle** or **DS #2 Paddle**<br>
-Dualshock left Stick in analog mode as VC-1312 Paddle emulation.<br>
-ANALOG Paddle mode will be indicated by DS 2 red light indicator. <br>
+<u>Dualshock 2 Gamepad</u> as Paddle  
+OSD: **DS #1 Paddle** or **DS #2 Paddle**
+Dualshock left Stick in analog mode as VC-1312 Paddle emulation.
+ANALOG Paddle mode will be indicated by DS 2 red light indicator.
 > [!NOTE]
-> TN20k: <br>
-> single Dualshock support only<br>
+> TN20k:
+> single Dualshock support only
 > 4 Paddles mapped to a single Gamepad (X/Y) and both Sticks.
-> **square** , **cross**, **circle** and **triangle** used as 4 Trigger buttons<br>
-> ``Joyport 1:``  **DS2 #1 Paddle** <br>
-> ``Joyport 2:``  **DS2 #1 Paddle**<br>
+> **square** , **cross**, **circle** and **triangle** used as 4 Trigger buttons
+> ``Joyport 1:``  **DS2 #1 Paddle**
+> ``Joyport 2:``  **DS2 #1 Paddle**
 > or<br>
-> ``Joyport 1:``  **DS2 #2 Paddle** <br>
-> ``Joyport 2:``  **DS2 #2 Paddle** <br>
+> ``Joyport 1:``  **DS2 #2 Paddle**
+> ``Joyport 2:``  **DS2 #2 Paddle**
 
-or <u>USB Paddle</u>.  
-OSD: **USB #1 Padd** or **USB #2 Padd** <br>
-Left Stick in X / Y analog mode as VC-1312 Paddle emulation.<br>
-Button **cross / square** as Trigger<br>
+<u>USB Paddle</u>.  
+OSD: **USB #1 Padd** or **USB #2 Padd**
+Left Stick in X / Y analog mode as VC-1312 Paddle emulation.
+Button **cross / square** as Trigger
 
-## Keyboard 
+## Keyboard
+
  ![Layout](\.assets/keymap.gif)
  PAGE UP (Tape Play) Key or the Tang S1 Button swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.
 
- F11 (RESTORE) Key as ``FREEZE``. Typically used by Freezer Cards like Action Replay, Snappy Rom etc. 
+ F11 (RESTORE) Key as ``FREEZE``. Typically used by Freezer Cards like Action Replay, Snappy Rom etc.
+
 ## LED UI
 
 | LED | function    | TN20K | TP25K |TM60K|TM138K Pro|
@@ -276,24 +295,25 @@ Button **cross / square** as Trigger<br>
 | 4 |Kernal selected| x     | -     |   -  |x  |
 | 5 | TAP selected  | x     | -     |   -  |x  |
 
-Solid **<font color="red">red</font>** of the c1541 led after power-up indicates a missing DOS in Flash<br>
+Solid **<font color="red">red</font>** of the c1541 led after power-up indicates a missing DOS in Flash
 
 **Multicolor RGB LED**
-* **<font color="green">green</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;all fine and ready to go<br>
-* **<font color="red">red</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;something wrong with SDcard / default boot image<br>
-* **<font color="blue">blue</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;µC firmware detected valid FPGA core<br>
-* **<font color="yellow">yellow</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;FPGA core can't detect valid firmware<br>
-* **white**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;-<br>
+
+* **<font color="green">green</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;all fine and ready to go
+* **<font color="red">red</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;something wrong with SDcard / default boot image
+* **<font color="blue">blue</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;µC firmware detected valid FPGA core
+* **<font color="yellow">yellow</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;FPGA core can't detect valid firmware
+* **white**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;-
 
 ## MIDI-IN and OUT
-Type of MIDI interface can be selected from OSD.<br> There is support for Sequential Inc., Passport/Sentech, DATEL/SIEL/JMS/C-LAB and Namesoft<br>
-You can use a [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) to interface to a Keyboard.<br>
 
-## RS232 Serial Interface 
-The Tang onboard USB-C serial port can be used for communication with the C64 Userport Serial port in [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode.<br>
-Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal rather than default DolphinDOS.<br> For a first start use UP9600 mode and a Terminal program like [ccgms](https://github.com/mist64/ccgmsterm) and on the PC side [Putty](https://www.putty.org) with 2400 Baud.<br>
+Type of MIDI interface can be selected from OSD. There is support for Sequential Inc., Passport/Sentech, DATEL/SIEL/JMS/C-LAB and Namesoft. You can use a [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) to interface to a Keyboard.
 
-OSD selection allows to change in between TANG USB-C port or external HW pin interface.<br>
+## RS232 Serial Interface
+
+The Tang onboard USB-C serial port can be used for communication with the C64 Userport Serial port in [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode. Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal rather than default DolphinDOS. For a first start use UP9600 mode and a Terminal program like [ccgms](https://github.com/mist64/ccgmsterm) and on the PC side [Putty](https://www.putty.org) with 2400 Baud.
+
+OSD selection allows to change in between TANG USB-C port or external HW pin interface.
 
 | Board      |RX (I) FPGA |TX (O) FPGA|Note|
 |  -         |   -    |   -  | -   |
@@ -303,36 +323,44 @@ OSD selection allows to change in between TANG USB-C port or external HW pin int
 | TM138k Pro |H15     | H14  | J24-6 J24-5, share M0S Dock PMOD |
 
 Remember that in + out to be crossed to connect to external device. Level are 3V3 tolerant.
+
 ## Powering
-Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
+
+Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter.
+
 ## Synthesis
-Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
-Alternatively use the command line build script **gw_sh.exe / gw_sh.sh** [build_tn20k.tcl](build_tn20k.tcl) , [build_tp25k.tcl](build_tp25k.tcl) or [build_tm138k.tcl](build_tm138k.tcl)<br>
+
+Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.
+
+Alternatively use the command line build script **gw_sh.exe / gw_sh.sh** [build_tn20k.tcl](build_tn20k.tcl) , [build_tp25k.tcl](build_tp25k.tcl) or [build_tm138k.tcl](build_tm138k.tcl)
+
 ## HW circuit considerations
 
-**Pinmap TN20k Interfaces** <br>
- Sipeed M0S Dock, digital Joystick D9 and DualShock Gamepad connection.<br>
+**Pinmap TN20k Interfaces**
+ Sipeed M0S Dock, digital Joystick D9 and DualShock Gamepad connection.
  ![wiring](\.assets/wiring_spi_irq.png)
-<br>
 
-**Pinmap D-SUB 9 Joystick Interface** <br>
-- Joystick interface is 3.3V tolerant. Joystick 5V supply pin has to be left floating !<br>
+**Pinmap D-SUB 9 Joystick Interface**
+
+* Joystick interface is 3.3V tolerant. Joystick 5V supply pin has to be left floating !
+
 ![pinmap](\.assets/vic20-Joystick.png)
 
-| Joystick pin |IO| Tang Nano pin | FPGA pin | Joystick Function |
-| ----------- |-----| ---   | --------  | ----- |
-| 1 |2| J6 10  | 25   | UP | 
-| 2 |1| J6 9  | 28 | DOWN |
-| 3 |4| J6 12 | 29 | LEFT |
-| 4 |3| J5 11 | 26 | RIGHT |
-| 5 |-| - | - | POT Y/ TRIGGER 3| - |
-| 6 |0| J5 8 | 27 | TRIGGER|
-| 7 |-| n.c | n.c | 5V | - |
-| 8 |-| J5 20 | - | GND | - |
-| 9 |-| - | 30 | TRIGGER 2| |
+|Joystick pin|IO   |Tang Nano pin| FPGA pin |Joystick Function|
+|----------- |-----| ---         | -------- |-----            |
+| 1          |2    | J6 10       | 25       | UP              |
+| 2          |1    | J6 9        | 28       | DOWN            |
+| 3          |4    | J6 12       | 29       | LEFT            |
+| 4          |3    | J5 11       | 26       | RIGHT           |
+| 5          |-    | -           | -        | POT Y/ TRIGGER 3|
+| 6          |0    | J5 8        | 27       | TRIGGER         |
+| 7          |-    | n.c         | n.c      | 5V              |
+| 8          |-    | J5 20       | -        | GND             |
+| 9          |-    | -           | 30       | TRIGGER 2       |
 
-**Pinmap Dualshock 2 Controller Interface** <br>
+**Pinmap Dualshock 2 Controller Interface**
 <img src="./.assets/controller-pinout.jpg" alt="image" width="30%" height="auto">
+
 | DS pin | Tang Nano pin | FPGA pin | DS Function |
 | ----------- | ---   | --------  | ----- |
 | 1 | J5 18 | 71 MISO | JOYDAT  |
@@ -345,30 +373,28 @@ Alternatively use the command line build script **gw_sh.exe / gw_sh.sh** [build_
 | 8 | n.c. | - | JOYIRQ |
 | 9 | n.c. | - | JOYACK |
 
-
 ## Getting started
 
 In order to use this Design the following things are needed:
 
-[Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) or Raspberry Pi Pico RP2040 or ESP32-S2/S3<br>
-[Sipeed Tang Nano 20k](https://wiki.sipeed.com/nano20k) <br>
-or [Sipeed Tang Primer 25k](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)<br>
-and [PMOD DVI](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DVI)<br>
-and [PMOD TF-CARD V2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_TF-CARD)<br>
-and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
-and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)
-or ad hoc wiring + soldering.<br>
-or [Sipeed Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)<br>
-and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
-and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)<br>
-and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)<br>
-or [Tang Mega 60K NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)<br>
-and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
-and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)<br>
-and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)<br>
-microSD or microSDHC card FAT32 formatted<br>
-TFT Monitor with HDMI Input and Speaker<br>
-<br>
+[Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) or Raspberry Pi Pico RP2040 or ESP32-S2/S3  
+[Sipeed Tang Nano 20k](https://wiki.sipeed.com/nano20k)  
+or [Sipeed Tang Primer 25k](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  
+and [PMOD DVI](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DVI)  
+and [PMOD TF-CARD V2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_TF-CARD)  
+and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)  
+and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)  
+or ad hoc wiring + soldering.
+or [Sipeed Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)  
+and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)  
+and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)  
+and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)  
+or [Tang Mega 60K NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)  
+and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)  
+and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)  
+and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)  
+microSD or microSDHC card FAT32 formatted  
+TFT Monitor with HDMI Input and Speaker  
 
 | HID and Gamecontrol Hardware option | TN20k needs | alternative option |Primer 25K|Mega 60K|Mega 138K Pro|
 | -----------                         | ---         | ---                | ---      | -      | -       |
