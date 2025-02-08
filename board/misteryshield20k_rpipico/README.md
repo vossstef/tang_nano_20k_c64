@@ -26,4 +26,4 @@ The great PCB Layout work using [KiCad](https://www.kicad.org) had been done by 
 ![RPiPico](miyteryshield20l_rpipico.png)
 ![PNG](MiSTeryShield20kRPiPico-1.png)<br>
 ![PNG](MiSTeryShield20kRPiPico-2.png)<br>
-![PNG](MiSTeryShield20kRPiPico-brd.svg)<br>
+![PNG](MiSTeryShield20kRPiPico-brd.png)<br>

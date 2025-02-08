@@ -54,7 +54,7 @@ Features:
 * 2nd dual SID Option and loadable Filter curves
 * emulated [RAM Expansion Unit (REU)](https://en.wikipedia.org/wiki/Commodore_REU) or [GeoRAM](https://en.wikipedia.org/wiki/GeoRAM)<br>
 * On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN/TAP/FLT)<br>
-* Physical MIDI-IN and OUT [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
+* Physical MIDI-IN and OUT<br>
 * RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode to Tang onboard USB-C serial port or external hw pin.
 * Freezer support (e.g. Action Replay)
 <br>
@@ -270,7 +270,7 @@ Button **cross / square** as Trigger<br>
 | LED | function    | TN20K | TP25K |TM60K|TM138K Pro|
 | --- |           - | -     | -     | -    |-  |
 | 0 | c1541 activity| x     | x     | x    |x  |
-| 1 | D64 selected  | x     | -     | x    |x  |
+| 1 | D64 selected  | x     | x     | x    |x  |
 | 2 | CRT seleced   | x     | -     |   -  |x  |
 | 3 | PRG selected  | x     | -     |   -  |x  |
 | 4 |Kernal selected| x     | -     |   -  |x  |
@@ -287,7 +287,7 @@ Solid **<font color="red">red</font>** of the c1541 led after power-up indicates
 
 ## MIDI-IN and OUT
 Type of MIDI interface can be selected from OSD.<br> There is support for Sequential Inc., Passport/Sentech, DATEL/SIEL/JMS/C-LAB and Namesoft<br>
-You can use a [MiSTeryNano MIDI shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) to interface to a Keyboard.<br>
+You can use a [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) to interface to a Keyboard.<br>
 
 ## RS232 Serial Interface 
 The Tang onboard USB-C serial port can be used for communication with the C64 Userport Serial port in [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode.<br>
@@ -370,11 +370,11 @@ microSD or microSDHC card FAT32 formatted<br>
 TFT Monitor with HDMI Input and Speaker<br>
 <br>
 
-| HID and Gamecontrol Hardware option | TN20k needs | alternative option |Primer 25K|Mega 60K|Mega 138K|
+| HID and Gamecontrol Hardware option | TN20k needs | alternative option |Primer 25K|Mega 60K|Mega 138K Pro|
 | -----------                         | ---         | ---                | ---      | -      | -       |
-| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  |x|x|x|
-| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH) | - |x|x|x|
-| USB Mouse   | [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  | -  |x|x|x|
-| USB Gamepad |[4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  | -  |x|x|x|
-| Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|adhoc SDRAM1 Joy D9|adhoc PMOD Joy D9|
-| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) respectively<br> PMOD DS2x2 | breadboard to wire everything up and some jumper wires |-|PMOD DS2x2|PMOD DS2x2|
+| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html)| USB hub  |x|x|x|
+| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)|mini USB-C hub | - |x|x|x|
+| USB Mouse   |mini USB-C hub | -  |x|x|x|
+| USB Gamepad |mini USB-C hub  | -  |x|x|x|
+| Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| MiSTeryShield20k|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|adhoc SDRAM1 Joy D9|adhoc PMOD Joy D9|
+| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) / MiSTeryShield20k + DS cable or MiSTeryShield20k PiPico| breadboard to wire everything up and some jumper wires |-|PMOD DS2x2|PMOD DS2x2|
