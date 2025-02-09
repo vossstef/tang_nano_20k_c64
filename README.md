@@ -86,14 +86,15 @@ See [Tang Nano LCD](TANG_NANO_20k_LCD.md)
 Emulated 1541 on a regular FAT/exFAT formatted microSD card including parallel bus Speedloader Dolphin DOS 2.0.
 Copy a D64 Disk image to your sdcard and rename it to **disk8.d64** as default boot image.
 Add further D64 or G64 images as you like and insert card in TN slot. LED 0 acts as Drive activity indicator.
+
 > [!TIP]
-Disk directory listing: [(or F7 keypress)](https://project64.c64.org/hw/dolphindos.txt)
-command:
-LOAD"$",8
-LIST
-Load first program from Disk: (or just LOAD if Dolphin Kernal active)
-LOAD"*",8
-RUN
+> Disk directory listing: [(or F7 keypress)](https://project64.c64.org/hw/dolphindos.txt)  
+> command:  
+> LOAD"$",8  
+> LIST  
+> Load first program from Disk: (or just LOAD if Dolphin Kernal active)  
+> LOAD"*",8  
+> RUN  
 
 c1541 DOS ROM can be selected from OSD (default Dolphin DOS 2.0, CBM DOS, SpeedDos Plus or JiffyDOS)
 In case a program don't load correctly select via OSD the factory default CBM DOS an give it a try.
@@ -104,8 +105,8 @@ Cartridge ROM can be loaded via OSD file selection.
 Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge ROM.
 Prevent the cartridge load at boot by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.
 > [!TIP]
->**Detach Cartridge** by OSD:
->```temporary``` **Cartridge unload & Reset** ```permanent``` **No Disk**, **Save settings** and System **Cold Boot**
+> **Detach Cartridge** by OSD:
+> ```temporary``` **Cartridge unload & Reset** ```permanent``` **No Disk**, **Save settings** and System **Cold Boot**
 
 > [!IMPORTANT]
 > Be aware that some Freezer Card CRT might require to use the standard C64 Kernal and the standard C1541 CBM DOS.
@@ -115,42 +116,43 @@ Prevent the cartridge load at boot by OSD CRT selection **No Disk** , **Save set
 A BASIC Program *.PRG file can be loaded via OSD file selection.
 Copy a .PRG to your sdcard and rename it to **c64prg.prg** as default boot basic program. Prevent the PRG load at boot by OSD PRG selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.
 > [!TIP]
-Check loaded file by command: **LIST**
+> Check loaded file by command: **LIST**
 
 > [!IMPORTANT]
-command: **RUN**
+> command: **RUN**
 
 ## Tape Image Loader (*.TAP)
 
 A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection
 In order to start a tape download choose C64 CBM Kernal (mandatory as Dolphin DOS doesn't support Tape). Best to save Kernal OSD selection via **Save settings**.
 > [!IMPORTANT]
-command: **LOAD**
-___ Only if you have [Exbasic Level II](https://www.c64-wiki.de/index.php?title=Exbasic_Level_II&oldid=261004) .CRT Basic loaded then use command: **LOAD***
-Screen will blank!
+> command: **LOAD**  
+> ___ Only if you have [Exbasic Level II](https://www.c64-wiki.de/index.php?title=Exbasic_Level_II&oldid=261004). CRT Basic loaded then use command: 
+> **LOAD***  
+> Screen will blank!
 
 The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case ***no** TAP had been previously selected*.
 As mentioned screen will blank for several seconds and then display briefly the filename of the to be loaded file. It will blank shortly afterwards again till load completed and take a lot of time...
 Copy a *.TAP to your sdcard and rename it to **c64tap.tap** as default tape mountpoint.
 For **Tape unload** use OSD TAP selection **No Disk** and **Reset** or System **Cold Boot**
 > [!WARNING]
-After board power-up or coldboot a TAP file will **not autoloaded** even if TAP file selection had been saved or c64tap.tap mountpoint available !
-Unblock loader by OSD TAP selection **No Disk** or simply select again the desired TAP file to be loaded after you typed **LOAD**
+> After board power-up or coldboot a TAP file will **not autoloaded** even if TAP file selection had been saved or c64tap.tap mountpoint available !
+> Unblock loader by OSD TAP selection **No Disk** or simply select again the desired TAP file to be loaded after you typed **LOAD**
 
 > [!TIP]
-Check loaded file by command: **LIST**
+> Check loaded file by command: **LIST**
 
 > [!IMPORTANT]
-command: **RUN**
+> command: **RUN**
 
 > [!NOTE]
-The available (muffled) Tape Sound audio can be disabled from OSD.
+> The available (muffled) Tape Sound audio can be disabled from OSD.
 
 ## Kernal Loader (.BIN)
 
 The build-in Dolphin Kernal is the power-up default C64 Kernal with an excellent C1541 speedloader.
 > [!TIP]
-If you are fine with that then there is no need to load another Kernal via OSD and just select OSD Kernal BIN selection **No Disk** and **Save settings**!
+> If you are fine with that then there is no need to load another Kernal via OSD and just select OSD Kernal BIN selection **No Disk** and **Save settings**!
 
 In general Kernal ROM files *.BIN can be loaded via OSD selection.
 Copy a 8K C64 Kernal ROM .BIN to your sdcard and rename it to **c64kernal.bin** as default boot Kernal.
@@ -163,8 +165,8 @@ Custom Filters curves can optionally be loaded via OSD.
 > This is in most cases not needed and build-in filters curves are already an optimum.
 
 > [!NOTE]
-Remember to select the 6581 chip, not the 8580.
-Select 'Custom 1' as the filter to activate it. When a custom filter is loaded, there's no difference between custom options Custom 1, 2, and 3. Selecting 'Default' switches back to the built-in filter curve.
+> Remember to select the 6581 chip, not the 8580.
+> Select 'Custom 1' as the filter to activate it. When a custom filter is loaded, there's no difference between custom options Custom 1, 2, and 3. Selecting 'Default' switches back to the built-in filter curve.
 
 Prevent Filter curve load by OSD Kernal **FLT** selection **No Disk** and **Save settings** and **power-cyle** of the board.
 
@@ -173,7 +175,7 @@ Prevent Filter curve load by OSD Kernal **FLT** selection **No Disk** and **Save
 The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order:
 
 > [!NOTE]
-(1) BIN Kernal, (2) CRT ROM, (3) PRG Basic and finally (4) FLT.
+> (1) BIN Kernal, (2) CRT ROM, (3) PRG Basic and finally (4) FLT.
 
 ## emulated RAM Expansion Unit REU 1750
 
@@ -191,7 +193,7 @@ Enable REU, select c1541 CBM DOS ROM and load the PRG.
 * Mega 60k NEO ```SW1 ON``` ```SW6 ON``` + Unplug 12V Power + Unplug USB Programmer + Disconnect HDMI + Press & **Hold** ```RECONFIG``` + Power the Board + connect USB programmer cable + release ```RECONFIG``` and perform programming. + Reconnect cables.
 
 > [!CAUTION]
-A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
+> A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
 
 * S1 swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.
 
@@ -241,7 +243,7 @@ At the moment Dpad only for original Pad. Some clone devices support at the same
 > [!NOTE]
 > TN20k: You have to select OSD **DS2 #2 Joy** or **DS #2 Paddle** for a ``MiSTeryShield20k`` configuration.
 > TN20k: You have to select OSD **DS2 #1 Joy** or **DS #1 Paddle** if you use the ``Sipeed Joy to DIP`` adapter.
-Single DS interface active at the same time!
+> Single DS interface active at the same time!
 
 <u>Keyboard Numpad.</u>  
 OSD: **Numpad**
