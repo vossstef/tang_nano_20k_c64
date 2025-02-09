@@ -14,7 +14,7 @@ The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wi
 Be aware that the [VIC20](https://en.wikipedia.org/wiki/VIC-20) had been ported too in similar manner ([VIC20Nano](https://github.com/vossstef/VIC20Nano)).
 Also the [Atari 2600 VCS](https://en.wikipedia.org/wiki/Atari_2600) had been ported ([A2600Nano](https://github.com/vossstef/A2600Nano)).
 
-This project relies on an external µC being connected to the Tang Nano 20K. You can use a [M0S Dock BL616](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html), [Raspberry Pi Pico](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html) or [esp32-s2](https://www.espressif.com/en/products/socs/esp32-s2)/[s3](https://www.espressif.com/en/products/socs/esp32-s3) and use the [FPGA companion firmware](http://github.com/harbaum/FPGA-Companion). Basically a µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).
+This project relies on an external µC being connected to the Tang Nano 20K. You can use a [M0S Dock BL616](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html), [Raspberry Pi Pico (W)](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html) or [esp32-s2](https://www.espressif.com/en/products/socs/esp32-s2)/[s3](https://www.espressif.com/en/products/socs/esp32-s3) and use the [FPGA companion firmware](http://github.com/harbaum/FPGA-Companion). Basically a µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).
 
 For the [M0S Dock BL616](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) there is a:
 
@@ -26,7 +26,7 @@ and for the Raspberry PiPico (RP2040 µC) there is a:
 
 * [Optional custom carrier board MiSTeryShield20k Raspberry PiPico](/board/misteryshield20k_rpipico/README.md)
 
-Original C64 core by Peter Wendrich and c1541 by [darfpga](https://github.com/darfpga).  f
+Original C64 core by Peter Wendrich and c1541 by [darfpga](https://github.com/darfpga).  
 All HID components and µC firmware by Till Harbaum
 
 Features:
@@ -104,9 +104,8 @@ Cartridge ROM can be loaded via OSD file selection.
 Copy a *.CRT to your sdcard and rename it to **c64crt.crt** as default boot cartridge ROM.
 Prevent the cartridge load at boot by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.
 > [!TIP]
-**Detach Cartridge** by OSD :
-```temporary``` **Cartridge unload & Reset**  
-```permanent``` **No Disk**, **Save settings** and System **Cold Boot**
+>**Detach Cartridge** by OSD:
+>```temporary``` **Cartridge unload & Reset** ```permanent``` **No Disk**, **Save settings** and System **Cold Boot**
 
 > [!IMPORTANT]
 > Be aware that some Freezer Card CRT might require to use the standard C64 Kernal and the standard C1541 CBM DOS.
@@ -249,9 +248,9 @@ OSD: **Numpad**
 
 |Numpad| |Numpad|
 |-|-|-|
-|0<br>Trigger|8<br>Up|.<br>Trigger 2|
-|4<br>Left|-|6<br>Right|
-|-|2<br>Down|-|
+|0  Trigger|8  Up|.  Trigger 2|
+|4  Left|-|6  Right|
+|-|2  Down|-|
 
 <u>Mouse.</u>  
 OSD: **Mouse**
@@ -297,7 +296,7 @@ Button **cross / square** as Trigger
 
 Solid **<font color="red">red</font>** of the c1541 led after power-up indicates a missing DOS in Flash
 
-**Multicolor RGB LED**
+## Multicolor RGB LED
 
 * **<font color="green">green</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;all fine and ready to go
 * **<font color="red">red</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;something wrong with SDcard / default boot image
@@ -340,7 +339,7 @@ Alternatively use the command line build script **gw_sh.exe / gw_sh.sh** [build_
  Sipeed M0S Dock, digital Joystick D9 and DualShock Gamepad connection.
  ![wiring](\.assets/wiring_spi_irq.png)
 
-**Pinmap D-SUB 9 Joystick Interface**
+## Pinmap D-SUB 9 Joystick Interface
 
 * Joystick interface is 3.3V tolerant. Joystick 5V supply pin has to be left floating !
 
@@ -358,7 +357,8 @@ Alternatively use the command line build script **gw_sh.exe / gw_sh.sh** [build_
 | 8          |-    | J5 20       | -        | GND             |
 | 9          |-    | -           | 30       | TRIGGER 2       |
 
-**Pinmap Dualshock 2 Controller Interface**
+## Pinmap Dualshock 2 Controller Interface
+
 <img src="./.assets/controller-pinout.jpg" alt="image" width="30%" height="auto">
 
 | DS pin | Tang Nano pin | FPGA pin | DS Function |
@@ -395,6 +395,8 @@ and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.ht
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)  
 microSD or microSDHC card FAT32 formatted  
 TFT Monitor with HDMI Input and Speaker  
+
+## Selection
 
 | HID and Gamecontrol Hardware option | TN20k needs | alternative option |Primer 25K|Mega 60K|Mega 138K Pro|
 | -----------                         | ---         | ---                | ---      | -      | -       |
