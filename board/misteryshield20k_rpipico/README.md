@@ -23,6 +23,12 @@ Note: The [PS2 9 Pin 90 Degrees Female Socket Slot Connector For PlayStation 2 G
 
 The great PCB Layout work using [KiCad](https://www.kicad.org) had been done by [cantclosevi](https://github.com/cantclosevi). Thx Michal !
 
+> [!NOTE]
+> |Version|Comment                                          |
+> |----   |---                                              |
+> |1      |DS2 connector have to be mounted PCB Bottom Side (workaround)|
+> |2      |DS2 connector mounted on top side                |
+
 ![RPiPico](miyteryshield20l_rpipico.png)
 ![PNG](MiSTeryShield20kRPiPico-1.png)<br>
 ![PNG](MiSTeryShield20kRPiPico-2.png)<br>
