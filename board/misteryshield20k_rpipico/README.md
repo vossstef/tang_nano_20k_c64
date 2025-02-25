@@ -27,9 +27,9 @@ The great PCB Layout work using [KiCad](https://www.kicad.org) had been done by 
 > |Version|Comment                                          |
 > |----   |---                                              |
 > |1      |DS2 connector have to be mounted PCB Bottom Side (workaround)|
-> |2      |DS2 connector mounted on top side                |
+> |2      |DS2 connector mounted on top side (fixed)               |
 
-![RPiPico](miyteryshield20l_rpipico.png)
+![RRPiPico](pico.png)
 ![PNG](MiSTeryShield20kRPiPico-1.png)<br>
 ![PNG](MiSTeryShield20kRPiPico-2.png)<br>
 ![PNG](MiSTeryShield20kRPiPico-brd.png)<br>
