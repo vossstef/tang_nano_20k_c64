@@ -1116,6 +1116,7 @@ pot4 <= pd2 when joyswap = '1' else pd4;
 pd1 <=    not paddle_1 when port_1_sel = "0110" else
           not paddle_3 when port_1_sel = "1011" else
           joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else
+          joystick2_x_pos(7 downto 0) when port_1_sel = "1000" else
           ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_1_sel = "0101" else
           x"ff" when unsigned(port_1_sel) < 5 and joyA(5) = '1' else
           x"ff" when unsigned(port_1_sel) = "1010" and joyA(5) = '1' else
@@ -1123,19 +1124,22 @@ pd1 <=    not paddle_1 when port_1_sel = "0110" else
 pd2 <=    not paddle_2 when port_1_sel = "0110" else
           not paddle_4 when port_1_sel = "1011" else
           joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else
+          joystick2_y_pos(7 downto 0) when port_1_sel = "1000" else
           ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_1_sel = "0101" else
           x"ff" when unsigned(port_1_sel) < 5 and joyA(6) = '1' else
           x"ff" when unsigned(port_1_sel) = "1010" and joyA(6) = '1' else
           x"00";
 pd3 <=    not paddle_3 when port_2_sel = "1011" else
           not paddle_1 when port_2_sel = "0110" else
-          joystick2_x_pos(7 downto 0) when port_2_sel = "1000" else 
+          joystick1_x_pos(7 downto 0) when port_2_sel = "0111" else
+          joystick2_x_pos(7 downto 0) when port_2_sel = "1000" else
           ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_2_sel = "0101" else
           x"ff" when unsigned(port_2_sel) < 5 and joyB(5) = '1' else
           x"ff" when unsigned(port_2_sel) = "1010" and joyB(5) = '1' else
           x"00";
 pd4 <=    not paddle_4 when port_2_sel = "1011" else
           not paddle_2 when port_2_sel = "0110" else
+          joystick1_y_pos(7 downto 0) when port_2_sel = "0111" else
           joystick2_y_pos(7 downto 0) when port_2_sel = "1000" else
           ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_2_sel = "0101" else
           x"ff" when unsigned(port_2_sel) < 5 and joyB(6) = '1' else
