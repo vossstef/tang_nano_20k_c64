@@ -19,7 +19,10 @@ Features:
 
 PCBA production files for [JLCPCB](https://jlcpcb.com) are availble [here](Fabrication).<br>
 (Fully assembled boards can orderd based on BOM partlist, excluding the TN20k, PiPico and [Dualshock](/.assets/PS_connnector_female.png) connector)<br>
-Note: The [PS2 9 Pin 90 Degrees Female Socket Slot Connector For PlayStation 2 Game Controller](https://www.aliexpress.com) need to be sourced separately and assembled/ soldered on your own.
+
+> [!TIP]
+> The “PS2 9 Pin 90 Degrees Female Socket Slot Connector For PlayStation 2 Game Controller” need to be [sourced](https://www.aliexpress.com) separately and assembled + soldered on your own.  
+> It is advisible to secure the shell with a lot hot-melt adhesive to the PCBA in order to minimize the strain from the solder joints while plug / unplug the large connector.
 
 The great PCB Layout work using [KiCad](https://www.kicad.org) had been done by [cantclosevi](https://github.com/cantclosevi). Thx Michal !
 
@@ -33,3 +36,22 @@ The great PCB Layout work using [KiCad](https://www.kicad.org) had been done by 
 ![PNG](MiSTeryShield20kRPiPico-1.png)<br>
 ![PNG](MiSTeryShield20kRPiPico-2.png)<br>
 ![PNG](MiSTeryShield20kRPiPico-brd.png)<br>
+
+# Pin usage
+
+| Pin  | Signal | Description            |
+|------|--------|------------------------|
+| GP0  | UART_TX| Serial debug output    |
+| GP1  | UART_RX| (Serial debug input)   |
+| GP2  | USB D+ | USB PIO host D+        |
+| GP3  | USB D- | USB PIO host D-        |
+| GP4  | LED 1  | indicator mice         |
+| GP5  | LED 2  | indicator keyboard     |
+| GP6  | LED 3  | indicator joystick     |
+| GP16 | MISO   | SPI data from FPGA     |
+| GP17 | CSn    | SPI chip select to FPGA|
+| GP18 | SCK    | SPI clock to FPGA      |
+| GP19 | MOSI   | SPI data to FPGA       |
+| GP20 |RECONFGN| spare                  |
+| GP22 | IRQn   | SPI interrupt from FPGA|
+
