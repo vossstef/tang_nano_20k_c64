@@ -19,7 +19,7 @@ This project relies on an external µC being connected to the Tang Nano 20K. You
 For the [M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) BL616 µC there is a:
 
 * [Optional custom carrier board MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)
-* [Optional case](https://github.com/prcoder-1/MiSTeryNano-Case)
+* [Optional case](https://github.com/harbaum/MiSTeryNano/blob/main/board/misteryshield20k/housing3D)
 * [Dualshock Adapter / Cable](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md)
 
 and for the Raspberry PiPico (RP2040 µC) there is a:
