@@ -168,7 +168,13 @@ port  (
 	cass_motor  : out std_logic;
 	cass_write  : out std_logic;
 	cass_sense  : in  std_logic;
-	cass_read   : in  std_logic
+	cass_read   : in  std_logic;
+
+	serial_tx_strobe : in std_logic;
+	serial_tx_available : out  std_logic;
+	serial_tx_data   : out std_logic_vector(7 downto 0);
+	serial_rx_strobe : in std_logic;
+	serial_rx_data   : in std_logic_vector(7 downto 0)
 );
 end fpga64_sid_iec;
 
@@ -768,7 +774,7 @@ port map (
 	irq_n => irq_cia1
 );
 
-cia2: mos6526
+cia2: entity work.mos6526sercom
 port map (
 	clk => clk32,
 	mode => cia_mode,
@@ -783,12 +789,12 @@ port map (
 	db_out => cia2Do,
 
 	pa_in => cia2_pai and cia2_pao,
-	pa_out => cia2_pao,
-	pb_in => (pb_i and not cia2_pbe) or (cia2_pbo and cia2_pbe),
+	pa_out => cia2_pao, -- uart tx
+	pb_in => (pb_i and not cia2_pbe) or (cia2_pbo and cia2_pbe),  -- pb_i(0) uart_rx
 	pb_out => cia2_pbo,
 	pb_oe => cia2_pbe,
 
-	flag_n => flag2_n_i,
+	flag_n => flag2_n_i, -- uart rx
 	pc_n => pc2_n_o,
 
 	sp_in => sp2_i,
@@ -798,7 +804,14 @@ port map (
 
 	tod => todclk,
 
-	irq_n => irq_cia2
+	irq_n => irq_cia2,
+
+	serial_strobe_out => serial_tx_strobe,
+	serial_data_out_available => serial_tx_available,
+	serial_data_out => serial_tx_data,
+	serial_status_out => open,
+	serial_strobe_in => serial_rx_strobe,
+	serial_data_in => serial_rx_data
 );
 
 serialBus: process(clk32)

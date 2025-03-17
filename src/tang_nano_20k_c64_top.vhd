@@ -477,6 +477,12 @@ signal paddle_2_analogB : std_logic;
 signal flash_ready      : std_logic;
 signal pll_locked_comb  : std_logic;
 
+signal serial_tx_strobe : std_logic;
+signal serial_tx_available : std_logic;
+signal serial_tx_data   : std_logic_vector(7 downto 0);
+signal serial_rx_strobe : std_logic;
+signal serial_rx_data   : std_logic_vector(7 downto 0);
+
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
 -- cartridge ROM banks are mapped to 0x100000
@@ -1351,6 +1357,12 @@ hid_inst: entity work.hid
 
   cold_boot           => coldboot,
 
+  port_out_strobe    => serial_tx_strobe,
+  port_out_available => serial_tx_available,
+  port_out_data      => serial_tx_data,
+  port_in_strobe     => serial_rx_strobe,
+  port_in_data       => serial_rx_data,
+
   int_out_n           => m0s(4),
   int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
   int_ack             => int_ack,
@@ -1511,7 +1523,14 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   cass_motor   => cass_motor,
   cass_write   => cass_write,
   cass_sense   => cass_sense,
-  cass_read    => cass_read
+  cass_read    => cass_read,
+
+  -- port io (used to expose rs232)
+  serial_tx_strobe    => serial_tx_strobe,
+  serial_tx_available => serial_tx_available,
+  serial_tx_data      => serial_tx_data,
+  serial_rx_strobe    => serial_rx_strobe,
+  serial_rx_data      => serial_rx_data
   );
 
 process(clk32)
