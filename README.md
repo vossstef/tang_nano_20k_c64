@@ -25,7 +25,7 @@ For the [M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) BL
 and for the Raspberry PiPico (RP2040 µC) there is a:
 
 * [Optional custom carrier board MiSTeryShield20k Raspberry PiPico](/board/misteryshield20k_rpipico/README.md)
-* [Optional custom PMOD RP2040-Zero](/board/rp2040_zero_pmod/README.md) (upcoming)
+* [Optional custom PMOD RP2040-Zero](/board/pizero_pmod/README.md)
 * Optional case (upcoming)
   
 Original C64 core by Peter Wendrich and c1541 by [darfpga](https://github.com/darfpga).  
