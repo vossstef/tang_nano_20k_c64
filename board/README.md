@@ -13,6 +13,6 @@ Standalone Dock Solution for a Raspberry PiPico (WLAN)
 The extra DS2 cable is not needed and interface is already integrated.  
 [MiSTeryShield20k RPiPico](/board/misteryshield20k_rpipico/README.md)
 
-[PIZero_PMOD](/board/pizero_pmod/README.md)
+[PMOD RP-2040_Zero](/board/pizero_pmod/README.md)
 PMOD based on [RP2040-Zero](https://www.waveshare.com/wiki/RP2040-Zero)  
-To be used in conjuction with Primer20k, Primer25k, Mega60k NEO, Mega138k NEO or Mega138kPro
+To be used in conjuction with a Primer20k, Primer25k, Mega60k NEO, Mega138k NEO or Mega138kPro
