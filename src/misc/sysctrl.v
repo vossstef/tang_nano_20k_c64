@@ -65,18 +65,19 @@ module sysctrl (
   output reg        cold_boot
 );
 
-reg [3:0] state = 4'd0;
-reg [7:0] command = 8'd0;
+reg [3:0] state;
+reg [7:0] command;
 reg [7:0] id;
    
 // reverse data byte for rgb   
 wire [7:0] data_in_rev = { data_in[0], data_in[1], data_in[2], data_in[3], 
                            data_in[4], data_in[5], data_in[6], data_in[7] };
 
-reg coldboot = 1'b1;
+// coldboot flash and system interrupt   
+reg coldboot = 1'b1;   
 reg sys_int = 1'b1;
 
-// the system control interrupt or any other interrupt (e,g sdc, hid, ...)
+// the system cobtrol interrupt or any other interrupt (e,g sdc, hid, ...)
 // activates the interrupt line to the MCU by pulling it low
 assign int_out_n = (int_in != 8'h00 || sys_int)?1'b0:1'b1;
    
@@ -96,7 +97,7 @@ assign color = color_i;
 assign int_ack = int_ack_i;
 
 // process mouse events
-always @(posedge clk) begin  
+always @(posedge clk) begin
    if(reset) begin
       state <= 4'd0;      
       leds <= 2'b00;        // after reset leds are off
@@ -167,8 +168,9 @@ always @(posedge clk) begin
       // (further) data has just become available, so raise interrupt
       port_out_availableD <= port_out_available;      
       if(port_out_available && !port_out_availableD)
-
-      if(data_in_strobe) begin
+	sys_int <= 1'b1;
+      
+      if(data_in_strobe) begin      
         if(data_in_start) begin
             state <= 4'd1;
             command <= data_in;
@@ -275,19 +277,19 @@ always @(posedge clk) begin
                 // second byte acknowleges the interrupts
                 if(state == 4'd1) int_ack_i <= data_in;
 
-            // interrupt[0] notifies the MCU of a FPGA cold boot e.g. if
+	        // interrupt[0] notifies the MCU of a FPGA cold boot e.g. if
                 // the FPGA has been loaded via USB
                 data_out <= { int_in[7:1], sys_int };
             end
 	   
             // CMD 6: read system interrupt source
             if(command == 8'd6) begin
-                // bit[0]: coldboot flag
-                // bit[1]: port data is available
-                data_out <= { 6'b0000000, port_out_available, coldboot };
-                // reading the interrupt source acknowledges the coldboot notification
-                if(state == 4'd1) coldboot <= 1'b0;
-            end
+	        // bit[0]: coldboot flag
+	        // bit[1]: port data is available
+                data_out <= { 6'b000000, port_out_available, coldboot };
+	        // reading the interrupt source acknowledges the coldboot notification
+	        if(state == 4'd1) coldboot <= 1'b0;            
+	    end
 
             // CMD 7: read port output status and data
             if(command == 8'd7) begin
