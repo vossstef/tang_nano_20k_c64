@@ -100,6 +100,7 @@ port  (
 	romL        : out std_logic;
 	romH        : out std_logic;
 	UMAXromH 	: out std_logic;
+	IO7			: out std_logic;
 	IOE			: out std_logic;
 	IOF			: out std_logic;
 	freeze_key  : out std_logic;
@@ -168,13 +169,7 @@ port  (
 	cass_motor  : out std_logic;
 	cass_write  : out std_logic;
 	cass_sense  : in  std_logic;
-	cass_read   : in  std_logic;
-
-	serial_tx_strobe : in std_logic;
-	serial_tx_available : out  std_logic;
-	serial_tx_data   : out std_logic_vector(7 downto 0);
-	serial_rx_strobe : in std_logic;
-	serial_rx_data   : in std_logic_vector(7 downto 0)
+	cass_read   : in  std_logic
 );
 end fpga64_sid_iec;
 
@@ -260,6 +255,7 @@ signal cpuDo        : unsigned(7 downto 0);
 signal cpuDo_pre    : unsigned(7 downto 0);
 signal cpuIO        : unsigned(7 downto 0);
 signal io_data_i    : unsigned(7 downto 0);
+signal io7_i        : std_logic;
 signal ioe_i        : std_logic;
 signal iof_i        : std_logic;
 
@@ -492,6 +488,7 @@ port map (
 	cs_ram => cs_ram,
 	cs_ioE => ioe_i,
 	cs_ioF => iof_i,
+	cs_io7 => io7_i,
 	cs_romL => romL,
 	cs_romH => romH,
 	cs_UMAXromH => UMAXromH,
@@ -501,6 +498,7 @@ port map (
 	c64rom_wr => c64rom_wr
 );
 
+IO7 <= io7_i;
 IOE <= ioe_i;
 IOF <= iof_i;
 
@@ -774,7 +772,7 @@ port map (
 	irq_n => irq_cia1
 );
 
-cia2: entity work.mos6526sercom
+cia2: mos6526
 port map (
 	clk => clk32,
 	mode => cia_mode,
@@ -789,12 +787,12 @@ port map (
 	db_out => cia2Do,
 
 	pa_in => cia2_pai and cia2_pao,
-	pa_out => cia2_pao, -- uart tx
-	pb_in => (pb_i and not cia2_pbe) or (cia2_pbo and cia2_pbe),  -- pb_i(0) uart_rx
+	pa_out => cia2_pao,
+	pb_in => (pb_i and not cia2_pbe) or (cia2_pbo and cia2_pbe),
 	pb_out => cia2_pbo,
 	pb_oe => cia2_pbe,
 
-	flag_n => flag2_n_i, -- uart rx
+	flag_n => flag2_n_i,
 	pc_n => pc2_n_o,
 
 	sp_in => sp2_i,
@@ -804,14 +802,7 @@ port map (
 
 	tod => todclk,
 
-	irq_n => irq_cia2,
-
-	serial_strobe_out => serial_tx_strobe,
-	serial_data_out_available => serial_tx_available,
-	serial_data_out => serial_tx_data,
-	serial_status_out => open,
-	serial_strobe_in => serial_rx_strobe,
-	serial_data_in => serial_rx_data
+	irq_n => irq_cia2
 );
 
 serialBus: process(clk32)

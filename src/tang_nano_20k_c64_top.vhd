@@ -16,7 +16,8 @@ entity tang_nano_20k_c64_top is
   generic
   (
    DUAL  : integer := 1; -- 0:no, 1:yes dual SID build option
-   MIDI  : integer := 1  -- 0:no, 1:yes optional MIDI Interface
+   MIDI  : integer := 1;  -- 0:no, 1:yes optional MIDI Interface
+   U6551 : integer := 1  -- 0:no, 1:yes optional 6551 UART
    );
   port
   (
@@ -255,6 +256,7 @@ signal reu_ram_addr   : std_logic_vector(24 downto 0);
 signal reu_ram_dout   : std_logic_vector(7 downto 0);
 signal reu_ram_we     : std_logic;
 signal reu_irq        : std_logic;
+signal IO7            : std_logic;
 signal IOE            : std_logic;
 signal IOF            : std_logic;
 signal reu_dout       : std_logic_vector(7 downto 0);
@@ -438,6 +440,13 @@ signal sid_fc_offset   : std_logic_vector(2 downto 0);
 signal sid_fc_lr       : std_logic_vector(12 downto 0);
 signal sid_filter      : std_logic_vector(2 downto 0);
 signal georam          : std_logic;
+signal uart_data       : unsigned(7 downto 0) := (others =>'0');
+signal uart_oe         : std_logic := '0';
+signal uart_en         : std_logic := '0';
+signal tx_6551         : std_logic := '1';
+signal uart_irq        : std_logic := '0';
+signal uart_cs         : std_logic;
+signal CLK_6551_EN     : std_logic;
 signal phi2_p, phi2_n  : std_logic;
 signal sid_ld_addr     : std_logic_vector(11 downto 0) := (others =>'0');
 signal sid_ld_data     : std_logic_vector(15 downto 0) := (others =>'0');
@@ -1394,8 +1403,11 @@ begin
   end if;
 end process;
 
+uart_en <= system_up9600(2) or system_up9600(1);
+uart_oe <= not ram_we and uart_cs and uart_en;
 io_data <=  unsigned(cart_data) when cart_oe = '1' else
             unsigned(midi_data) when midi_oe = '1' else
+            uart_data when uart_oe = '1' else
             unsigned(reu_dout);
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
 sid_fc_lr <= 13x"0600" - (3x"0" & sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
@@ -1448,14 +1460,15 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => game,
   exrom        => exrom,
   io_rom       => io_rom,
-  io_ext       => reu_oe or cart_oe or midi_oe,
+  io_ext       => reu_oe or cart_oe or midi_oe or uart_oe,
   io_data      => io_data,
   irq_n        => midi_irq_n,
-  nmi_n        => not nmi and midi_nmi_n,
+  nmi_n        => not nmi and midi_nmi_n and not (uart_irq and uart_en),
   nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,
   UMAXromH     => UMAXromH,
+  IO7          => IO7,
   IOE          => IOE,
   IOF          => IOF,
   freeze_key   => open,
@@ -1523,14 +1536,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   cass_motor   => cass_motor,
   cass_write   => cass_write,
   cass_sense   => cass_sense,
-  cass_read    => cass_read,
-
-  -- port io (used to expose rs232)
-  serial_tx_strobe    => serial_tx_strobe,
-  serial_tx_available => serial_tx_available,
-  serial_tx_data      => serial_tx_data,
-  serial_rx_strobe    => serial_rx_strobe,
-  serial_rx_data      => serial_rx_data
+  cass_read    => cass_read
   );
 
 process(clk32)
@@ -2026,7 +2032,63 @@ begin
       sp2_i <= uart_rx_filtered;
       flag2_n_i <= uart_rx_filtered;
       pb_i(0) <= uart_rx_filtered;
+      elsif system_up9600 = 2 then
+        uart_tx <= tx_6551;
+        uart_cs <= IOE;
+      elsif system_up9600 = 3 then
+        uart_tx <= tx_6551;
+        uart_cs <= IOF;
+      elsif system_up9600 = 4 then
+        uart_tx <= tx_6551;
+  --    uart_cs <= IO7;
   end if;
 end process;
+
+-- | SwiftLink       $DE00/$DF00/$D700/NMI (300-38400 baud)
+-- | Turbo-232 only: $DE07/56839/TURBO232+7  Enhanced-Speed Register
+-- https://gglabs.us/node/2057
+yes_uart: if U6551 /= 0 generate
+uart_inst : entity work.glb6551
+port map (
+  RESET_N     => reset_n,
+  CLK         => clk32,
+  PHI2_P      => phi2_p,
+  PHI2_N      => phi2_n,
+  RX_CLK      => open,
+  RX_CLK_IN   => CLK_6551_EN,
+  XTAL_CLK_IN => CLK_6551_EN,
+  PH_2        => phi2_p,
+  DI          => c64_data_out,
+  DO          => uart_data,
+  IRQ         => uart_irq,
+  CS          => unsigned'(not uart_en & uart_cs), -- RD = PHI2_N & CS == 2'b01 &  RW_N;
+  RW_N        => not ram_we,
+  RS          => c64_addr(1 downto 0),
+  TXDATA_OUT  => tx_6551,
+  RXDATA_IN   => uart_rx,
+  RTS         => open,
+  CTS         => '1',
+  DCD         => '1',
+  DTR         => open,
+  DSR         => '1',
+
+  serial_strobe_out => serial_tx_strobe,
+	serial_data_out_available => serial_tx_available,
+	serial_data_out => serial_tx_data,
+	serial_status_out => open,
+	serial_strobe_in => serial_rx_strobe,
+	serial_data_in => serial_rx_data
+  );
+
+--  3.686.400Hz clock enable derived
+baudgen_inst: entity work.BaudRate
+ GENERIC map(
+  BAUD_RATE	=> 230400
+ )
+ port map(
+   i_CLOCK	=> clk32,
+   o_serialEn	=> CLK_6551_EN
+);
+end generate;
 
 end Behavioral_top;

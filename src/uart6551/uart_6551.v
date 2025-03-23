@@ -94,7 +94,17 @@ RTS,
 CTS,
 DCD,
 DTR,
-DSR
+DSR,
+
+// serial rs232 connection to io controller
+serial_data_out_available,
+serial_strobe_out,
+serial_data_out,
+serial_status_out,
+
+// serial rs223 connection from io controller
+serial_strobe_in,
+serial_data_in
 );
 
 input					RESET_N;
@@ -118,6 +128,16 @@ input					CTS;
 input					DCD;
 output					DTR;
 input					DSR;
+
+// to io controller
+output           serial_data_out_available;
+input            serial_strobe_out;
+output     [7:0] serial_data_out;
+output    [63:0] serial_status_out;
+
+// serial rs223 connection from io controller
+input            serial_strobe_in;
+input      [7:0] serial_data_in;
 
 reg		[7:0]		TX_BUFFER;
 reg		[7:0]		TX_REG;
