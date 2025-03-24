@@ -15,7 +15,7 @@ use IEEE.numeric_std.ALL;
 entity tang_nano_20k_c64_top is
   generic
   (
-   DUAL  : integer := 1; -- 0:no, 1:yes dual SID build option
+   DUAL  : integer := 0; -- 0:no, 1:yes dual SID build option
    MIDI  : integer := 1;  -- 0:no, 1:yes optional MIDI Interface
    U6551 : integer := 1  -- 0:no, 1:yes optional 6551 UART
    );
@@ -1403,10 +1403,13 @@ begin
   end if;
 end process;
 
+-- 210
+-- 000
+-- 
 uart_en <= system_up9600(2) or system_up9600(1);
-uart_oe <= not ram_we and uart_cs and uart_en;
+--uart_oe <= not ram_we and uart_cs and uart_en;
 io_data <=  unsigned(cart_data) when cart_oe = '1' else
-            unsigned(midi_data) when midi_oe = '1' else
+         -- unsigned(midi_data) when midi_oe = '1' else
             uart_data when uart_oe = '1' else
             unsigned(reu_dout);
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
@@ -1460,10 +1463,10 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => game,
   exrom        => exrom,
   io_rom       => io_rom,
-  io_ext       => reu_oe or cart_oe or midi_oe or uart_oe,
+  io_ext       => reu_oe or cart_oe or uart_oe, -- midi_oe or
   io_data      => io_data,
   irq_n        => midi_irq_n,
-  nmi_n        => not nmi and midi_nmi_n and not (uart_irq and uart_en),
+  nmi_n        => not nmi and not (uart_irq and uart_en), -- and midi_nmi_n
   nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,
@@ -1989,13 +1992,14 @@ begin
   drive_stb_i <= '1';
   uart_tx <= '1';
   flag2_n_i <= '1';
+  uart_cs <= '0';
   if ext_en = '1' and disk_access = '1' then
     -- c1541 parallel bus
     drive_par_i <= pb_o;
     drive_stb_i <= pc2_n_o;
     pb_i <= drive_par_o;
     flag2_n_i <= drive_stb_o;
-  elsif system_up9600(0) = '0' and (disk_access = '0' or ext_en = '0') then
+    elsif system_up9600 = 0 and (disk_access = '0' or ext_en = '0') then
       -- UART 
       -- https://www.pagetable.com/?p=1656
       -- FLAG2 RXD
@@ -2015,7 +2019,7 @@ begin
       pb_i(6) <= not pb_o(1);  -- RTS > CTS
       pb_i(4) <= not pb_o(2);  -- DTR > DCD
       pb_i(7) <= not pb_o(2);  -- DTR > DSR
-    elsif system_up9600(0) = '1' and (disk_access = '0' or ext_en = '0') then
+    elsif system_up9600 = 1 and (disk_access = '0' or ext_en = '0') then
       -- UART UP9600
       -- https://www.pagetable.com/?p=1656
       -- SP1 TXD
@@ -2040,7 +2044,7 @@ begin
         uart_cs <= IOF;
       elsif system_up9600 = 4 then
         uart_tx <= tx_6551;
-  --    uart_cs <= IO7;
+        uart_cs <= IO7;
   end if;
 end process;
 
@@ -2080,15 +2084,12 @@ port map (
 	serial_data_in => serial_rx_data
   );
 
---  3.686.400Hz clock enable derived
-baudgen_inst: entity work.BaudRate
- GENERIC map(
-  BAUD_RATE	=> 230400
- )
- port map(
-   i_CLOCK	=> clk32,
-   o_serialEn	=> CLK_6551_EN
-);
+uart_clk_inst : entity work.uclockdiv
+port map (
+    CLK         => clk64,
+    RESET_N     => reset_n,
+    CLK_6551_EN => CLK_6551_EN
+  );
 end generate;
 
 end Behavioral_top;
