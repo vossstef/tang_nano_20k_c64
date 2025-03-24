@@ -1407,7 +1407,7 @@ end process;
 -- 000
 -- 
 uart_en <= system_up9600(2) or system_up9600(1);
---uart_oe <= not ram_we and uart_cs and uart_en;
+uart_oe <= not ram_we and uart_cs and uart_en;
 io_data <=  unsigned(cart_data) when cart_oe = '1' else
          -- unsigned(midi_data) when midi_oe = '1' else
             uart_data when uart_oe = '1' else
@@ -1992,7 +1992,7 @@ begin
   drive_stb_i <= '1';
   uart_tx <= '1';
   flag2_n_i <= '1';
-  uart_cs <= '0';
+  --uart_cs <= '0';
   if ext_en = '1' and disk_access = '1' then
     -- c1541 parallel bus
     drive_par_i <= pb_o;
