@@ -485,6 +485,8 @@ signal paddle_2_analogA : std_logic;
 signal paddle_2_analogB : std_logic;
 signal flash_ready      : std_logic;
 signal pll_locked_comb  : std_logic;
+signal rts_cts          : std_logic;
+signal dtr              : std_logic;
 
 signal serial_tx_strobe : std_logic;
 signal serial_tx_available : std_logic;
@@ -1463,10 +1465,10 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => game,
   exrom        => exrom,
   io_rom       => io_rom,
-  io_ext       => reu_oe or cart_oe or uart_oe, -- midi_oe or
+  io_ext       => reu_oe or cart_oe or midi_oe or uart_oe,
   io_data      => io_data,
   irq_n        => midi_irq_n,
-  nmi_n        => not nmi and not (uart_irq and uart_en), -- and midi_nmi_n
+  nmi_n        => not nmi and midi_nmi_n and (not uart_irq and uart_en),
   nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,
@@ -1992,7 +1994,7 @@ begin
   drive_stb_i <= '1';
   uart_tx <= '1';
   flag2_n_i <= '1';
-  --uart_cs <= '0';
+  uart_cs <= '0';
   if ext_en = '1' and disk_access = '1' then
     -- c1541 parallel bus
     drive_par_i <= pb_o;
@@ -2056,40 +2058,36 @@ uart_inst : entity work.glb6551
 port map (
   RESET_N     => reset_n,
   CLK         => clk32,
-  PHI2_P      => phi2_p,
-  PHI2_N      => phi2_n,
   RX_CLK      => open,
   RX_CLK_IN   => CLK_6551_EN,
   XTAL_CLK_IN => CLK_6551_EN,
-  PH_2        => phi2_p,
+  PH_2        => phi2_n,
   DI          => c64_data_out,
   DO          => uart_data,
   IRQ         => uart_irq,
-  CS          => unsigned'(not uart_en & uart_cs), -- RD = PHI2_N & CS == 2'b01 &  RW_N;
+  CS          => unsigned'(not uart_en & uart_cs),
   RW_N        => not ram_we,
   RS          => c64_addr(1 downto 0),
   TXDATA_OUT  => tx_6551,
   RXDATA_IN   => uart_rx,
-  RTS         => open,
-  CTS         => '1',
-  DCD         => '1',
-  DTR         => open,
-  DSR         => '1',
-
-  serial_strobe_out => serial_tx_strobe,
-	serial_data_out_available => serial_tx_available,
-	serial_data_out => serial_tx_data,
-	serial_status_out => open,
-	serial_strobe_in => serial_rx_strobe,
-	serial_data_in => serial_rx_data
+  RTS         => rts_cts,
+  CTS         => rts_cts,
+  DCD         => dtr,
+  DTR         => dtr,
+  DSR         => dtr
+--  serial_strobe_out => serial_tx_strobe,
+--	serial_data_out_available => serial_tx_available,
+--	serial_data_out => serial_tx_data,
+--	serial_status_out => open,
+--	serial_strobe_in => serial_rx_strobe,
+--	serial_data_in => serial_rx_data
   );
 
-uart_clk_inst : entity work.uclockdiv
+uart_clk_inst : entity work.BaudRate
 port map (
-    CLK         => clk64,
-    RESET_N     => reset_n,
-    CLK_6551_EN => CLK_6551_EN
-  );
+      i_CLOCK     => clk32,
+      o_serialEn  => CLK_6551_EN
+);
 end generate;
 
 end Behavioral_top;

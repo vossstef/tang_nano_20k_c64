@@ -76,8 +76,6 @@
 module glb6551(
 RESET_N,
 CLK,
-PHI2_P,
-PHI2_N,
 RX_CLK,
 RX_CLK_IN,
 XTAL_CLK_IN,
@@ -94,91 +92,74 @@ RTS,
 CTS,
 DCD,
 DTR,
-DSR,
-
+DSR
 // serial rs232 connection to io controller
-serial_data_out_available,
-serial_strobe_out,
-serial_data_out,
-serial_status_out,
+//serial_data_out_available,
+//serial_strobe_out,
+//serial_data_out,
+//serial_status_out,
 
 // serial rs223 connection from io controller
-serial_strobe_in,
-serial_data_in
+//serial_strobe_in,
+//serial_data_in
 );
 
 input					RESET_N;
 input					CLK;
-input                   PHI2_P;
-input                   PHI2_N;
-output					RX_CLK;
+output				RX_CLK;
 input					RX_CLK_IN;
 input					XTAL_CLK_IN;
 input					PH_2;
 input		[7:0]		DI;
-output	reg	[7:0]		DO;
-output					IRQ;
+output	[7:0]		DO;
+output				IRQ;
 input		[1:0]		CS;
 input		[1:0]		RS;
 input					RW_N;
-output					TXDATA_OUT;
+output				TXDATA_OUT;
 input					RXDATA_IN;
-output					RTS;
+output				RTS;
 input					CTS;
 input					DCD;
-output					DTR;
+output				DTR;
 input					DSR;
-
-// to io controller
-output           serial_data_out_available;
-input            serial_strobe_out;
-output     [7:0] serial_data_out;
-output    [63:0] serial_status_out;
-
-// serial rs223 connection from io controller
-input            serial_strobe_in;
-input      [7:0] serial_data_in;
 
 reg		[7:0]		TX_BUFFER;
 reg		[7:0]		TX_REG;
-wire	[7:0]		RX_BUFFER;
+wire		[7:0]		RX_BUFFER;
 reg		[7:0]		RX_REG;
-wire	[7:0]		STATUS_REG;
+wire		[7:0]		STATUS_REG;
 reg		[7:0]		CTL_REG;
 reg		[7:0]		CMD_REG;
 reg					OVERRUN;
 reg					FRAME;
 reg					PARITY;
 
-wire				TX_DONE;
+wire					TX_DONE;
 reg					TX_DONE0;
 reg					TX_DONE1;
 reg					TX_START;
 reg					TDRE;
 reg					RDRF;
-reg		[10:0]		TX_CLK_DIV;
-wire				TX_CLK;
-wire				RX_CLK;
-wire				FRAME_BUF;
-wire		[1:0]	WORD_SELECT;
-wire				RESET_X;
-wire				STOP;
-wire				PARITY_ERR;
-wire				PAR_DIS;
+reg		[10:0]	TX_CLK_DIV;
+wire					TX_CLK;
+wire					RX_CLK;
+wire					FRAME_BUF;
+wire		[1:0]		WORD_SELECT;
+wire					RESET_X;
+wire					STOP;
+wire					PARITY_ERR;
+wire					PAR_DIS;
 reg		[7:0]		LOOPBACK;
-wire				RX_DATA;
-wire				TX_DATA;
+wire					RX_DATA;
+wire					TX_DATA;
 reg					RESET_NX;
 reg					TX_CLK_REG_T;
 reg			 		TX_CLK_REG;
 reg		[1:0]		READ_STATE;
-wire				GOT_DATA;
+wire					GOT_DATA;
 reg					READY0;
 reg					READY1;
-
-wire				RD = PHI2_N & CS == 2'b01 &  RW_N;
-wire				WR = PHI2_N & CS == 2'b01 & !RW_N;
-
 /*
 Baud rate divisors
 (for toggle of baud clock bit)
@@ -201,7 +182,7 @@ F	19200	3
 
 //assign TX_CLK_REG = TX_CLK_REG_T & XTAL_CLK_IN;
 
-always @ (posedge CLK)
+always @ (negedge CLK or negedge RESET_X)
 begin
 	if(!RESET_X)
 	begin
@@ -342,7 +323,7 @@ assign RX_CLK = (CTL_REG[4] == 1'b0)	?	RX_CLK_IN:
 assign RESET_X = RESET_NX 					?	1'b0:
 												RESET_N;
 
-always @ (posedge CLK)
+always @ (negedge CLK)
 begin
 		if (TX_CLK)
 			LOOPBACK <= {LOOPBACK[6:0], TX_DATA};			//half bit time FIFO
@@ -355,6 +336,11 @@ assign TXDATA_OUT =	(CMD_REG[4:2] == 3'b100)	?	1'b1:
 													TX_DATA;
 
 assign STATUS_REG = {!IRQ, DSR, DCD, TDRE, RDRF, OVERRUN, FRAME, PARITY};
+
+assign DO =	(RS == 2'b00)	?	RX_REG:
+			(RS == 2'b01)	?	STATUS_REG:
+			(RS == 2'b10)	?	CMD_REG:
+								CTL_REG;
 
 assign IRQ =	({CMD_REG[1:0], RDRF} == 3'b011)						?	1'b0:
 				({CMD_REG[3:2], CMD_REG[0], TDRE} == 4'b0111)			?	1'b0:
@@ -370,7 +356,21 @@ assign STOP =	(CTL_REG[7] == 1'b0)									?	1'b0:		// Stop = 1
 assign PAR_DIS = ~CMD_REG[5];
 assign WORD_SELECT = CTL_REG[6:5];
 
-always @ (posedge CLK)
+always @ (negedge CLK or negedge RESET_N)
+begin
+	if(!RESET_N)
+		RESET_NX <= 1'b1;
+	else
+	begin
+		if (PH_2)
+			if({RW_N, CS, RS} == 5'b00101)						// Software RESET
+				RESET_NX <= 1'b1;
+			else
+				RESET_NX <= 1'b0;
+			end
+end
+
+always @ (negedge CLK or negedge RESET_X)
 begin
 	if(!RESET_X)
 	begin
@@ -378,6 +378,8 @@ begin
 		READ_STATE <= 2'b00;
 		TX_BUFFER <= 8'h00;
 		CTL_REG <= 8'h00;
+// Commador data sheet says reset value is 02
+// but Apple will not work unless it is 00
 		CMD_REG <= 8'h00;
 		TDRE <= 1'b1;
 		TX_START <= 1'b0;
@@ -392,33 +394,7 @@ begin
 	end
 	else
 	begin
-
-	if (WR) begin
-		if({RS} == 2'b00)						// Write TX data register
-			TX_REG <= DI;
-
-		if({RS} == 2'b10)						// Write CMD register
-			CMD_REG <= DI;
-
-		if({RS} == 2'b11)						// Write CTL register
-			CTL_REG <= DI;
-
-		if({RS} == 2'b01)						// Software RESET
-				RESET_NX <= 1'b1;
-			else
-				RESET_NX <= 1'b0;
-	end
-
-	if (RD) begin
-		case (RS)
-			2'h0: DO <= RX_REG;
-			2'h1: DO <= STATUS_REG;
-			2'h2: DO <= CMD_REG;
-			2'h3: DO <= CTL_REG;	
-		endcase
-	end
-
-		if (PHI2_P)
+		if (PH_2)
 		begin
 			TX_DONE1 <= TX_DONE0;			// sync TX_DONE with E clock for metastability?
 			TX_DONE0 <= TX_DONE;
@@ -439,7 +415,7 @@ begin
 			end
 			2'b01:
 			begin
-				if({RD, RS} == 3'b100)
+				if({RW_N, CS, RS} == 5'b10100)
 				begin
 					RDRF <= 1'b0;
 					READ_STATE <= 2'b10;
@@ -460,7 +436,7 @@ begin
 			end
 			2'b11:
 			begin
-				if({RD,RS} == 3'b100)
+				if({RW_N, CS, RS} == 5'b10100)
 				begin
 					RDRF <= 1'b0;
 					READ_STATE <= 2'b00;
@@ -483,6 +459,15 @@ begin
 			end
 			endcase
 
+			if({RW_N, CS, RS} == 5'b00100)						// Write TX data register
+				TX_REG <= DI;
+
+			if({RW_N, CS, RS} == 5'b00110)						// Write CMD register
+				CMD_REG <= DI;
+
+			if({RW_N, CS, RS} == 5'b00111)						// Write CTL register
+				CTL_REG <= DI;
+
 			if(~TDRE & TX_DONE1 & ~TX_START & ~(CS == 2'b01))
 			begin
 				TX_BUFFER <= TX_REG;
@@ -491,14 +476,13 @@ begin
 			end
 			else
 			begin
-				if({WR, RS} == 3'b100)					// Write TX data register
+				if({RW_N, CS, RS} == 5'b00100)					// Write TX data register
 					TDRE <= 1'b0;
 				if(~TX_DONE1)
 					TX_START <= 1'b0;
 			end
 		end
 	end
-
 end
 
 uart51_tx tx(
