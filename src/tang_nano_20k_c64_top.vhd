@@ -300,6 +300,7 @@ signal hbl_out         : std_logic;
 signal vbl_out         : std_logic;
 signal midi_data       : std_logic_vector(7 downto 0) := (others =>'0');
 signal midi_oe         : std_logic := '0';
+signal midi_en         : std_logic := '0';
 signal midi_irq_n      : std_logic := '1';
 signal midi_nmi_n      : std_logic := '1';
 signal midi_rx         : std_logic;
@@ -1415,7 +1416,7 @@ end process;
 uart_en <= system_up9600(2) or system_up9600(1);
 uart_oe <= not ram_we and uart_cs and uart_en;
 io_data <=  unsigned(cart_data) when cart_oe = '1' else
-         -- unsigned(midi_data) when midi_oe = '1' else
+            unsigned(midi_data) when (midi_oe and midi_en) = '1' else
             uart_data when uart_oe = '1' else
             unsigned(reu_dout);
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
@@ -1469,7 +1470,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => game,
   exrom        => exrom,
   io_rom       => io_rom,
-  io_ext       => reu_oe or cart_oe or midi_oe or uart_oe,
+  io_ext       => reu_oe or cart_oe or (midi_oe and midi_en) or uart_oe,
   io_data      => io_data,
   irq_n        => midi_irq_n,
   nmi_n        => not nmi and midi_nmi_n and (not uart_irq and uart_en),
@@ -1653,12 +1654,13 @@ port map
     nmi_ack     => nmi_ack
   );
 
+midi_en <= st_midi(2) or st_midi(1) or st_midi(0);
 
 yes_midi: if MIDI /= 0 generate
   midi_inst : entity work.c64_midi
   port map (
     clk32   => clk32,
-    reset   => not reset_n or not (st_midi(2) or st_midi(1) or st_midi(0)),
+    reset   => not reset_n or not midi_en,
     Mode    => st_midi,
     E       => phi,
     IOE     => IOE,

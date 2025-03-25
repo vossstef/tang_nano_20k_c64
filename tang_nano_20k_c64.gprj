@@ -46,6 +46,7 @@
         <File path="src/sid/sid_voice.sv" type="file.verilog" enable="1"/>
         <File path="src/uart6551/6551rx.v" type="file.verilog" enable="1"/>
         <File path="src/uart6551/6551tx.v" type="file.verilog" enable="1"/>
+        <File path="src/uart6551/io_fifo.v" type="file.verilog" enable="1"/>
         <File path="src/uart6551/uart_6551.v" type="file.verilog" enable="1"/>
         <File path="src/c1530.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/c1541_logic.vhd" type="file.vhdl" enable="1"/>
