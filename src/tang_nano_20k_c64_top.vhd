@@ -487,10 +487,11 @@ signal flash_ready      : std_logic;
 signal pll_locked_comb  : std_logic;
 signal rts_cts          : std_logic;
 signal dtr              : std_logic;
-
+signal serial_status    : std_logic_vector(31 downto 0);
+signal serial_tx_available : std_logic_vector(7 downto 0);
 signal serial_tx_strobe : std_logic;
-signal serial_tx_available : std_logic;
 signal serial_tx_data   : std_logic_vector(7 downto 0);
+signal serial_rx_available : std_logic_vector(7 downto 0);
 signal serial_rx_strobe : std_logic;
 signal serial_rx_data   : std_logic_vector(7 downto 0);
 
@@ -1368,11 +1369,14 @@ hid_inst: entity work.hid
 
   cold_boot           => coldboot,
 
-  port_out_strobe    => serial_tx_strobe,
+  -- port io (used to expose rs232)
+  port_status       => serial_status,
   port_out_available => serial_tx_available,
-  port_out_data      => serial_tx_data,
-  port_in_strobe     => serial_rx_strobe,
-  port_in_data       => serial_rx_data,
+  port_out_strobe   => serial_tx_strobe,
+  port_out_data     => serial_tx_data,
+  port_in_available => serial_rx_available,
+  port_in_strobe    => serial_rx_strobe,
+  port_in_data      => serial_rx_data,
 
   int_out_n           => m0s(4),
   int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
@@ -2074,13 +2078,16 @@ port map (
   CTS         => rts_cts,
   DCD         => dtr,
   DTR         => dtr,
-  DSR         => dtr
---  serial_strobe_out => serial_tx_strobe,
---	serial_data_out_available => serial_tx_available,
---	serial_data_out => serial_tx_data,
---	serial_status_out => open,
---	serial_strobe_in => serial_rx_strobe,
---	serial_data_in => serial_rx_data
+  DSR         => dtr,
+  -- serial/rs232 interface io-controller<-> UART
+  serial_status_out   => serial_status,
+  serial_data_out_available => serial_tx_available,
+  serial_strobe_out   => serial_tx_strobe,
+  serial_data_out     => serial_tx_data,
+
+  serial_data_in_free => serial_rx_available,
+  serial_strobe_in    => serial_rx_strobe,
+  serial_data_in      => serial_rx_data
   );
 
 uart_clk_inst : entity work.BaudRate

@@ -92,37 +92,46 @@ RTS,
 CTS,
 DCD,
 DTR,
-DSR
+DSR,
 // serial rs232 connection to io controller
-//serial_data_out_available,
-//serial_strobe_out,
-//serial_data_out,
-//serial_status_out,
-
+serial_data_out_available,  // bytes available
+serial_data_in_free,        // free buffer available
+serial_strobe_out,
+serial_data_out,
+serial_status_out,
 // serial rs223 connection from io controller
-//serial_strobe_in,
-//serial_data_in
+serial_strobe_in,
+serial_data_in
 );
 
-input					RESET_N;
-input					CLK;
+input				RESET_N;
+input				CLK;
 output				RX_CLK;
-input					RX_CLK_IN;
-input					XTAL_CLK_IN;
-input					PH_2;
-input		[7:0]		DI;
-output	[7:0]		DO;
+input				RX_CLK_IN;
+input				XTAL_CLK_IN;
+input				PH_2;
+input		[7:0]	DI;
+output		[7:0]	DO;
 output				IRQ;
-input		[1:0]		CS;
-input		[1:0]		RS;
-input					RW_N;
+input		[1:0]	CS;
+input		[1:0]	RS;
+input				RW_N;
 output				TXDATA_OUT;
-input					RXDATA_IN;
+input				RXDATA_IN;
 output				RTS;
-input					CTS;
-input					DCD;
+input				CTS;
+input				DCD;
 output				DTR;
-input					DSR;
+input				DSR;
+
+output		[7:0]	serial_data_out_available;
+output		[7:0]	serial_data_in_free;
+input				serial_strobe_out;
+output		[7:0]	serial_data_out;
+output    [31:0]	serial_status_out;
+input				serial_strobe_in;
+input		[7:0]	serial_data_in;
+
 
 reg		[7:0]		TX_BUFFER;
 reg		[7:0]		TX_REG;
