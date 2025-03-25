@@ -72,6 +72,9 @@
 // 
 //	1/11/22		Changed to be super synchronus
 ////////////////////////////////////////////////////////////////////////////////
+//
+// 03/2025      Stefan Voss io controller added
+////////////////////////////////////////////////////////////////////////////////
 
 module glb6551(
 RESET_N,
@@ -169,28 +172,104 @@ reg		[1:0]		READ_STATE;
 wire					GOT_DATA;
 reg					READY0;
 reg					READY1;
-/*
-Baud rate divisors
-(for toggle of baud clock bit)
-1	50		1152
-2	75		768
-3	110	524 	-0.069396
-4	135	428 	-0.311526
-5	150	384
-6	300	192
-7	600	96
-8	1200	48
-9	1800	32
-A	2400	24
-B	3600	16
-C	4800	12
-D	7200	8
-E	9600	6
-F	19200	3
-*/
 
-//assign TX_CLK_REG = TX_CLK_REG_T & XTAL_CLK_IN;
+// report the available unused space in the input fifo
+assign serial_data_in_free = { 4'h0, serial_data_in_space };
 
+wire serial_data_out_fifo_full;
+wire serial_data_in_full;
+
+// --- mfp output fifo ---
+// filled by the CPU when writing to the mfp uart data register
+// emptied by the io controller when reading via SPI
+assign serial_data_out_available[7:4] = 4'h0;
+
+io_fifo uart_out_fifo (
+	.reset            ( ~RESET_N ),
+
+	.in_clk           ( CLK ),
+	.in               ( DI ),
+	.in_strobe        ( 1'b0 ),
+	.in_enable        ( {PH_2, RW_N, CS, RS} == 6'b100100 ), // TXD Register Addr 0
+
+	.out_clk          ( CLK ),
+	.out              ( serial_data_out ),
+	.out_strobe       ( serial_strobe_out ),
+	.out_enable       ( 1'b0 ),
+
+	.space            (  ),
+	.used             ( serial_data_out_available[3:0] ),
+	.empty            (  ),
+	.full             ( serial_data_out_fifo_full )
+);
+
+reg serial_cpu_data_read;
+wire [7:0] serial_data_in_cpu;
+wire	   serial_data_in_empty;
+wire [3:0] serial_data_in_used;
+wire [3:0] serial_data_in_space;
+wire	   uart_rx_busy;
+
+// As long as "rx busy" the same previous byte can still be read from the
+// UDR/rx fifo. Thus we increment the io_fifo read pointer at the end of
+// the rx_busy phase which is the falling edge of uart_rx_busy
+reg uart_rx_busyD;
+always @(posedge CLK) uart_rx_busyD <= uart_rx_busy;
+wire uart_rx_busy_ends = !uart_rx_busy && uart_rx_busyD;
+   
+// --- uart input fifo ---
+// filled by the io controller when writing via SPI
+// emptied by CPU when reading the uart RXD data register
+io_fifo uart_in_fifo (
+	.reset            ( ~RESET_N ),
+
+	.in_clk           ( CLK ),
+	.in               ( serial_data_in ),
+	.in_strobe        ( serial_strobe_in ),
+	.in_enable        ( 1'b0 ),
+
+	.out_clk          ( CLK ),
+	.out              ( serial_data_in_cpu ),
+	.out_strobe       ( 1'b0 ),
+	.out_enable       ( !serial_data_in_empty && uart_rx_busy_ends ),
+
+	.space            ( serial_data_in_space ),
+	.used             ( serial_data_in_used ),
+	.empty            ( serial_data_in_empty ),
+	.full             ( serial_data_in_full )
+);
+
+// ---------------- uart data to/from io controller ------------
+always @(posedge CLK) begin
+	serial_cpu_data_read <= 1'b0;
+	if (PH_2) begin
+		// read on uart data register
+		if({RW_N, CS, RS} == 5'b10100)  // RXD Addr = 0
+			serial_cpu_data_read <= 1'b1;
+	end
+end
+
+// delay data_in_available one more cycle to give the fifo a chance to remove one item
+wire	   serial_data_in_available = !serial_data_in_empty && !uart_rx_busy && !uart_rx_busyD;
+// the cpu reading data clears rx irq. It may raise again immediately if there's more
+// data in the input fifo.
+wire uart_rx_irq = serial_data_in_available;
+// the io controller reading data clears tx irq. It may raus again immediately if 
+// there's more data in the output fifo
+wire uart_tx_irq = !serial_data_out_fifo_full && !serial_strobe_out;
+
+// CPU reads the UDR
+//if(serial_cpu_data_read && serial_data_in_available) begin
+//	uart_rx_delay_cnt <= timerd_set_data;
+//	uart_rx_prediv_cnt <= { uart_prediv-11'd1, 5'b00000 };    // load predivider with 2*16 the predivider value
+//end
+
+
+//		dout = serial_data_in_available,
+//		dout = serial_data_out_fifo_full
+//		dout = serial_data_in_cpu;
+
+// 6551 UART
 always @ (negedge CLK or negedge RESET_X)
 begin
 	if(!RESET_X)
