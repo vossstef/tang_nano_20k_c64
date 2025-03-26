@@ -72,9 +72,6 @@
 // 
 //	1/11/22		Changed to be super synchronus
 ////////////////////////////////////////////////////////////////////////////////
-//
-// 03/2025      Stefan Voss io controller added based on Till Harbaums MFP 68901 component work
-////////////////////////////////////////////////////////////////////////////////
 
 module glb6551(
 RESET_N,
@@ -107,26 +104,25 @@ serial_strobe_in,
 serial_data_in
 );
 
-input				RESET_N;
-input				CLK;
+input					RESET_N;
+input					CLK;
 output				RX_CLK;
-input				RX_CLK_IN;
-input				XTAL_CLK_IN;
-input				PH_2;
-input		[7:0]	DI;
-output		[7:0]	DO;
+input					RX_CLK_IN;
+input					XTAL_CLK_IN;
+input					PH_2;
+input		[7:0]		DI;
+output	[7:0]		DO;
 output				IRQ;
-input		[1:0]	CS;
-input		[1:0]	RS;
-input				RW_N;
+input		[1:0]		CS;
+input		[1:0]		RS;
+input					RW_N;
 output				TXDATA_OUT;
-input				RXDATA_IN;
+input					RXDATA_IN;
 output				RTS;
-input				CTS;
-input				DCD;
+input					CTS;
+input					DCD;
 output				DTR;
-input				DSR;
-
+input					DSR;
 output		[7:0]	serial_data_out_available;
 output		[7:0]	serial_data_in_free;
 input				serial_strobe_out;
@@ -134,7 +130,6 @@ output		[7:0]	serial_data_out;
 output    [31:0]	serial_status_out;
 input				serial_strobe_in;
 input		[7:0]	serial_data_in;
-
 
 reg		[7:0]		TX_BUFFER;
 reg		[7:0]		TX_REG;
@@ -172,167 +167,28 @@ reg		[1:0]		READ_STATE;
 wire					GOT_DATA;
 reg					READY0;
 reg					READY1;
+/*
+Baud rate divisors
+(for toggle of baud clock bit)
+1	50		1152
+2	75		768
+3	110	524 	-0.069396
+4	135	428 	-0.311526
+5	150	384
+6	300	192
+7	600	96
+8	1200	48
+9	1800	32
+A	2400	24
+B	3600	16
+C	4800	12
+D	7200	8
+E	9600	6
+F	19200	3
+*/
 
-// report the available unused space in the input fifo
-assign serial_data_in_free = { 4'h0, serial_data_in_space };
+//assign TX_CLK_REG = TX_CLK_REG_T & XTAL_CLK_IN;
 
-wire serial_data_out_fifo_full;
-wire serial_data_in_full;
-
-// --- mfp output fifo ---
-// filled by the CPU when writing to the mfp uart data register
-// emptied by the io controller when reading via SPI
-assign serial_data_out_available[7:4] = 4'h0;
-
-io_fifo uart_out_fifo (
-	.reset            ( ~RESET_N ),
-
-	.in_clk           ( CLK ),
-	.in               ( DI ),
-	.in_strobe        ( 1'b0 ),
-	.in_enable        ( {PH_2, RW_N, CS, RS} == 6'b100100 ), // TXD Register Addr 0, Write
-
-	.out_clk          ( CLK ),
-	.out              ( serial_data_out ),
-	.out_strobe       ( serial_strobe_out ),
-	.out_enable       ( 1'b0 ),
-
-	.space            (  ),
-	.used             ( serial_data_out_available[3:0] ),
-	.empty            (  ),
-	.full             ( serial_data_out_fifo_full )
-);
-
-reg serial_cpu_data_read;
-wire [7:0] serial_data_in_cpu;
-wire	   serial_data_in_empty;
-wire [3:0] serial_data_in_used;
-wire [3:0] serial_data_in_space;
-wire	   uart_rx_busy;
-
-// As long as "rx busy" the same previous byte can still be read from the
-// UDR/rx fifo. Thus we increment the io_fifo read pointer at the end of
-// the rx_busy phase which is the falling edge of uart_rx_busy
-reg uart_rx_busyD;
-always @(posedge CLK) uart_rx_busyD <= uart_rx_busy;
-wire uart_rx_busy_ends = !uart_rx_busy && uart_rx_busyD;
-   
-// --- uart input fifo ---
-// filled by the io controller when writing via SPI
-// emptied by CPU when reading the uart RXD data register
-io_fifo uart_in_fifo (
-	.reset            ( ~RESET_N ),
-
-	.in_clk           ( CLK ),
-	.in               ( serial_data_in ),
-	.in_strobe        ( serial_strobe_in ),
-	.in_enable        ( 1'b0 ),
-
-	.out_clk          ( CLK ),
-	.out              ( serial_data_in_cpu ),
-	.out_strobe       ( 1'b0 ),
-	.out_enable       ( !serial_data_in_empty && uart_rx_busy_ends ),
-
-	.space            ( serial_data_in_space ),
-	.used             ( serial_data_in_used ),
-	.empty            ( serial_data_in_empty ),
-	.full             ( serial_data_in_full )
-);
-
-// ---------------- uart data to/from io controller ------------
-always @(posedge CLK) begin
-	serial_cpu_data_read <= 1'b0;
-	if (PH_2) begin
-		// read on uart RX data register
-		if({RW_N, CS, RS} == 5'b10100)  // RXD Addr = 0
-			serial_cpu_data_read <= 1'b1;
-	end
-end
-
-// delay data_in_available one more cycle to give the fifo a chance to remove one item
-wire	   serial_data_in_available = !serial_data_in_empty && !uart_rx_busy && !uart_rx_busyD;
-
-// the cpu reading data clears rx irq. It may raise again immediately if there's more
-// data in the input fifo.
-wire uart_rx_irq = serial_data_in_available;
-
-// the io controller reading data clears tx irq. It may raus again immediately if 
-// there's more data in the output fifo
-wire uart_tx_irq = !serial_data_out_fifo_full && !serial_strobe_out;
-
-// timer to simulate the timing behaviour of a serial transmitter by
-// reporting "tx buffer not empty" for about one byte time after each byte
-// being requested to be sent
-
-wire [3:0] timerd_ctrl_o;
-wire [7:0] timerd_set_data;
-
-// bps is 2.457MHz/2/16/prescaler/datavalue. These values are used for byte timing
-// and are thus 10*the bit values (1 start + 8 data + 1 stop)
-wire [10:0] uart_prediv =
-	   (timerd_ctrl_o[2:0] == 3'b000)?11'd0:  // timer stopped
-	   (timerd_ctrl_o[2:0] == 3'b001)?11'd40:
-	   (timerd_ctrl_o[2:0] == 3'b010)?11'd100:
-	   (timerd_ctrl_o[2:0] == 3'b011)?11'd160:
-	   (timerd_ctrl_o[2:0] == 3'b100)?11'd500:
-	   (timerd_ctrl_o[2:0] == 3'b101)?11'd600:
-	   (timerd_ctrl_o[2:0] == 3'b110)?11'd1000:
-	   11'd2000;
-
-reg [15:0] uart_rx_prediv_cnt;   
-reg [15:0] uart_tx_prediv_cnt;   
-reg [7:0]  uart_tx_delay_cnt;   
-wire	   uart_tx_busy = uart_tx_delay_cnt != 8'd0;
-reg [7:0]  uart_rx_delay_cnt;   
-assign     uart_rx_busy = uart_rx_delay_cnt != 8'd0;
-
-// delay data_in_available one more cycle to give the fifo a chance to remove one item
-wire	   serial_data_in_available = !serial_data_in_empty && !uart_rx_busy && !uart_rx_busyD;   
-
-always @(posedge CLK) begin
-
-   // the timer itself runs at 2.457 MHz 
-   if(XTAL_CLK_IN) begin
-      if(uart_rx_prediv_cnt != 16'd0)
-	 uart_rx_prediv_cnt <= uart_rx_prediv_cnt - 16'd1;
-      else begin
-	 uart_rx_prediv_cnt <= { uart_prediv-11'd1, 5'b00000 };	 
-	 if(uart_rx_delay_cnt != 8'd0)
-	   uart_rx_delay_cnt <= uart_rx_delay_cnt - 8'd1;
-      end
-	 
-      if(uart_tx_prediv_cnt != 16'd0)
-	 uart_tx_prediv_cnt <= uart_tx_prediv_cnt - 16'd1;
-      else begin
-	 uart_tx_prediv_cnt <= { uart_prediv-11'd1, 5'b00000 };	 
-	 if(uart_tx_delay_cnt != 8'd0)
-	   uart_tx_delay_cnt <= uart_tx_delay_cnt - 8'd1;
-      end
-   end
-
-	// CPU reads the UDR  (  USART Data Register)
-	if(serial_cpu_data_read && serial_data_in_available) begin
-		uart_rx_delay_cnt <= timerd_set_data;
-		uart_rx_prediv_cnt <= { uart_prediv-11'd1, 5'b00000 };// load predivider with 2*16 the predivider value
-	end
-
-   // cpu bus access to uart data register
-   if(RS == 2'd0) begin
-//   if(clk_en && ~bus_selD && bus_sel && (addr == 5'h17) && !rw) begin
-      // CPU write to UDR starts the delay counter. The uart transamitter is then
-      // reported busy as long as the counter runs
-      uart_tx_delay_cnt <= timerd_set_data;
-      uart_tx_prediv_cnt <= { uart_prediv-11'd1, 5'b00000 };    // load predivider with 2*16 the predivider value    
-   end
-      
-end
-
-//		dout = { uart_ctrl, 1'b0 };       14 USART Control Register,    ,bit CLK CL1 CL0 ST1 ST0 PE E / O 0
-//		dout = serial_data_in_available,  15 Receiver Status Register   ,bit 7 BF buffer full and ready to read
-//		dout = serial_data_out_fifo_full  16 Transmitter Status Register,bit 7 BE Buffer Empty and new data can be send into UDR
-//		dout = serial_data_in_cpu;        17 UDR  (  USART Data Register)
-
-// 6551 UART
 always @ (negedge CLK or negedge RESET_X)
 begin
 	if(!RESET_X)
@@ -487,22 +343,14 @@ assign TXDATA_OUT =	(CMD_REG[4:2] == 3'b100)	?	1'b1:
 													TX_DATA;
 
 assign STATUS_REG = {!IRQ, DSR, DCD, TDRE, RDRF, OVERRUN, FRAME, PARITY};
-// STATUS_REG
-// 7 Interrupt (IRQ)
-// 6 Data Set Ready (DSRB)
-// 5 Data Carrier Detect (DCDB)
-// 4 Transmitter Data Register Empty
-// 3 Receiver Data Register Full
-// 2 Overrun
-// 1 Framing Error
-// 0 Parity Error
-assign DO =	(RS == 2'b00)	?	serial_data_in_cpu:
-			(RS == 2'b01)	?	{!IRQ, DSR, DCD, serial_data_out_fifo_full, serial_data_in_available, 3'd0}:
+
+assign DO =	(RS == 2'b00)	?	RX_REG:
+			(RS == 2'b01)	?	STATUS_REG:
 			(RS == 2'b10)	?	CMD_REG:
 								CTL_REG;
 
-assign IRQ =	({CMD_REG[1:0], uart_rx_irq} == 3'b011)	?	1'b0:
-				({CMD_REG[3:2], CMD_REG[0], uart_tx_irq} == 4'b0111)	?	1'b0:
+assign IRQ =	({CMD_REG[1:0], RDRF} == 3'b011)						?	1'b0:
+				({CMD_REG[3:2], CMD_REG[0], TDRE} == 4'b0111)			?	1'b0:
 																			1'b1;
 
 assign RTS = (CMD_REG[3:2] == 2'b00);
