@@ -73,7 +73,7 @@
 //	1/11/22		Changed to be super synchronus
 ////////////////////////////////////////////////////////////////////////////////
 //
-// 03/2025      Stefan Voss io controller added
+// 03/2025      Stefan Voss io controller added based on Till Harbaums MFP 68901 component work
 ////////////////////////////////////////////////////////////////////////////////
 
 module glb6551(
@@ -243,7 +243,7 @@ io_fifo uart_in_fifo (
 always @(posedge CLK) begin
 	serial_cpu_data_read <= 1'b0;
 	if (PH_2) begin
-		// read on uart data register (17 UDR USART Data Register)
+		// read on uart RX data register
 		if({RW_N, CS, RS} == 5'b10100)  // RXD Addr = 0
 			serial_cpu_data_read <= 1'b1;
 	end
@@ -435,15 +435,13 @@ assign STATUS_REG = {!IRQ, DSR, DCD, TDRE, RDRF, OVERRUN, FRAME, PARITY};
 // 2 Overrun
 // 1 Framing Error
 // 0 Parity Error
-wire io_int;
-assign io_int = uart_rx_irq || uart_tx_irq;
-assign DO =	(RS == 2'b00)	?	serial_data_in_cpu: // RX_REG:
-			(RS == 2'b01)	?	{io_int,2'd0,serial_data_out_fifo_full,serial_data_in_available,3'd0}: //STATUS_REG:
+assign DO =	(RS == 2'b00)	?	serial_data_in_cpu:
+			(RS == 2'b01)	?	{!IRQ, DSR, DCD, serial_data_out_fifo_full, serial_data_in_available, 3'd0}:
 			(RS == 2'b10)	?	CMD_REG:
 								CTL_REG;
 
-assign IRQ =	({CMD_REG[1:0], RDRF} == 3'b011)						?	1'b0:
-				({CMD_REG[3:2], CMD_REG[0], TDRE} == 4'b0111)			?	1'b0:
+assign IRQ =	({CMD_REG[1:0], uart_rx_irq} == 3'b011)	?	1'b0:
+				({CMD_REG[3:2], CMD_REG[0], uart_tx_irq} == 4'b0111)	?	1'b0:
 																			1'b1;
 
 assign RTS = (CMD_REG[3:2] == 2'b00);
