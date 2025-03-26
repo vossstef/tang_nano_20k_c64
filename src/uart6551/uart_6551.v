@@ -190,7 +190,7 @@ io_fifo uart_out_fifo (
 	.in_clk           ( CLK ),
 	.in               ( DI ),
 	.in_strobe        ( 1'b0 ),
-	.in_enable        ( {PH_2, RW_N, CS, RS} == 6'b100100 ), // TXD Register Addr 0
+	.in_enable        ( {PH_2, RW_N, CS, RS} == 6'b100100 ), // TXD Register Addr 0, Write
 
 	.out_clk          ( CLK ),
 	.out              ( serial_data_out ),
@@ -243,7 +243,7 @@ io_fifo uart_in_fifo (
 always @(posedge CLK) begin
 	serial_cpu_data_read <= 1'b0;
 	if (PH_2) begin
-		// read on uart data register
+		// read on uart data register (17 UDR USART Data Register)
 		if({RW_N, CS, RS} == 5'b10100)  // RXD Addr = 0
 			serial_cpu_data_read <= 1'b1;
 	end
@@ -251,23 +251,25 @@ end
 
 // delay data_in_available one more cycle to give the fifo a chance to remove one item
 wire	   serial_data_in_available = !serial_data_in_empty && !uart_rx_busy && !uart_rx_busyD;
+
 // the cpu reading data clears rx irq. It may raise again immediately if there's more
 // data in the input fifo.
 wire uart_rx_irq = serial_data_in_available;
+
 // the io controller reading data clears tx irq. It may raus again immediately if 
 // there's more data in the output fifo
 wire uart_tx_irq = !serial_data_out_fifo_full && !serial_strobe_out;
 
-// CPU reads the UDR
+// CPU reads the UDR  (  USART Data Register)
 //if(serial_cpu_data_read && serial_data_in_available) begin
 //	uart_rx_delay_cnt <= timerd_set_data;
 //	uart_rx_prediv_cnt <= { uart_prediv-11'd1, 5'b00000 };    // load predivider with 2*16 the predivider value
 //end
 
-
-//		dout = serial_data_in_available,
-//		dout = serial_data_out_fifo_full
-//		dout = serial_data_in_cpu;
+//		dout = { uart_ctrl, 1'b0 };       14 USART Control Register,    ,bit CLK CL1 CL0 ST1 ST0 PE E / O 0
+//		dout = serial_data_in_available,  15 Receiver Status Register   ,bit 7 BF buffer full and ready to read
+//		dout = serial_data_out_fifo_full  16 Transmitter Status Register,bit 7 BE Buffer Empty and new data can be send into UDR
+//		dout = serial_data_in_cpu;        17 UDR  (  USART Data Register)
 
 // 6551 UART
 always @ (negedge CLK or negedge RESET_X)
@@ -424,9 +426,19 @@ assign TXDATA_OUT =	(CMD_REG[4:2] == 3'b100)	?	1'b1:
 													TX_DATA;
 
 assign STATUS_REG = {!IRQ, DSR, DCD, TDRE, RDRF, OVERRUN, FRAME, PARITY};
-
-assign DO =	(RS == 2'b00)	?	RX_REG:
-			(RS == 2'b01)	?	STATUS_REG:
+// STATUS_REG
+// 7 Interrupt (IRQ)
+// 6 Data Set Ready (DSRB)
+// 5 Data Carrier Detect (DCDB)
+// 4 Transmitter Data Register Empty
+// 3 Receiver Data Register Full
+// 2 Overrun
+// 1 Framing Error
+// 0 Parity Error
+wire io_int;
+assign io_int = uart_rx_irq || uart_tx_irq;
+assign DO =	(RS == 2'b00)	?	serial_data_in_cpu: // RX_REG:
+			(RS == 2'b01)	?	{io_int,2'd0,serial_data_out_fifo_full,serial_data_in_available,3'd0}: //STATUS_REG:
 			(RS == 2'b10)	?	CMD_REG:
 								CTL_REG;
 
