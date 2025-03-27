@@ -1473,7 +1473,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   io_ext       => reu_oe or cart_oe or (midi_oe and midi_en) or uart_oe,
   io_data      => io_data,
   irq_n        => midi_irq_n,
-  nmi_n        => not nmi and midi_nmi_n and (not uart_irq and uart_en),
+  nmi_n        => not nmi and midi_nmi_n and (uart_irq and uart_en),
   nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,
@@ -2007,58 +2007,56 @@ begin
     drive_stb_i <= pc2_n_o;
     pb_i <= drive_par_o;
     flag2_n_i <= drive_stb_o;
-    elsif system_up9600 = 0 and (disk_access = '0' or ext_en = '0') then
-      -- UART 
-      -- https://www.pagetable.com/?p=1656
-      -- FLAG2 RXD
-      -- PB0 RXD in
-      -- PB1 RTS out
-      -- PB2 DTR out
-      -- PB3 RI in
-      -- PB4 DCD in
-      -- PB5
-      -- PB6 CTS in
-      -- PB7 DSR in
-      -- PA2 TXD out
-      uart_tx <= pa2_o;
-      flag2_n_i <= uart_rx_filtered;
-      pb_i(0) <= uart_rx_filtered;
-      -- Zeromodem
-      pb_i(6) <= not pb_o(1);  -- RTS > CTS
-      pb_i(4) <= not pb_o(2);  -- DTR > DCD
-      pb_i(7) <= not pb_o(2);  -- DTR > DSR
-    elsif system_up9600 = 1 and (disk_access = '0' or ext_en = '0') then
-      -- UART UP9600
-      -- https://www.pagetable.com/?p=1656
-      -- SP1 TXD
-      -- PA2 TXD
-      -- PB0 RXD
-      -- SP2 RXD
-      -- FLAG2 RXD
-      -- PB7 to CNT2 
-      pb_i(7) <= cnt2_o;
-      -- pb_i(6) <= not pb_o(1);  -- RTS > CTS
-      -- pb_i(4) <= not pb_o(2);  -- DTR > DCD
-      cnt2_i <= pb_o(7);
-      uart_tx <= pa2_o and sp1_o;
-      sp2_i <= uart_rx_filtered;
-      flag2_n_i <= uart_rx_filtered;
-      pb_i(0) <= uart_rx_filtered;
-      elsif system_up9600 = 2 then
-        uart_tx <= tx_6551;
-        uart_cs <= IOE;
-      elsif system_up9600 = 3 then
-        uart_tx <= tx_6551;
-        uart_cs <= IOF;
-      elsif system_up9600 = 4 then
-        uart_tx <= tx_6551;
-        uart_cs <= IO7;
+  elsif system_up9600 = 0 and (disk_access = '0' or ext_en = '0') then
+    -- UART 
+    -- https://www.pagetable.com/?p=1656
+    -- FLAG2 RXD
+    -- PB0 RXD in
+    -- PB1 RTS out
+    -- PB2 DTR out
+    -- PB3 RI in
+    -- PB4 DCD in
+    -- PB5
+    -- PB6 CTS in
+    -- PB7 DSR in
+    -- PA2 TXD out
+    uart_tx <= pa2_o;
+    flag2_n_i <= uart_rx_filtered;
+    pb_i(0) <= uart_rx_filtered;
+    -- Zeromodem
+    pb_i(6) <= not pb_o(1);  -- RTS > CTS
+    pb_i(4) <= not pb_o(2);  -- DTR > DCD
+    pb_i(7) <= not pb_o(2);  -- DTR > DSR
+  elsif system_up9600 = 1 and (disk_access = '0' or ext_en = '0') then
+    -- UART UP9600
+    -- https://www.pagetable.com/?p=1656
+    -- SP1 TXD
+    -- PA2 TXD
+    -- PB0 RXD
+    -- SP2 RXD
+    -- FLAG2 RXD
+    -- PB7 to CNT2 
+    pb_i(7) <= cnt2_o;
+    -- pb_i(6) <= not pb_o(1);  -- RTS > CTS
+    -- pb_i(4) <= not pb_o(2);  -- DTR > DCD
+    cnt2_i <= pb_o(7);
+    uart_tx <= pa2_o and sp1_o;
+    sp2_i <= uart_rx_filtered;
+    flag2_n_i <= uart_rx_filtered;
+    pb_i(0) <= uart_rx_filtered;
+    elsif system_up9600 = 2 then
+      uart_tx <= tx_6551;
+      uart_cs <= IOE;
+    elsif system_up9600 = 3 then
+      uart_tx <= tx_6551;
+      uart_cs <= IOF;
+    elsif system_up9600 = 4 then
+      uart_tx <= tx_6551;
+      uart_cs <= IO7;
   end if;
 end process;
 
 -- | SwiftLink       $DE00/$DF00/$D700/NMI (300-38400 baud)
--- | Turbo-232 only: $DE07/56839/TURBO232+7  Enhanced-Speed Register
--- https://gglabs.us/node/2057
 yes_uart: if U6551 /= 0 generate
 uart_inst : entity work.glb6551
 port map (
