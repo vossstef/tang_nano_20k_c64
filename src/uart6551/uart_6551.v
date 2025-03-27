@@ -497,13 +497,13 @@ assign STATUS_REG = {!IRQ, DSR, DCD, TDRE, RDRF, OVERRUN, FRAME, PARITY};
 // 1 Framing Error
 // 0 Parity Error
 assign DO =	(RS == 2'b00)	?	serial_data_in_cpu:
-			(RS == 2'b01)	?	{!IRQ, DSR, DCD, serial_data_out_fifo_full, serial_data_in_available, 3'd0}:
+			(RS == 2'b01)	?	{!IRQ, DSR, DCD, !serial_data_out_fifo_full, serial_data_in_available, 3'd0}:
 			(RS == 2'b10)	?	CMD_REG:
 								CTL_REG;
 
-assign IRQ =	({CMD_REG[1:0], uart_rx_irq} == 3'b011)	?	1'b0:
-				({CMD_REG[3:2], CMD_REG[0], uart_tx_irq} == 4'b0111)	?	1'b0:
-																			1'b1;
+assign IRQ =	({CMD_REG[1:0], RDRF} == 3'b011)			?	1'b0:// IRD,DTR,RDRF; IRQ if RX full
+				({CMD_REG[3:2], CMD_REG[0], TDRE} == 4'b0111) ?	1'b0:// TIC1,TIC0,DTR,TDRE; IRQ if RTSn=low and TX empty
+																1'b1;// low active
 
 assign RTS = (CMD_REG[3:2] == 2'b00);
 assign DTR = ~CMD_REG[0];
@@ -537,9 +537,7 @@ begin
 		READ_STATE <= 2'b00;
 		TX_BUFFER <= 8'h00;
 		CTL_REG <= 8'h00;
-// Commador data sheet says reset value is 02
-// but Apple will not work unless it is 00
-		CMD_REG <= 8'h00;
+		CMD_REG <= 8'h02; // 2 = IRQ disabled by default
 		TDRE <= 1'b1;
 		TX_START <= 1'b0;
 		RX_REG <= 8'h00;
