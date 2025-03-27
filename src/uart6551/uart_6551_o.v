@@ -385,7 +385,7 @@ begin
 		READ_STATE <= 2'b00;
 		TX_BUFFER <= 8'h00;
 		CTL_REG <= 8'h00;
-		CMD_REG <= 8'h02; // 2 = IRQ disabled by default
+		CMD_REG <= 8'h00; // 2 = IRQ disabled 
 		TDRE <= 1'b1;
 		TX_START <= 1'b0;
 		RX_REG <= 8'h00;

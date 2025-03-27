@@ -147,31 +147,41 @@ reg					OVERRUN;
 reg					FRAME;
 reg					PARITY;
 
-wire					TX_DONE;
+wire				TX_DONE;
 reg					TX_DONE0;
 reg					TX_DONE1;
 reg					TX_START;
 reg					TDRE;
 reg					RDRF;
 reg		[10:0]	TX_CLK_DIV;
-wire					TX_CLK;
-wire					RX_CLK;
-wire					FRAME_BUF;
-wire		[1:0]		WORD_SELECT;
-wire					RESET_X;
-wire					STOP;
-wire					PARITY_ERR;
-wire					PAR_DIS;
+wire				TX_CLK;
+wire				RX_CLK;
+wire				FRAME_BUF;
+wire		[1:0]	WORD_SELECT;
+wire				RESET_X;
+wire				STOP;
+wire				PARITY_ERR;
+wire				PAR_DIS;
 reg		[7:0]		LOOPBACK;
-wire					RX_DATA;
-wire					TX_DATA;
+wire				RX_DATA;
+wire				TX_DATA;
 reg					RESET_NX;
 reg					TX_CLK_REG_T;
 reg			 		TX_CLK_REG;
 reg		[1:0]		READ_STATE;
-wire					GOT_DATA;
+wire				GOT_DATA;
 reg					READY0;
 reg					READY1;
+
+wire [23:0] bitrate = 24'd38400;
+wire [1:0] parity = 2'h0;
+wire [1:0] stopbits = 2'h0;
+wire [3:0] databits = 4'd8;
+
+// assemble output status structure. Adjust bitrate endianess
+assign serial_status_out = { 
+	bitrate[7:0], bitrate[15:8], bitrate[23:16], 
+	databits, parity, stopbits };
 
 // report the available unused space in the input fifo
 assign serial_data_in_free = { 4'h0, serial_data_in_space };
@@ -264,11 +274,14 @@ wire uart_tx_irq = !serial_data_out_fifo_full && !serial_strobe_out;
 // reporting "tx buffer not empty" for about one byte time after each byte
 // being requested to be sent
 
-wire [3:0] timerd_ctrl_o;
-wire [7:0] timerd_set_data;
+wire [3:0] timerd_ctrl_o = 3'b011; //  dummy
+wire [7:0] timerd_set_data = 8'd32; // dummy
 
 // bps is 2.457MHz/2/16/prescaler/datavalue. These values are used for byte timing
 // and are thus 10*the bit values (1 start + 8 data + 1 stop)
+
+//3686400 Hz /2/16
+
 wire [10:0] uart_prediv =
 	   (timerd_ctrl_o[2:0] == 3'b000)?11'd0:  // timer stopped
 	   (timerd_ctrl_o[2:0] == 3'b001)?11'd40:
@@ -289,7 +302,10 @@ assign     uart_rx_busy = uart_rx_delay_cnt != 8'd0;
 // delay data_in_available one more cycle to give the fifo a chance to remove one item
 wire	   serial_data_in_available = !serial_data_in_empty && !uart_rx_busy && !uart_rx_busyD;   
 
+reg [1:0 ]CS_D;
+
 always @(posedge CLK) begin
+	CS_D <= CS;
 
    // the timer itself runs at 2.457 MHz 
    if(XTAL_CLK_IN) begin
@@ -316,9 +332,9 @@ always @(posedge CLK) begin
 		uart_rx_prediv_cnt <= { uart_prediv-11'd1, 5'b00000 };// load predivider with 2*16 the predivider value
 	end
 
-   // cpu bus access to uart data register
-   if(RS == 2'd0) begin
-//   if(clk_en && ~bus_selD && bus_sel && (addr == 5'h17) && !rw) begin
+   // cpu bus access to uart data register (falling edge)
+// if(clk_en && ~bus_selD && bus_sel && (addr == 5'h17) && !rw) begin
+   if({PH_2, RW_N, CS_D, CS, RS} == 8'b10100100) begin
       // CPU write to UDR starts the delay counter. The uart transamitter is then
       // reported busy as long as the counter runs
       uart_tx_delay_cnt <= timerd_set_data;
@@ -486,7 +502,7 @@ assign RX_DATA = (CMD_REG[4:2] == 3'b100)	?	LOOPBACK[7]:
 assign TXDATA_OUT =	(CMD_REG[4:2] == 3'b100)	?	1'b1:
 													TX_DATA;
 
-assign STATUS_REG = {!IRQ, DSR, DCD, TDRE, RDRF, OVERRUN, FRAME, PARITY};
+
 // STATUS_REG
 // 7 Interrupt (IRQ)
 // 6 Data Set Ready (DSRB)
@@ -496,8 +512,13 @@ assign STATUS_REG = {!IRQ, DSR, DCD, TDRE, RDRF, OVERRUN, FRAME, PARITY};
 // 2 Overrun
 // 1 Framing Error
 // 0 Parity Error
+
+assign TDRE = !serial_data_out_fifo_full && !uart_tx_busy;
+assign RDRF = serial_data_in_available;
+
+assign STATUS_REG = {!IRQ, DSR, DCD, TDRE, RDRF, OVERRUN, FRAME, PARITY};
 assign DO =	(RS == 2'b00)	?	serial_data_in_cpu:
-			(RS == 2'b01)	?	{!IRQ, DSR, DCD, !serial_data_out_fifo_full, serial_data_in_available, 3'd0}:
+			(RS == 2'b01)	?	STATUS_REG:
 			(RS == 2'b10)	?	CMD_REG:
 								CTL_REG;
 
@@ -533,142 +554,28 @@ always @ (negedge CLK or negedge RESET_X)
 begin
 	if(!RESET_X)
 	begin
-		RDRF <= 1'b0;
-		READ_STATE <= 2'b00;
-		TX_BUFFER <= 8'h00;
+//		RDRF <= 1'b0;
+//		TDRE <= 1'b1;
 		CTL_REG <= 8'h00;
-		CMD_REG <= 8'h02; // 2 = IRQ disabled by default
-		TDRE <= 1'b1;
-		TX_START <= 1'b0;
-		RX_REG <= 8'h00;
+		CMD_REG <= 8'h00;
 		OVERRUN <= 1'b0;
 		FRAME <= 1'b0;
 		PARITY <= 1'b0;
-		TX_DONE1 <= 1'b1;
-		TX_DONE0 <= 1'b1;
-		READY0 <= 1'b0;
-		READY1 <= 1'b0;
 	end
 	else
 	begin
 		if (PH_2)
 		begin
-			TX_DONE1 <= TX_DONE0;			// sync TX_DONE with E clock for metastability?
-			TX_DONE0 <= TX_DONE;
-			READY1 <= READY0;
-			READY0 <= GOT_DATA;
-			case (READ_STATE)
-			2'b00:
-			begin
-				if(READY1)				//Stop bit
-				begin
-					RDRF <= 1'b1;
-					READ_STATE <= 2'b01;
-					RX_REG <= RX_BUFFER;
-					OVERRUN <= 1'b0;
-					PARITY <= (PARITY_ERR & !PAR_DIS);
-					FRAME <= FRAME_BUF;
-				end
-			end
-			2'b01:
-			begin
-				if({RW_N, CS, RS} == 5'b10100)
-				begin
-					RDRF <= 1'b0;
-					READ_STATE <= 2'b10;
-					PARITY <= 1'b0;
-					OVERRUN <= 1'b0;
-					FRAME <= 1'b0;
-				end
-				else
-				begin
-					if(~READY1)
-						READ_STATE <= 2'b11;
-				end
-			end
-			2'b10:
-			begin
-				if(~READY1)
-					READ_STATE <= 2'b00;
-			end
-			2'b11:
-			begin
-				if({RW_N, CS, RS} == 5'b10100)
-				begin
-					RDRF <= 1'b0;
-					READ_STATE <= 2'b00;
-					PARITY <= 1'b0;
-					OVERRUN <= 1'b0;
-					FRAME <= 1'b0;
-				end
-				else
-				begin
-					if(READY1)
-					begin
-						RDRF <= 1'b1;
-						READ_STATE <= 2'b01;
-						OVERRUN <= 1'b1;
-						PARITY <= (PARITY_ERR & !PAR_DIS);
-						FRAME <= FRAME_BUF;
-						RX_REG <= RX_BUFFER;
-					end
-				end
-			end
-			endcase
-
-			if({RW_N, CS, RS} == 5'b00100)						// Write TX data register
-				TX_REG <= DI;
+	//		if({RW_N, CS, RS} == 5'b00100)						// Write TX data register
+	//			TX_REG <= DI;
 
 			if({RW_N, CS, RS} == 5'b00110)						// Write CMD register
 				CMD_REG <= DI;
 
 			if({RW_N, CS, RS} == 5'b00111)						// Write CTL register
 				CTL_REG <= DI;
-
-			if(~TDRE & TX_DONE1 & ~TX_START & ~(CS == 2'b01))
-			begin
-				TX_BUFFER <= TX_REG;
-				TDRE <= 1'b1;
-				TX_START <= 1'b1;
-			end
-			else
-			begin
-				if({RW_N, CS, RS} == 5'b00100)					// Write TX data register
-					TDRE <= 1'b0;
-				if(~TX_DONE1)
-					TX_START <= 1'b0;
-			end
 		end
 	end
 end
-
-uart51_tx tx(
-.RESET_N(RESET_X),
-.CLK(CLK),
-.BAUD_CLK(TX_CLK),
-.TX_DATA(TX_DATA),
-.TX_START(TX_START),
-.TX_DONE(TX_DONE),
-.TX_STOP(STOP),
-.TX_WORD(WORD_SELECT),
-.TX_PAR_DIS(PAR_DIS),
-.TX_PARITY(CMD_REG[7:6]),
-.CTS(CTS),
-.TX_BUFFER(TX_BUFFER)
-);
-
-uart51_rx rx(
-.RESET_N(RESET_X),
-.CLK(CLK),
-.BAUD_CLK(RX_CLK),
-.RX_DATA(RX_DATA),
-.RX_BUFFER(RX_BUFFER),
-.RX_WORD(WORD_SELECT),
-.RX_PAR_DIS(PAR_DIS),
-.RX_PARITY(CMD_REG[7:6]),
-.PARITY_ERR(PARITY_ERR),
-.FRAME(FRAME_BUF),
-.READY(GOT_DATA)
-);
 
 endmodule
