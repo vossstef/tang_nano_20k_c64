@@ -1,0 +1,15 @@
+PACKAGE 'crystal_smd_3225-4pin_3_2x2_5mm'
+CLASS IC
+PINCOUNT 4
+PINORDER MAIN ,
+	1__1,
+	2__2,
+	3__3,
+	4__4
+FUNCTION MAIN MAIN ,
+	1,
+	2,
+	3,
+	4
+PACKAGEPROP VALUE Crystal_GND24
+END
