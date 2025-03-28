@@ -43,6 +43,8 @@
         <File path="src/sid/sid_top.sv" type="file.verilog" enable="1"/>
         <File path="src/sid/sid_voice.sv" type="file.verilog" enable="1"/>
         <File path="src/tang/tn20k_lcd/video_lcd.v" type="file.verilog" enable="1"/>
+        <File path="src/uart6551/io_fifo.v" type="file.verilog" enable="1"/>
+        <File path="src/uart6551/uart_6551.v" type="file.verilog" enable="1"/>
         <File path="src/c1530.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/c1541_logic.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/c1541_sd.vhd" type="file.vhdl" enable="1"/>
@@ -66,6 +68,7 @@
         <File path="src/t65/T65_MCode.vhd" type="file.vhdl" enable="1"/>
         <File path="src/t65/T65_Pack.vhd" type="file.vhdl" enable="1"/>
         <File path="src/tang/tn20k_lcd/tang_nano_20k_c64_top_lcd.vhd" type="file.vhdl" enable="1"/>
+        <File path="src/uart6551/BaudRate.vhd" type="file.vhdl" enable="1"/>
         <File path="src/video_vicII_656x.vhd" type="file.vhdl" enable="1"/>
         <File path="src/tang/tn20k_lcd/tang_nano_20k_c64_top_lcd.cst" type="file.cst" enable="1"/>
         <File path="src/tang/tn20k_lcd/tang_nano_20k_c64_top_lcd.sdc" type="file.sdc" enable="1"/>
