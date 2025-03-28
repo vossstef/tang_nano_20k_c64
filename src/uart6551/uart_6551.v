@@ -73,7 +73,7 @@
 //	1/11/22		Changed to be super synchronus
 ////////////////////////////////////////////////////////////////////////////////
 //
-// 03/2025      Stefan Voss io controller added based on Till Harbaums MFP 68901 component work
+// 03/2025      Stefan Voss io controller added based on Till Harbaums MFP 68901 work
 ////////////////////////////////////////////////////////////////////////////////
 
 module glb6551(
@@ -96,12 +96,14 @@ CTS,
 DCD,
 DTR,
 DSR,
+
 // serial rs232 connection to io controller
 serial_data_out_available,  // bytes available
 serial_data_in_free,        // free buffer available
 serial_strobe_out,
 serial_data_out,
 serial_status_out,
+
 // serial rs223 connection from io controller
 serial_strobe_in,
 serial_data_in
@@ -136,31 +138,21 @@ input				serial_strobe_in;
 input		[7:0]	serial_data_in;
 
 
-reg		[7:0]		TX_BUFFER;
-reg		[7:0]		TX_REG;
-wire		[7:0]		RX_BUFFER;
-reg		[7:0]		RX_REG;
-wire		[7:0]		STATUS_REG;
-reg		[7:0]		CTL_REG;
-reg		[7:0]		CMD_REG;
-reg					OVERRUN;
-reg					FRAME;
-reg					PARITY;
-
-wire				TX_DONE;
-reg					TX_DONE0;
-reg					TX_DONE1;
-reg					TX_START;
+wire	[7:0]		STATUS_REG;
+reg		[7:0]		CTL_REG = 8'd0;
+reg		[7:0]		CMD_REG = 8'd0;
+reg					OVERRUN = 1'b0;
+reg					FRAME = 1'b0;
+reg					PARITY = 1'b0;
 reg					TDRE;
 reg					RDRF;
-reg		[10:0]	TX_CLK_DIV;
+
+reg		[10:0]		TX_CLK_DIV;
 wire				TX_CLK;
 wire				RX_CLK;
-wire				FRAME_BUF;
-wire		[1:0]	WORD_SELECT;
+wire	[1:0]		WORD_SELECT;
 wire				RESET_X;
 wire				STOP;
-wire				PARITY_ERR;
 wire				PAR_DIS;
 reg		[7:0]		LOOPBACK;
 wire				RX_DATA;
@@ -168,10 +160,6 @@ wire				TX_DATA;
 reg					RESET_NX;
 reg					TX_CLK_REG_T;
 reg			 		TX_CLK_REG;
-reg		[1:0]		READ_STATE;
-wire				GOT_DATA;
-reg					READY0;
-reg					READY1;
 
 // assemble output status structure. Adjust bitrate endianess
 assign serial_status_out = { 
@@ -185,7 +173,7 @@ wire serial_data_out_fifo_full;
 wire serial_data_in_full;
 
 // --- mfp output fifo ---
-// filled by the CPU when writing to the mfp uart data register
+// filled by the CPU when writing to the uart data register
 // emptied by the io controller when reading via SPI
 assign serial_data_out_available[7:4] = 4'h0;
 
@@ -195,7 +183,7 @@ io_fifo uart_out_fifo (
 	.in_clk           ( CLK ),
 	.in               ( DI ),
 	.in_strobe        ( 1'b0 ),
-	.in_enable        ( {PH_2, RW_N, CS, RS} == 6'b100100 ), // TXD Register Addr 0, Write
+	.in_enable        ( {PH_2, RW_N, CS, RS} == 6'b100100 ),
 
 	.out_clk          ( CLK ),
 	.out              ( serial_data_out ),
@@ -272,33 +260,33 @@ wire uart_tx_irq = !serial_data_out_fifo_full && !serial_strobe_out;
 wire [11:0] timerd_state = { timerd_ctrl_o, timerd_set_data };
 // try to calculate bitrate from timer d config
 // bps is 2.457MHz/2/16/prescaler/datavalue
-wire [23:0] bitrate = 
+//wire [23:0] bitrate = 
 //	(uart_ctrl[6] !=    1'b1)?24'h800000:      // uart prescaler not 1
-	(timerd_state == 12'h101)?24'd19200:       // 19200 bit/s
-	(timerd_state == 12'h102)?24'd9600:        // 9600 bit/s
-	(timerd_state == 12'h104)?24'd4800:        // 4800 bit/s
-	(timerd_state == 12'h105)?24'd3600:        // 3600 bit/s (?? isn't that 3840?)
-	(timerd_state == 12'h108)?24'd2400:        // 2400 bit/s
-	(timerd_state == 12'h10a)?24'd2000:        // 2000 bit/s (exact 1920)
-	(timerd_state == 12'h10b)?24'd1800:        // 1800 bit/s (exact 1745)
-	(timerd_state == 12'h110)?24'd1200:        // 1200 bit/s
-	(timerd_state == 12'h120)?24'd600:         // 600 bit/s
-	(timerd_state == 12'h140)?24'd300:         // 300 bit/s
-	(timerd_state == 12'h160)?24'd200:         // 200 bit/s
-	(timerd_state == 12'h180)?24'd150:         // 150 bit/s
-	(timerd_state == 12'h18f)?24'd134:         // 134 bit/s (134.27)
-	(timerd_state == 12'h1af)?24'd110:         // 110 bit/s (109.71)
-	(timerd_state == 12'h240)?24'd75:          // 75 bit/s (120)
-	(timerd_state == 12'h260)?24'd50:          // 50 bit/s (80)
-	24'h800001;                                // unsupported bit rate
+//	(timerd_state == 12'h101)?24'd19200:       // 19200 bit/s
+//	(timerd_state == 12'h102)?24'd9600:        // 9600 bit/s
+//	(timerd_state == 12'h104)?24'd4800:        // 4800 bit/s
+//	(timerd_state == 12'h105)?24'd3600:        // 3600 bit/s (?? isn't that 3840?)
+//	(timerd_state == 12'h108)?24'd2400:        // 2400 bit/s
+//	(timerd_state == 12'h10a)?24'd2000:        // 2000 bit/s (exact 1920)
+//	(timerd_state == 12'h10b)?24'd1800:        // 1800 bit/s (exact 1745)
+//	(timerd_state == 12'h110)?24'd1200:        // 1200 bit/s
+//	(timerd_state == 12'h120)?24'd600:         // 600 bit/s
+//	(timerd_state == 12'h140)?24'd300:         // 300 bit/s
+//	(timerd_state == 12'h160)?24'd200:         // 200 bit/s
+//	(timerd_state == 12'h180)?24'd150:         // 150 bit/s
+//	(timerd_state == 12'h18f)?24'd134:         // 134 bit/s (134.27)
+//	(timerd_state == 12'h1af)?24'd110:         // 110 bit/s (109.71)
+//	(timerd_state == 12'h240)?24'd75:          // 75 bit/s (120)
+//	(timerd_state == 12'h260)?24'd50:          // 50 bit/s (80)
+//	24'h800001;                                // unsupported bit rate
 
 wire [23:0] bitrate = 24'd38400;
 wire [1:0] parity = 2'h0;
 wire [1:0] stopbits = 2'h0;
 wire [3:0] databits = 4'd8;
 
-wire [3:0] timerd_ctrl_o = 3'b001; //  dummy
-wire [7:0] timerd_set_data = 8'd01; // dummy
+wire [3:0] timerd_ctrl_o = 3'b001;  // 19200 bit/s
+wire [7:0] timerd_set_data = 8'd01; // 19200 bit/s
 
 // bps is 2.457MHz/2/16/prescaler/datavalue. These values are used for byte timing
 // and are thus 10*the bit values (1 start + 8 data + 1 stop)
@@ -323,7 +311,7 @@ reg [7:0]  uart_rx_delay_cnt;
 assign     uart_rx_busy = uart_rx_delay_cnt != 8'd0;
 
 // delay data_in_available one more cycle to give the fifo a chance to remove one item
-wire	   serial_data_in_available = !serial_data_in_empty && !uart_rx_busy && !uart_rx_busyD;   
+wire	   serial_data_in_available = !serial_data_in_empty && !uart_rx_busy && !uart_rx_busyD;
 
 reg [1:0 ]CS_D;
 
@@ -335,7 +323,7 @@ always @(posedge CLK) begin
       if(uart_rx_prediv_cnt != 16'd0)
 	 uart_rx_prediv_cnt <= uart_rx_prediv_cnt - 16'd1;
       else begin
-	 uart_rx_prediv_cnt <= { uart_prediv-11'd1, 5'b00000 };	 
+	 uart_rx_prediv_cnt <= { uart_prediv-11'd1, 5'b00000 };
 	 if(uart_rx_delay_cnt != 8'd0)
 	   uart_rx_delay_cnt <= uart_rx_delay_cnt - 8'd1;
       end
@@ -343,19 +331,19 @@ always @(posedge CLK) begin
       if(uart_tx_prediv_cnt != 16'd0)
 	 uart_tx_prediv_cnt <= uart_tx_prediv_cnt - 16'd1;
       else begin
-	 uart_tx_prediv_cnt <= { uart_prediv-11'd1, 5'b00000 };	 
+	 uart_tx_prediv_cnt <= { uart_prediv-11'd1, 5'b00000 };
 	 if(uart_tx_delay_cnt != 8'd0)
 	   uart_tx_delay_cnt <= uart_tx_delay_cnt - 8'd1;
       end
    end
 
-	// CPU reads the UDR  (  USART Data Register)
+	// CPU reads the RX Data Register)
 	if(serial_cpu_data_read && serial_data_in_available) begin
 		uart_rx_delay_cnt <= timerd_set_data;
 		uart_rx_prediv_cnt <= { uart_prediv-11'd1, 5'b00000 };// load predivider with 2*16 the predivider value
 	end
 
-   // cpu bus access to uart data register (falling edge)
+   // cpu bus write to TX data register
    if({PH_2, RW_N, CS_D, CS, RS} == 8'b10100100) begin
       // CPU write to UDR starts the delay counter. The uart transamitter is then
       // reported busy as long as the counter runs
@@ -364,11 +352,6 @@ always @(posedge CLK) begin
    end
       
 end
-
-//		dout = { uart_ctrl, 1'b0 };       14 USART Control Register,    ,bit CLK CL1 CL0 ST1 ST0 PE E / O 0
-//		dout = serial_data_in_available,  15 Receiver Status Register   ,bit 7 BF buffer full and ready to read
-//		dout = serial_data_out_fifo_full  16 Transmitter Status Register,bit 7 BE Buffer Empty and new data can be send into UDR
-//		dout = serial_data_in_cpu;        17 UDR  (  USART Data Register)
 
 // 6551 UART
 always @ (negedge CLK or negedge RESET_X)
@@ -510,7 +493,7 @@ assign RX_CLK = (CTL_REG[4] == 1'b0)	?	RX_CLK_IN:
 											TX_CLK;
 
 assign RESET_X = RESET_NX 					?	1'b0:
-												RESET_N;
+											RESET_N;
 
 always @ (negedge CLK)
 begin
@@ -524,17 +507,6 @@ assign RX_DATA = (CMD_REG[4:2] == 3'b100)	?	LOOPBACK[7]:
 assign TXDATA_OUT =	(CMD_REG[4:2] == 3'b100)	?	1'b1:
 													TX_DATA;
 
-
-// STATUS_REG
-// 7 Interrupt (IRQ)
-// 6 Data Set Ready (DSRB)
-// 5 Data Carrier Detect (DCDB)
-// 4 Transmitter Data Register Empty
-// 3 Receiver Data Register Full
-// 2 Overrun
-// 1 Framing Error
-// 0 Parity Error
-
 assign TDRE = !serial_data_out_fifo_full && !uart_tx_busy;
 assign RDRF = serial_data_in_available;
 
@@ -544,16 +516,16 @@ assign DO =	(RS == 2'b00)	?	serial_data_in_cpu:
 			(RS == 2'b10)	?	CMD_REG:
 								CTL_REG;
 
-assign IRQ =	({CMD_REG[1:0], RDRF} == 3'b011)			?	1'b0:// IRD,DTR,RDRF; IRQ if RX full
-				({CMD_REG[3:2], CMD_REG[0], TDRE} == 4'b0111) ?	1'b0:// TIC1,TIC0,DTR,TDRE; IRQ if RTSn=low and TX empty
-																1'b1;// low active
+assign IRQ =	({CMD_REG[1:0], RDRF} == 3'b011)			?	1'b0:
+				({CMD_REG[3:2], CMD_REG[0], TDRE} == 4'b0111) ?	1'b0:
+																1'b1; // low active
 
 assign RTS = (CMD_REG[3:2] == 2'b00);
 assign DTR = ~CMD_REG[0];
 
-assign STOP =	(CTL_REG[7] == 1'b0)									?	1'b0:		// Stop = 1
-				({CTL_REG[7:5], CMD_REG[5]} == 4'b1001)					?	1'b0:		// Stop >1 but 8bit word and parity
-																			1'b1;		// Stop > 1
+assign STOP =	(CTL_REG[7] == 1'b0)									?	1'b0:	// Stop = 1
+				({CTL_REG[7:5], CMD_REG[5]} == 4'b1001)					?	1'b0:	// Stop >1 but 8bit word and parity
+																			1'b1;	// Stop > 1
 
 assign PAR_DIS = ~CMD_REG[5];
 assign WORD_SELECT = CTL_REG[6:5];
@@ -565,7 +537,7 @@ begin
 	else
 	begin
 		if (PH_2)
-			if({RW_N, CS, RS} == 5'b00101)						// Software RESET
+			if({RW_N, CS, RS} == 5'b00101) // Software RESET
 				RESET_NX <= 1'b1;
 			else
 				RESET_NX <= 1'b0;
@@ -576,8 +548,6 @@ always @ (negedge CLK or negedge RESET_X)
 begin
 	if(!RESET_X)
 	begin
-//		RDRF <= 1'b0;
-//		TDRE <= 1'b1;
 		CTL_REG <= 8'h00;
 		CMD_REG <= 8'h00;
 		OVERRUN <= 1'b0;
@@ -588,13 +558,10 @@ begin
 	begin
 		if (PH_2)
 		begin
-	//		if({RW_N, CS, RS} == 5'b00100)						// Write TX data register
-	//			TX_REG <= DI;
-
-			if({RW_N, CS, RS} == 5'b00110)						// Write CMD register
+			if({RW_N, CS, RS} == 5'b00110) // Write CMD register
 				CMD_REG <= DI;
 
-			if({RW_N, CS, RS} == 5'b00111)						// Write CTL register
+			if({RW_N, CS, RS} == 5'b00111) // Write CTL register
 				CTL_REG <= DI;
 		end
 	end
