@@ -1410,9 +1410,6 @@ begin
   end if;
 end process;
 
--- 210
--- 000
--- 
 uart_en <= system_up9600(2) or system_up9600(1);
 uart_oe <= not ram_we and uart_cs and uart_en;
 io_data <=  unsigned(cart_data) when cart_oe = '1' else
@@ -1992,7 +1989,7 @@ end process;
 -- connect user port
 process (all)
 begin
-  pa2_i <= '1';
+  pa2_i <= pa2_o;
   cnt2_i <= '1';
   sp2_i <= '1';
   pb_i <= (others => '1');
