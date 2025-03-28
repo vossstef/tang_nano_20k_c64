@@ -65,6 +65,9 @@ add_file src/sid/sid_filter.sv
 add_file src/sid/sid_tables.sv
 add_file src/sid/sid_top.sv
 add_file src/sid/sid_voice.sv
+add_file src/uart6551/BaudRate.vhd
+add_file src/uart6551/io_fifo.v
+add_file src/uart6551/uart_6551.v
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name tang_nano_20k_c64

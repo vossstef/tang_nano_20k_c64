@@ -274,9 +274,6 @@ wire   uart_tx_busy = uart_tx_delay_cnt != 8'd0;
 reg [7:0]  uart_rx_delay_cnt;
 assign     uart_rx_busy = uart_rx_delay_cnt != 8'd0;
 
-// delay data_in_available one more cycle to give the fifo a chance to remove one item
-wire   serial_data_in_available = !serial_data_in_empty && !uart_rx_busy && !uart_rx_busyD;
-
 reg [1:0 ]CS_D;
 
 always @(posedge CLK) begin
