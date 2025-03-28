@@ -1,7 +1,7 @@
 /*
     sysctrl.v
  
-    generic system control interface fro/via the MCU
+    generic system control interface from/via the MCU
 
     TODO: This is currently very core specific. This needs to be
     generic for all cores.
@@ -106,7 +106,6 @@ reg [31:0] main_reset_timeout = 32'd80_000_000;
 reg c1541reset = 1'b1;
 assign system_reset = main_reset;
 assign system_1541_reset = c1541reset;
-assign cold_boot = coldboot;
 
 // process mouse events
 always @(posedge clk) begin
@@ -114,7 +113,6 @@ always @(posedge clk) begin
       state <= 4'd0;      
       leds <= 2'b00;        // after reset leds are off
       color <= 24'h000000;  // color black -> rgb led off
-
       // stay in reset for about 3 seconds or until MCU releases reset
       main_reset <= 2'd3;
       c1541reset <= 1'b1;
@@ -155,18 +153,15 @@ always @(posedge clk) begin
       system_uart <= 2'b00;
       system_joyswap <= 1'b0;
       system_detach_reset <= 1'b0;
-
    end else begin
-
       // release main reset after timeout
       if(main_reset_timeout) begin
         main_reset_timeout <= main_reset_timeout - 32'd1;
 
         if(main_reset_timeout == 32'd1) begin
-        main_reset <= 2'd0;
-        c1541reset <= 1'b0;
-        // BRG LED yellow if no MCU has responded
-        end
+          main_reset <= 2'd0;
+          c1541reset <= 1'b0;
+          end
       end
 
       int_ack <= 8'h00;
@@ -174,8 +169,8 @@ always @(posedge clk) begin
       port_in_strobe <= 1'b0;
 
       // iack bit 0 acknowledges the system control interrupt
-      if(int_ack[0]) sys_int <= 1'b0;
-
+      if(int_ack[0]) sys_int <= 1'b0;      
+            
       // (further) data has just become available, so raise interrupt
       port_out_availableD <= (port_out_available != 8'd0);
       if(port_out_available && !port_out_availableD)
@@ -184,19 +179,19 @@ always @(posedge clk) begin
       if(data_in_strobe) begin
         if(data_in_start) begin
            state <= 4'd0;
-            command <= data_in;
-            menu_rom_addr <= 12'd0;
-            data_out <= 8'h00;
+           command <= data_in;
+	   menu_rom_addr <= 12'd0;
+	   data_out <= 8'h00;
         end else begin
             if(state != 4'd15) state <= state + 4'd1;
 	    
             // CMD 0: status data
             if(command == 8'd0) begin
                 // return some pattern that would not appear randomly
-	            // on e.g. an unprogrammed device
+	        // on e.g. an unprogrammed device
                 if(state == 4'd0) data_out <= 8'h5c;
                 if(state == 4'd1) data_out <= 8'h42;
-                if(state == 4'd2) data_out <= 8'h00;   // old: core id 2 = C64 
+                if(state == 4'd2) data_out <= 8'h02;   // old: core id 2 = C64
             end
 	   
             // CMD 1: there are two MCU controlled LEDs
@@ -218,8 +213,8 @@ always @(posedge clk) begin
 
             // CMD 4: config values (e.g. set by user via OSD)
             if(command == 8'd4) begin
-               // second byte can be any character which identifies the variable to set 
-               if(state == 4'd0) id <= data_in;
+                // second byte can be any character which identifies the variable to set 
+                if(state == 4'd0) id <= data_in;
 
                 if(state == 4'd1) begin
                     // Value "V": REU cfg: off, on

@@ -173,11 +173,6 @@ wire				GOT_DATA;
 reg					READY0;
 reg					READY1;
 
-wire [23:0] bitrate = 24'd38400;
-wire [1:0] parity = 2'h0;
-wire [1:0] stopbits = 2'h0;
-wire [3:0] databits = 4'd8;
-
 // assemble output status structure. Adjust bitrate endianess
 assign serial_status_out = { 
 	bitrate[7:0], bitrate[15:8], bitrate[23:16], 
@@ -274,8 +269,36 @@ wire uart_tx_irq = !serial_data_out_fifo_full && !serial_strobe_out;
 // reporting "tx buffer not empty" for about one byte time after each byte
 // being requested to be sent
 
-wire [3:0] timerd_ctrl_o = 3'b011; //  dummy
-wire [7:0] timerd_set_data = 8'd32; // dummy
+wire [11:0] timerd_state = { timerd_ctrl_o, timerd_set_data };
+// try to calculate bitrate from timer d config
+// bps is 2.457MHz/2/16/prescaler/datavalue
+wire [23:0] bitrate = 
+//	(uart_ctrl[6] !=    1'b1)?24'h800000:      // uart prescaler not 1
+	(timerd_state == 12'h101)?24'd19200:       // 19200 bit/s
+	(timerd_state == 12'h102)?24'd9600:        // 9600 bit/s
+	(timerd_state == 12'h104)?24'd4800:        // 4800 bit/s
+	(timerd_state == 12'h105)?24'd3600:        // 3600 bit/s (?? isn't that 3840?)
+	(timerd_state == 12'h108)?24'd2400:        // 2400 bit/s
+	(timerd_state == 12'h10a)?24'd2000:        // 2000 bit/s (exact 1920)
+	(timerd_state == 12'h10b)?24'd1800:        // 1800 bit/s (exact 1745)
+	(timerd_state == 12'h110)?24'd1200:        // 1200 bit/s
+	(timerd_state == 12'h120)?24'd600:         // 600 bit/s
+	(timerd_state == 12'h140)?24'd300:         // 300 bit/s
+	(timerd_state == 12'h160)?24'd200:         // 200 bit/s
+	(timerd_state == 12'h180)?24'd150:         // 150 bit/s
+	(timerd_state == 12'h18f)?24'd134:         // 134 bit/s (134.27)
+	(timerd_state == 12'h1af)?24'd110:         // 110 bit/s (109.71)
+	(timerd_state == 12'h240)?24'd75:          // 75 bit/s (120)
+	(timerd_state == 12'h260)?24'd50:          // 50 bit/s (80)
+	24'h800001;                                // unsupported bit rate
+
+wire [23:0] bitrate = 24'd38400;
+wire [1:0] parity = 2'h0;
+wire [1:0] stopbits = 2'h0;
+wire [3:0] databits = 4'd8;
+
+wire [3:0] timerd_ctrl_o = 3'b001; //  dummy
+wire [7:0] timerd_set_data = 8'd01; // dummy
 
 // bps is 2.457MHz/2/16/prescaler/datavalue. These values are used for byte timing
 // and are thus 10*the bit values (1 start + 8 data + 1 stop)
@@ -333,7 +356,6 @@ always @(posedge CLK) begin
 	end
 
    // cpu bus access to uart data register (falling edge)
-// if(clk_en && ~bus_selD && bus_sel && (addr == 5'h17) && !rw) begin
    if({PH_2, RW_N, CS_D, CS, RS} == 8'b10100100) begin
       // CPU write to UDR starts the delay counter. The uart transamitter is then
       // reported busy as long as the counter runs
