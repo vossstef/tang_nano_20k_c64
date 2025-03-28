@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------
 --  C64 Top level for Tang Nano
---  2023 / 2024 Stefan Voss
+--  2023...2025 Stefan Voss
 --  based on the work of many others
 --
 --  FPGA64 is Copyrighted 2005-2008 by Peter Wendrich (pwsoft@syntiac.com)
@@ -15,8 +15,8 @@ use IEEE.numeric_std.ALL;
 entity tang_nano_20k_c64_top is
   generic
   (
-   DUAL  : integer := 0; -- 0:no, 1:yes dual SID build option
-   MIDI  : integer := 1;  -- 0:no, 1:yes optional MIDI Interface
+   DUAL  : integer := 1; -- 0:no, 1:yes dual SID build option
+   MIDI  : integer := 0; -- 0:no, 1:yes optional MIDI Interface
    U6551 : integer := 1  -- 0:no, 1:yes optional 6551 UART
    );
   port
@@ -445,7 +445,7 @@ signal uart_data       : unsigned(7 downto 0) := (others =>'0');
 signal uart_oe         : std_logic := '0';
 signal uart_en         : std_logic := '0';
 signal tx_6551         : std_logic := '1';
-signal uart_irq        : std_logic := '0';
+signal uart_irq        : std_logic := '1'; -- low active
 signal uart_cs         : std_logic;
 signal CLK_6551_EN     : std_logic;
 signal phi2_p, phi2_n  : std_logic;
@@ -1416,7 +1416,7 @@ end process;
 uart_en <= system_up9600(2) or system_up9600(1);
 uart_oe <= not ram_we and uart_cs and uart_en;
 io_data <=  unsigned(cart_data) when cart_oe = '1' else
-            unsigned(midi_data) when (midi_oe and midi_en) = '1' else
+      --    unsigned(midi_data) when (midi_oe and midi_en) = '1' else
             uart_data when uart_oe = '1' else
             unsigned(reu_dout);
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
@@ -1470,10 +1470,10 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => game,
   exrom        => exrom,
   io_rom       => io_rom,
-  io_ext       => reu_oe or cart_oe or (midi_oe and midi_en) or uart_oe,
+  io_ext       => reu_oe or cart_oe or uart_oe, --or (midi_oe and midi_en)
   io_data      => io_data,
-  irq_n        => midi_irq_n,
-  nmi_n        => not nmi and midi_nmi_n and (uart_irq and uart_en),
+  irq_n        => '1', -- midi_irq_n,
+  nmi_n        => not nmi and uart_irq, -- and midi_nmi_n 
   nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,
@@ -2056,7 +2056,7 @@ begin
   end if;
 end process;
 
--- | SwiftLink       $DE00/$DF00/$D700/NMI (300-38400 baud)
+-- | SwiftLink       $DE00/$DF00/$D700/NMI (38400 baud)
 yes_uart: if U6551 /= 0 generate
 uart_inst : entity work.glb6551
 port map (
@@ -2073,7 +2073,7 @@ port map (
   RW_N        => not ram_we,
   RS          => c64_addr(1 downto 0),
   TXDATA_OUT  => tx_6551,
-  RXDATA_IN   => uart_rx,
+  RXDATA_IN   => uart_rx_filtered,
   RTS         => rts_cts,
   CTS         => rts_cts,
   DCD         => dtr,
