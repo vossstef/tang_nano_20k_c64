@@ -1,4 +1,4 @@
-# MiSTeryShield20k RPiPico board
+# MiSTeryShield20k RPiPico USB board
 
 Features:
 
