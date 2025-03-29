@@ -1,0 +1,25 @@
+PACKAGE 'usb_a_wuerth_61400826021_horizontal_stacked'
+CLASS IC
+PINCOUNT 9
+PINORDER MAIN ,
+	VBUS1__1,
+	D1-__2,
+	D1+__3,
+	GND1__4,
+	VBUS2__5,
+	D2-__6,
+	D2+__7,
+	GND2__8,
+	Shield__9
+FUNCTION MAIN MAIN ,
+	1,
+	2,
+	3,
+	4,
+	5,
+	6,
+	7,
+	8,
+	9
+PACKAGEPROP VALUE USB_A_Stacked
+END

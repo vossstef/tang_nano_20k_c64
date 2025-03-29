@@ -1,0 +1,19 @@
+PACKAGE 'sot-23-6'
+CLASS IC
+PINCOUNT 6
+PINORDER MAIN ,
+	?__1,
+	GND__2,
+	?__3,
+	?__4,
+	VCC__5,
+	?__6
+FUNCTION MAIN MAIN ,
+	1,
+	2,
+	3,
+	4,
+	5,
+	6
+PACKAGEPROP VALUE 74LVC2G14
+END
