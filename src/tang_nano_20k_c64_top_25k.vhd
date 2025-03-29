@@ -16,7 +16,8 @@ entity tang_nano_20k_c64_top_25k is
   generic
   (
    DUAL  : integer := 1; -- 0:no, 1:yes dual SID build option
-   MIDI  : integer := 0 -- 0:no, 1:yes optional MIDI Interface
+   MIDI  : integer := 0; -- 0:no, 1:yes optional MIDI Interface
+   U6551 : integer := 1  -- 0:no, 1:yes optional 6551 UART
    );
   port
   (
@@ -242,6 +243,7 @@ signal reu_ram_addr   : std_logic_vector(24 downto 0);
 signal reu_ram_dout   : std_logic_vector(7 downto 0);
 signal reu_ram_we     : std_logic;
 signal reu_irq        : std_logic;
+signal IO7            : std_logic;
 signal IOE            : std_logic;
 signal IOF            : std_logic;
 signal reu_dout       : std_logic_vector(7 downto 0);
@@ -285,6 +287,7 @@ signal hbl_out         : std_logic;
 signal vbl_out         : std_logic;
 signal midi_data       : std_logic_vector(7 downto 0) := (others =>'0');
 signal midi_oe         : std_logic := '0';
+signal midi_en         : std_logic := '0';
 signal midi_irq_n      : std_logic := '1';
 signal midi_nmi_n      : std_logic := '1';
 signal midi_rx         : std_logic;
@@ -421,6 +424,13 @@ signal sid_fc_offset   : std_logic_vector(2 downto 0);
 signal sid_fc_lr       : std_logic_vector(12 downto 0);
 signal sid_filter      : std_logic_vector(2 downto 0);
 signal georam          : std_logic;
+signal uart_data       : unsigned(7 downto 0) := (others =>'0');
+signal uart_oe         : std_logic := '0';
+signal uart_en         : std_logic := '0';
+signal tx_6551         : std_logic := '1';
+signal uart_irq        : std_logic := '1'; -- low active
+signal uart_cs         : std_logic;
+signal CLK_6551_EN     : std_logic;
 signal phi2_p, phi2_n  : std_logic;
 signal sid_ld_addr     : std_logic_vector(11 downto 0) := (others =>'0');
 signal sid_ld_data     : std_logic_vector(15 downto 0) := (others =>'0');
@@ -448,13 +458,21 @@ signal pd1,pd2,pd3,pd4 : std_logic_vector(7 downto 0);
 signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
-signal coldboot        : std_logic;
 signal disk_pause      : std_logic;
 signal paddle_1_analogA : std_logic;
 signal paddle_1_analogB : std_logic;
 signal paddle_2_analogA : std_logic;
 signal paddle_2_analogB : std_logic;
 signal flash_ready      : std_logic;
+signal rts_cts          : std_logic;
+signal dtr              : std_logic;
+signal serial_status    : std_logic_vector(31 downto 0);
+signal serial_tx_available : std_logic_vector(7 downto 0);
+signal serial_tx_strobe : std_logic;
+signal serial_tx_data   : std_logic_vector(7 downto 0);
+signal serial_rx_available : std_logic_vector(7 downto 0);
+signal serial_rx_strobe : std_logic;
+signal serial_rx_data   : std_logic_vector(7 downto 0);
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -1122,7 +1140,14 @@ hid_inst: entity work.hid
   system_joyswap      => system_joyswap,
   system_detach_reset => detach_reset,
 
-  cold_boot           => coldboot,
+  -- port io (used to expose rs232)
+  port_status       => serial_status,
+  port_out_available => serial_tx_available,
+  port_out_strobe   => serial_tx_strobe,
+  port_out_data     => serial_tx_data,
+  port_in_available => serial_rx_available,
+  port_in_strobe    => serial_rx_strobe,
+  port_in_data      => serial_rx_data,
 
   int_out_n           => m0s(4),
   int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
@@ -1155,8 +1180,11 @@ begin
   end if;
 end process;
 
+uart_en <= system_up9600(2) or system_up9600(1);
+uart_oe <= not ram_we and uart_cs and uart_en;
 io_data <=  unsigned(cart_data) when cart_oe = '1' else
-            unsigned(midi_data) when midi_oe = '1' else
+      --    unsigned(midi_data) when (midi_oe and midi_en) = '1' else
+            uart_data when uart_oe = '1' else
             unsigned(reu_dout);
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
 sid_fc_lr <= 13x"0600" - (3x"0" & sid_fc_offset & 7x"00") when sid_filter(2) = '1' else (others => '0');
@@ -1209,14 +1237,15 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   game         => game,
   exrom        => exrom,
   io_rom       => io_rom,
-  io_ext       => reu_oe or cart_oe or midi_oe,
+  io_ext       => reu_oe or cart_oe or uart_oe, --or (midi_oe and midi_en)
   io_data      => io_data,
-  irq_n        => midi_irq_n,
-  nmi_n        => not nmi and midi_nmi_n,
+  irq_n        => '1', -- midi_irq_n,
+  nmi_n        => not nmi and uart_irq, -- and midi_nmi_n 
   nmi_ack      => nmi_ack,
   romL         => romL,
   romH         => romH,
   UMAXromH     => UMAXromH,
+  IO7          => IO7,
   IOE          => IOE,
   IOF          => IOF,
   freeze_key   => open,
@@ -1737,50 +1766,99 @@ begin
   drive_stb_i <= '1';
   uart_tx <= '1';
   flag2_n_i <= '1';
+  uart_cs <= '0';
   if ext_en = '1' and disk_access = '1' then
     -- c1541 parallel bus
     drive_par_i <= pb_o;
     drive_stb_i <= pc2_n_o;
     pb_i <= drive_par_o;
     flag2_n_i <= drive_stb_o;
-  elsif system_up9600(0) = '0' and (disk_access = '0' or ext_en = '0') then
-      -- UART 
-      -- https://www.pagetable.com/?p=1656
-      -- FLAG2 RXD
-      -- PB0 RXD in
-      -- PB1 RTS out
-      -- PB2 DTR out
-      -- PB3 RI in
-      -- PB4 DCD in
-      -- PB5
-      -- PB6 CTS in
-      -- PB7 DSR in
-      -- PA2 TXD out
-      uart_tx <= pa2_o;
-      flag2_n_i <= uart_rx_filtered;
-      pb_i(0) <= uart_rx_filtered;
-      -- Zeromodem
-      pb_i(6) <= not pb_o(1);  -- RTS > CTS
-      pb_i(4) <= not pb_o(2);  -- DTR > DCD
-      pb_i(7) <= not pb_o(2);  -- DTR > DSR
-    elsif system_up9600(0) = '1' and (disk_access = '0' or ext_en = '0') then
-      -- UART UP9600
-      -- https://www.pagetable.com/?p=1656
-      -- SP1 TXD
-      -- PA2 TXD
-      -- PB0 RXD
-      -- SP2 RXD
-      -- FLAG2 RXD
-      -- PB7 to CNT2 
-      pb_i(7) <= cnt2_o;
-      -- pb_i(6) <= not pb_o(1);  -- RTS > CTS
-      -- pb_i(4) <= not pb_o(2);  -- DTR > DCD
-      cnt2_i <= pb_o(7);
-      uart_tx <= pa2_o and sp1_o;
-      sp2_i <= uart_rx_filtered;
-      flag2_n_i <= uart_rx_filtered;
-      pb_i(0) <= uart_rx_filtered;
+  elsif system_up9600 = 0 and (disk_access = '0' or ext_en = '0') then
+    -- UART 
+    -- https://www.pagetable.com/?p=1656
+    -- FLAG2 RXD
+    -- PB0 RXD in
+    -- PB1 RTS out
+    -- PB2 DTR out
+    -- PB3 RI in
+    -- PB4 DCD in
+    -- PB5
+    -- PB6 CTS in
+    -- PB7 DSR in
+    -- PA2 TXD out
+    uart_tx <= pa2_o;
+    flag2_n_i <= uart_rx_filtered;
+    pb_i(0) <= uart_rx_filtered;
+    -- Zeromodem
+    pb_i(6) <= not pb_o(1);  -- RTS > CTS
+    pb_i(4) <= not pb_o(2);  -- DTR > DCD
+    pb_i(7) <= not pb_o(2);  -- DTR > DSR
+  elsif system_up9600 = 1 and (disk_access = '0' or ext_en = '0') then
+    -- UART UP9600
+    -- https://www.pagetable.com/?p=1656
+    -- SP1 TXD
+    -- PA2 TXD
+    -- PB0 RXD
+    -- SP2 RXD
+    -- FLAG2 RXD
+    -- PB7 to CNT2 
+    pb_i(7) <= cnt2_o;
+    cnt2_i <= pb_o(7);
+    uart_tx <= pa2_o and sp1_o;
+    sp2_i <= uart_rx_filtered;
+    flag2_n_i <= uart_rx_filtered;
+    pb_i(0) <= uart_rx_filtered;
+    elsif system_up9600 = 2 then
+      uart_tx <= tx_6551;
+      uart_cs <= IOE;
+    elsif system_up9600 = 3 then
+      uart_tx <= tx_6551;
+      uart_cs <= IOF;
+    elsif system_up9600 = 4 then
+      uart_tx <= tx_6551;
+      uart_cs <= IO7;
   end if;
 end process;
+
+-- |SwiftLink       $DE00/$DF00/$D700/NMI (38400 baud)
+yes_uart: if U6551 /= 0 generate
+uart_inst : entity work.glb6551
+port map (
+  RESET_N     => reset_n,
+  CLK         => clk32,
+  RX_CLK      => open,
+  RX_CLK_IN   => CLK_6551_EN,
+  XTAL_CLK_IN => CLK_6551_EN,
+  PH_2        => phi2_n,
+  DI          => c64_data_out,
+  DO          => uart_data,
+  IRQ         => uart_irq,
+  CS          => unsigned'(not uart_en & uart_cs),
+  RW_N        => not ram_we,
+  RS          => c64_addr(1 downto 0),
+  TXDATA_OUT  => tx_6551,
+  RXDATA_IN   => uart_rx_filtered,
+  RTS         => rts_cts,
+  CTS         => rts_cts,
+  DCD         => dtr,
+  DTR         => dtr,
+  DSR         => dtr,
+  -- serial/rs232 interface io-controller<-> UART
+  serial_status_out   => serial_status,
+  serial_data_out_available => serial_tx_available,
+  serial_strobe_out   => serial_tx_strobe,
+  serial_data_out     => serial_tx_data,
+
+  serial_data_in_free => serial_rx_available,
+  serial_strobe_in    => serial_rx_strobe,
+  serial_data_in      => serial_rx_data
+  );
+
+uart_clk_inst : entity work.BaudRate
+port map (
+      i_CLOCK     => clk32,
+      o_serialEn  => CLK_6551_EN
+);
+end generate;
 
 end Behavioral_top;

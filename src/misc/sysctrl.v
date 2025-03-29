@@ -63,8 +63,7 @@ module sysctrl (
   output reg        system_georam,
   output reg [1:0]  system_uart,
   output reg        system_joyswap,
-  output reg        system_detach_reset,
-  output reg        cold_boot
+  output reg        system_detach_reset
 );
 
 reg [3:0] state;
@@ -94,7 +93,7 @@ reg [7:0]  menu_rom_data;
 // generate hex e.g.:
 // gzip -n c64.xml
 // xxd -c1 -p c64.xml.gz > c64_xml.hex
-reg [7:0] c64_xml[1024];
+reg [7:0] c64_xml[2048];
 initial $readmemh("c64_xml.hex", c64_xml);
 
 always @(posedge clk)
@@ -191,7 +190,7 @@ always @(posedge clk) begin
 	        // on e.g. an unprogrammed device
                 if(state == 4'd0) data_out <= 8'h5c;
                 if(state == 4'd1) data_out <= 8'h42;
-                if(state == 4'd2) data_out <= 8'h02;   // old: core id 2 = C64
+                if(state == 4'd2) data_out <= 8'h00;   // old: core id 2 = C64
             end
 	   
             // CMD 1: there are two MCU controlled LEDs
