@@ -1,6 +1,7 @@
 # MiSTeryShield20k RPiPico board
 
 Features:
+
 * Headers to plug the Tang Nano 20K
 * Headers to plug the [Raspberry Pi Pico (W)](https://www.raspberrypi.com/products/raspberry-pi-pico)
 * Atari / Commodore style joystick interface
@@ -10,27 +11,17 @@ Features:
   * MIDI
     * MIDI OUT with driver chip to protect Tang Nano 20K
     * MIDI IN with optocoupler to protect Tang Nano 20K
-* Dualshock 2 Gamepad Interface
 * 4 x USB-A Interface
-* Spare header for FPGA IO
+* Spare header for FPGA IO / Dualshock 2 Adapter cable (**no DS2 connector onboard**)
 * Debug header for Pico UART and e.g. FPGA UART
 * 3 x PiPico Status LED
+* 3D STEP model to ease case development
 * [CERN-OHL-S](https://cern-ohl.web.cern.ch/home) license
 
-PCBA production files for [JLCPCB](https://jlcpcb.com) are availble [here](Fabrication).<br>
-(Fully assembled boards can orderd based on BOM partlist, excluding the TN20k, PiPico and [Dualshock](/.assets/PS_connnector_female.png) connector)<br>
-
-> [!TIP]
-> The “PS2 9 Pin 90 Degrees Female Socket Slot Connector For PlayStation 2 Game Controller” need to be [sourced](https://www.aliexpress.com) separately and assembled + soldered on your own.  
-> It is advisible to secure the shell with a lot hot-melt adhesive to the PCBA in order to minimize the strain from the solder joints while plug / unplug the large connector.
+PCBA production files for [JLCPCB](https://jlcpcb.com) are availble [here](production).  
+(Fully assembled boards can orderd based on BOM partlist, excluding the TN20k and PiPico connector)  
 
 The great PCB Layout work using [KiCad](https://www.kicad.org) had been done by [cantclosevi](https://github.com/cantclosevi). Thx Michal !
-
-> [!NOTE]
-> |Version|Comment                                          |
-> |----   |---                                              |
-> |1      |DS2 connector have to be mounted PCB Bottom Side (workaround)|
-> |2      |DS2 connector mounted on top side (fixed)               |
 
 ![RRPiPico](pico.png)
 ![PNG](MiSTeryShield20kRPiPico-1.png)<br>

@@ -10,11 +10,11 @@ To be to be used with the [MiSTeryShield20k](https://github.com/harbaum/MiSTeryN
 [MiSTeryShield20k DS2 Adapter / Cable](misteryshield20k_ds2_adapter\misteryshield20k_ds2_adapter_cable.md)
 
 Standalone Dock Solution for a Raspberry PiPico (WIFI):  
-General use and supporting individual case/ shell.  
-[MiSTeryShield20k RPiPicoUSB](/board/misteryshield20k_rpipicousb/README.md)
+General use and supporting individual case/ shell development.  
+[MiSTeryShield20k RPiPico](/board/misteryshield20k_rpipico/README.md)
 
 For bare PCBA desk use only, no case feasible.  
-[MiSTeryShield20k RPiPico](/board/misteryshield20k_rpipico/README.md)
+[MiSTeryShield20k RPiPicoDS2](/board/misteryshield20k_rpipicods2/README.md)
 
 [PIZero_PMOD](/board/pizero_pmod/README.md)
 PMOD based on [RP2040-Zero](https://www.waveshare.com/wiki/RP2040-Zero)  

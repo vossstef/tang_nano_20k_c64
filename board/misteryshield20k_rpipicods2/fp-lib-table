@@ -1,4 +1,5 @@
 (fp_lib_table
   (version 7)
   (lib (name "MiSTeryShield20kRPiPico")(type "KiCad")(uri "${KIPRJMOD}/Library/footprint_library/MiSTeryShield20kRPiPico.pretty")(options "")(descr ""))
+  (lib (name "3D_library")(type "KiCad")(uri "${KIPRJMOD}/Library/3D_library.pretty")(options "")(descr ""))
 )
