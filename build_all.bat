@@ -1,6 +1,6 @@
 
 @echo off
-set GWSH=C:\Gowin\Gowin_V1.9.10.03_x64\IDE\bin\gw_sh
+set GWSH=C:\Gowin\Gowin_V1.9.11.01_x64\IDE\bin\gw_sh
 
 echo.
 echo ============ build mega138k pro ===============
