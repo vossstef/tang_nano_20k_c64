@@ -129,11 +129,14 @@ input				DCD;
 output				DTR;
 input				DSR;
 
+// serial rs232 connection to io controller
 output		[7:0]	serial_data_out_available;
 output		[7:0]	serial_data_in_free;
 input				serial_strobe_out;
 output		[7:0]	serial_data_out;
 output    [31:0]	serial_status_out;
+
+// serial rs223 connection from io controller
 input				serial_strobe_in;
 input		[7:0]	serial_data_in;
 
@@ -156,21 +159,19 @@ wire				STOP;
 wire				PAR_DIS;
 reg		[7:0]		LOOPBACK;
 wire				RX_DATA;
-wire				TX_DATA;
+wire				TX_DATA = 1'b1;
 reg					RESET_NX;
 reg					TX_CLK_REG_T;
 reg			 		TX_CLK_REG;
-
-// assemble output status structure. Adjust bitrate endianess
-assign serial_status_out = { 
-	bitrate[7:0], bitrate[15:8], bitrate[23:16], 
-	databits, parity, stopbits };
 
 // report the available unused space in the input fifo
 assign serial_data_in_free = { 4'h0, serial_data_in_space };
 
 wire serial_data_out_fifo_full;
 wire serial_data_in_full;
+
+wire write = PH_2 && CS==2'b01 && !RW_N && RS==2'b00;
+wire read  = PH_2 && CS==2'b01 &&  RW_N && RS==2'b00;
 
 // --- 6551 output fifo ---
 // filled by the CPU when writing to the uart data register
@@ -183,7 +184,7 @@ io_fifo uart_out_fifo (
 	.in_clk           ( CLK ),
 	.in               ( DI ),
 	.in_strobe        ( 1'b0 ),
-	.in_enable        ( {PH_2, RW_N, CS, RS} == 6'b100100 ),
+	.in_enable        ( write ),
 
 	.out_clk          ( CLK ),
 	.out              ( serial_data_out ),
@@ -235,23 +236,15 @@ io_fifo uart_in_fifo (
 // ---------------- uart data to/from io controller ------------
 always @(posedge CLK) begin
 	serial_cpu_data_read <= 1'b0;
-	if (PH_2) begin
 		// read on uart RX data register
-		if({RW_N, CS, RS} == 5'b10100)  // RXD Addr = 0
+		if(read) 
 			serial_cpu_data_read <= 1'b1;
-	end
 end
 
-// delay data_in_available one more cycle to give the fifo a chance to remove one item
-wire	   serial_data_in_available = !serial_data_in_empty && !uart_rx_busy && !uart_rx_busyD;
-
-// the cpu reading data clears rx irq. It may raise again immediately if there's more
-// data in the input fifo.
-wire uart_rx_irq = serial_data_in_available;
-
-// the io controller reading data clears tx irq. It may raus again immediately if 
-// there's more data in the output fifo
-wire uart_tx_irq = !serial_data_out_fifo_full && !serial_strobe_out;
+// assemble output status structure. Adjust bitrate endianess
+assign serial_status_out = { 
+	bitrate[7:0], bitrate[15:8], bitrate[23:16], 
+	databits, parity, stopbits };
 
 // timer to simulate the timing behaviour of a serial transmitter by
 // reporting "tx buffer not empty" for about one byte time after each byte
@@ -267,18 +260,17 @@ wire [7:0] timerd_set_data = 8'h01; // 38400 bit/s
 // and are thus 10*the bit values (1 start + 8 data + 1 stop)
 wire [10:0] uart_prediv =11'd30; // 38400 bit/s
 
-reg [15:0] uart_rx_prediv_cnt;
-reg [15:0] uart_tx_prediv_cnt;
-reg [7:0]  uart_tx_delay_cnt;
-wire   uart_tx_busy = uart_tx_delay_cnt != 8'd0;
-reg [7:0]  uart_rx_delay_cnt;
-assign     uart_rx_busy = uart_rx_delay_cnt != 8'd0;
+reg [15:0]	uart_rx_prediv_cnt;
+reg [15:0]	uart_tx_prediv_cnt;
+reg [7:0]	uart_tx_delay_cnt;
+wire		uart_tx_busy = uart_tx_delay_cnt != 8'd0;
+reg [7:0]	uart_rx_delay_cnt;
+assign		uart_rx_busy = uart_rx_delay_cnt != 8'd0;
 
-reg [1:0 ]CS_D;
+// delay data_in_available one more cycle to give the fifo a chance to remove one item
+wire	   serial_data_in_available = !serial_data_in_empty && !uart_rx_busy && !uart_rx_busyD;
 
 always @(posedge CLK) begin
-	CS_D <= CS;
-
    // the timer itself runs at 3.6864 Mhz
    if(XTAL_CLK_IN) begin
       if(uart_rx_prediv_cnt != 16'd0)
@@ -305,13 +297,21 @@ always @(posedge CLK) begin
 	end
 
    // cpu bus write to TX data register
-   if({PH_2, RW_N, CS_D, CS, RS} == 8'b10100100) begin
+   if(write) begin
       // CPU write to TX Data starts the delay counter. The uart transamitter is then
       // reported busy as long as the counter runs
       uart_tx_delay_cnt <= timerd_set_data;
       uart_tx_prediv_cnt <= { uart_prediv-11'd1, 5'b00000 };    // load predivider with 2*16 the predivider value    
    end
 end
+
+// the cpu reading data clears rx irq. It may raise again immediately if there's more
+// data in the input fifo.
+wire uart_rx_irq = serial_data_in_available;
+
+// the io controller reading data clears tx irq. It may raus again immediately if 
+// there's more data in the output fifo
+wire uart_tx_irq = !serial_data_out_fifo_full && !serial_strobe_out;
 
 // 6551 UART
 always @ (negedge CLK or negedge RESET_X)
@@ -484,7 +484,7 @@ assign RTS = (CMD_REG[3:2] == 2'b00);
 assign DTR = ~CMD_REG[0];
 
 assign STOP =	(CTL_REG[7] == 1'b0)									?	1'b0:	// Stop = 1
-				({CTL_REG[7:5], CMD_REG[5]} == 4'b1001)					?	1'b0:	// Stop >1 but 8bit word and parity
+				({CTL_REG[7:5], CMD_REG[5]} == 4'b1001)					?	1'b0:	// Stop > 1 but 8bit word and parity
 																			1'b1;	// Stop > 1
 
 assign PAR_DIS = ~CMD_REG[5];
