@@ -25,6 +25,7 @@ For the [M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) BL
 and for the Raspberry PiPico (RP2040 µC) there is a:
 
 * [Optional custom carrier board MiSTeryShield20k Raspberry PiPico](/board/misteryshield20k_rpipico/README.md)
+* [Dualshock Adapter / Cable](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md)
 * [Optional custom PMOD RP2040-Zero](/board/pizero_pmod/README.md) for Primer / Mega Boards
 * Optional case (upcoming)
   
