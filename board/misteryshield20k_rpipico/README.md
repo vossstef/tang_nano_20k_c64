@@ -12,7 +12,7 @@ Features:
     * MIDI OUT with driver chip to protect Tang Nano 20K
     * MIDI IN with optocoupler to protect Tang Nano 20K
 * 4 x USB-A Interface
-* Spare header for FPGA IO / Dualshock 2 Adapter cable (**no DS2 connector onboard**)
+* Spare header for FPGA IO / [Dualshock 2 Adapter cable](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md) (**no DS2 connector onboard**)
 * Debug header for Pico UART and e.g. FPGA UART
 * 3 x PiPico Status LED
 * 3D STEP model to ease case development
