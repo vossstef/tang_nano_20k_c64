@@ -253,12 +253,11 @@ wire [23:0] bitrate = 24'd38400;
 wire [1:0] parity = 2'h0;
 wire [1:0] stopbits = 2'h0;
 wire [3:0] databits = 4'd8;
-wire [3:0] timerd_ctrl_o = 3'b001;  // 38400 bit/s
-wire [7:0] timerd_set_data = 8'h01; // 38400 bit/s
+wire [7:0] timerd_set_data = 8'h08; // (h01 for 38400)
 
 // bps is 3.6864MHz /2/16 prescaler/datavalue. These values are used for byte timing
 // and are thus 10*the bit values (1 start + 8 data + 1 stop)
-wire [10:0] uart_prediv =11'd30; // 38400 bit/s
+wire [10:0] uart_prediv =11'd60; // (d30 for 38400)
 
 reg [15:0]	uart_rx_prediv_cnt;
 reg [15:0]	uart_tx_prediv_cnt;
