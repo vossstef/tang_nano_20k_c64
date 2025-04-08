@@ -246,18 +246,52 @@ assign serial_status_out = {
 	bitrate[7:0], bitrate[15:8], bitrate[23:16], 
 	databits, parity, stopbits };
 
+// --- export bit rate based on 6551 config ---
+wire [23:0] bitrate = 
+	(CTL_REG[3:0] == 4'hf)?24'd38400:       // 38400 bit/s
+	(CTL_REG[3:0] == 4'he)?24'd19200:       // 19200 bit/s
+	(CTL_REG[3:0] == 4'hd)?24'd9600:        // 9600 bit/s
+	(CTL_REG[3:0] == 4'hc)?24'd7200:        // 7200 bit/s
+	(CTL_REG[3:0] == 4'hb)?24'd4800:        // 4800 bit/s
+	(CTL_REG[3:0] == 4'ha)?24'd3600:        // 3600 bit/s
+	(CTL_REG[3:0] == 4'h9)?24'd2400:        // 2400 bit/s
+	(CTL_REG[3:0] == 4'h8)?24'd1800:        // 1800 bit/s
+	(CTL_REG[3:0] == 4'h7)?24'd1200:        // 1200 bit/s
+	(CTL_REG[3:0] == 4'h6)?24'd600:         // 600 bit/s
+	(CTL_REG[3:0] == 4'h5)?24'd300:         // 300 bit/s
+	(CTL_REG[3:0] == 4'h4)?24'd150:         // 150 bit/s
+	(CTL_REG[3:0] == 4'h3)?24'd134:         // 134 bit/s
+	(CTL_REG[3:0] == 4'h2)?24'd109:         // 109 bit/s
+	(CTL_REG[3:0] == 4'h1)?24'd75:          // 75 bit/s
+	24'd230400;                             // 16 x external clk
+	
 // timer to simulate the timing behaviour of a serial transmitter by
 // reporting "tx buffer not empty" for about one byte time after each byte
 // being requested to be sent
-wire [23:0] bitrate = 24'd38400;
 wire [1:0] parity = 2'h0;
 wire [1:0] stopbits = 2'h0;
 wire [3:0] databits = 4'd8;
-wire [7:0] timerd_set_data = 8'h08; // (h01 for 38400)
+wire [7:0] timerd_set_data = 8'h01;
 
 // bps is 3.6864MHz /2/16 prescaler/datavalue. These values are used for byte timing
 // and are thus 10*the bit values (1 start + 8 data + 1 stop)
-wire [10:0] uart_prediv =11'd60; // (d30 for 38400)
+wire [10:0] uart_prediv =
+	(CTL_REG[3:0] == 4'hf)?11'd30:    // 38400 bit/s
+	(CTL_REG[3:0] == 4'he)?11'd60:    // 19200 bit/s
+	(CTL_REG[3:0] == 4'hd)?11'd120:   // 9600 bit/s
+	(CTL_REG[3:0] == 4'hc)?11'd160:   // 7200 bit/s
+	(CTL_REG[3:0] == 4'hb)?11'd240:   // 4800 bit/s
+	(CTL_REG[3:0] == 4'ha)?11'd320:   // 3600 bit/s
+	(CTL_REG[3:0] == 4'h9)?11'd480:   // 2400 bit/s
+	(CTL_REG[3:0] == 4'h8)?11'd640:   // 1800 bit/s
+	(CTL_REG[3:0] == 4'h7)?11'd960:   // 1200 bit/s
+	(CTL_REG[3:0] == 4'h6)?11'd1920:  // 600 bit/s
+	(CTL_REG[3:0] == 4'h5)?11'd1920:  // x 300 bit/s
+	(CTL_REG[3:0] == 4'h4)?11'd1920:  // x 150 bit/s
+	(CTL_REG[3:0] == 4'h3)?11'd1920:  // x 134 bit/s
+	(CTL_REG[3:0] == 4'h2)?11'd1920:  // x 109 bit/s
+	(CTL_REG[3:0] == 4'h1)?11'd1920:  // x 75 bit/s
+	11'd5;                            // 16*ext clk, 230400 bit/s
 
 reg [15:0]	uart_rx_prediv_cnt;
 reg [15:0]	uart_tx_prediv_cnt;
