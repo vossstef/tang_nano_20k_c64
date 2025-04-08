@@ -271,27 +271,43 @@ wire [23:0] bitrate =
 wire [1:0] parity = 2'h0;
 wire [1:0] stopbits = 2'h0;
 wire [3:0] databits = 4'd8;
-wire [7:0] timerd_set_data = 8'h01;
+wire [7:0] timerd_set_data =
+	(CTL_REG[3:0] == 4'hf)?8'h01:  // 38400 bit/s
+	(CTL_REG[3:0] == 4'he)?8'h02:  // 19200 bit/s
+	(CTL_REG[3:0] == 4'hd)?8'h04:  // 9600 bit/s
+	(CTL_REG[3:0] == 4'hc)?8'h05:  // 7200 bit/s
+	(CTL_REG[3:0] == 4'hb)?8'h08:  // 4800 bit/s
+	(CTL_REG[3:0] == 4'ha)?8'h0a:  // 3600 bit/s
+	(CTL_REG[3:0] == 4'h9)?8'h10:  // 2400 bit/s
+	(CTL_REG[3:0] == 4'h8)?8'h16:  // 1800 bit/s
+	(CTL_REG[3:0] == 4'h7)?8'h20:  // 1200 bit/s	
+	(CTL_REG[3:0] == 4'h6)?8'h40:  // 600 bit/s
+	(CTL_REG[3:0] == 4'h5)?8'h80:  // 300 bit/s
+	(CTL_REG[3:0] == 4'h4)?8'h40:  // 150 bit/s
+	(CTL_REG[3:0] == 4'h3)?8'h48:  // 134 bit/s
+	(CTL_REG[3:0] == 4'h2)?8'h50:  // 109 bit/s
+	(CTL_REG[3:0] == 4'h1)?8'hBE:  // 75 bit/s
+	8'h01;                         // 16*ext clk, 230400 bit/s
 
 // bps is 3.6864MHz /2/16 prescaler/datavalue. These values are used for byte timing
 // and are thus 10*the bit values (1 start + 8 data + 1 stop)
 wire [10:0] uart_prediv =
-	(CTL_REG[3:0] == 4'hf)?11'd30:    // 38400 bit/s
-	(CTL_REG[3:0] == 4'he)?11'd60:    // 19200 bit/s
-	(CTL_REG[3:0] == 4'hd)?11'd120:   // 9600 bit/s
-	(CTL_REG[3:0] == 4'hc)?11'd160:   // 7200 bit/s
-	(CTL_REG[3:0] == 4'hb)?11'd240:   // 4800 bit/s
-	(CTL_REG[3:0] == 4'ha)?11'd320:   // 3600 bit/s
-	(CTL_REG[3:0] == 4'h9)?11'd480:   // 2400 bit/s
-	(CTL_REG[3:0] == 4'h8)?11'd640:   // 1800 bit/s
-	(CTL_REG[3:0] == 4'h7)?11'd960:   // 1200 bit/s
-	(CTL_REG[3:0] == 4'h6)?11'd1920:  // 600 bit/s
-	(CTL_REG[3:0] == 4'h5)?11'd1920:  // x 300 bit/s
-	(CTL_REG[3:0] == 4'h4)?11'd1920:  // x 150 bit/s
-	(CTL_REG[3:0] == 4'h3)?11'd1920:  // x 134 bit/s
-	(CTL_REG[3:0] == 4'h2)?11'd1920:  // x 109 bit/s
-	(CTL_REG[3:0] == 4'h1)?11'd1920:  // x 75 bit/s
-	11'd5;                            // 16*ext clk, 230400 bit/s
+	(CTL_REG[3:0] == 4'hf)?11'd30:  // 38400 bit/s
+	(CTL_REG[3:0] == 4'he)?11'd30:  // 19200 bit/s
+	(CTL_REG[3:0] == 4'hd)?11'd30:  // 9600 bit/s
+	(CTL_REG[3:0] == 4'hc)?11'd30:  // 7200 bit/s
+	(CTL_REG[3:0] == 4'hb)?11'd30:  // 4800 bit/s
+	(CTL_REG[3:0] == 4'ha)?11'd30:  // 3600 bit/s
+	(CTL_REG[3:0] == 4'h9)?11'd30:  // 2400 bit/s
+	(CTL_REG[3:0] == 4'h8)?11'd30:  // 1800 bit/s
+	(CTL_REG[3:0] == 4'h7)?11'd30:  // 1200 bit/s
+	(CTL_REG[3:0] == 4'h6)?11'd30:  // 600 bit/s
+	(CTL_REG[3:0] == 4'h5)?11'd30:  // 300 bit/s
+	(CTL_REG[3:0] == 4'h4)?11'd120: // 150 bit/s
+	(CTL_REG[3:0] == 4'h3)?11'd120: // 134 bit/s
+	(CTL_REG[3:0] == 4'h2)?11'd120: // 109 bit/s
+	(CTL_REG[3:0] == 4'h1)?11'd120: // 75 bit/s
+	11'd01;                         // 16*ext clk, 230400 bit/s
 
 reg [15:0]	uart_rx_prediv_cnt;
 reg [15:0]	uart_tx_prediv_cnt;
