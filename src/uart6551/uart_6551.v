@@ -1,81 +1,3 @@
-////////////////////////////////////////////////////////////////////////////////
-// Project Name:	CoCo3FPGA Version 4.0
-// File Name:		uart_6551.v
-//
-// CoCo3 in an FPGA
-//
-// Revision: 4.0 07/10/16
-////////////////////////////////////////////////////////////////////////////////
-//
-// CPU section copyrighted by John Kent
-// The FDC co-processor copyrighted Daniel Wallner.
-// SDRAM Controller copyrighted by XESS Corp.
-//
-////////////////////////////////////////////////////////////////////////////////
-//
-// Color Computer 3 compatible system on a chip
-//
-// Version : 4.0
-//
-// Copyright (c) 2008 Gary Becker (gary_l_becker@yahoo.com)
-//
-// All rights reserved
-//
-// Redistribution and use in source and synthezised forms, with or without
-// modification, are permitted provided that the following conditions are met:
-//
-// Redistributions of source code must retain the above copyright notice,
-// this list of conditions and the following disclaimer.
-//
-// Redistributions in synthesized form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// Neither the name of the author nor the names of other contributors may
-// be used to endorse or promote products derived from this software without
-// specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
-// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
-//
-// Please report bugs to the author, but before you do so, please
-// make sure that this is not a derivative work and that
-// you have the latest version of this file.
-//
-// The latest version of this file can be found at:
-//      http://groups.yahoo.com/group/CoCo3FPGA
-//
-// File history :
-//
-//  1.0			Full Release
-//  2.0			Partial Release
-//  3.0			Full Release
-//  3.0.0.1		Update to fix DoD interrupt issue
-//	3.0.1.0		Update to fix 32/40 CoCO3 Text issue and add 2 Meg max memory
-//	4.0.X.X		Full Release
-////////////////////////////////////////////////////////////////////////////////
-// Gary Becker
-// gary_L_becker@yahoo.com
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-// MISTer Conversion by Stan Hodge and Alan Steremberg (& Gary Becker)
-// stan.pda@gmail.com
-// 
-//	1/11/22		Changed to be super synchronus
-////////////////////////////////////////////////////////////////////////////////
-//
-// 03/2025      Stefan Voss io controller added based on Till Harbaums MFP 68901 work
-////////////////////////////////////////////////////////////////////////////////
-
 module glb6551(
 RESET_N,
 CLK,
@@ -150,19 +72,10 @@ reg					PARITY = 1'b0;
 reg					TDRE;
 reg					RDRF;
 
-reg		[10:0]		TX_CLK_DIV;
-wire				TX_CLK;
-wire				RX_CLK;
 wire	[1:0]		WORD_SELECT;
 wire				RESET_X;
-wire				STOP;
 wire				PAR_DIS;
-reg		[7:0]		LOOPBACK;
-wire				RX_DATA;
-wire				TX_DATA = 1'b1;
 reg					RESET_NX;
-reg					TX_CLK_REG_T;
-reg			 		TX_CLK_REG;
 
 // report the available unused space in the input fifo
 assign serial_data_in_free = { 4'h0, serial_data_in_space };
@@ -177,6 +90,8 @@ wire read  = PH_2 && CS==2'b01 &&  RW_N && RS==2'b00;
 // filled by the CPU when writing to the uart data register
 // emptied by the io controller when reading via SPI
 assign serial_data_out_available[7:4] = 4'h0;
+
+assign RX_CLK = 1'b0 ;
 
 io_fifo uart_out_fifo (
 	.reset            ( ~RESET_N ),
@@ -307,7 +222,7 @@ wire [10:0] uart_prediv =
 	(CTL_REG[3:0] == 4'h3)?11'd120: // 134 bit/s
 	(CTL_REG[3:0] == 4'h2)?11'd120: // 109 bit/s
 	(CTL_REG[3:0] == 4'h1)?11'd120: // 75 bit/s
-	11'd01;                         // 16*ext clk, 230400 bit/s
+	11'd30;                         // 16*ext clk, 230400 bit/s
 
 reg [15:0]	uart_rx_prediv_cnt;
 reg [15:0]	uart_tx_prediv_cnt;
@@ -363,158 +278,10 @@ wire uart_rx_irq = serial_data_in_available;
 wire uart_tx_irq = !serial_data_out_fifo_full && !serial_strobe_out;
 
 // 6551 UART
-always @ (negedge CLK or negedge RESET_X)
-begin
-	if(!RESET_X)
-	begin
-		TX_CLK_DIV <= 11'h000;
-		TX_CLK_REG_T <= 1'b0;
-		TX_CLK_REG <= 1'b0;
-	end
-	else
-	begin
-		TX_CLK_REG <= 1'b0;
-		if (XTAL_CLK_IN)
-		begin
-			case (TX_CLK_DIV)
-			11'h000:
-			begin
-				TX_CLK_DIV <= 11'h001;
-				TX_CLK_REG_T <= ~TX_CLK_REG_T;
-				if (TX_CLK_REG_T)
-					TX_CLK_REG <= 1'b1;
-			end
-			11'h002:
-			begin
-				if(CTL_REG[3:0] == 4'hF)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h003;
-			end
-			11'h005:
-			begin
-				if(CTL_REG[3:0] == 4'hE)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h006;
-			end
-			11'h007:
-			begin
-				if(CTL_REG[3:0] == 4'hD)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h008;
-			end
-			11'h00B:
-			begin
-				if(CTL_REG[3:0] == 4'hC)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h00C;
-			end
-			11'h00F:
-			begin
-				if(CTL_REG[3:0] == 4'hB)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h010;
-			end
-			11'h017:
-			begin
-				if(CTL_REG[3:0] == 4'hA)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h018;
-			end
-			11'h01F:
-			begin
-				if(CTL_REG[3:0] == 4'h9)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h020;
-			end
-			11'h02F:
-			begin
-				if(CTL_REG[3:0] == 4'h8)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h030;
-			end
-			11'h05F:
-			begin
-				if(CTL_REG[3:0] == 4'h7)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h060;
-			end
-			11'h0BF:
-			begin
-				if(CTL_REG[3:0] == 4'h6)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h0C0;
-			end
-			11'h17F:
-			begin
-				if(CTL_REG[3:0] == 4'h5)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h180;
-			end
-			11'h1AB:
-			begin
-				if(CTL_REG[3:0] == 4'h4)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h1AC;
-			end
-			11'h20B:
-			begin
-				if(CTL_REG[3:0] == 4'h3)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h20C;
-			end
-			11'h2FF:
-			begin
-				if(CTL_REG[3:0] == 4'h2)
-					TX_CLK_DIV <= 11'h000;
-				else
-					TX_CLK_DIV <= 11'h300;
-			end
-			11'h47F:
-			begin
-				TX_CLK_DIV <= 11'h000;
-			end
-			default:
-			begin
-				TX_CLK_DIV <= TX_CLK_DIV +1'b1;
-			end
-			endcase
-		end
-	end
-end
-
-assign TX_CLK = (CTL_REG[3:0] == 4'h0)	?	XTAL_CLK_IN:
-											TX_CLK_REG;
-
-assign RX_CLK = (CTL_REG[4] == 1'b0)	?	RX_CLK_IN:
-											TX_CLK;
 
 assign RESET_X = RESET_NX 					?	1'b0:
 											RESET_N;
-
-always @ (negedge CLK)
-begin
-		if (TX_CLK)
-			LOOPBACK <= {LOOPBACK[6:0], TX_DATA};			//half bit time FIFO
-end
-
-assign RX_DATA = (CMD_REG[4:2] == 3'b100)	?	LOOPBACK[7]:
-												RXDATA_IN;
-
-assign TXDATA_OUT =	(CMD_REG[4:2] == 3'b100)	?	1'b1:
-													TX_DATA;
+assign TXDATA_OUT =	1'b1;
 
 assign TDRE = !serial_data_out_fifo_full && !uart_tx_busy;
 assign RDRF = serial_data_in_available;
@@ -525,17 +292,11 @@ assign DO =	(RS == 2'b00)	?	serial_data_in_cpu:
 			(RS == 2'b10)	?	CMD_REG:
 								CTL_REG;
 
-assign IRQ =	({CMD_REG[1:0], RDRF} == 3'b011)			?	1'b0:
-				({CMD_REG[3:2], CMD_REG[0], TDRE} == 4'b0111) ?	1'b0:
-																1'b1; // low active
+assign IRQ =	({CMD_REG[1:0], RDRF} == 3'b011) ? 1'b0:
+				({CMD_REG[3:2], CMD_REG[0], TDRE} == 4'b0111) ?	1'b0:1'b1; // low active
 
 assign RTS = (CMD_REG[3:2] == 2'b00);
 assign DTR = ~CMD_REG[0];
-
-assign STOP =	(CTL_REG[7] == 1'b0)									?	1'b0:	// Stop = 1
-				({CTL_REG[7:5], CMD_REG[5]} == 4'b1001)					?	1'b0:	// Stop > 1 but 8bit word and parity
-																			1'b1;	// Stop > 1
-
 assign PAR_DIS = ~CMD_REG[5];
 assign WORD_SELECT = CTL_REG[6:5];
 
