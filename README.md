@@ -60,6 +60,7 @@ Features:
 * On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN/TAP/FLT)
 * Physical MIDI-IN and OUT
 * RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode to Tang onboard USB-C serial port or external hw pin.
+* Swiftlink [6551](https://en.wikipedia.org/wiki/MOS_Technology_6551) WIFI Modem Interface to FPGA-Companion up to 38400 Baud
 * Freezer support (e.g. Action Replay)
 
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
