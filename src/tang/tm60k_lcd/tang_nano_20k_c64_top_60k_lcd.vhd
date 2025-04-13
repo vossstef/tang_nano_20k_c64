@@ -478,7 +478,6 @@ signal pd1,pd2,pd3,pd4 : std_logic_vector(7 downto 0);
 signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
-signal coldboot        : std_logic;
 signal disk_pause      : std_logic;
 signal paddle_1_analogA : std_logic;
 signal paddle_1_analogB : std_logic;
@@ -1250,8 +1249,6 @@ hid_inst: entity work.hid
   system_uart         => system_uart,
   system_joyswap      => system_joyswap,
   system_detach_reset => detach_reset,
-
-  cold_boot           => coldboot,
 
   -- port io (used to expose rs232)
   port_status       => serial_status,
