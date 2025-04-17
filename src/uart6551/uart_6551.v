@@ -284,7 +284,8 @@ assign RESET_X = RESET_NX 					?	1'b0:
 assign TXDATA_OUT =	1'b1;
 
 assign TDRE = !serial_data_out_fifo_full && !uart_tx_busy;
-assign RDRF = serial_data_in_available;
+assign RDRF = (CMD_REG[1]) ? serial_data_in_available:
+							serial_data_in_available && ~RTS;
 
 assign STATUS_REG = {!IRQ, DSR, DCD, TDRE, RDRF, OVERRUN, FRAME, PARITY};
 assign DO =	(RS == 2'b00)	?	serial_data_in_cpu:

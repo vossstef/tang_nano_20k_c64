@@ -304,7 +304,7 @@ signal midi_en         : std_logic := '0';
 signal midi_irq_n      : std_logic := '1';
 signal midi_nmi_n      : std_logic := '1';
 signal midi_rx         : std_logic;
-signal midi_tx         : std_logic := 'Z';
+signal midi_tx         : std_logic := '1';
 signal st_midi         : std_logic_vector(2 downto 0);
 signal phi             : std_logic;
 signal ds_cs_i         : std_logic;
