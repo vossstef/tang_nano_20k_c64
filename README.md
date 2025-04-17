@@ -322,7 +322,7 @@ Most Terminal programs need the Kernal serial routines therefore select via OSD 
 
 Modem Commands:  
 ATPETSCII switches the modem interpreter to communicate in native C64 PETSCII character set  
-ATSCAN scan for WiFi networks..
+ATSCAN scan for WiFi networks  
 ATSSID ssid,password (connects to your WIFI Access Point)  
 ATD host:port (connects to a BBS)  
 <1sec>+++<1sec> escape to offline mode  
