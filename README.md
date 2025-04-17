@@ -7,8 +7,8 @@ The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wi
 | Board      | FPGA       | support |Note|
 | ---        |        -   | -     |-|
 | [Tang Nano 20k](https://wiki.sipeed.com/nano20k)     | [GW2AR](https://www.gowinsemi.com/en/product/detail/38/)  | HDMI / LCD |Dualshock via MiSTeryShield20k spare header **or** Joy to DIP |
-| [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)  | HDMI |no Dualshock, no Retro D9 Joystick, no MIDI |
-| [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/)| HDMI / LCD | twin Dualshock|
+| [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/) | HDMI |no Dualshock, no Retro D9 Joystick, no MIDI |
+| [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html) | [GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD | twin Dualshock |
 | [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD |twin Dualshock |
 
 Be aware that the [VIC20](https://en.wikipedia.org/wiki/VIC-20) had been ported too in similar manner ([VIC20Nano](https://github.com/vossstef/VIC20Nano)).
@@ -60,7 +60,7 @@ Features:
 * On Screen Display (OSD) for configuration and loadable image selection (D64/G64/CRT/PRG/BIN/TAP/FLT)
 * Physical MIDI-IN and OUT
 * RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode to Tang onboard USB-C serial port or external hw pin.
-* Swiftlink [6551](https://en.wikipedia.org/wiki/MOS_Technology_6551) WIFI Modem Interface to FPGA-Companion up to 38400 Baud
+* Swiftlink-232 [6551](https://en.wikipedia.org/wiki/MOS_Technology_6551) WIFI Modem Interface to FPGA-Companion up to 38400 Baud
 * Freezer support (e.g. Action Replay)
 
 <img src="./.assets/c64_core.png" alt="image" width="80%" height="auto">
@@ -166,13 +166,13 @@ Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings*
 ## SID Filter Curve (.FLT)
 
 Custom Filters curves can optionally be loaded via OSD.
-> [!TIP]
+> [!TIP]https://www.telnetbbsguide.com/bbs/software/image-bbs/
 > This is in most cases not needed and build-in filters curves are already an optimum.
 
 > [!NOTE]
 > Remember to select the 6581 chip, not the 8580.
 > Select 'Custom 1' as the filter to activate it. When a custom filter is loaded, there's no difference between custom options Custom 1, 2, and 3. Selecting 'Default' switches back to the built-in filter curve.
-
+https://www.telnetbbsguide.com/bbs/software/image-bbs/
 Prevent Filter curve load by OSD Kernal **FLT** selection **No Disk** and **Save settings** and **power-cyle** of the board.
 
 ## Core Loader Sequencing
@@ -315,7 +315,29 @@ Solid **<font color="red">red</font>** of the c1541 led after power-up indicates
 
 Type of MIDI interface can be selected from OSD. There is support for Sequential Inc., Passport/Sentech, DATEL/SIEL/JMS/C-LAB and Namesoft. You can use a [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) to interface to a Keyboard.
 
-## RS232 Serial Interface
+## RS232 Serial Interface Swiftlink-232 <-> WIFI Modem
+
+The FPGA companion firmware for M0S/BL616 or PiPico W /RP2040 contains a build in WIFI modem to connect via TCP/Telnet with a BBS.
+Most Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal rather than default DolphinDOS. In addition select in System RS232 mode ``Swiftlink DE``. Also possible ACIA [6551](https://en.wikipedia.org/wiki/MOS_Technology_6551) addresses are: $DE00 (default), $DF00 or $D700.  
+
+Modem Commands:  
+ATPETSCII switches the modem interpreter to communicate in native C64 PETSCII character set  
+ATSCAN scan for WiFi networks..
+ATSSID ssid,password (connects to your WIFI Access Point)  
+ATD host:port (connects to a BBS)  
+<1sec>+++<1sec> escape to offline mode  
+ATH to disconnect  
+
+For a PETSCII or ASCII/ANSI BBS you can use [ccgms](https://github.com/mist64/ccgmsterm).  
+Press ``F8`` and select modem ``Swiftlink DE`` and Baudrate of ``38400``.  
+You can press ``Shift F8`` to toggle in between the different character [modes](https://github.com/mist64/ccgmsterm/blob/main/Documentation.md).  
+Connect to you WIFI AP and have a try: ``ATD`` [bbs.retrocampus.com:6510](https://bbs.retrocampus.com) or just have a look at [telnetbbsguide](https://www.telnetbbsguide.com/bbs/software/image-bbs) and choose as you like.  
+
+For a more exotic Turbo56k protocol BBS use [retroterm](https://github.com/retrocomputacion/retroterm).  
+
+Note: Enabling persitent the Swiftlink-232 ACIA 6551 component at $FE00 will block other things like Multicard CRT ROMS. Adress $D700 doesn't block other HW.
+
+## RS232 Serial Interface VIC-1011/UP9600 <-> USB-C / external HW pins
 
 The Tang onboard USB-C serial port can be used for communication with the C64 Userport Serial port in [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) or [UP9600](https://www.pagetable.com/?p=1656) mode. Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal rather than default DolphinDOS. For a first start use UP9600 mode and a Terminal program like [ccgms](https://github.com/mist64/ccgmsterm) and on the PC side [Putty](https://www.putty.org) with 2400 Baud.
 
@@ -396,7 +418,7 @@ or [Sipeed Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-meg
 and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)  
 and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)  
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)  
-or [Tang Mega 60K NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)  
+or [Tang Mega 60K NEO][def]  
 and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)  
 and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)  
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)  
@@ -413,3 +435,6 @@ TFT Monitor with HDMI Input and Speaker
 | USB Gamepad |mini USB-C hub  | -  |x|x|x|
 | Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| MiSTeryShield20k|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|adhoc SDRAM1 Joy D9|adhoc PMOD Joy D9|
 | [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) / MiSTeryShield20k + DS cable or MiSTeryShield20k PiPico| breadboard to wire everything up and some jumper wires |-|PMOD DS2x2|PMOD DS2x2|
+
+
+[def]: https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html
