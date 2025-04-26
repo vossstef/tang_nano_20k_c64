@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------
---  C64 Top level for Tang Nano Mega 60k NEO
---  2024 Stefan Voss
+--  C64 Top level for Tang Console 60k NEO
+--  2025 Stefan Voss
 --  based on the work of many others
 --
 --  FPGA64 is Copyrighted 2005-2008 by Peter Wendrich (pwsoft@syntiac.com)
@@ -12,7 +12,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use IEEE.numeric_std.ALL;
 
-entity tang_nano_20k_c64_top_60k is
+entity tang_nano_20k_c64_top_console60k is
   generic
   (
    DUAL  : integer := 1; -- 0:no, 1:yes dual SID build option
@@ -23,7 +23,7 @@ entity tang_nano_20k_c64_top_60k is
     clk         : in std_logic;
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
-    leds_n      : out std_logic_vector(1 downto 0);
+    leds_n      : out std_logic_vector(2 downto 0);
     -- USB-C BL616 UART
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
@@ -38,6 +38,7 @@ entity tang_nano_20k_c64_top_60k is
     tmds_d_n    : out std_logic_vector( 2 downto 0);
     tmds_d_p    : out std_logic_vector( 2 downto 0);
     hpd_en      : out std_logic;
+    pwr_sav     : out std_logic;
 
     -- sd interface
     sd_clk      : out std_logic;
@@ -74,7 +75,7 @@ entity tang_nano_20k_c64_top_60k is
     );
 end;
 
-architecture Behavioral_top of tang_nano_20k_c64_top_60k is
+architecture Behavioral_top of tang_nano_20k_c64_top_console60k is
 
 signal clk64          : std_logic;
 signal clk32          : std_logic;
@@ -240,7 +241,6 @@ signal c1541_osd_reset : std_logic;
 signal system_wide_screen : std_logic;
 signal system_floppy_wprot : std_logic_vector(1 downto 0);
 signal leds           : std_logic_vector(5 downto 0);
-signal system_leds    : std_logic_vector(1 downto 0);
 signal led1541        : std_logic;
 signal reu_cfg        : std_logic; 
 signal dma_req        : std_logic;
@@ -513,6 +513,7 @@ component DCS
 begin
 
   hpd_en <= '1';
+  pwr_sav <= '1';
 
   spi_io_din  <= m0s(1);
   spi_io_ss   <= m0s(2);
@@ -918,7 +919,7 @@ flashclock: entity work.Gowin_PLL_60k_flash
         clkin => clk
     );
 
-leds_n(1 downto 0) <= leds(1 downto 0);
+leds_n(2 downto 0) <= leds(2 downto 0);
 leds(0) <= led1541;
 
 --                    6   5  4  3  2  1  0
@@ -1232,9 +1233,9 @@ hid_inst: entity work.hid
   int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
   int_ack             => int_ack,
 
-  buttons             => unsigned'(not reset & not user), -- S0 and S1 buttons on Tang Nano 20k
-  leds                => system_leds,         -- two leds can be controlled from the MCU
-  color               => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
+  buttons             => unsigned'(not reset & not user), -- S0 and S1 buttons on Tang
+  leds                => open,
+  color               => open
 );
 
 process(clk32)

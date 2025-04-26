@@ -23,7 +23,7 @@
         <File path="src/hdmi/tmds_channel.sv" type="file.verilog" enable="1"/>
         <File path="src/loader_sd_card.sv" type="file.verilog" enable="1"/>
         <File path="src/misc/c64_keymap.v" type="file.verilog" enable="1"/>
-        <File path="src/misc/flash_dspi.v" type="file.verilog" enable="1"/>
+        <File path="src/misc/flash_dspi_gw5a.v" type="file.verilog" enable="1"/>
         <File path="src/misc/hid.v" type="file.verilog" enable="1"/>
         <File path="src/misc/mcu_spi.v" type="file.verilog" enable="1"/>
         <File path="src/misc/osd_u8g2.v" type="file.verilog" enable="1"/>
@@ -50,7 +50,6 @@
         <File path="src/c1541/c1541_sd.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/gcr_floppy.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/via6522.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/c64_midi.vhd" type="file.vhdl" enable="1"/>
         <File path="src/cpu_6510.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fifo_sc_hs/FIFO_SC_HS_Top_gw5a.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fpga64_buslogic_gw5a.vhd" type="file.vhdl" enable="1"/>
@@ -74,6 +73,6 @@
         <File path="src/uart6551/BaudRate.vhd" type="file.vhdl" enable="1"/>
         <File path="src/video_vicII_656x.vhd" type="file.vhdl" enable="1"/>
         <File path="src/tang/console60k/tang_nano_20k_c64_top_console60k.cst" type="file.cst" enable="1"/>
-        <File path="src/tang_nano_20k_c64_top_60k.sdc" type="file.sdc" enable="1"/>
+        <File path="src/tang/console60k/tang_nano_20k_c64_top_console60k.sdc" type="file.sdc" enable="1"/>
     </FileList>
 </Project>

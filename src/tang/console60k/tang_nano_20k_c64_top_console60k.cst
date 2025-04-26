@@ -10,14 +10,16 @@ IO_PORT "clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=OFF;
 IO_LOC "user" AB13;      // S1
 IO_PORT "user" IO_TYPE=LVCMOS15 PULL_MODE=UP DRIVE=OFF BANK_VCCIO=1.5;
 // s2
-//IO_LOC "reset" Y12;
-//IO_PORT "reset" IO_TYPE=LVCMOS15 PULL_MODE=UP DRIVE=OFF BANK_VCCIO=1.5;
+IO_LOC "reset" AA13;   // Y12;
+IO_PORT "reset" IO_TYPE=LVCMOS15 PULL_MODE=UP DRIVE=OFF BANK_VCCIO=1.5;
 
 //====== LEDS ====== 
 IO_LOC  "leds_n[0]"   G11; // fpga done
 IO_PORT "leds_n[0]"   IO_TYPE=LVCMOS33 DRIVE=12 PULL_MODE=NONE BANK_VCCIO=3.3;
 IO_LOC  "leds_n[1]"   U12; // fpga ready
 IO_PORT "leds_n[1]"   IO_TYPE=LVCMOS33 DRIVE=12 PULL_MODE=NONE BANK_VCCIO=3.3;
+IO_LOC  "leds_n[2]"   V13; // sys_act
+IO_PORT "leds_n[2]"   IO_TYPE=LVCMOS33 DRIVE=12 PULL_MODE=NONE BANK_VCCIO=3.3;
 
 // UART through USB-C port
 IO_LOC "uart_rx" V14;
@@ -34,10 +36,10 @@ IO_LOC "tmds_d_p[1]" J15,H15;
 IO_PORT "tmds_d_p[1]" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33D;
 IO_LOC "tmds_d_p[2]" K17,J17
 IO_PORT "tmds_d_p[2]" PULL_MODE=NONE DRIVE=8 IO_TYPE=LVCMOS33D;
-IO_LOC  "hpd_en"  K13;
+IO_LOC  "hpd_en"  K13; // HDMI Hot Plug Detection
 IO_PORT "hpd_en"  PULL_MODE=UP BANK_VCCIO=3.3;
-//DVI-A_PSV  K14
-//pwr_sav
+IO_LOC  "pwr_sav"  K14; // DVI-A_PSV
+IO_PORT "pwr_sav"  PULL_MODE=UP BANK_VCCIO=3.3;
 
 // SDCard/TF_SDIO
 IO_LOC "sd_clk" V15;
