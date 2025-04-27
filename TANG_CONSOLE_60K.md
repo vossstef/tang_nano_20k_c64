@@ -10,8 +10,8 @@ SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SD
 this board allows to use the same SDR-SDRAM memory access
 methods.  
 
-The M0S Dock required to control the C64 Nano is to be mounted in the
-**lower right PMOD** connector with the help of the [M0S PMOD adapter](board/m0s_pmod).
+The [M0S Dock BL616](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) required to control the C64 Nano is to be mounted in the
+**lower right PMOD** connector with the help of the [M0S PMOD Adapter](https://github.com/harbaum/MiSTeryNano/blob/main/board/m0s_pmod).
 
 Alternatively a [PMOD RP2040-Zero](/board/pizero_pmod/README.md) can be plugged right away into the **lower right PMOD** connector.
 

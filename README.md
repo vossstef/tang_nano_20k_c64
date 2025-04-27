@@ -20,6 +20,7 @@ This project relies on an external µC being connected to the Tang Nano 20K. You
 For the [M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) BL616 µC there is a:
 
 * [Optional custom carrier board MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)
+* [M0S PMOD Adapter](https://github.com/harbaum/MiSTeryNano/blob/main/board/m0s_pmod) for Primer / Mega Boards
 * [Optional case](https://github.com/harbaum/MiSTeryNano/blob/main/board/misteryshield20k/housing3D)
 * [Dualshock Adapter / Cable](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md)
 
@@ -322,16 +323,10 @@ Type of MIDI interface can be selected from OSD. There is support for Sequential
 
 ## RS232 Serial Interface Swiftlink-232 <-> WIFI Modem
 
-The FPGA companion firmware for M0S/BL616 or PiPico W /RP2040 contains a build in WIFI modem to connect via TCP/Telnet with a BBS.
+The FPGA companion firmware for M0S/BL616 or PiPico W /RP2040 contain a build in WIFI modem to connect via TCP/Telnet with a BBS.
 Most Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal rather than default DolphinDOS. In addition select in System RS232 mode ``Swiftlink DE``. Also possible ACIA [6551](https://en.wikipedia.org/wiki/MOS_Technology_6551) addresses are: $DE00 (default), $DF00 or $D700.  
 
-Modem Commands:  
-ATPETSCII switches the modem interpreter to communicate in native C64 PETSCII character set  
-ATSCAN scan for WiFi networks  
-ATSSID ssid,password (connects to your WIFI Access Point)  
-ATD host:port (connects to a BBS)  
-<1sec>+++<1sec> escape to offline mode  
-ATH to disconnect  
+Have a look: FPGA companion Wicki [WIFI Modem](https://github.com/harbaum/FPGA-Companion/wiki/AT-Wi%E2%80%90Fi-modem)
 
 For a PETSCII or ASCII/ANSI BBS you can use [ccgms](https://github.com/mist64/ccgmsterm).  
 Press ``F8`` and select modem ``Swiftlink DE`` and Baudrate of ``38400``.  
