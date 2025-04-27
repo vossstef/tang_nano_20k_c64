@@ -72,7 +72,7 @@ add_file src/misc/c64_xml.hex
 add_file src/misc/c64_keymap.v
 
 set_option -synthesis_tool gowinsynthesis
-set_option -output_base_name tang_nano_20k_c64_top_console60k
+set_option -output_base_name tang_nano_20k_c64_console60k
 set_option -verilog_std sysv2017
 set_option -vhdl_std vhd2008
 set_option  -top_module tang_nano_20k_c64_top_console60k
