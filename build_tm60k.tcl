@@ -17,7 +17,7 @@ add_file src/hdmi/packet_picker.sv
 add_file src/hdmi/serializer.sv
 add_file src/hdmi/source_product_description_info_frame.sv
 add_file src/hdmi/tmds_channel.sv
-add_file src/misc/flash_dspi.v
+add_file src/misc/flash_dspi_gw5a.v
 add_file src/misc/hid.v
 add_file src/misc/mcu_spi.v
 add_file src/misc/osd_u8g2.v
@@ -91,7 +91,7 @@ set_option -user_code 00000001
 set_option -bit_compress 1
 set_option -vccx 1.8
 set_option -vcc 0.9
-set_option -multi_boot 1
+set_option -multi_boot 0
 set_option -mspi_jump 0
 
 #run syn
