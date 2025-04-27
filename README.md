@@ -10,6 +10,7 @@ The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wi
 | [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/) | HDMI |no Dualshock, no Retro D9 Joystick, no MIDI |
 | [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html) | [GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD | twin Dualshock |
 | [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD |twin Dualshock |
+| [Tang Console 60K NEO](https://wiki.sipeed.com/hardware/en/tang/tang-console/mega-console.html)|[GW5AST-60](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD |twin Dualshock, no Retro D9 Joystick|
 
 Be aware that the [VIC20](https://en.wikipedia.org/wiki/VIC-20) had been ported too in similar manner ([VIC20Nano](https://github.com/vossstef/VIC20Nano)).
 Also the [Atari 2600 VCS](https://en.wikipedia.org/wiki/Atari_2600) had been ported ([A2600Nano](https://github.com/vossstef/A2600Nano)).
@@ -81,6 +82,10 @@ See [Tang Mega 60K NEO](TANG_MEGA_60K.md)
 ## c64 Nano on Tang Mega 138k Pro
 
 See [Tang Mega 138K Pro](TANG_MEGA_138Kpro.md)
+
+## c64 Nano on Tang Console 60k NEO
+
+See [Tang Console 60K NEO](TANG_CONSOLE_60K.md)
 
 ## c64 Nano with LCD and Speaker
 
@@ -292,14 +297,14 @@ Button **cross / square** as Trigger
 
 ## LED UI
 
-| LED | function    | TN20K | TP25K |TM60K|TM138K Pro|
-| --- |           - | -     | -     | -    |-  |
-| 0 | c1541 activity| x     | x     | x    |x  |
-| 1 | D64 selected  | x     | x     | x    |x  |
-| 2 | CRT seleced   | x     | -     |   -  |x  |
-| 3 | PRG selected  | x     | -     |   -  |x  |
-| 4 |Kernal selected| x     | -     |   -  |x  |
-| 5 | TAP selected  | x     | -     |   -  |x  |
+| LED | function    | TN20K | TP25K |TM60K|TM138K Pro|Console60K|
+| --- |           - | -     | -     | -    |-  |-|
+| 0 | c1541 activity| x     | x     | x    |x  |x|
+| 1 | D64 selected  | x     | x     | x    |x  |x|
+| 2 | CRT seleced   | x     | -     |   -  |x  |-|
+| 3 | PRG selected  | x     | -     |   -  |x  |-|
+| 4 |Kernal selected| x     | -     |   -  |x  |-|
+| 5 | TAP selected  | x     | -     |   -  |x  |-|
 
 Solid **<font color="red">red</font>** of the c1541 led after power-up indicates a missing DOS in Flash
 
@@ -418,23 +423,16 @@ or [Sipeed Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-meg
 and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)  
 and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)  
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)  
-or [Tang Mega 60K NEO][def]  
+or [Tang Mega 60K NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)  
 and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)  
 and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)  
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)  
+or [Tang Console 60K NEO](https://wiki.sipeed.com/hardware/en/tang/tang-console/mega-console.html)  
+and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)  
+and [Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)
+and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)  
+or a [PMOD RP2040-Zero](/board/pizero_pmod/README.md)  
 microSD or microSDHC card FAT32 formatted  
 TFT Monitor with HDMI Input and Speaker  
 
-## Selection
 
-| HID and Gamecontrol Hardware option | TN20k needs | alternative option |Primer 25K|Mega 60K|Mega 138K Pro|
-| -----------                         | ---         | ---                | ---      | -      | -       |
-| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html)| USB hub  |x|x|x|
-| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)|mini USB-C hub | - |x|x|x|
-| USB Mouse   |mini USB-C hub | -  |x|x|x|
-| USB Gamepad |mini USB-C hub  | -  |x|x|x|
-| Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| MiSTeryShield20k|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|adhoc SDRAM1 Joy D9|adhoc PMOD Joy D9|
-| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) / MiSTeryShield20k + DS cable or MiSTeryShield20k PiPico| breadboard to wire everything up and some jumper wires |-|PMOD DS2x2|PMOD DS2x2|
-
-
-[def]: https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html
