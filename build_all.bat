@@ -31,7 +31,10 @@ echo ============ build nano 20k LCD ===============
 echo.
 %GWSH% build_tn20k_lcd.tcl
 echo.
-
+echo ============ build console 60k ===============
+echo.
+%GWSH% build_tc60k.tcl
+echo.
 echo "done."
 dir impl\pnr\*.fs
 
