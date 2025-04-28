@@ -39,6 +39,16 @@ module video
           output [2:0] tmds_d_n,
           output [2:0] tmds_d_p,
 
+          // digital video out for lcd
+          output lcd_clk,
+          output lcd_hs_n,
+          output lcd_vs_n,
+          output lcd_de,
+          output [7:0] lcd_r,
+          output [7:0] lcd_g,
+          output [7:0] lcd_b,
+          output lcd_bl,
+
          // audio
           output hp_bck,
           output hp_ws,
@@ -229,5 +239,46 @@ assign hp_bck = !i2s_clk;
 assign hp_ws = !pll_lock?1'b0:audio_bit_cnt[4];
 assign hp_din = !pll_lock?1'b0:audio[15-audio_bit_cnt[3:0]];
 assign pa_en = (STEREO)?~pll_lock:pll_lock; // TM138/60k enable amplifier 0=on and 1= off, TN20k vice versa
+
+assign lcd_clk = clk;
+assign lcd_hs_n = sd_hs_n;
+assign lcd_vs_n = sd_vs_n;
+assign lcd_bl = pll_lock;
+assign lcd_r = {osd_r,2'b00};
+assign lcd_g = {osd_g,2'b00};
+assign lcd_b = {osd_b,2'b00};
+
+reg [10:0] hcnt; // max 1040
+reg [9:0] vcnt;  // max 624
+
+// generate lcd de signal
+localparam XNTSC = 11'd1850;
+localparam YNTSC = 10'd980;
+localparam XPAL  = 11'd1880;
+localparam YPAL  = 10'd940;
+
+assign lcd_de = (hcnt < 11'd800) && (vcnt < 10'd480);
+
+// after scandoubler (with dim lines), ste video is 3*6 bits
+// lcd r and b are only 5 bits, so there may be some color
+// offset
+
+always @(posedge clk) begin
+   reg last_vs_n, last_hs_n;
+
+   last_hs_n <= lcd_hs_n;
+
+   // rising edge/end of hsync
+   if(lcd_hs_n && !last_hs_n) begin
+      hcnt <= (ntscmode)?XNTSC:XPAL;
+      
+      last_vs_n <= lcd_vs_n;
+      if(lcd_vs_n && !last_vs_n) begin
+        vcnt <= (ntscmode)?YNTSC:YPAL;
+      end else
+	vcnt <= vcnt + 10'd1;
+   end else
+      hcnt <= hcnt + 11'd1;
+end
 
 endmodule

@@ -32,6 +32,15 @@ entity tang_nano_20k_c64_top_console60k is
     uart_ext_tx : out std_logic;
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(4 downto 0);
+    -- internal lcd
+    lcd_clk     : out std_logic; -- lcd clk
+    lcd_hs      : out std_logic; -- lcd horizontal synchronization
+    lcd_vs      : out std_logic; -- lcd vertical synchronization        
+    lcd_de      : out std_logic; -- lcd data enable     
+    lcd_bl      : out std_logic; -- lcd backlight control
+    lcd_r       : out std_logic_vector(7 downto 0);  -- lcd red
+    lcd_g       : out std_logic_vector(7 downto 0);  -- lcd green
+    lcd_b       : out std_logic_vector(7 downto 0);  -- lcd blue
     -- audio
     hp_bck      : out std_logic;
     hp_ws       : out std_logic;
@@ -809,6 +818,15 @@ port map(
       tmds_clk_p => tmds_clk_p,
       tmds_d_n   => tmds_d_n,
       tmds_d_p   => tmds_d_p,
+
+      lcd_clk  => lcd_clk,
+      lcd_hs_n => lcd_hs,
+      lcd_vs_n => lcd_vs,
+      lcd_de   => lcd_de,
+      lcd_r    => lcd_r,
+      lcd_g    => lcd_g,
+      lcd_b    => lcd_b,
+      lcd_bl   => lcd_bl,
 
       hp_bck   => hp_bck,
       hp_ws    => hp_ws,
