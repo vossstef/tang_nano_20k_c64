@@ -10,7 +10,7 @@ The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wi
 | [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/) | HDMI |no Dualshock, no Retro D9 Joystick, no MIDI |
 | [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html) | [GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD | twin Dualshock |
 | [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD |twin Dualshock |
-| [Tang Console 60K NEO](https://wiki.sipeed.com/hardware/en/tang/tang-console/mega-console.html)|[GW5AST-60](https://www.gowinsemi.com/en/product/detail/60/) | HDMI |twin Dualshock, no Retro D9 Joystick|
+| [Tang Console 60K NEO](https://wiki.sipeed.com/hardware/en/tang/tang-console/mega-console.html)|[GW5AST-60](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD |twin Dualshock, no Retro D9 Joystick|
 
 Be aware that the [VIC20](https://en.wikipedia.org/wiki/VIC-20) had been ported too in similar manner ([VIC20Nano](https://github.com/vossstef/VIC20Nano)).
 Also the [Atari 2600 VCS](https://en.wikipedia.org/wiki/Atari_2600) had been ported ([A2600Nano](https://github.com/vossstef/A2600Nano)).
@@ -323,10 +323,13 @@ Type of MIDI interface can be selected from OSD. There is support for Sequential
 
 ## RS232 Serial Interface Swiftlink-232 <-> WIFI Modem
 
-The FPGA companion firmware for M0S/BL616 or PiPico W /RP2040 contain a build in WIFI modem to connect via TCP/Telnet with a BBS.
-Most Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal rather than default DolphinDOS. In addition select in System RS232 mode ``Swiftlink DE``. Also possible ACIA [6551](https://en.wikipedia.org/wiki/MOS_Technology_6551) addresses are: $DE00 (default), $DF00 or $D700.  
+Have a look: [Wiki WIFI Modem](https://github.com/harbaum/FPGA-Companion/wiki/AT-Wi%E2%80%90Fi-modem)  
 
-Have a look: FPGA companion Wicki [WIFI Modem](https://github.com/harbaum/FPGA-Companion/wiki/AT-Wi%E2%80%90Fi-modem)
+Most Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal rather than default DolphinDOS.  
+In addition select OSD System RS232 mode ``Swiftlink DE``. Also possible ACIA [6551](https://en.wikipedia.org/wiki/MOS_Technology_6551) addresses are: $DE00 (default), $DF00 or $D700.  
+
+> [!NOTE]
+> Don't forget to active the PETSCII character input mode if you are sending commands to the modem !
 
 For a PETSCII or ASCII/ANSI BBS you can use [ccgms](https://github.com/mist64/ccgmsterm).  
 Press ``F8`` and select modem ``Swiftlink DE`` and Baudrate of ``38400``.  
