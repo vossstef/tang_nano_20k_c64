@@ -10,17 +10,17 @@ The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wi
 | [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/) | HDMI |no Dualshock, no Retro D9 Joystick, no MIDI |
 | [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html) | [GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD | twin Dualshock |
 | [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD |twin Dualshock |
-| [Tang Console 60K NEO](https://wiki.sipeed.com/hardware/en/tang/tang-console/mega-console.html)|[GW5AST-60](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD |twin Dualshock, no Retro D9 Joystick|
+| [Tang Console 60K NEO](https://wiki.sipeed.com/hardware/en/tang/tang-console/mega-console.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD |twin Dualshock, no Retro D9 Joystick|
 
 Be aware that the [VIC20](https://en.wikipedia.org/wiki/VIC-20) had been ported too in similar manner ([VIC20Nano](https://github.com/vossstef/VIC20Nano)).
 Also the [Atari 2600 VCS](https://en.wikipedia.org/wiki/Atari_2600) had been ported ([A2600Nano](https://github.com/vossstef/A2600Nano)).
 
 This project relies on an external µC being connected to the Tang Nano 20K. You can use a [M0S Dock BL616](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html), [Raspberry Pi Pico (W)](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html) or [esp32-s2](https://www.espressif.com/en/products/socs/esp32-s2)/[s3](https://www.espressif.com/en/products/socs/esp32-s3) and use the [FPGA companion firmware](http://github.com/harbaum/FPGA-Companion). Basically a µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).
 
-For the [M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) BL616 µC there is a:
+For the [M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) BL616 [µC](https://en.bouffalolab.com) there is a:
 
 * [Optional custom carrier board MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)
-* [M0S PMOD Adapter](https://github.com/harbaum/MiSTeryNano/blob/main/board/m0s_pmod) for Primer / Mega Boards
+* [M0S PMOD Adapter](https://github.com/harbaum/MiSTeryNano/blob/main/board/m0s_pmod) for Primer / Mega / Console Boards
 * [Optional case](https://github.com/harbaum/MiSTeryNano/blob/main/board/misteryshield20k/housing3D)
 * [Dualshock Adapter / Cable](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md)
 
@@ -28,7 +28,7 @@ and for the Raspberry PiPico (RP2040 µC) there is a:
 
 * [Optional custom carrier board MiSTeryShield20k Raspberry PiPico](/board/misteryshield20k_rpipico/README.md)
 * [Dualshock Adapter / Cable](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md)
-* [Optional custom PMOD RP2040-Zero](/board/pizero_pmod/README.md) for Primer / Mega Boards
+* [Optional custom PMOD RP2040-Zero](/board/pizero_pmod/README.md) for Primer / Mega / Console Boards
 * Optional case (upcoming)
   
 Original C64 core by Peter Wendrich and c1541 by [darfpga](https://github.com/darfpga).  
@@ -301,7 +301,7 @@ Button **cross / square** as Trigger
 | LED | function    | TN20K | TP25K |TM60K|TM138K Pro|Console60K|
 | --- |           - | -     | -     | -    |-  |-|
 | 0 | c1541 activity| x     | x     | x    |x  |x|
-| 1 | D64 selected  | x     | x     | x    |x  |x|
+| 1 | D64 selected  | x     | x     | x    |x  |-|
 | 2 | CRT seleced   | x     | -     |   -  |x  |-|
 | 3 | PRG selected  | x     | -     |   -  |x  |-|
 | 4 |Kernal selected| x     | -     |   -  |x  |-|
@@ -319,7 +319,7 @@ Solid **<font color="red">red</font>** of the c1541 led after power-up indicates
 
 ## MIDI-IN and OUT
 
-Type of MIDI interface can be selected from OSD. There is support for Sequential Inc., Passport/Sentech, DATEL/SIEL/JMS/C-LAB and Namesoft. You can use a [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) to interface to a Keyboard.
+<s>Type of MIDI interface can be selected from OSD. There is support for Sequential Inc., Passport/Sentech, DATEL/SIEL/JMS/C-LAB and Namesoft. You can use a [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) to interface to a Keyboard.</s>
 
 ## RS232 Serial Interface Swiftlink-232 <-> WIFI Modem
 
@@ -329,7 +329,7 @@ Most Terminal programs need the Kernal serial routines therefore select via OSD 
 In addition select OSD System RS232 mode ``Swiftlink DE``. Also possible ACIA [6551](https://en.wikipedia.org/wiki/MOS_Technology_6551) addresses are: $DE00 (default), $DF00 or $D700.  
 
 > [!NOTE]
-> Don't forget to active the PETSCII character input mode if you are sending commands to the modem !
+> Don't forget to active the ``PETSCII`` character input mode if you are sending commands to the modem !
 
 For a PETSCII or ASCII/ANSI BBS you can use [ccgms](https://github.com/mist64/ccgmsterm).  
 Press ``F8`` and select modem ``Swiftlink DE`` and Baudrate of ``38400``.  
@@ -430,6 +430,7 @@ and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.ht
 and [Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)  
 or a [PMOD RP2040-Zero](/board/pizero_pmod/README.md)  
+
 microSD or microSDHC card FAT32 formatted  
 TFT Monitor with HDMI Input and Speaker  
 
