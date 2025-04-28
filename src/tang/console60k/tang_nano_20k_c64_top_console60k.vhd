@@ -32,6 +32,11 @@ entity tang_nano_20k_c64_top_console60k is
     uart_ext_tx : out std_logic;
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(4 downto 0);
+    -- audio
+    hp_bck      : out std_logic;
+    hp_ws       : out std_logic;
+    hp_din      : out std_logic;
+    pa_en       : out std_logic;
     --
     tmds_clk_n  : out std_logic;
     tmds_clk_p  : out std_logic;
@@ -768,7 +773,11 @@ cass_snd <= cass_read and not cass_run and  system_tape_sound   and not cass_fin
 audio_l <= audio_data_l or (5x"00" & cass_snd & 12x"00000");
 audio_r <= audio_data_r or (5x"00" & cass_snd & 12x"00000");
 
-video_inst: entity work.video 
+video_inst: entity work.video
+generic map
+(
+  STEREO  => false
+)
 port map(
       pll_lock     => pll_locked, 
       clk          => clk32,
@@ -799,7 +808,12 @@ port map(
       tmds_clk_n => tmds_clk_n,
       tmds_clk_p => tmds_clk_p,
       tmds_d_n   => tmds_d_n,
-      tmds_d_p   => tmds_d_p
+      tmds_d_p   => tmds_d_p,
+
+      hp_bck   => hp_bck,
+      hp_ws    => hp_ws,
+      hp_din   => hp_din,
+      pa_en    => pa_en
       );
 
 addr <= io_cycle_addr when io_cycle ='1' else reu_ram_addr(22 downto 0) when ext_cycle = '1' else cart_addr;
@@ -919,8 +933,9 @@ flashclock: entity work.Gowin_PLL_60k_flash
         clkin => clk
     );
 
-leds_n(2 downto 0) <= leds(2 downto 0);
-leds(0) <= led1541;
+leds_n(2 downto 0) <= not leds(2 downto 0);
+leds(1 downto 0) <= "00";
+leds(2) <= led1541; -- green
 
 --                    6   5  4  3  2  1  0
 --                  TR3 TR2 TR RI LE DN UP digital c64 
@@ -1523,7 +1538,7 @@ port map (
   load_tap          => load_tap,
   load_flt          => load_flt,
   sd_img_size       => sd_img_size,
-  leds              => leds(5 downto 1),
+  leds              => open,
   img_select        => open,
 
   ioctl_download    => ioctl_download,
