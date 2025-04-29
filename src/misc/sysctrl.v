@@ -63,7 +63,8 @@ module sysctrl (
   output reg        system_georam,
   output reg [1:0]  system_uart,
   output reg        system_joyswap,
-  output reg        system_detach_reset
+  output reg        system_detach_reset,
+  output reg [1:0]  system_shift_mod
 );
 
 reg [3:0] state;
@@ -152,6 +153,7 @@ always @(posedge clk) begin
       system_uart <= 2'b00;
       system_joyswap <= 1'b0;
       system_detach_reset <= 1'b0;
+      system_shift_mod <= 2'b00;
    end else begin
       // release main reset after timeout
       if(main_reset_timeout) begin
@@ -276,6 +278,8 @@ always @(posedge clk) begin
                     if(id == "&") system_joyswap <= data_in[0];
                     // cartridge detach
                     if(id == "F") system_detach_reset <= data_in[0];
+                    // shift_mod
+                    if(id == "$") system_shift_mod <= data_in[1:0];
                 end
             end
 

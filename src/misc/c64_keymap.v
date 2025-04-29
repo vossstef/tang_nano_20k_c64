@@ -10,9 +10,31 @@
 module keymap (
   input [6:0]  code,
   output [2:0] row,
-  output [2:0] column
+  output [2:0] column,
+  output [2:0] row_s,
+  output [2:0] column_s,
+  input  [1:0] shift_mod
 );
-// ST  #define MATRIX(a,b)   (b*16+a)
+
+assign { row_s,column_s }
+= 
+  // characters shifted
+  ((code == 7'h50) && !shift_mod[0])?{ 3'd7,3'd1}: // cursor left
+  ((code == 7'h50) && !shift_mod[1])?{ 3'd4,3'd6}: // cursor left
+  ((code == 7'h52) && !shift_mod[0])?{ 3'd7,3'd1}: // cursor up 
+  ((code == 7'h52) && !shift_mod[1])?{ 3'd4,3'd6}: // cursor up 
+  ((code == 7'h3b) && !shift_mod[0])?{ 3'd7,3'd1}: // F2
+  ((code == 7'h3b) && !shift_mod[1])?{ 3'd4,3'd6}: // F2
+  ((code == 7'h3d) && !shift_mod[0])?{ 3'd7,3'd1}: // F4
+  ((code == 7'h3d) && !shift_mod[1])?{ 3'd4,3'd6}: // F4  
+  ((code == 7'h3f) && !shift_mod[0])?{ 3'd7,3'd1}: // F6
+  ((code == 7'h3f) && !shift_mod[1])?{ 3'd4,3'd6}: // F6
+  ((code == 7'h41) && !shift_mod[0])?{ 3'd7,3'd1}: // F8
+  ((code == 7'h41) && !shift_mod[1])?{ 3'd4,3'd6}: // F8  
+  ((code == 7'h49) && !shift_mod[0])?{ 3'd7,3'd1}: // Insert
+  ((code == 7'h49) && !shift_mod[1])?{ 3'd4,3'd6}: // Insert
+                                     { 3'd0,3'd0};
+
 // C64 #define MATRIX(b,a)   (b*8+a)
 assign { row,column } // vice versa than AtariST
 = 

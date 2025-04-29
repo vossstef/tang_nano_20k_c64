@@ -19,6 +19,7 @@ module hid (
   input  [5:0]    db9_port,
   output reg	  irq,
   input			  iack,
+  input [1:0] shift_mod,
 
   // output HID data received from USB
   output reg [7:0] joystick0,
@@ -43,17 +44,17 @@ module hid (
 );
 
 reg [7:0] keyboard[7:0]; // array of 8 elements of width 8bit
+reg [7:0] keyboard_s[7:0];
 
-//keyboard 
 assign keyboard_matrix_in =
-	      (!keyboard_matrix_out[0]?keyboard[0]:8'hff)&
-	      (!keyboard_matrix_out[1]?keyboard[1]:8'hff)&
-	      (!keyboard_matrix_out[2]?keyboard[2]:8'hff)&
-	      (!keyboard_matrix_out[3]?keyboard[3]:8'hff)&
-	      (!keyboard_matrix_out[4]?keyboard[4]:8'hff)&
-	      (!keyboard_matrix_out[5]?keyboard[5]:8'hff)&
-	      (!keyboard_matrix_out[6]?keyboard[6]:8'hff)&
-	      (!keyboard_matrix_out[7]?keyboard[7]:8'hff);
+	      (!keyboard_matrix_out[0]?(keyboard[0]& keyboard_s[0]):8'hff)&
+	      (!keyboard_matrix_out[1]?(keyboard[1]& keyboard_s[1]):8'hff)&
+	      (!keyboard_matrix_out[2]?(keyboard[2]& keyboard_s[2]):8'hff)&
+	      (!keyboard_matrix_out[3]?(keyboard[3]& keyboard_s[3]):8'hff)&
+	      (!keyboard_matrix_out[4]?(keyboard[4]& keyboard_s[4]):8'hff)&
+	      (!keyboard_matrix_out[5]?(keyboard[5]& keyboard_s[5]):8'hff)&
+	      (!keyboard_matrix_out[6]?(keyboard[6]& keyboard_s[6]):8'hff)&
+	      (!keyboard_matrix_out[7]?(keyboard[7]& keyboard_s[7]):8'hff);
 
 reg [3:0] state;
 reg [7:0] command;  
@@ -65,13 +66,17 @@ reg [5:0] db9_portD2;
 // translate incoming HID key codes into
 // C64 key matrix positions
 wire [2:0] kbd_row;
-wire [2:0] kbd_column;   
+wire [2:0] kbd_column;
+wire [2:0] kbd_row_s;
+wire [2:0] kbd_column_s;
 keymap keymap (
        .code   ( data_in[6:0] ),
-       .row    ( kbd_row      ),
-       .column ( kbd_column   )
-);  
-   
+       .row    ( kbd_row ),
+       .column ( kbd_column ),
+       .row_s  ( kbd_row_s ),
+       .column_s(kbd_column_s ),
+       .shift_mod( shift_mod )
+);
 // process mouse events
 always @(posedge clk) begin
    if(reset) begin
@@ -89,6 +94,9 @@ always @(posedge clk) begin
       keyboard[ 3] <= 8'hff; keyboard[ 4] <= 8'hff; keyboard[ 5] <= 8'hff;
       keyboard[ 6] <= 8'hff; keyboard[ 7] <= 8'hff; 
 
+      keyboard_s[ 0] <= 8'hff; keyboard_s[ 1] <= 8'hff; keyboard_s[ 2] <= 8'hff;
+      keyboard_s[ 3] <= 8'hff; keyboard_s[ 4] <= 8'hff; keyboard_s[ 5] <= 8'hff;
+      keyboard_s[ 6] <= 8'hff; keyboard_s[ 7] <= 8'hff; 
    end else begin
       db9_portD <= db9_port;
       db9_portD2 <= db9_portD;
@@ -122,8 +130,10 @@ always @(posedge clk) begin
 	   
             // CMD 1: keyboard data
             if(command == 8'd1) begin
-	       // kbd_column and kbd_row are derived from data_in
-               if(state == 4'd0) keyboard[kbd_column][kbd_row] <= data_in[7]; 
+            // kbd_column and kbd_row are derived from data_in
+               if(state == 4'd0) 
+                keyboard[kbd_column][kbd_row] <= data_in[7];
+                keyboard_s[kbd_column_s][kbd_row_s] <= data_in[7];
             end
 	       
             // CMD 2: mouse data
