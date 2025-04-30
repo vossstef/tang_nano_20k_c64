@@ -21,8 +21,8 @@ assign { row_s,column_s }
   // characters shifted
   ((code == 7'h50) && !shift_mod[0])?{ 3'd7,3'd1}: // cursor left
   ((code == 7'h50) && !shift_mod[1])?{ 3'd4,3'd6}: // cursor left
-  ((code == 7'h52) && !shift_mod[0])?{ 3'd7,3'd1}: // cursor up 
-  ((code == 7'h52) && !shift_mod[1])?{ 3'd4,3'd6}: // cursor up 
+  ((code == 7'h52) && !shift_mod[0])?{ 3'd7,3'd1}: // cursor up
+  ((code == 7'h52) && !shift_mod[1])?{ 3'd4,3'd6}: // cursor up
   ((code == 7'h3b) && !shift_mod[0])?{ 3'd7,3'd1}: // F2
   ((code == 7'h3b) && !shift_mod[1])?{ 3'd4,3'd6}: // F2
   ((code == 7'h3d) && !shift_mod[0])?{ 3'd7,3'd1}: // F4
@@ -30,9 +30,11 @@ assign { row_s,column_s }
   ((code == 7'h3f) && !shift_mod[0])?{ 3'd7,3'd1}: // F6
   ((code == 7'h3f) && !shift_mod[1])?{ 3'd4,3'd6}: // F6
   ((code == 7'h41) && !shift_mod[0])?{ 3'd7,3'd1}: // F8
-  ((code == 7'h41) && !shift_mod[1])?{ 3'd4,3'd6}: // F8  
+  ((code == 7'h41) && !shift_mod[1])?{ 3'd4,3'd6}: // F8
   ((code == 7'h49) && !shift_mod[0])?{ 3'd7,3'd1}: // Insert
   ((code == 7'h49) && !shift_mod[1])?{ 3'd4,3'd6}: // Insert
+  ((code == 7'h39) && !shift_mod[0])?{ 3'd7,3'd1}: // caps lock
+  ((code == 7'h39) && !shift_mod[1])?{ 3'd4,3'd6}: // caps lock
                                      { 3'd0,3'd0};
 
 // C64 #define MATRIX(b,a)   (b*8+a)
@@ -87,7 +89,7 @@ assign { row,column } // vice versa than AtariST
   (code == 7'h28)?{ 3'd1,3'd0}: // 28: return
   (code == 7'h29)?{ 3'd7,3'd7}: // 29: esc
   (code == 7'h2a)?{ 3'd0,3'd0}: // 2a: backspace
-  (code == 7'h2b)?{ 3'd7,3'd1}: // 2b: tab
+  (code == 7'h2b)?{ 3'd5,3'd7}: // 2b: tab as CBM
   (code == 7'h2c)?{ 3'd4,3'd7}: // 2c: space
 
   (code == 7'h2d)?{ 3'd3,3'd5}: // 2d: -
@@ -102,7 +104,7 @@ assign { row,column } // vice versa than AtariST
   (code == 7'h36)?{ 3'd7,3'd5}: // 36: ,
   (code == 7'h37)?{ 3'd4,3'd5}: // 37: .
   (code == 7'h38)?{ 3'd7,3'd6}: // 38: /
-  (code == 7'h39)?{ 3'd5,3'd7}: // 39: caps lock
+//(code == 7'h39)?{ 3'd7,3'd1}: // 39: caps lock as shift
   
   // function keys
   (code == 7'h3a)?{ 3'd4,3'd0}: // 3a: F1
@@ -133,8 +135,7 @@ assign { row,column } // vice versa than AtariST
   (code == 7'h50)?{ 3'd2,3'd0}: // 50: left
   (code == 7'h51)?{ 3'd7,3'd0}: // 51: down
   (code == 7'h52)?{ 3'd7,3'd0}: // 52: up
-  
-  (code == 7'h53)?{ 3'd7,3'd1}: // 53: Num Lock
+  (code == 7'h53)?{ 3'd7,3'd1}: // 53: Num Lock and Clear
 
   // keypad
   (code == 7'h54)?{ 3'd7,3'd1}: // 54: KP /
@@ -153,18 +154,20 @@ assign { row,column } // vice versa than AtariST
   (code == 7'h61)?{ 3'd7,3'd1}: // 61: KP 9
   (code == 7'h62)?{ 3'd7,3'd1}: // 62: KP 0
   (code == 7'h63)?{ 3'd7,3'd1}: // 63: KP .
-  (code == 7'h64)?{ 3'd7,3'd1}: // 64: EUR-2
+  (code == 7'h64)?{ 3'd7,3'd1}: // 64: EUR-2  Non-US \ and |
+//(code == 7'h65)  COMPOSE Keyboard Application
+//(code == 7'h66)  POWER Keyboard Power
+//(code == 7'h67)  KPEQUAL Keypad =
 
   // remapped modifier keys
   (code == 7'h68)?{ 3'd2,3'd7}: // 68: left ctrl
   (code == 7'h69)?{ 3'd7,3'd1}: // 69: left shift
-  (code == 7'h6a)?{ 3'd5,3'd7}: // 6a: left alt
+  (code == 7'h6a)?{ 3'd5,3'd7}: // 6a: left alt as CBM
   (code == 7'h6b)?{ 3'd7,3'd1}: // 6b: left meta
   (code == 7'h6c)?{ 3'd2,3'd7}: // 6c: right ctrl
   (code == 7'h6d)?{ 3'd4,3'd6}: // 6d: right shift
-  (code == 7'h6e)?{ 3'd5,3'd7}: // 6e: right alt
+  (code == 7'h6e)?{ 3'd5,3'd7}: // 6e: right alt as CBM
   (code == 7'h6f)?{ 3'd7,3'd1}: // 6f: right meta
-  
   { 3'd0,3'd0};
   
 endmodule
