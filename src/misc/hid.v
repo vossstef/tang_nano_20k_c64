@@ -25,7 +25,6 @@ module hid (
   output reg [7:0]    joystick0,
   output reg [7:0]    joystick1,
   output reg [7:0]    numpad,
-  output reg [7:0]    usb_kbd,
   input  [7:0]        keyboard_matrix_out,
   output [7:0]        keyboard_matrix_in,
   output reg          key_restore,
@@ -46,6 +45,7 @@ module hid (
 
 reg [7:0] keyboard[7:0]; // array of 8 elements of width 8bit
 reg [7:0] keyboard_s[7:0];
+reg [7:0] data_in_d;
 
 assign keyboard_matrix_in =
       (!keyboard_matrix_out[0]?(keyboard[0]& keyboard_s[0]):8'hff)&
@@ -79,25 +79,6 @@ keymap keymap (
        .shift_mod( shift_mod )
 );
 
-always @(posedge clk) begin
-   if(reset) begin
-      numpad <= 8'h00;
-    end else
-    begin
-        if (data_in[7]) begin
-        numpad <=
-        (usb_kbd == 8'h5e)?numpad| 8'h01:
-        (usb_kbd == 8'h5c)?numpad| 8'h02:
-        (usb_kbd == 8'h5a)?numpad| 8'h04:
-        (usb_kbd == 8'h60)?numpad| 8'h08:
-        (usb_kbd == 8'h62)?numpad| 8'h10:
-        (usb_kbd == 8'h63)?numpad| 8'h20:
-        (usb_kbd == 8'h44)?numpad| 8'h40:
-        (usb_kbd == 8'h4b)?numpad| 8'h80:
-        8'h00;
-        end
-    end
-end
 assign mod_key = numpad[5];
 assign key_restore = numpad[6]; 
 assign tape_play = numpad[7];
@@ -110,6 +91,7 @@ always @(posedge clk) begin
       irq <= 1'b0;
       irq_enable <= 1'b0;
       joystick_strobe <= 1'b0; 
+      numpad <= 8'h00;
 
       // reset entire keyboard to 1's
       keyboard[ 0] <= 8'hff; keyboard[ 1] <= 8'hff; keyboard[ 2] <= 8'hff;
@@ -123,7 +105,9 @@ always @(posedge clk) begin
    end else begin
       db9_portD <= db9_port;
       db9_portD2 <= db9_portD;
-      
+      data_in_d <= data_in;
+      if (data_in_d != data_in) numpad <= 8'h00;
+
       // monitor db9 port for changes and raise interrupt
       if(irq_enable) begin
         if(db9_portD2 != db9_portD) begin
@@ -157,9 +141,19 @@ always @(posedge clk) begin
                if(state == 4'd0) 
                 keyboard[kbd_column][kbd_row] <= data_in[7];
                 keyboard_s[kbd_column_s][kbd_row_s] <= data_in[7];
-                usb_kbd <= data_in;
+                if (data_in[7]) begin
+                    numpad <=
+                    (data_in[6:0] == 7'h5e)?numpad | 8'h01:
+                    (data_in[6:0] == 7'h5c)?numpad | 8'h02:
+                    (data_in[6:0] == 7'h5a)?numpad | 8'h04:
+                    (data_in[6:0] == 7'h60)?numpad | 8'h08:
+                    (data_in[6:0] == 7'h62)?numpad | 8'h10:
+                    (data_in[6:0] == 7'h63)?numpad | 8'h20:
+                    (data_in[6:0] == 7'h44)?numpad | 8'h40:
+                    (data_in[6:0] == 7'h4b)?numpad | 8'h80:
+                    8'h00;
+                end 
             end
-
             // CMD 2: mouse data
             if(command == 8'd2) begin
                 if(state == 4'd0) mouse_btns <= data_in[1:0];

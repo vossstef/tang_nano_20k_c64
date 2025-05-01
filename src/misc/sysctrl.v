@@ -79,6 +79,10 @@ wire [7:0] data_in_rev = { data_in[0], data_in[1], data_in[2], data_in[3],
 reg coldboot = 1'b1;   
 reg sys_int = 1'b1;
 
+// registers to report button interrupts
+reg [1:0] buttonsD, buttonsD2;
+reg	  buttons_irq_enable;
+   
 // the system cobtrol interrupt or any other interrupt (e,g sdc, hid, ...)
 // activates the interrupt line to the MCU by pulling it low
 assign int_out_n = (int_in != 8'h00 || sys_int)?1'b0:1'b1;
@@ -118,6 +122,7 @@ always @(posedge clk) begin
       c1541reset <= 1'b1;
       main_reset_timeout <= 32'd80_000_000;
 
+      buttons_irq_enable <= 1'b1;  // allow buttons irq
       int_ack <= 8'h00;
       coldboot = 1'b1;      // reset is actually the power-on-reset
       sys_int = 1'b1;       // coldboot interrupt
@@ -154,7 +159,10 @@ always @(posedge clk) begin
       system_joyswap <= 1'b0;
       system_detach_reset <= 1'b0;
       system_shift_mod <= 2'b00;
-   end else begin
+   end else begin // if (reset)
+      //  bring button state into local clock domain
+      buttonsD <= buttons;
+      buttonsD2 <= buttonsD;
       // release main reset after timeout
       if(main_reset_timeout) begin
         main_reset_timeout <= main_reset_timeout - 32'd1;
@@ -177,6 +185,16 @@ always @(posedge clk) begin
       if(port_out_available && !port_out_availableD)
 	sys_int <= 1'b1;
       
+      // monitor buttons for changes and raise interrupt
+      if(buttons_irq_enable) begin
+        if(buttonsD2 != buttonsD) begin
+            // irq_enable prevents further interrupts until
+            // the button state has actually been read by the MCU
+            sys_int <= 1'b1;
+            buttons_irq_enable <= 1'b0;
+        end
+      end
+
       if(data_in_strobe) begin
         if(data_in_start) begin
            state <= 4'd0;
@@ -209,7 +227,9 @@ always @(posedge clk) begin
 
             // CMD 3: return button state
             if(command == 8'd3) begin
-                data_out <= { 6'b000000, buttons };;
+               data_out <= { 6'b000000, buttons };
+	       // re-enable interrupt once state has been read
+               buttons_irq_enable <= 1'b1;
             end
 
             // CMD 4: config values (e.g. set by user via OSD)
@@ -297,7 +317,8 @@ always @(posedge clk) begin
             if(command == 8'd6) begin
 	        // bit[0]: coldboot flag
 	        // bit[1]: port data is available
-                data_out <= { 6'b000000, (port_out_available != 8'd0), coldboot };
+	        // bit[2]: buttons state change has been detected
+                data_out <= { 5'b00000, !buttons_irq_enable, (port_out_available != 8'd0), coldboot };
 	        // reading the interrupt source acknowledges the coldboot notification
 	        if(state == 4'd0) coldboot <= 1'b0;            
 	    end
