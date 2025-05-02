@@ -124,7 +124,7 @@ assign { row,column } // vice versa than AtariST
   (code == 7'h47)?{ 3'd7,3'd1}: // 47: Scroll Lock
   (code == 7'h48)?{ 3'd7,3'd1}: // 48: Pause
   (code == 7'h49)?{ 3'd3,3'd6}: // 49: Insert
-  (code == 7'h4a)?{ 3'd7,3'd1}: // 4a: Home
+  (code == 7'h4a)?{ 3'd3,3'd6}: // 4a: Home
   (code == 7'h4b)?{ 3'd7,3'd1}: // 4b: PageUp -> HELP
   (code == 7'h4c)?{ 3'd3,3'd6}: // 4c: Delete
   (code == 7'h4d)?{ 3'd7,3'd1}: // 4d: End -> KP-)
