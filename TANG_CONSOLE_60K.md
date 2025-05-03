@@ -18,6 +18,9 @@ Alternatively a [PMOD RP2040-Zero](/board/pizero_pmod/README.md) can be plugged 
 An optional Plastation Dualshock 2 PMOD may by inserted in the second PMOD
 closer to the HDMI connector. 
 
+Both Audio Amplifier and the LCD Interface for a 5" TFT-LCD module 800x480 Type [SH500Q01Z](https://dl.sipeed.com/Accessories/LCD/500Q01Z-00%20spec.pdf) (Ilitek ILI6122)
+is in additionto HDMI actiavted.  
+
 The firmware for the M0S Dock / PiPico is the [same version as for the Tang
 Nano 20K and all other boards](https://github.com/harbaum/FPGA-Companion).
 
