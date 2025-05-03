@@ -294,7 +294,13 @@ Button **cross / square** as Trigger
  ![Layout](\.assets/keymap.gif)
  PAGE UP (Tape Play) Key or the Tang S1 Button swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.
 
- F11 (RESTORE) Key as ``FREEZE``. Typically used by Freezer Cards like Action Replay, Snappy Rom etc.
+ 
+ F2,F4,F6,F8,Left/Up keys automatically activate Shift key.  
+ F9 - arrow-up key.  
+ F10 - = key.  
+ F11 (RESTORE) Key as ``FREEZE``. Typically used by Freezer Cards like Action Replay, Snappy Rom etc.  
+ F12 OSD  
+ Alt,Tab - C= key.  
 
 ## LED UI
 

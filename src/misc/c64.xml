@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- C64 configuration -->
+<config name="C64Nano" version="0">
+  <actions>
+    <!-- the init action is being executed immediately -->
+    <!-- when this file has been loaded -->
+    <action name="init">
+      <!-- (try to) load config from sd card -->
+      <load file="c64.ini"/>
+      <set id="R" value="3"/>  <!-- keep machine in cold reset -->
+      <set id="Z" value="1"/>  <!-- default c1541 -->
+      <set id="F" value="0"/>  <!-- default cartridge detach -->
+    </action>
+    
+    <!-- the ready action is being executed once all -->
+    <!-- initialization has been done -->
+    <action name="ready">
+      <set id="R" value="0"/>  <!-- release reset -->
+      <set id="F" value="0"/>  <!-- default cartridge detach -->
+      <set id="Z" value="0"/>  <!-- c1541 out of reset -->
+    </action>
+      
+    <action name="save">
+      <!-- save config to sd card -->
+      <save file="c64.ini"/>
+    </action>
+      
+    <action name="reset">
+      <!-- trigger a system reset -->
+      <set id="R" value="1"/>
+      <delay ms="10"/>
+      <set id="R" value="0"/>      
+    </action>
+    
+    <action name="reset_hide">
+      <!-- trigger a system reset and hide OSD -->
+      <link action="reset"/>
+      <hide/>      
+    </action>      
+
+    <action name="cold_reset">
+      <!-- trigger a cold system reset -->
+      <set id="R" value="3"/>
+      <set id="R" value="0"/>      
+    </action>
+    
+    <action name="cold_reset_hide">
+      <!-- trigger a cold reset and hide OSD -->
+      <link action="cold_reset"/>
+      <hide/>      
+    </action>
+
+    <action name="c1541_reset">
+      <!-- trigger a cold system reset -->
+      <set id="Z" value="1"/>
+      <set id="Z" value="0"/>
+    </action>
+
+    <action name="c1541_reset_hide">
+      <!-- trigger a c1541 reset and hide OSD -->
+      <link action="c1541_reset"/>
+      <hide/>      
+    </action>
+
+    <action name="detach_reset">
+      <!-- trigger a detach reset -->
+      <set id="F" value="1"/>
+      <set id="F" value="0"/>
+    </action>
+
+    <action name="detach_reset_hide">
+      <!-- trigger a detach reset and hide OSD -->
+      <link action="detach_reset"/>
+      <hide/>      
+    </action>
+
+  </actions>
+  
+  <menu label="C64Nano">
+ <button label="Detach Cartridge & Reset" action="detach_reset_hide"/>
+    <menu label="System">
+      <list label="Joyport 1:" id="Q" default="9">
+ <listentry label="Retro D9" value="0"/>
+ <listentry label="USB #1 Joy" value="1"/>
+ <listentry label="USB #2 Joy" value="2"/>
+ <listentry label="NumPad" value="3"/>
+ <listentry label="DS #1 Joy" value="4"/>
+ <listentry label="Mouse" value="5"/>
+ <listentry label="DS #1 Paddle" value="6"/>
+ <listentry label="USB #1 Padd" value="7"/>
+ <listentry label="USB #2 Padd" value="8"/>
+ <listentry label="Off" value="9"/>
+ <listentry label="DS #2 Joy" value="10"/>
+ <listentry label="DS #2 Paddle" value="11"/>
+      </list>
+      <list label="Joyport 2:" id="J" default="1">
+ <listentry label="Retro D9" value="0"/>
+ <listentry label="USB #1 Joy" value="1"/>
+ <listentry label="USB #2 Joy" value="2"/>
+ <listentry label="NumPad" value="3"/>
+ <listentry label="DS #1 Joy" value="4"/>
+ <listentry label="Mouse" value="5"/>
+ <listentry label="DS #1 Paddle" value="6"/>
+ <listentry label="USB #1 Padd" value="7"/>
+ <listentry label="USB #2 Padd" value="8"/>
+ <listentry label="Off" value="9"/>
+ <listentry label="DS #2 Joy" value="10"/>
+ <listentry label="DS #2 Paddle" value="11"/>
+      </list>
+      <list label="Swap Joyst:" id="&" default="0">
+ <listentry label="Off" value="0"/>
+ <listentry label="On" value="1"/>
+      </list>
+      <list label="REU 1750:" id="V" default="0">
+ <listentry label="Off" value="0"/>
+ <listentry label="On" value="1"/>
+      </list>
+      <list label="C1541 ROM:" id="D" default="0" action="c1541_reset">
+ <listentry label="Dolphin DOS" value="0"/>
+ <listentry label="CBM DOS" value="1"/>
+ <listentry label="Speed DOS P" value="2"/>
+ <listentry label="Jiffy DOS" value="3"/>
+      </list>
+      <list label="Turbo mode:" id="X" default="0">
+ <listentry label="Off" value="0"/>
+ <listentry label="C128" value="1"/>
+ <listentry label="Smart" value="2"/>
+      </list>
+      <list label="Turbo speed:" id="Y" default="0">
+ <listentry label="2x" value="0"/>
+ <listentry label="3x" value="1"/>
+ <listentry label="4x" value="2"/>
+      </list>
+      <list label="Video Std:" id="E" default="0" action="cold_reset">
+ <listentry label="PAL" value="0"/>
+ <listentry label="NTSC" value="1"/>
+      </list>
+      <list label="Midi:" id="N" default="0">
+ <listentry label="Off" value="0"/>
+ <listentry label="Sequential" value="1"/>
+ <listentry label="Passport" value="2"/>
+ <listentry label="DATEL" value="3"/>
+ <listentry label="Namesoft" value="4"/>
+      </list>
+      <list label="Pause OSD:" id="G" default="0">
+ <listentry label="Off" value="0"/>
+ <listentry label="On" value="1"/>
+      </list>
+      <list label="VIC-II:" id="C" default="0">
+ <listentry label="656x" value="0"/>
+ <listentry label="856x" value="1"/>
+ <listentry label="Early 856x" value="2"/>
+      </list>
+      <list label="CIA:" id="M" default="0">
+ <listentry label="6581" value="0"/>
+ <listentry label="8521" value="1"/>
+      </list>
+      <list label="SID:" id="O" default="0">
+ <listentry label="6526" value="0"/>
+ <listentry label="8580" value="1"/>
+      </list>
+      <list label="SID Digifix:" id="U" default="0">
+ <listentry label="Off" value="0"/>
+ <listentry label="On" value="1"/>
+      </list>
+      <list label="SID Right:" id="K" default="0">
+ <listentry label="Same" value="0"/>
+ <listentry label="DE00" value="1"/>
+ <listentry label="D420" value="2"/>
+ <listentry label="D500" value="3"/>
+ <listentry label="Df00" value="4"/>
+      </list>
+      <list label="SID Filter:" id="H" default="0">
+ <listentry label="Default" value="0"/>
+ <listentry label="Custom 1" value="1"/>
+ <listentry label="Custom 2" value="2"/>
+ <listentry label="Custom 3" value="3"/>
+ <listentry label="Adjustable" value="4"/>
+      </list>
+      <list label="SID Fc Ofs:" id=">" default="0">
+ <listentry label="0" value="0"/>
+ <listentry label="1" value="1"/>
+ <listentry label="2" value="2"/>
+ <listentry label="3" value="3"/>
+ <listentry label="4" value="4"/>
+ <listentry label="5" value="5"/>
+      </list>
+      <list label="RS232 mode:" id="<" default="0">
+ <listentry label="VIC-1011" value="0"/>
+ <listentry label="UP9600" value="1"/>
+ <listentry label="SwiftLnk DE" value="2"/>
+ <listentry label="SwiftLnk DF" value="3"/>
+ <listentry label="SwiftLnk D7" value="4"/>
+      </list>
+      <list label="GeoRAM:" id="#" default="0">
+ <listentry label="Off" value="0"/>
+ <listentry label="On" value="1"/>
+      </list>
+      <list label="Tape Sound:" id="I" default="1">
+ <listentry label="Off" value="0"/>
+ <listentry label="On" value="1"/>
+      </list>
+      <list label="RS232 port:" id="*" default="0">
+ <listentry label="Tang USB-C" value="0"/>
+ <listentry label="External" value="1"/>
+ <listentry label="reserved" value="2"/>
+      </list>
+      <list label="Key modifier:" id="$" default="0">
+ <listentry label="L+R Shift" value="0"/>
+ <listentry label="L Shift" value="1"/>
+ <listentry label="R Shift" value="2"/>
+ <listentry label="Off" value="3"/>
+      </list>
+ <button label="C1541 Reset" action="c1541_reset_hide"/>
+ <button label="Cold Boot" action="cold_reset_hide"/>
+    </menu>
+    <menu label="Storage">
+      <fileselector label="Floppy 8:" ext="d64;g64" index="0" default="disk8.d64"/>
+      <fileselector label="CRT ROM:" ext="crt" index="1" default="c64crt.crt"/>
+      <fileselector label="PRG BASIC:" ext="prg" index="2" default="c64prg.prg"/>
+      <fileselector label="C64 KERNAL:" ext="bin" index="3" default="c64kernal.bin"/>
+      <fileselector label="TAP TAPE:" ext="tap" index="4"/>
+      <fileselector label="FLT FILTER:" ext="flt" index="5" default="c64flt.flt"/>
+      <list label="Disk prot.:" id="P" default="0">
+	<listentry label="None" value="0"/>
+	<listentry label="8:" value="1"/>
+      </list>
+    </menu>
+    <menu label="Settings">
+      <list label="Screen:" id="W" default="0">
+	<listentry label="Normal" value="0"/>
+	<listentry label="Wide" value="1"/>
+      </list>
+      <list label="Scanlines:" id="S" default="0">
+	<listentry label="None" value="0"/>
+	<listentry label="25%" value="1"/>
+	<listentry label="50%" value="2"/>
+	<listentry label="75%" value="3"/>
+      </list>
+      <list label="Volume:" id="A" default="2">
+	<listentry label="Mute" value="0"/>
+	<listentry label="33%" value="1"/>
+	<listentry label="66%" value="2"/>
+	<listentry label="100%" value="3"/>
+      </list>
+      <button label="Save settings" action="save"/>
+    </menu>
+    <button label="Reset" action="reset_hide"/>
+  </menu>    
+</config>

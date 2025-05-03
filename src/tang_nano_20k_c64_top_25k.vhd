@@ -473,6 +473,7 @@ signal serial_tx_data   : std_logic_vector(7 downto 0);
 signal serial_rx_available : std_logic_vector(7 downto 0);
 signal serial_rx_strobe : std_logic;
 signal serial_rx_data   : std_logic_vector(7 downto 0);
+signal shift_mod        : std_logic_vector(1 downto 0);
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -1077,6 +1078,8 @@ hid_inst: entity work.hid
   db9_port        => db9_joy,
   irq             => hid_int,
   iack            => int_ack(1),
+  shift_mod       => shift_mod,
+
   -- output HID data received from USB
   joystick0       => joystick1,
   joystick1       => joystick2,
@@ -1139,6 +1142,7 @@ hid_inst: entity work.hid
   system_uart         => system_uart,
   system_joyswap      => system_joyswap,
   system_detach_reset => detach_reset,
+  system_shift_mod    => shift_mod,
 
   -- port io (used to expose rs232)
   port_status       => serial_status,
