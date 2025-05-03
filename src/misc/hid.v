@@ -65,9 +65,9 @@ reg [5:0] db9_portD;
 reg [5:0] db9_portD2;
 
 // translate incoming HID key codes into C64 key matrix positions
-wire [2:0] kbd_row;
+wire [3:0] kbd_row;
 wire [2:0] kbd_column;
-wire [2:0] kbd_row_s;
+wire [3:0] kbd_row_s;
 wire [2:0] kbd_column_s;
 
 keymap keymap (
