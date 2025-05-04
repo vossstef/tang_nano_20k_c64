@@ -199,14 +199,13 @@ Enable REU, select c1541 CBM DOS ROM and load the PRG.
 
 ## Push Button / DIP Switch utilization
 
-* Nano 20k S2 keep pressed during power-up for FLASH programming of FPGA bitstream
+* S1 swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.
 
-* Mega 60k NEO ```SW1 ON``` ```SW6 ON``` + Unplug 12V Power + Unplug USB Programmer + Disconnect HDMI + Press & **Hold** ```RECONFIG``` + Power the Board + connect USB programmer cable + release ```RECONFIG``` and perform programming. + Reconnect cables.
+* S2 open OSD
 
 > [!CAUTION]
 > A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
-
-* S1 swap the Joystick Ports if OSD **Swap Joys** is set to Off mode.
+> Nano 20k S2 keep pressed during power-up for FLASH programming of FPGA bitstream  
 
 ## OSD
 
