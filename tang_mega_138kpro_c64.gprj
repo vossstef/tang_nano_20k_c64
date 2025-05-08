@@ -23,7 +23,6 @@
         <File path="src/hdmi/source_product_description_info_frame.sv" type="file.verilog" enable="1"/>
         <File path="src/hdmi/tmds_channel.sv" type="file.verilog" enable="1"/>
         <File path="src/loader_sd_card.sv" type="file.verilog" enable="1"/>
-        <File path="src/misc/c64_keymap.v" type="file.verilog" enable="1"/>
         <File path="src/misc/flash_dspi_gw5a.v" type="file.verilog" enable="1"/>
         <File path="src/misc/hid.v" type="file.verilog" enable="1"/>
         <File path="src/misc/mcu_spi.v" type="file.verilog" enable="1"/>

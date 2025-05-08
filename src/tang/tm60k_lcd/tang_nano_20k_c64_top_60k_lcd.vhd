@@ -494,6 +494,8 @@ signal serial_rx_available : std_logic_vector(7 downto 0);
 signal serial_rx_strobe : std_logic;
 signal serial_rx_data   : std_logic_vector(7 downto 0);
 signal shift_mod        : std_logic_vector(1 downto 0);
+signal usb_key          : std_logic_vector(7 downto 0);
+signal mod_key          : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -1188,17 +1190,12 @@ hid_inst: entity work.hid
   db9_port        => db9_joy,
   irq             => hid_int,
   iack            => int_ack(1),
-  shift_mod       => shift_mod,
 
   -- output HID data received from USB
+  usb_kbd         => usb_key,
   joystick0       => joystick1,
   joystick1       => joystick2,
   numpad          => numpad,
-  keyboard_matrix_out => keyboard_matrix_out,
-  keyboard_matrix_in  => keyboard_matrix_in,
-  key_restore     => freeze_key,
-  tape_play       => open,
-  mod_key         => open,
   mouse_btns      => mouse_btns,
   mouse_x         => mouse_x,
   mouse_y         => mouse_y,
@@ -1314,11 +1311,10 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   bios         => "00",
   pause        => '0',
   pause_out    => c64_pause,
-  -- keyboard interface
-  keyboard_matrix_out => keyboard_matrix_out,
-  keyboard_matrix_in  => keyboard_matrix_in,
-  kbd_reset    => '0',
-  shift_mod    => (others => '0'),
+
+  usb_key      => usb_key,
+  kbd_reset    => not reset_n,
+  shift_mod    => not shift_mod,
 
   -- external memory
   ramAddr      => c64_addr,
@@ -1529,8 +1525,8 @@ port map
     data_in     => c64_data_out,
     addr_out    => cart_addr,
 
-    freeze_key  => numpad(6),
-    mod_key     => '0',
+    freeze_key  => freeze_key,
+    mod_key     => mod_key,
     nmi         => nmi,
     nmi_ack     => nmi_ack
   );
