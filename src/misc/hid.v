@@ -25,9 +25,6 @@ module hid (
   output reg [7:0]    joystick0,
   output reg [7:0]    joystick1,
   output reg [7:0]    numpad,
-  output reg          key_restore,
-  output reg          tape_play,
-  output reg          mod_key,
   output reg [1:0]    mouse_btns,
   output reg [7:0]    mouse_x,
   output reg [7:0]    mouse_y,
@@ -61,16 +58,9 @@ always @(posedge clk) begin
         (usb_kbd[6:0] == 7'h5c)?numpad | 8'h02:
         (usb_kbd[6:0] == 7'h5a)?numpad | 8'h04:
         (usb_kbd[6:0] == 7'h60)?numpad | 8'h08:
-        (usb_kbd[6:0] == 7'h62)?numpad | 8'h10:
-        (usb_kbd[6:0] == 7'h63)?numpad | 8'h20:
-        (usb_kbd[6:0] == 7'h44)?numpad | 8'h40:
-        (usb_kbd[6:0] == 7'h4b)?numpad | 8'h80:8'h00;
+        (usb_kbd[6:0] == 7'h62)?numpad | 8'h10:8'h00;
     end
 end
-
-assign mod_key = numpad[5];
-assign key_restore = numpad[6]; 
-assign tape_play = numpad[7];
 
 // process mouse events
 always @(posedge clk) begin

@@ -37,8 +37,8 @@ entity fpga64_keyboard is
 	port (
 		clk     : in std_logic;
 		reset   : in std_logic;
-		usb_key : in std_logic_vector(7 downto 0);
 
+		usb_key : in std_logic_vector(7 downto 0);
 		joyA    : in unsigned(6 downto 0);
 		joyB    : in unsigned(6 downto 0);
 		
@@ -52,6 +52,7 @@ entity fpga64_keyboard is
 		restore_key : out std_logic;
 		mod_key     : out std_logic;
 		tape_play   : out std_logic;
+		
 		-- Config
 		-- backwardsReadingEnabled = 1 allows reversal of PIA registers to still work.
 		-- not needed for kernel/normal operation only for some specific programs.
@@ -61,7 +62,6 @@ entity fpga64_keyboard is
 end fpga64_keyboard;
 
 architecture rtl of fpga64_keyboard is	
-	signal extended: boolean;
 	signal pressed: std_logic := '0';
 
 	signal key_del: std_logic := '0';
@@ -150,10 +150,9 @@ architecture rtl of fpga64_keyboard is
 	signal key_caps: std_logic := '0';
 	signal delay_cnt : integer range 0 to 300000;
 	signal delay_end : std_logic;
-	signal key_8s    : std_logic := '0';
+	signal key_8s : std_logic := '0';
 
 begin
-
 	delay_end <= '1' when delay_cnt = 0 else '0';
 	pressed <= not usb_key(7);
 	mod_key <= mod_key1 or mod_key2;
@@ -162,7 +161,6 @@ begin
 	matrix: process(clk)
 	begin
 		if rising_edge(clk) then
-
 			if delay_cnt /= 0 then
 				delay_cnt <= delay_cnt - 1;
 			end if;
@@ -337,6 +335,7 @@ begin
 				when 7X"2B" => key_commodore <= pressed; -- Tab
 				when 7X"35" => key_arrowleft <= pressed; -- ` (Grave)
 				when 7X"6A" => key_commodore <= pressed; -- Left Alt
+				when 7X"6E" => key_commodore <= pressed; -- Right Alt
 				when 7X"69" => key_shiftl <= pressed;    -- Left Shift
 				when 7X"68" => key_ctrl <= pressed;      -- Left Control
 				when 7X"14" => key_Q <= pressed;
@@ -365,26 +364,26 @@ begin
 				when 7X"0B" => key_H <= pressed;
 				when 7X"0A" => key_G <= pressed;
 				when 7X"1C" => key_Y <= pressed;
-				when 7X"24" => key_7 <= pressed and key_shift;
-								key_6 <= pressed and not key_shift;
+				when 7X"23" => key_7 <= pressed and key_shift;
+							key_6 <= pressed and not key_shift;
 				when 7X"10" => key_M <= pressed;
 				when 7X"0D" => key_J <= pressed;
 				when 7X"18" => key_U <= pressed;
-				when 7X"23" => key_6 <= pressed and key_shift;
-						key_7 <= pressed and not key_shift;
-				when 7X"25" => key_8s <= pressed and  key_shift;
-								key_8 <= pressed and not key_shift;
-								delay_cnt <= 300000;
+				when 7X"24" => key_6 <= pressed and     key_shift;
+							key_7 <= pressed and not key_shift;
+				when 7X"25" => key_8s <= pressed and key_shift;
+							key_8 <= pressed and not key_shift;
+							delay_cnt <= 300000;
 				when 7X"36" => key_comma <= pressed;  -- , (Comma)
 				when 7X"0E" => key_K <= pressed;
 				when 7X"0C" => key_I <= pressed;
 				when 7X"12" => key_O <= pressed;
-				when 7X"27" => key_9 <= pressed and key_shift;
+				when 7X"27" => key_9 <= pressed and     key_shift;
 							key_0 <= pressed and not key_shift;
-				when 7X"26" => key_8 <= pressed and key_shift;
-								key_9 <= pressed and not key_shift;
+				when 7X"26" => key_8 <= pressed and     key_shift;
+					  		key_9 <= pressed and not key_shift;
 				when 7X"37" => key_dot <= pressed;    -- . (Period)
-				when 7X"54" => key_slash <= pressed;  -- / (Slash)
+				when 7X"38" => key_slash <= pressed;  -- / (Slash)
 				when 7X"0F" => key_L <= pressed;
 				when 7X"33" => key_colon <= pressed;  -- ; (Semicolon)
 				when 7X"13" => key_P <= pressed;
@@ -398,25 +397,32 @@ begin
 				when 7X"30" => key_star <= pressed;   -- ] (Right Bracket)
 				when 7X"31" => key_pound <= pressed;  -- \ (Backslash)
 				when 7X"2A" => key_del <= pressed;    -- Backspace
-				when 7X"59" => key_equal   <= pressed;-- End
-				when 7X"5C" => key_left    <= pressed;-- Keypad 4
-				when 7X"5F" => key_home <= pressed;   -- Home
-				when 7X"62" => key_inst <= pressed;   -- Insert
-				when 7X"63" => key_del <= pressed;    -- Delete
-				when 7X"5A" => key_down <= pressed;   -- Keypad 2
-				when 7X"5E" => key_right <= pressed;  -- Keypad 6
-				when 7X"60" => key_up <= pressed;     -- Up Arrow
-				when 7X"29" => key_runstop <= pressed;-- Escape
-				when 7X"44" => restore_key <= pressed;-- F11
-				when 7X"57" => key_plus <= pressed;   -- Keypad +
-				when 7X"5B" => key_arrowup <= pressed;-- Keypad 3
-				when 7X"56" => key_minus <= pressed;  -- Keypad -
-				when 7X"55" => key_star <= pressed;   -- Keypad *
-				when 7X"61" => tape_play <= pressed;  -- Keypad 9
+				when 7X"59" => key_equal <= pressed;  -- End
+				when 7X"50" => key_left <= pressed;   -- Keypad 4
+				when 7X"4A" => key_home <= pressed;   -- Home
+				when 7X"49" => key_inst <= pressed;   -- Insert
+				when 7X"4C" => key_del <= pressed;    -- Delete
+				when 7X"51" => key_down <= pressed;
+				when 7X"5D" => key_5 <= pressed;
+				when 7X"4F" => key_right <= pressed;
+				when 7X"52" => key_up <= pressed;
+				when 7X"29" => key_runstop <= pressed;--- Escape
+				when 7X"44" => restore_key <= pressed;--- F11
+				when 7X"57" => key_plus <= pressed;
+				when 7X"4E" => key_arrowup <= pressed;
+				when 7X"56" => key_minus <= pressed;
+				when 7X"55" => key_star <= pressed;
+				when 7X"4B" => tape_play <= pressed;
 				when others => null;
-			end case;
+--				7X"46" -- 46: PrtScr
+--				7X"47" -- 47: Scroll Lock
+--				7X"48" -- 48: Pause
+--				7X"4d" -- 4d: End
+--				7X"53" -- 53: Num Lock and Clear
+--				7X"64" -- 64: EUR-2
+				end case;
 			
-			if ( reset or usb_key(7) ) = '1' then
+			if reset = '1' then
 					key_F1        <= '0';
 					key_F2        <= '0';
 					key_F3        <= '0';

@@ -495,6 +495,8 @@ signal serial_rx_available : std_logic_vector(7 downto 0);
 signal serial_rx_strobe : std_logic;
 signal serial_rx_data   : std_logic_vector(7 downto 0);
 signal shift_mod        : std_logic_vector(1 downto 0);
+signal usb_key          : std_logic_vector(7 downto 0);
+signal mod_key          : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -1305,17 +1307,12 @@ hid_inst: entity work.hid
   db9_port        => db9_joy,
   irq             => hid_int,
   iack            => int_ack(1),
-  shift_mod       => shift_mod,
 
   -- output HID data received from USB
+  usb_kbd         => usb_key,
   joystick0       => joystick1,
   joystick1       => joystick2,
   numpad          => numpad,
-  keyboard_matrix_out => keyboard_matrix_out,
-  keyboard_matrix_in  => keyboard_matrix_in,
-  key_restore     => freeze_key,
-  tape_play       => open,
-  mod_key         => open,
   mouse_btns      => mouse_btns,
   mouse_x         => mouse_x,
   mouse_y         => mouse_y,
@@ -1355,7 +1352,7 @@ hid_inst: entity work.hid
   system_turbo_mode   => turbo_mode,
   system_turbo_speed  => turbo_speed,
   system_video_std    => ntscMode,
-  system_midi         => st_midi,
+  system_midi         => open,
   system_pause        => system_pause,
   system_vic_variant  => vic_variant, 
   system_cia_mode     => cia_mode,
@@ -1414,7 +1411,6 @@ end process;
 uart_en <= system_up9600(2) or system_up9600(1);
 uart_oe <= not ram_we and uart_cs and uart_en;
 io_data <=  unsigned(cart_data) when cart_oe = '1' else
-      --    unsigned(midi_data) when (midi_oe and midi_en) = '1' else
             uart_data when uart_oe = '1' else
             unsigned(reu_dout);
 c64rom_wr <= load_rom and ioctl_download and ioctl_wr when ioctl_addr(16 downto 14) = "000" else '0';
@@ -1431,11 +1427,10 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   bios         => "00",
   pause        => '0',
   pause_out    => c64_pause,
-  -- keyboard interface
-  keyboard_matrix_out => keyboard_matrix_out,
-  keyboard_matrix_in  => keyboard_matrix_in,
-  kbd_reset    => '0',
-  shift_mod    => (others => '0'),
+
+  usb_key      => usb_key,
+  kbd_reset    => not reset_n,
+  shift_mod    => not shift_mod,
 
   -- external memory
   ramAddr      => c64_addr,
@@ -1479,8 +1474,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   IO7          => IO7,
   IOE          => IOE,
   IOF          => IOF,
-  freeze_key   => open,
-  mod_key      => open,
+  freeze_key   => freeze_key,
+  mod_key      => mod_key,
   tape_play    => open,
 
   -- dma access
@@ -1646,8 +1641,8 @@ port map
     data_in     => c64_data_out,
     addr_out    => cart_addr,
 
-    freeze_key  => numpad(6),
-    mod_key     => '0',
+    freeze_key  => freeze_key,
+    mod_key     => mod_key,
     nmi         => nmi,
     nmi_ack     => nmi_ack
   );

@@ -489,6 +489,7 @@ signal serial_rx_strobe : std_logic;
 signal serial_rx_data   : std_logic_vector(7 downto 0);
 signal shift_mod        : std_logic_vector(1 downto 0);
 signal usb_key          : std_logic_vector(7 downto 0);
+signal mod_key          : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -962,7 +963,7 @@ joyDS2_p2  <= key_circle2 & key_cross2 & key_square2 & key_right2 & key_left2 & 
 joyDigital <= 7x"00";
 joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3);
 joyUsb2    <= joystick2(6 downto 4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3);
-joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
+joyNumpad  <= "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <= "00" & mouse_btns(0) & "000" & mouse_btns(1);
 joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00"; -- DS2 left stick
 joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00"; 
@@ -1196,9 +1197,6 @@ hid_inst: entity work.hid
   joystick0       => joystick1,
   joystick1       => joystick2,
   numpad          => numpad,
-  key_restore     => freeze_key,
-  tape_play       => open,
-  mod_key         => open,
   mouse_btns      => mouse_btns,
   mouse_x         => mouse_x,
   mouse_y         => mouse_y,
@@ -1360,8 +1358,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   IO7          => IO7,
   IOE          => IOE,
   IOF          => IOF,
-  freeze_key   => open,
-  mod_key      => open,
+  freeze_key   => freeze_key,
+  mod_key      => mod_key,
   tape_play    => open,
 
   -- dma access
@@ -1527,8 +1525,8 @@ port map
     data_in     => c64_data_out,
     addr_out    => cart_addr,
 
-    freeze_key  => numpad(6),
-    mod_key     => '0',
+    freeze_key  => freeze_key,
+    mod_key     => mod_key,
     nmi         => nmi,
     nmi_ack     => nmi_ack
   );
