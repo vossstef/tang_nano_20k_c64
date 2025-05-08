@@ -58,7 +58,8 @@ always @(posedge clk) begin
         (usb_kbd[6:0] == 7'h5c)?numpad | 8'h02:
         (usb_kbd[6:0] == 7'h5a)?numpad | 8'h04:
         (usb_kbd[6:0] == 7'h60)?numpad | 8'h08:
-        (usb_kbd[6:0] == 7'h62)?numpad | 8'h10:8'h00;
+        (usb_kbd[6:0] == 7'h62)?numpad | 8'h10:
+        (usb_kbd[6:0] == 7'h63)?numpad | 8'h20:8'h00;
     end
 end
 
