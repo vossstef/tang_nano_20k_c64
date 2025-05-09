@@ -37,7 +37,7 @@ module sysctrl (
 		
   // values that can be configured by the user
   output reg        system_reu_cfg,
-  output     [1:0]  system_reset,
+  output reg [1:0]  system_reset,
   output reg [1:0]  system_scanlines,
   output reg [1:0]  system_volume,
   output reg	    system_wide_screen,
@@ -45,7 +45,7 @@ module sysctrl (
   output reg [3:0]  system_port_1,
   output reg [3:0]  system_port_2,
   output reg [1:0]  system_dos_sel,
-  output            system_1541_reset,
+  output reg        system_1541_reset,
   output reg        system_sid_digifix,
   output reg [1:0]  system_turbo_mode,
   output reg [1:0]  system_turbo_speed,
@@ -96,7 +96,7 @@ reg [11:0] menu_rom_addr;
 reg [7:0]  menu_rom_data;
 
 // generate hex e.g.:
-// gzip -n c64.xml
+// gzip -n c64.xml  or windows 7-zip
 // xxd -c1 -p c64.xml.gz > c64_xml.hex
 reg [7:0] c64_xml[2048];
 initial $readmemh("c64_xml.hex", c64_xml);
@@ -107,9 +107,6 @@ always @(posedge clk)
 // by default system is in reset
 reg [1:0] main_reset = 2'd3;
 reg [31:0] main_reset_timeout = 32'd80_000_000;
-reg c1541reset = 1'b1;
-assign system_reset = main_reset;
-assign system_1541_reset = c1541reset;
 
 // process mouse events
 always @(posedge clk) begin
@@ -118,8 +115,6 @@ always @(posedge clk) begin
       leds <= 2'b00;        // after reset leds are off
       color <= 24'h000000;  // color black -> rgb led off
       // stay in reset for about 3 seconds or until MCU releases reset
-      main_reset <= 2'd3;
-      c1541reset <= 1'b1;
       main_reset_timeout <= 32'd80_000_000;
 
       buttons_irq_enable <= 1'b1;  // allow buttons irq
@@ -132,6 +127,8 @@ always @(posedge clk) begin
       
       // OSD value defaults. These should be sane defaults, but the MCU
       // will very likely override these early
+      system_reset <= 2'b00;
+      system_1541_reset <= 1'b0;
       system_reu_cfg <= 1'b0;
       system_scanlines <= 2'b00;
       system_volume <= 2'b10;
@@ -241,11 +238,7 @@ always @(posedge clk) begin
                     // Value "V": REU cfg: off, on
                     if(id == "V") system_reu_cfg <= data_in[0];
                     // Value "R": coldboot(3), reset(1) or run(0)
-                    if(id == "R") begin
-                      main_reset <= data_in[1:0];
-                      // cancel out-timeout if MCU is active
-                      main_reset_timeout <= 32'd0;
-                    end
+                    if(id == "R") system_reset <= data_in[1:0];
                     // Value "S": scanlines none(0), 25%(1), 50%(2) or 75%(3)
                     if(id == "S") system_scanlines <= data_in[1:0];
                     // Value "A": volume mute(0), 33%(1), 66%(2) or 100%(3)
@@ -261,7 +254,7 @@ always @(posedge clk) begin
                     // DOS system
                     if(id == "D") system_dos_sel <= data_in[1:0];
                     // c1541 reset
-                    if(id == "Z") c1541reset  <= data_in[0];
+                    if(id == "Z") system_1541_reset <= data_in[0];
                     // sid audio filter
                     if(id == "U") system_sid_digifix <= data_in[0];
                     // turbo mode

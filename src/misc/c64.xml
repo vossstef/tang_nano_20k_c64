@@ -9,7 +9,7 @@
       <load file="c64.ini"/>
       <set id="R" value="3"/>  <!-- keep machine in cold reset -->
       <set id="Z" value="1"/>  <!-- default c1541 -->
-      <set id="F" value="0"/>  <!-- default cartridge detach -->
+      <set id="F" value="1"/>  <!-- default cartridge detach -->
     </action>
     
     <!-- the ready action is being executed once all -->
