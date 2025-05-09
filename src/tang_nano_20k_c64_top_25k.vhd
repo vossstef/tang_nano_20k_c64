@@ -116,8 +116,6 @@ signal iec_atn_o   : std_logic;
 signal iec_atn_i   : std_logic;
 
   -- keyboard
-signal keyboard_matrix_out : std_logic_vector(7 downto 0);
-signal keyboard_matrix_in  : std_logic_vector(7 downto 0);
 signal joyUsb1      : std_logic_vector(6 downto 0);
 signal joyUsb2      : std_logic_vector(6 downto 0);
 signal joyUsb1A     : std_logic_vector(6 downto 0);
@@ -1421,12 +1419,13 @@ port map
     nmi_ack     => nmi_ack
   );
 
+midi_en <= st_midi(2) or st_midi(1) or st_midi(0);
 
 yes_midi: if MIDI /= 0 generate
   midi_inst : entity work.c64_midi
   port map (
     clk32   => clk32,
-    reset   => not reset_n or not (st_midi(2) or st_midi(1) or st_midi(0)),
+    reset   => not reset_n or not midi_en,
     Mode    => st_midi,
     E       => phi,
     IOE     => IOE,
@@ -1446,7 +1445,7 @@ end generate;
 crt_inst : entity work.loader_sd_card
 port map (
   clk               => clk32,
-  system_reset      => system_reset,
+  system_reset      => unsigned'(por & por),
 
   sd_lba            => loader_lba,
   sd_rd             => sd_rd(5 downto 1),
@@ -1480,8 +1479,6 @@ port map (
 process(clk32)
 begin
   if rising_edge(clk32) then
-    detach_reset_d <= detach_reset;
-    detach <= '0';
     old_download <= ioctl_download;
     io_cycleD <= io_cycle;
     cart_hdr_wr <= '0';
@@ -1577,8 +1574,8 @@ begin
   end if;
 
       -- cart added
-      if old_download /= ioctl_download and load_crt = '1' then
-        cart_attached <= old_download;
+      if old_download /= ioctl_download and load_crt= '1' then
+        cart_attached <= old_download and not detach;
         erase_cram <= '1';
       end if;
 
@@ -1613,9 +1610,8 @@ begin
 
       old_meminit <= inj_meminit;
 
-      if detach_reset_d = '0' and detach_reset = '1' then
+      if detach = '1' then
         cart_attached <= '0';
-        detach <= '1';
       end if;
 
       -- start RAM erasing
@@ -1640,19 +1636,27 @@ begin
     end if;
 end process;
 
-por <= system_reset(0) or detach or not pll_locked or not ram_ready;
+por <= system_reset(0) or not pll_locked or not ram_ready;
 
 process(clk32, por)
 variable reset_counter : integer;
   begin
     if por = '1' then
-          reset_counter := 1000000;
+        reset_counter := 100000;
+        do_erase <= '1';
+        reset_n <= '0';
+        reset_wait <= '0';
+        force_erase <= '0';
+        detach <= '0';
+    elsif rising_edge(clk32) then
+        detach_reset_d <= detach_reset;
+        if detach_reset_d = '0' and detach_reset = '1' then
+          reset_counter := 255;
           do_erase <= '1';
           reset_n <= '0';
-          reset_wait <= '0';
-          force_erase <= '0';
-       elsif rising_edge(clk32) then
-        if reset_counter = 0 then reset_n <= '1'; else reset_n <= '0'; end if;
+          detach <= '1';
+        end if;
+        if reset_counter = 0 then reset_n <= '1'; detach <= '0'; else reset_n <= '0'; end if;
         old_download_r <= ioctl_download;
         if old_download_r = '0' and ioctl_download = '1' and load_prg = '1' then
           do_erase <= '1';
@@ -1668,7 +1672,7 @@ variable reset_counter : integer;
         else
           reset_counter := reset_counter - 1;
           if reset_counter = 100 and do_erase = '1' then force_erase <= '1'; end if;
-      end if;
+        end if;
     end if;
 end process;
 
