@@ -116,8 +116,6 @@ signal iec_atn_o   : std_logic;
 signal iec_atn_i   : std_logic;
 
   -- keyboard
-signal keyboard_matrix_out : std_logic_vector(7 downto 0);
-signal keyboard_matrix_in  : std_logic_vector(7 downto 0);
 signal joyUsb1      : std_logic_vector(6 downto 0);
 signal joyUsb2      : std_logic_vector(6 downto 0);
 signal joyUsb1A     : std_logic_vector(6 downto 0);
@@ -458,6 +456,7 @@ signal pd1,pd2,pd3,pd4 : std_logic_vector(7 downto 0);
 signal detach_reset_d  : std_logic;
 signal detach_reset    : std_logic;
 signal detach          : std_logic;
+signal detach_d        : std_logic;
 signal disk_pause      : std_logic;
 signal paddle_1_analogA : std_logic;
 signal paddle_1_analogB : std_logic;
@@ -474,6 +473,8 @@ signal serial_rx_available : std_logic_vector(7 downto 0);
 signal serial_rx_strobe : std_logic;
 signal serial_rx_data   : std_logic_vector(7 downto 0);
 signal shift_mod        : std_logic_vector(1 downto 0);
+signal usb_key          : std_logic_vector(7 downto 0);
+signal mod_key          : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -1078,17 +1079,12 @@ hid_inst: entity work.hid
   db9_port        => db9_joy,
   irq             => hid_int,
   iack            => int_ack(1),
-  shift_mod       => shift_mod,
 
   -- output HID data received from USB
+  usb_kbd         => usb_key,
   joystick0       => joystick1,
   joystick1       => joystick2,
   numpad          => numpad,
-  keyboard_matrix_out => keyboard_matrix_out,
-  keyboard_matrix_in  => keyboard_matrix_in,
-  key_restore     => freeze_key,
-  tape_play       => open,
-  mod_key         => open,
   mouse_btns      => mouse_btns,
   mouse_x         => mouse_x,
   mouse_y         => mouse_y,
@@ -1204,11 +1200,10 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   bios         => "00",
   pause        => '0',
   pause_out    => c64_pause,
-  -- keyboard interface
-  keyboard_matrix_out => keyboard_matrix_out,
-  keyboard_matrix_in  => keyboard_matrix_in,
-  kbd_reset    => '0',
-  shift_mod    => (others => '0'),
+
+  usb_key      => usb_key,
+  kbd_reset    => not reset_n,
+  shift_mod    => not shift_mod,
 
   -- external memory
   ramAddr      => c64_addr,
@@ -1252,8 +1247,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   IO7          => IO7,
   IOE          => IOE,
   IOF          => IOF,
-  freeze_key   => open,
-  mod_key      => open,
+  freeze_key   => freeze_key,
+  mod_key      => mod_key,
   tape_play    => open,
 
   -- dma access
@@ -1419,18 +1414,19 @@ port map
     data_in     => c64_data_out,
     addr_out    => cart_addr,
 
-    freeze_key  => numpad(6),
-    mod_key     => '0',
+    freeze_key  => freeze_key,
+    mod_key     => mod_key,
     nmi         => nmi,
     nmi_ack     => nmi_ack
   );
 
+midi_en <= st_midi(2) or st_midi(1) or st_midi(0);
 
 yes_midi: if MIDI /= 0 generate
   midi_inst : entity work.c64_midi
   port map (
     clk32   => clk32,
-    reset   => not reset_n or not (st_midi(2) or st_midi(1) or st_midi(0)),
+    reset   => not reset_n or not midi_en,
     Mode    => st_midi,
     E       => phi,
     IOE     => IOE,
@@ -1450,7 +1446,7 @@ end generate;
 crt_inst : entity work.loader_sd_card
 port map (
   clk               => clk32,
-  system_reset      => system_reset,
+  system_reset      => unsigned'(por & por),
 
   sd_lba            => loader_lba,
   sd_rd             => sd_rd(5 downto 1),
@@ -1484,8 +1480,6 @@ port map (
 process(clk32)
 begin
   if rising_edge(clk32) then
-    detach_reset_d <= detach_reset;
-    detach <= '0';
     old_download <= ioctl_download;
     io_cycleD <= io_cycle;
     cart_hdr_wr <= '0';
@@ -1617,9 +1611,8 @@ begin
 
       old_meminit <= inj_meminit;
 
-      if detach_reset_d = '0' and detach_reset = '1' then
+      if detach_d = '0' and detach = '1' then
         cart_attached <= '0';
-        detach <= '1';
       end if;
 
       -- start RAM erasing
@@ -1644,36 +1637,56 @@ begin
     end if;
 end process;
 
-por <= system_reset(0) or detach or not pll_locked or not ram_ready;
+por <= system_reset(0) or not pll_locked or not ram_ready;
 
-process(clk32, por)
+process(clk32)
 variable reset_counter : integer;
   begin
-    if por = '1' then
-          reset_counter := 1000000;
+    if rising_edge(clk32) then
+      detach_reset_d <= detach_reset;
+      old_download_r <= ioctl_download;
+      if por = '1' then
+          reset_counter := 0;
+          do_erase <= '0';
+          reset_n <= '0';
+          reset_wait <= '0';
+          force_erase <= '0';
+          detach <= '0';
+      else
+        if system_reset(1) = '1' then
+          reset_counter := 100000;
           do_erase <= '1';
           reset_n <= '0';
           reset_wait <= '0';
           force_erase <= '0';
-       elsif rising_edge(clk32) then
-        if reset_counter = 0 then reset_n <= '1'; else reset_n <= '0'; end if;
-        old_download_r <= ioctl_download;
-        if old_download_r = '0' and ioctl_download = '1' and load_prg = '1' then
+          detach <= '0';
+        elsif old_download_r = '0' and ioctl_download = '1' and load_prg = '1' then
           do_erase <= '1';
           reset_wait <= '1';
           reset_counter := 255;
-        elsif ioctl_download = '1' and (load_crt = '1' or load_rom = '1') then
+        elsif ioctl_download = '1' and (load_crt or load_rom) = '1' then
           do_erase <= '1';
           reset_counter := 255;
-        elsif erasing = '1' then force_erase <= '0';
+        elsif detach_reset_d = '0' and detach_reset = '1' then
+          do_erase <= '1';
+          reset_counter := 255;
+          detach <= '1';
+        elsif erasing = '1' then 
+          force_erase <= '0';
         elsif reset_counter = 0 then
+          reset_n <= '1'; 
           do_erase <= '0';
+          detach <= '0';
           if reset_wait = '1' and c64_addr = X"FFCF" then reset_wait <= '0'; end if;
         else
+          reset_n <= '0';
           reset_counter := reset_counter - 1;
-          if reset_counter = 100 and do_erase = '1' then force_erase <= '1'; end if;
+          if reset_counter = 100 and do_erase = '1' then 
+            force_erase <= '1'; 
+          end if;
+        end if;
       end if;
-    end if;
+  end if;
 end process;
 
 process(clk32)

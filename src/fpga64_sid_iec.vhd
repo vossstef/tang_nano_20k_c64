@@ -53,8 +53,7 @@ port  (
 	pause_out   : out std_logic;
 
 	-- keyboard interface
-	keyboard_matrix_out : out  std_logic_vector(7 downto 0);
-	keyboard_matrix_in  :  in  std_logic_vector(7 downto 0);
+	usb_key     : in  std_logic_vector(7 downto 0);
 	kbd_reset   : in  std_logic := '0';
 	shift_mod   : in  std_logic_vector(1 downto 0);
 
@@ -927,9 +926,7 @@ port map (
 	clk => clk32,
 	
 	reset => kbd_reset,
-
-	keyboard_matrix_out => keyboard_matrix_out,
-	keyboard_matrix_in => keyboard_matrix_in,
+	usb_key => usb_key,
 
 	joyA => not unsigned(joyA(6 downto 0)),
 	joyB => not unsigned(joyB(6 downto 0)),
