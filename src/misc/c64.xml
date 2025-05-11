@@ -15,7 +15,7 @@
     <!-- initialization has been done -->
     <action name="ready">
       <set id="R" value="0"/>  <!-- release reset -->
-      <set id="F" value="0"/>  <!-- default cartridge detach -->
+      <set id="Z" value="0"/>  <!-- default c1541 -->
     </action>
       
     <action name="save">
