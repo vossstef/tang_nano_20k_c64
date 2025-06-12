@@ -12,8 +12,8 @@ The C64Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wi
 | [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD |twin Dualshock |
 | [Tang Console 60K NEO](https://wiki.sipeed.com/hardware/en/tang/tang-console/mega-console.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD |twin Dualshock, no Retro D9 Joystick|
 
-Be aware that the [VIC20](https://en.wikipedia.org/wiki/VIC-20) had been ported too in similar manner ([VIC20Nano](https://github.com/vossstef/VIC20Nano)).
-Also the [Atari 2600 VCS](https://en.wikipedia.org/wiki/Atari_2600) had been ported ([A2600Nano](https://github.com/vossstef/A2600Nano)).
+Be aware that the [VIC20](https://en.wikipedia.org/wiki/VIC-20) ([VIC20Nano](https://github.com/vossstef/VIC20Nano)),
+[Atari 2600 VCS](https://en.wikipedia.org/wiki/Atari_2600) ([A2600Nano](https://github.com/vossstef/A2600Nano)), [Apple IIe](https://en.wikipedia.org/wiki/Apple_IIe) ([NanoApple2](https://github.com/vossstef/NanoApple2)) had been ported too in similar manner.  
 
 This project relies on an external µC being connected to the Tang Nano 20K. You can use a [M0S Dock BL616](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html), [Raspberry Pi Pico (W)](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html) or [esp32-s2](https://www.espressif.com/en/products/socs/esp32-s2)/[s3](https://www.espressif.com/en/products/socs/esp32-s3) and use the [FPGA companion firmware](http://github.com/harbaum/FPGA-Companion). Basically a µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).
 
