@@ -495,6 +495,7 @@ signal serial_rx_data   : std_logic_vector(7 downto 0);
 signal shift_mod        : std_logic_vector(1 downto 0);
 signal usb_key          : std_logic_vector(7 downto 0);
 signal mod_key          : std_logic;
+signal kbd_strobe       : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -829,6 +830,7 @@ port map(
       lcd_g    => lcd_g,
       lcd_b    => lcd_b,
       lcd_bl   => lcd_bl,
+
       hp_bck   => hp_bck,
       hp_ws    => hp_ws,
       hp_din   => hp_din,
@@ -1192,6 +1194,7 @@ hid_inst: entity work.hid
 
   -- output HID data received from USB
   usb_kbd         => usb_key,
+  kbd_strobe      => kbd_strobe,
   joystick0       => joystick1,
   joystick1       => joystick2,
   numpad          => numpad,
@@ -1312,6 +1315,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   pause_out    => c64_pause,
 
   usb_key      => usb_key,
+  kbd_strobe   => kbd_strobe,
   kbd_reset    => not reset_n,
   shift_mod    => not shift_mod,
 
@@ -1357,8 +1361,8 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   IO7          => IO7,
   IOE          => IOE,
   IOF          => IOF,
-  freeze_key   => open,
-  mod_key      => open,
+  freeze_key   => freeze_key,
+  mod_key      => mod_key,
   tape_play    => open,
 
   -- dma access

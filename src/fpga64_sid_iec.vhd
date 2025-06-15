@@ -54,6 +54,7 @@ port  (
 
 	-- keyboard interface
 	usb_key     : in  std_logic_vector(7 downto 0);
+	kbd_strobe  : in  std_logic;
 	kbd_reset   : in  std_logic := '0';
 	shift_mod   : in  std_logic_vector(1 downto 0);
 
@@ -927,6 +928,7 @@ port map (
 	
 	reset => kbd_reset,
 	usb_key => usb_key,
+	kbd_strobe => kbd_strobe,
 
 	joyA => not unsigned(joyA(6 downto 0)),
 	joyB => not unsigned(joyB(6 downto 0)),
