@@ -496,6 +496,7 @@ signal serial_rx_data   : std_logic_vector(7 downto 0);
 signal shift_mod        : std_logic_vector(1 downto 0);
 signal usb_key          : std_logic_vector(7 downto 0);
 signal mod_key          : std_logic;
+signal kbd_strobe       : std_logic;
 
 -- 64k core ram                      0x000000
 -- cartridge RAM banks are mapped to 0x010000
@@ -1309,6 +1310,7 @@ hid_inst: entity work.hid
 
   -- output HID data received from USB
   usb_kbd         => usb_key,
+  kbd_strobe      => kbd_strobe,
   joystick0       => joystick1,
   joystick1       => joystick2,
   numpad          => numpad,
@@ -1428,6 +1430,7 @@ fpga64_sid_iec_inst: entity work.fpga64_sid_iec
   pause_out    => c64_pause,
 
   usb_key      => usb_key,
+  kbd_strobe   => kbd_strobe,
   kbd_reset    => not reset_n,
   shift_mod    => not shift_mod,
 

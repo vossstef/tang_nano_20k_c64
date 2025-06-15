@@ -20,6 +20,7 @@ module hid (
   output reg          irq,
   input               iack,
   output reg [7:0]    usb_kbd,
+  output reg          kbd_strobe,
 
   // output HID data received from USB
   output reg [7:0]    joystick0,
@@ -72,6 +73,7 @@ always @(posedge clk) begin
       irq_enable <= 1'b0;
       joystick_strobe <= 1'b0; 
       usb_kbd <= 8'h00;
+      kbd_strobe <= 1'b0;
 
    end else begin
       db9_portD <= db9_port;
@@ -109,6 +111,7 @@ always @(posedge clk) begin
             // kbd_column and kbd_row are derived from data_in
                if(state == 4'd0) 
                 usb_kbd <= data_in;
+                kbd_strobe <= ~kbd_strobe;		
             end
             // CMD 2: mouse data
             if(command == 8'd2) begin

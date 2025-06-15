@@ -39,6 +39,7 @@ entity fpga64_keyboard is
 		reset   : in std_logic;
 
 		usb_key : in std_logic_vector(7 downto 0);
+		kbd_strobe : in std_logic;
 		joyA    : in unsigned(6 downto 0);
 		joyB    : in unsigned(6 downto 0);
 		
@@ -150,9 +151,11 @@ architecture rtl of fpga64_keyboard is
 	signal key_caps: std_logic := '0';
 	signal delay_cnt : integer range 0 to 300000;
 	signal delay_end : std_logic;
+	signal ps2_stb   : std_logic;
 	signal key_8s : std_logic := '0';
 
 begin
+
 	delay_end <= '1' when delay_cnt = 0 else '0';
 	pressed <= not usb_key(7);
 	mod_key <= mod_key1 or mod_key2;
@@ -161,6 +164,8 @@ begin
 	matrix: process(clk)
 	begin
 		if rising_edge(clk) then
+			ps2_stb <= kbd_strobe;
+
 			if delay_cnt /= 0 then
 				delay_cnt <= delay_cnt - 1;
 			end if;
@@ -320,7 +325,7 @@ begin
 				(pai(5) or not key_comma) and
 				(pai(6) or not key_slash) and
 				(pai(7) or not key_runstop);
-
+		if kbd_strobe /= ps2_stb then
 			case usb_key(6 downto 0) is
 				when 7X"3A" => key_F1 <= pressed;
 				when 7X"3B" => key_F2 <= pressed;
@@ -421,7 +426,8 @@ begin
 --				7X"53" -- 53: Num Lock and Clear
 --				7X"64" -- 64: EUR-2
 				end case;
-			
+			end if;	
+
 			if reset = '1' then
 					key_F1        <= '0';
 					key_F2        <= '0';
