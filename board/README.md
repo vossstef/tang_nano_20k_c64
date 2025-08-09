@@ -6,16 +6,20 @@ some breadboard setup.
 To simplify this this project provides additional
 hardware:
 
-To be to be used with the [MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md) and M0S Dock BL616 µC  
-[MiSTeryShield20k DS2 Adapter / Cable](misteryshield20k_ds2_adapter\misteryshield20k_ds2_adapter_cable.md)
+Standalone Dock Solution for a BL616 µC M0S DOCK (WIFI):  
+[MiSTeryShield20k](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)
 
-Standalone Dock Solution for a Raspberry PiPico (WIFI):  
-General use and supporting individual case/ shell development.  
+Standalone Dock Solution for a RP2040 µC Raspberry PiPico (WIFI):  
 [MiSTeryShield20k RPiPico](/board/misteryshield20k_rpipico/README.md)
 
-For bare PCBA desk use only, no case feasible.  
-[MiSTeryShield20k RPiPicoDS2](/board/misteryshield20k_rpipicods2/README.md)
+Dualshock DS2 Adapter / Cable  
+To be to be used with any Dock  
+[MiSTeryShield20k DS2 Adapter / Cable](misteryshield20k_ds2_adapter\misteryshield20k_ds2_adapter_cable.md)
 
-[PIZero_PMOD](/board/pizero_pmod/README.md)
-PMOD based on [RP2040-Zero](https://www.waveshare.com/wiki/RP2040-Zero)  
-To be used in conjuction with Primer20k, Primer25k, Mega60k NEO, Mega138k NEO or Mega138kPro
+[PIZero_PMOD](/board/pizero_pmod/README.md)  
+PMOD based on a [RP2040-Zero](https://www.waveshare.com/wiki/RP2040-Zero)  
+To be used in conjuction with Primer20k, Primer25k, Mega60k NEO, Mega138k NEO, Mega138kPro
+
+[PIPico_PMOD](/board/pipico_pmod/README.md)  
+PMOD based on a [Raspberry Pi Pico W](https://www.raspberrypi.com/documentation/microcontrollers/pico-series.html)  
+To be used in conjuction with Primer20k, Primer25k, Mega60k NEO, Mega138k NEO, Mega138kPro

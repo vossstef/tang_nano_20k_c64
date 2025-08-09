@@ -32,7 +32,7 @@ and for the Raspberry PiPico (RP2040 µC) there is a:
 * [Optional custom carrier board MiSTeryShield20k Raspberry PiPico](/board/misteryshield20k_rpipico/README.md)
 * [Dualshock Adapter / Cable](/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md)
 * [Optional custom PMOD RP2040-Zero](/board/pizero_pmod/README.md) for Primer / Mega / Console Boards
-* Optional case (upcoming)
+* [Optional custom PMOD PiPico W](/board/pipico_pmod/README.md) incl. WIFI-modem for Primer / Mega / Console Boards
   
 Original C64 core by Peter Wendrich and c1541 by [darfpga](https://github.com/darfpga).  
 All HID components and µC firmware by Till Harbaum
