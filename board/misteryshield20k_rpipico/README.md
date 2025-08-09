@@ -18,22 +18,30 @@ Features:
 * 3D STEP model to ease case development
 * [CERN-OHL-S](https://cern-ohl.web.cern.ch/home) license
 
-PCBA production files for [JLCPCB](https://jlcpcb.com) are availble [here](production).  
+PCBA production files for [JLCPCB](https://jlcpcb.com) are availble [here](Output/production)  
 (Fully assembled boards can orderd based on BOM partlist, excluding the TN20k and PiPico connector)  
 
 The great PCB Layout work using [KiCad](https://www.kicad.org) had been done by [cantclosevi](https://github.com/cantclosevi). Thx Michal !
 
-![RRPiPico](pico.png)
-![PNG](MiSTeryShield20kRPiPico-1.png)<br>
-![PNG](MiSTeryShield20kRPiPico-2.png)<br>
-![PNG](MiSTeryShield20kRPiPico-brd.png)<br>
+**Version history**
+| Version  | Issue|  Change to earlier version|rework|
+|----------|-|--------|-|
+|0|engineering sample|DS2 connector rotated|mount DS2 bottom|
+|1|DS2 rotation fixed|mechanical positioning|-|
+|2|DS2 removed and positioning fixed|MIDI IN pin 4+5 reversed|[Instruction](rework/REWORK_HW2.MD)|
+|3| none known |MIDI IN fix|-|
+
+![RRPiPico](pico.png)  
+![PNG](MiSTeryShield20kRPiPico-1.png)  
+![PNG](MiSTeryShield20kRPiPico-2.png)  
+![PNG](MiSTeryShield20kRPiPico-brd.png)  
 
 # Pin usage
 
 | Pin  | Signal | Description            |
 |------|--------|------------------------|
 | GP0  | UART_TX| Serial debug output    |
-| GP1  | UART_RX| (Serial debug input)   |
+| GP1  | UART_RX| Serial debug input     |
 | GP2  | USB D+ | USB PIO host D+        |
 | GP3  | USB D- | USB PIO host D-        |
 | GP4  | LED 1  | indicator mice         |
@@ -43,6 +51,5 @@ The great PCB Layout work using [KiCad](https://www.kicad.org) had been done by 
 | GP17 | CSn    | SPI chip select to FPGA|
 | GP18 | SCK    | SPI clock to FPGA      |
 | GP19 | MOSI   | SPI data to FPGA       |
-| GP20 |RECONFGN| spare                  |
+| GP20 |spare   | spare                  |
 | GP22 | IRQn   | SPI interrupt from FPGA|
-
